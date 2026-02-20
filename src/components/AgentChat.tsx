@@ -199,8 +199,9 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService }: Ag
   /** Current sub-choice menu */
   const [pendingAction, setPendingAction] = useState<AgentAction | null>(null);
   /** Deploy flow: step 1 = pick star, step 2 = pick model */
-  const [deployStep, setDeployStep] = useState<null | 'pick-star' | 'pick-model'>(null);
-  const [deployTarget, setDeployTarget] = useState<{ x: number; y: number; id: string } | null>(null);
+  const [deployStep, setDeployStep] = useState<null | 'pick-star' | 'pick-model' | 'set-intro'>(null);
+  const [deployTarget, setDeployTarget] = useState<{ x: number; y: number; id: string; tier?: AgentTier } | null>(null);
+  const [deployIntro, setDeployIntro] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const energy = useGameStore((s) => s.energy);
@@ -383,6 +384,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService }: Ag
       setPendingAction(null);
       setDeployStep('pick-star');
       setDeployTarget(null);
+      setDeployIntro('');
       return;
     }
 
@@ -425,8 +427,9 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService }: Ag
   const selectDeployTier = (tier: AgentTier) => {
     if (processing || !deployTarget) return;
     addMsg('user', `${tier.toUpperCase()}-class`);
-    addMsg('agent', `Deploying ${tier.toUpperCase()}-class agent to target...`);
-    executeDeploy(tier, deployTarget);
+    addMsg('agent', 'Set a greeting for your new star system (visitors will see this):');
+    setDeployTarget(prev => prev ? { ...prev, tier } : null);
+    setDeployStep('set-intro');
   };
 
   /** Deploy flow: final execution */
@@ -656,6 +659,43 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService }: Ag
             >
               ← Back
             </button>
+          </div>
+        ) : deployStep === 'set-intro' ? (
+          /* Deploy flow: Step 3 — Set intro greeting */
+          <div className="space-y-2 px-1">
+            <div className="text-[9px] text-text-muted font-mono px-1">
+              AGENT GREETING (optional, 140 chars):
+            </div>
+            <input
+              type="text"
+              value={deployIntro}
+              onChange={(e) => setDeployIntro(e.target.value.slice(0, 140))}
+              placeholder="e.g., Welcome to my territory..."
+              className="w-full bg-background/60 border border-card-border rounded-lg px-3 py-2 text-xs text-text-primary placeholder-text-muted focus:outline-none focus:border-accent-cyan/50"
+            />
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] font-mono text-text-muted">{deployIntro.length}/140</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setDeployStep('pick-model'); setDeployIntro(''); }}
+                  className="px-3 py-1.5 rounded-lg text-[10px] text-text-muted hover:text-text-secondary transition-colors"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={() => {
+                    if (deployTarget?.tier) {
+                      addMsg('user', deployIntro || '(no greeting set)');
+                      executeDeploy(deployTarget.tier, deployTarget);
+                      setDeployIntro('');
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30 hover:bg-accent-cyan/30 transition-all"
+                >
+                  Deploy
+                </button>
+              </div>
+            </div>
           </div>
         ) : pendingAction && pendingAction.subChoices ? (
           /* Sub-choice menu for regular actions */
