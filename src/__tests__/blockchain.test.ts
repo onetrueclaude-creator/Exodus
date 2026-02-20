@@ -67,6 +67,16 @@ describe('validateChainOperation', () => {
     expect(validateChainOperation(op, ownedCoords).success).toBe(true);
   });
 
+  it('blocks secure on unowned coordinate', () => {
+    const op: ChainOperation = {
+      action: 'secure',
+      targetCoordinate: { x: 500, y: 500 },
+      userId: 'user-1',
+      timestamp: Date.now(),
+    };
+    expect(validateChainOperation(op, ownedCoords).success).toBe(false);
+  });
+
   it('allows secure on owned coordinate', () => {
     const op: ChainOperation = {
       action: 'secure',

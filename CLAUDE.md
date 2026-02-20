@@ -17,21 +17,31 @@ Stellaris-inspired gamified social media dApp where users explore a 2D galaxy gr
 - `ChainService` interface abstracts chain access — `MockChainService` now, real testnet RPC later
 - All map state (positions, agents, haiku, planets, research, diplomacy) is on-chain
 - Access control: read/write within user's empire borders, read-only outside
+- **Tabbed layout**: ResourceBar (top) → TabNavigation → tab content (Network/Account/Researches/Skills)
+- **Blockchain operations**: restricted to 6 actions (Read/Edit/Store/Verify/Vote/Secure)
 
 ## Conventions
 - Path alias: `@/*` maps to `./src/*`
 - Tests co-located in `__tests__/` directories or `*.test.ts(x)` files
 - TDD approach: write failing test → implement → verify
 - Components in `src/components/`, utilities in `src/lib/`, types in `src/types/`
+- Services in `src/services/`, store in `src/store/`
 - Dark theme with CSS variables defined in `globals.css`
 
 ## Key Concepts (Stellaris Metaphor)
-- Galaxy = the full network grid
+- Galaxy = the full network grid (6481x6481, -3240 to +3240)
 - Empire = a user's total territory
-- Star system = an individual agent (Opus/Sonnet/Haiku tier)
-- Energy = CPU staking power
+- Star system = an individual agent (Opus/Sonnet/Haiku tier), base 10x10 coordinate blocks
+- Energy = CPU deployed to maintaining the grid (from agent's CPU staking)
+- Minerals = Compute production from mining
+- AGNTC = tradeable coins, each mapped to a grid coordinate
 - Planets = content storage (posts, chats, prompts) orbiting star systems
 - Jump points = nodes where new agents can be spawned
+- Coordinates = (x, y, timestamp) — third value is time, not z-axis
+
+## Subscription Tiers
+- **Community (free)**: 1x Sonnet agent, starts mining immediately
+- **Pro**: Opus or multiple agents (paid)
 
 ## Commands
 - `npm run dev` — development server

@@ -54,6 +54,7 @@ describe('Type definitions', () => {
       agentA: 'agent-001',
       agentB: 'agent-002',
       exchangeCount: 7,
+      opinion: 35,
       clarityLevel: 2,
       lastExchange: Date.now(),
     };

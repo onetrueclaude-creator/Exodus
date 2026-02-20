@@ -34,8 +34,8 @@ export function validateChainOperation(
     return { success: false, action: operation.action, error: 'Invalid action' };
   }
 
-  // Edit and Store operations can only target owned coordinates
-  if (operation.action === 'edit' || operation.action === 'store') {
+  // Edit, Store, and Secure operations can only target owned coordinates
+  if (operation.action === 'edit' || operation.action === 'store' || operation.action === 'secure') {
     const isOwned = ownedCoordinates.some(
       (c) => c.x === operation.targetCoordinate.x && c.y === operation.targetCoordinate.y,
     );

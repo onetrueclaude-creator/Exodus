@@ -21,6 +21,9 @@ export default function GamePage() {
   const setCurrentUser = useGameStore((s) => s.setCurrentUser);
   const currentAgentId = useGameStore((s) => s.currentAgentId);
   const activeTab = useGameStore((s) => s.activeTab);
+  const agents = useGameStore((s) => s.agents);
+  const energy = useGameStore((s) => s.energy);
+  const addPlanet = useGameStore((s) => s.addPlanet);
 
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [showPlanetCreator, setShowPlanetCreator] = useState(false);
@@ -72,7 +75,7 @@ export default function GamePage() {
                 <PlanetCreator
                   agentId={currentAgentId}
                   onSubmit={(planetData) => {
-                    useGameStore.getState().addPlanet({
+                    addPlanet({
                       ...planetData,
                       id: `planet-${Date.now()}`,
                       createdAt: Date.now(),
@@ -94,7 +97,7 @@ export default function GamePage() {
             {selectedAgent && (
               <div className="absolute top-4 right-4 z-20">
                 <AgentPanel
-                  agent={useGameStore.getState().agents[selectedAgent]}
+                  agent={agents[selectedAgent]}
                   fogLevel="clear"
                   clarityLevel={0}
                   onClose={() => setSelectedAgent(null)}
@@ -110,7 +113,7 @@ export default function GamePage() {
         {/* Researches tab */}
         {activeTab === 'researches' && (
           <ResearchPanel
-            energy={useGameStore.getState().energy}
+            energy={energy}
             progress={{}}
             completedIds={[]}
             onAllocateEnergy={(id, amount) => {

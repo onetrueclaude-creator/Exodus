@@ -1,8 +1,7 @@
 "use client";
 
 import { useGameStore } from '@/store';
-
-type GameTab = 'network' | 'account' | 'researches' | 'skills';
+import type { GameTab } from '@/store/gameStore';
 
 const TABS: { id: GameTab; label: string }[] = [
   { id: 'network', label: 'Network' },
