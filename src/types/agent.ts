@@ -17,6 +17,8 @@ export interface Agent {
   cpuPerTurn: number;      // energy cost per turn to maintain this agent (base + borderPressure)
   miningRate: number;      // energy produced per turn from this star system
   energyLimit: number;     // max energy this agent can consume per turn
+  stakedCpu: number;       // CPU per turn staked to secure the blockchain network
+  introMessage?: string;   // agent's public greeting (max 140 chars)
   parentAgentId?: string;  // controlling agent (Opus -> Sonnet -> Haiku hierarchy)
 }
 
