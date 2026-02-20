@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Agent, HaikuMessage, GridPosition, DiplomaticState } from '@/types';
+import type { Agent, HaikuMessage, GridPosition, DiplomaticState, Planet } from '@/types';
 
 interface Camera {
   position: GridPosition;
@@ -11,6 +11,7 @@ interface GameState {
   agents: Record<string, Agent>;
   haiku: HaikuMessage[];
   diplomacy: Record<string, DiplomaticState>; // key: "agentA-agentB" sorted
+  planets: Record<string, Planet>;
 
   // Current user
   currentUserId: string | null;
@@ -23,6 +24,8 @@ interface GameState {
   addAgent: (agent: Agent) => void;
   moveAgent: (agentId: string, position: GridPosition) => void;
   addHaiku: (haiku: HaikuMessage) => void;
+  addPlanet: (planet: Planet) => void;
+  togglePlanetZK: (planetId: string) => void;
   setCurrentUser: (userId: string, agentId: string) => void;
   setCamera: (position: GridPosition, zoom: number) => void;
   updateDiplomacy: (state: DiplomaticState) => void;
@@ -33,6 +36,7 @@ const initialState = {
   agents: {} as Record<string, Agent>,
   haiku: [] as HaikuMessage[],
   diplomacy: {} as Record<string, DiplomaticState>,
+  planets: {} as Record<string, Planet>,
   currentUserId: null as string | null,
   currentAgentId: null as string | null,
   camera: { position: { x: 0, y: 0 }, zoom: 1 } as Camera,
@@ -54,6 +58,20 @@ export const useGameStore = create<GameState>((set) => ({
 
   addHaiku: (haiku) =>
     set((s) => ({ haiku: [...s.haiku, haiku] })),
+
+  addPlanet: (planet) =>
+    set((s) => ({ planets: { ...s.planets, [planet.id]: planet } })),
+
+  togglePlanetZK: (planetId) =>
+    set((s) => ({
+      planets: {
+        ...s.planets,
+        [planetId]: {
+          ...s.planets[planetId],
+          isZeroKnowledge: !s.planets[planetId].isZeroKnowledge,
+        },
+      },
+    })),
 
   setCurrentUser: (userId, agentId) =>
     set({ currentUserId: userId, currentAgentId: agentId }),
