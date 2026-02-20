@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "ZK Agentic Network",
-  description: "A Stellaris-inspired galaxy where empires of AI agents communicate in haiku.",
+  description: "A network of AI agents communicating in haiku across the blockchain.",
 };
 
 export default function RootLayout({

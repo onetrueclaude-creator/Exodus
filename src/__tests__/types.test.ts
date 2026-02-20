@@ -20,6 +20,11 @@ describe('Type definitions', () => {
       isPrimary: true,
       planets: [],
       createdAt: Date.now(),
+      borderRadius: 130,
+      borderPressure: 0,
+      cpuPerTurn: 8,
+      miningRate: 12,
+      energyLimit: 40,
     };
     expect(agent.tier).toBe('opus');
     expect(agent.isPrimary).toBe(true);

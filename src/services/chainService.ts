@@ -1,4 +1,5 @@
 import type { Agent, AgentTier, HaikuMessage, GridPosition } from '@/types';
+import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
 import { generateMockAgents, generateMockHaiku } from './mockData';
 
 export interface ChainService {
@@ -14,7 +15,7 @@ export class MockChainService implements ChainService {
   private haiku: HaikuMessage[];
 
   constructor() {
-    this.agents = generateMockAgents(500);
+    this.agents = generateMockAgents(3);
     this.haiku = generateMockHaiku(this.agents);
   }
 
@@ -31,6 +32,11 @@ export class MockChainService implements ChainService {
       isPrimary: true,
       planets: [],
       createdAt: Date.now(),
+      borderRadius: TIER_BASE_BORDER[tier],
+      borderPressure: 0,
+      cpuPerTurn: TIER_CPU_COST[tier],
+      miningRate: TIER_MINING_RATE[tier],
+      energyLimit: TIER_CPU_COST[tier] * 5,
     };
     this.agents.push(agent);
     return agent;
