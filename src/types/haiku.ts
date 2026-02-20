@@ -13,6 +13,7 @@ export interface DiplomaticState {
   agentA: string;
   agentB: string;
   exchangeCount: number;
+  opinion: number;         // numeric score driving attitude (hostile < -100, allied > 100)
   clarityLevel: number;    // 0-4 maps to exchange level table in design doc
   lastExchange: number;
 }

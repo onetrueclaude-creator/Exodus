@@ -6,7 +6,7 @@ interface Camera {
   zoom: number;
 }
 
-type GameTab = 'network' | 'account' | 'researches' | 'skills';
+export type GameTab = 'network' | 'account' | 'researches' | 'skills';
 
 interface GameState {
   // Entities
@@ -65,12 +65,15 @@ export const useGameStore = create<GameState>((set) => ({
     set((s) => ({ agents: { ...s.agents, [agent.id]: agent } })),
 
   moveAgent: (agentId, position) =>
-    set((s) => ({
-      agents: {
-        ...s.agents,
-        [agentId]: { ...s.agents[agentId], position },
-      },
-    })),
+    set((s) => {
+      if (!s.agents[agentId]) return s;
+      return {
+        agents: {
+          ...s.agents,
+          [agentId]: { ...s.agents[agentId], position },
+        },
+      };
+    }),
 
   addHaiku: (haiku) =>
     set((s) => ({ haiku: [...s.haiku, haiku] })),
@@ -79,15 +82,18 @@ export const useGameStore = create<GameState>((set) => ({
     set((s) => ({ planets: { ...s.planets, [planet.id]: planet } })),
 
   togglePlanetZK: (planetId) =>
-    set((s) => ({
-      planets: {
-        ...s.planets,
-        [planetId]: {
-          ...s.planets[planetId],
-          isZeroKnowledge: !s.planets[planetId].isZeroKnowledge,
+    set((s) => {
+      if (!s.planets[planetId]) return s;
+      return {
+        planets: {
+          ...s.planets,
+          [planetId]: {
+            ...s.planets[planetId],
+            isZeroKnowledge: !s.planets[planetId].isZeroKnowledge,
+          },
         },
-      },
-    })),
+      };
+    }),
 
   setCurrentUser: (userId, agentId) =>
     set({ currentUserId: userId, currentAgentId: agentId }),
