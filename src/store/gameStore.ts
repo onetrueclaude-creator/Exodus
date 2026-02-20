@@ -51,6 +51,7 @@ interface GameState {
   setBorderPressure: (agentId: string, pressure: number) => void;
   setMiningRate: (agentId: string, rate: number) => void;
   setEnergyLimit: (agentId: string, limit: number) => void;
+  setStakedCpu: (agentId: string, staked: number) => void;
   setPrimary: (agentId: string) => void;
   addHaiku: (haiku: HaikuMessage) => void;
   addPlanet: (planet: Planet) => void;
@@ -60,6 +61,7 @@ interface GameState {
   updateDiplomacy: (state: DiplomaticState) => void;
   setActiveTab: (tab: GameTab) => void;
   updateResources: (energy: number, minerals: number, agntc: number) => void;
+  syncAgentFromChain: (agent: Agent) => void;
   setChainMode: (mode: 'testnet' | 'mock', blocks?: number) => void;
   reset: () => void;
 }
@@ -108,6 +110,7 @@ export const useGameStore = create<GameState>((set) => ({
       cpuPerTurn: TIER_CPU_COST[tier],
       miningRate: TIER_MINING_RATE[tier],
       energyLimit: TIER_CPU_COST[tier] * 5,
+      stakedCpu: 0,
       parentAgentId,
     };
 
@@ -137,6 +140,7 @@ export const useGameStore = create<GameState>((set) => ({
       cpuPerTurn: TIER_CPU_COST[tier],
       miningRate: TIER_MINING_RATE[tier],
       energyLimit: TIER_CPU_COST[tier] * 5,
+      stakedCpu: 0,
       createdAt: Date.now(),
     };
 
@@ -181,7 +185,7 @@ export const useGameStore = create<GameState>((set) => ({
           [agentId]: {
             ...agent,
             borderPressure: clampedPressure,
-            cpuPerTurn: baseCost + clampedPressure + extraMining,
+            cpuPerTurn: baseCost + clampedPressure + extraMining + (agent.stakedCpu ?? 0),
           },
         },
       };
@@ -205,7 +209,7 @@ export const useGameStore = create<GameState>((set) => ({
           [agentId]: {
             ...agent,
             miningRate: clampedRate,
-            cpuPerTurn: baseCost + agent.borderPressure + extraMining,
+            cpuPerTurn: baseCost + agent.borderPressure + extraMining + (agent.stakedCpu ?? 0),
           },
         },
       };
@@ -220,6 +224,32 @@ export const useGameStore = create<GameState>((set) => ({
         agents: {
           ...s.agents,
           [agentId]: { ...agent, energyLimit: clampedLimit },
+        },
+      };
+    }),
+
+  /**
+   * Set CPU staked for blockchain security.
+   * Staked CPU adds to the agent's per-turn cost (reduces available energy)
+   * but contributes to securing the underlying blockchain network.
+   * cpuPerTurn = baseTierCost + borderPressure + extraMining + stakedCpu
+   */
+  setStakedCpu: (agentId, staked) =>
+    set((s) => {
+      const agent = s.agents[agentId];
+      if (!agent) return s;
+      const clampedStake = Math.max(0, Math.min(30, staked));
+      const baseCost = TIER_CPU_COST[agent.tier];
+      const baseMining = TIER_MINING_RATE[agent.tier];
+      const extraMining = Math.max(0, (agent.miningRate ?? baseMining) - baseMining);
+      return {
+        agents: {
+          ...s.agents,
+          [agentId]: {
+            ...agent,
+            stakedCpu: clampedStake,
+            cpuPerTurn: baseCost + agent.borderPressure + extraMining + clampedStake,
+          },
         },
       };
     }),
@@ -280,6 +310,7 @@ export const useGameStore = create<GameState>((set) => ({
    *   netEnergy = baseIncome + sum(miningRate) - sum(cpuPerTurn)
    *   minerals grow slowly (+1 per claimed agent per turn)
    *   agntcCost = sum of border pressure costs (0.1 AGNTC per pressure point per turn)
+   *   borderRadius grows by (pressure * 0.5) per turn, capped at 3x base radius
    *   baseIncome = 1000 (simulation grant — represents testnet faucet)
    */
   tick: () =>
@@ -297,11 +328,27 @@ export const useGameStore = create<GameState>((set) => ({
       const totalPressureCost = ownAgents.reduce(
         (sum, a) => sum + (a.borderPressure ?? 0) * 0.1, 0,
       );
+
+      // Territory expansion: border pressure grows borderRadius permanently
+      // Rate: 0.5 radius units per pressure point per turn, capped at 3x base
+      const updatedAgents = { ...s.agents };
+      for (const a of ownAgents) {
+        if (a.borderPressure > 0) {
+          const maxRadius = TIER_BASE_BORDER[a.tier] * 3;
+          const growth = a.borderPressure * 0.5;
+          const newRadius = Math.min(maxRadius, a.borderRadius + growth);
+          if (newRadius !== a.borderRadius) {
+            updatedAgents[a.id] = { ...a, borderRadius: Math.round(newRadius * 10) / 10 };
+          }
+        }
+      }
+
       return {
         turn: s.turn + 1,
         energy: Math.max(0, s.energy + netEnergy),
         minerals: s.minerals + mineralGain,
         agntcBalance: Math.round((s.agntcBalance - totalPressureCost) * 100) / 100,
+        agents: updatedAgents,
       };
     }),
 
@@ -321,6 +368,9 @@ export const useGameStore = create<GameState>((set) => ({
       set({ turnInterval: null });
     }
   },
+
+  syncAgentFromChain: (agent) =>
+    set((s) => ({ agents: { ...s.agents, [agent.id]: agent } })),
 
   setChainMode: (mode, blocks) =>
     set({ chainMode: mode, ...(blocks !== undefined ? { testnetBlocks: blocks } : {}) }),

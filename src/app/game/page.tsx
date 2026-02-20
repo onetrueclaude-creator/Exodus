@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import GalaxyGrid from '@/components/GalaxyGrid';
-import HaikuComposer from '@/components/HaikuComposer';
+import GalaxyChatRoom from '@/components/GalaxyChatRoom';
 import AgentPanel from '@/components/AgentPanel';
 import AgentDropdown from '@/components/AgentDropdown';
 import QuickActionMenu from '@/components/QuickActionMenu';
@@ -138,8 +138,8 @@ export default function GamePage() {
       case 'inspect':
         // Already showing AgentPanel
         break;
-      case 'haiku':
-        // Focus haiku composer (could scroll to it)
+      case 'chat':
+        // Galaxy chat is always visible — no action needed
         break;
       case 'deploy-via-terminal':
         // Open the current agent's terminal — the deploy flow starts there
@@ -200,14 +200,15 @@ export default function GamePage() {
                     agent={agents[id]}
                     onClose={() => closeTerminal(id)}
                     onDeploy={(newId) => openTerminal(newId)}
+                    chainService={chainRef.current}
                   />
                 </div>
               </div>
             ))}
 
-            {/* Haiku composer — shifts left to make room for terminals */}
+            {/* Galaxy Chat Room — shifts left to make room for terminals */}
             <div className={`absolute bottom-4 z-10 transition-all`} style={{ right: `${16 + openTerminals.size * 336}px` }}>
-              <HaikuComposer onSubmit={handleHaikuSubmit} />
+              <GalaxyChatRoom onSend={handleHaikuSubmit} />
             </div>
 
             {/* Bottom left controls: Agent creator + Planet creator */}
