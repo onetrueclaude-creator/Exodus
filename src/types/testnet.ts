@@ -63,3 +63,12 @@ export interface MineResult {
   block_number: number;
   yields: Record<string, number>;
 }
+
+// POST /api/birth
+export interface BirthResult {
+  coordinate: { x: number; y: number };
+  ring: number;
+  birth_cost: number;
+  records_created: number;
+  new_claim_count: number;
+}

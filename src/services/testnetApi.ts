@@ -6,7 +6,7 @@
  */
 import type {
   TestnetStatus, CoordinateInfo, ClaimInfo,
-  GridRegion, MineResult,
+  GridRegion, MineResult, BirthResult,
 } from '@/types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_TESTNET_API ?? 'http://localhost:8080';
@@ -19,8 +19,13 @@ async function get<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-async function post<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, { method: 'POST' });
+async function post<T>(path: string, body?: unknown): Promise<T> {
+  const init: RequestInit = { method: 'POST' };
+  if (body !== undefined) {
+    init.headers = { 'Content-Type': 'application/json' };
+    init.body = JSON.stringify(body);
+  }
+  const res = await fetch(`${BASE_URL}${path}`, init);
   if (!res.ok) {
     throw new Error(`Testnet API POST ${path}: ${res.status} ${res.statusText}`);
   }
@@ -60,6 +65,11 @@ export function getAgents(userCount: number = 3): Promise<unknown[]> {
 /** POST /api/mine — process one mining block (rate-limited to 60s) */
 export function mineBlock(): Promise<MineResult> {
   return post<MineResult>('/api/mine');
+}
+
+/** POST /api/birth — birth a new star system by spending AGNTC */
+export function birthStarSystem(walletIndex: number): Promise<BirthResult> {
+  return post<BirthResult>('/api/birth', { wallet_index: walletIndex });
 }
 
 /** POST /api/reset — wipe ledger and rebuild from fresh genesis */
