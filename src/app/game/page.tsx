@@ -15,6 +15,7 @@ import PlanetCreator from '@/components/PlanetCreator';
 import AgentCreator from '@/components/AgentCreator';
 import TimeRewind from '@/components/TimeRewind';
 import AgentChat from '@/components/AgentChat';
+import AgentProfilePopup from '@/components/AgentProfilePopup';
 import { useGameStore } from '@/store';
 import { MockChainService } from '@/services/chainService';
 import type { ChainService } from '@/services/chainService';
@@ -45,6 +46,7 @@ export default function GamePage() {
   const setChainMode = useGameStore((s) => s.setChainMode);
 
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
+  const [profileAgent, setProfileAgent] = useState<string | null>(null);
   const [showPlanetCreator, setShowPlanetCreator] = useState(false);
   const [showAgentCreator, setShowAgentCreator] = useState(false);
   /** Set of agent IDs with open terminal windows */
@@ -153,6 +155,9 @@ export default function GamePage() {
         break;
       case 'terminal':
         if (selectedAgent) openTerminal(selectedAgent);
+        break;
+      case 'profile':
+        if (selectedAgent) setProfileAgent(selectedAgent);
         break;
       case 'secure':
       case 'vote':
@@ -310,6 +315,24 @@ export default function GamePage() {
         {/* Skills tab */}
         {activeTab === 'skills' && <SkillsPanel />}
       </div>
+
+      {/* Agent Profile Popup */}
+      {profileAgent && agents[profileAgent] && (
+        <AgentProfilePopup
+          agent={agents[profileAgent]}
+          isOwn={currentUserId ? agents[profileAgent].userId === currentUserId : false}
+          onClose={() => setProfileAgent(null)}
+          onSendMessage={(text) => {
+            // TODO: Wire to chain messaging endpoint when available
+            console.log('Message to', profileAgent, ':', text);
+            setProfileAgent(null);
+          }}
+          onOpenTerminal={() => {
+            openTerminal(profileAgent);
+            setProfileAgent(null);
+          }}
+        />
+      )}
     </div>
   );
 }
