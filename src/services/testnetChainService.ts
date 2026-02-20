@@ -90,6 +90,7 @@ function claimToAgent(claim: ClaimInfo, index: number): Agent {
     cpuPerTurn: TIER_CPU_COST[tier],
     miningRate: Math.round(claim.density * TIER_MINING_RATE[tier] * 10) / 10,
     energyLimit: TIER_CPU_COST[tier] * 5,
+    stakedCpu: 0,
   };
 }
 
@@ -110,6 +111,7 @@ function coordToSlot(coord: { x: number; y: number }, index: number): Agent {
     cpuPerTurn: 0,
     miningRate: 0,
     energyLimit: 0,
+    stakedCpu: 0,
   };
 }
 
@@ -154,22 +156,27 @@ export class TestnetChainService implements ChainService {
   }
 
   async registerAgent(userId: string, tier: AgentTier): Promise<Agent> {
-    // TODO: POST to testnet when claim endpoint is available
-    const agent: Agent = {
-      id: `agent-${Date.now()}`,
+    // For testnet, wallet_index defaults to 0 (first wallet)
+    // In production, this would be derived from the authenticated user
+    const result = await api.birthStarSystem(0);
+    const position = chainToVisual(result.coordinate.x, result.coordinate.y);
+
+    return {
+      id: `chain-birth-${Date.now()}`,
       userId,
-      position: { x: 0, y: 0 },
+      position,
       tier,
-      isPrimary: true,
+      isPrimary: false,
       planets: [],
       createdAt: Date.now(),
+      username: `Star-${result.coordinate.x},${result.coordinate.y}`,
       borderRadius: TIER_BASE_BORDER[tier],
       borderPressure: 0,
       cpuPerTurn: TIER_CPU_COST[tier],
       miningRate: TIER_MINING_RATE[tier],
       energyLimit: TIER_CPU_COST[tier] * 5,
+      stakedCpu: 0,
     };
-    return agent;
   }
 
   async postHaiku(agentId: string, text: string): Promise<HaikuMessage> {
