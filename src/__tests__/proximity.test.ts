@@ -32,15 +32,15 @@ describe('getVisibleAgents', () => {
   it('filters agents by fog radius', () => {
     const viewer: Agent = {
       id: 'v', userId: 'u', position: { x: 0, y: 0 },
-      tier: 'opus', isPrimary: true, planets: [], createdAt: 0,
+      tier: 'opus', isPrimary: true, planets: [], createdAt: 0, borderRadius: 130, borderPressure: 0, cpuPerTurn: 8, miningRate: 12, energyLimit: 40,
     };
     const near: Agent = {
       id: 'n', userId: 'u2', position: { x: 50, y: 50 },
-      tier: 'haiku', isPrimary: true, planets: [], createdAt: 0,
+      tier: 'haiku', isPrimary: true, planets: [], createdAt: 0, borderRadius: 60, borderPressure: 0, cpuPerTurn: 1, miningRate: 2, energyLimit: 5,
     };
     const far: Agent = {
       id: 'f', userId: 'u3', position: { x: 9000, y: 9000 },
-      tier: 'haiku', isPrimary: true, planets: [], createdAt: 0,
+      tier: 'haiku', isPrimary: true, planets: [], createdAt: 0, borderRadius: 60, borderPressure: 0, cpuPerTurn: 1, miningRate: 2, energyLimit: 5,
     };
     const visible = getVisibleAgents(viewer, [near, far]);
     expect(visible.some(v => v.agent.id === 'n')).toBe(true);

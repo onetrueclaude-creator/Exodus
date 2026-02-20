@@ -23,6 +23,11 @@ describe('gameStore', () => {
       isPrimary: true,
       planets: [],
       createdAt: Date.now(),
+      borderRadius: 130,
+      borderPressure: 0,
+      cpuPerTurn: 8,
+      miningRate: 12,
+      energyLimit: 40,
     };
     useGameStore.getState().addAgent(agent);
     expect(useGameStore.getState().agents['a1']).toEqual(agent);
@@ -37,6 +42,11 @@ describe('gameStore', () => {
       isPrimary: true,
       planets: [],
       createdAt: Date.now(),
+      borderRadius: 130,
+      borderPressure: 0,
+      cpuPerTurn: 8,
+      miningRate: 12,
+      energyLimit: 40,
     };
     useGameStore.getState().addAgent(agent);
     useGameStore.getState().moveAgent('a1', { x: 50, y: 75 });
