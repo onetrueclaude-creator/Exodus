@@ -29,10 +29,12 @@ const AGENT_ACTIONS: Record<AgentTier, AgentAction[]> = {
         { id: 'mining-boost', label: 'Boost Output (200%)', description: 'Double mining, costs extra CPU' },
       ],
     },
-    { id: 'set-cpu-save', label: 'CPU Power Save', icon: '⚡', cpuCost: 1, estTime: '~10s', description: 'Toggle low-power mode', category: 'economy',
+    { id: 'adjust-staked-cpu', label: 'Adjust Staked CPU', icon: '⚡', cpuCost: 1, estTime: '~10s', description: 'Stake CPU to secure the blockchain', category: 'economy',
       subChoices: [
-        { id: 'power-normal', label: 'Normal Power', description: 'Full CPU allocation' },
-        { id: 'power-save', label: 'Power Save Mode', description: 'Halve energy limit to conserve' },
+        { id: 'stake-none', label: 'No Stake (0)', description: 'Keep all CPU for operations' },
+        { id: 'stake-low', label: 'Low Stake (5)', description: '5 CPU/t to blockchain security' },
+        { id: 'stake-medium', label: 'Medium Stake (10)', description: '10 CPU/t — standard contribution' },
+        { id: 'stake-high', label: 'High Stake (20)', description: '20 CPU/t — heavy commitment' },
       ],
     },
     { id: 'expand-border', label: 'Expand Territory', icon: '🔷', cpuCost: 5, estTime: '~2min', description: 'Push borders outward', category: 'military',
@@ -44,8 +46,9 @@ const AGENT_ACTIONS: Record<AgentTier, AgentAction[]> = {
       ],
     },
     { id: 'deploy', label: 'Deploy Agent', icon: '🛰', cpuCost: 4, estTime: '~5min', description: 'Claim a star system with new sub-agent', category: 'military' },
+    { id: 'report-status', label: 'Report Status', icon: '📊', cpuCost: 0, estTime: '~5s', description: 'Agent reports current state', category: 'intel' },
     { id: 'deep-scan', label: 'Deep Scan Sector', icon: '📡', cpuCost: 6, estTime: '~3min', description: 'Reveal agents in wide radius', category: 'intel' },
-    { id: 'diplomatic-msg', label: 'Diplomatic Broadcast', icon: '📜', cpuCost: 3, estTime: '~1min', description: 'Haiku to all nearby agents', category: 'social' },
+    { id: 'diplomatic-msg', label: 'Diplomatic Broadcast', icon: '📜', cpuCost: 3, estTime: '~1min', description: 'Broadcast to all nearby agents', category: 'social' },
   ],
   sonnet: [
     { id: 'set-mining', label: 'Adjust Mining Rate', icon: '⛏', cpuCost: 1, estTime: '~30s', description: 'Reallocate mining output', category: 'economy',
@@ -55,10 +58,11 @@ const AGENT_ACTIONS: Record<AgentTier, AgentAction[]> = {
         { id: 'mining-boost', label: 'Boost Output (200%)', description: 'Double mining, costs extra CPU' },
       ],
     },
-    { id: 'set-cpu-save', label: 'CPU Power Save', icon: '⚡', cpuCost: 1, estTime: '~10s', description: 'Toggle low-power mode', category: 'economy',
+    { id: 'adjust-staked-cpu', label: 'Adjust Staked CPU', icon: '⚡', cpuCost: 1, estTime: '~10s', description: 'Stake CPU to secure the blockchain', category: 'economy',
       subChoices: [
-        { id: 'power-normal', label: 'Normal Power', description: 'Full CPU allocation' },
-        { id: 'power-save', label: 'Power Save Mode', description: 'Halve energy limit to conserve' },
+        { id: 'stake-none', label: 'No Stake (0)', description: 'Keep all CPU for operations' },
+        { id: 'stake-low', label: 'Low Stake (5)', description: '5 CPU/t to blockchain security' },
+        { id: 'stake-medium', label: 'Medium Stake (10)', description: '10 CPU/t — standard contribution' },
       ],
     },
     { id: 'expand-border', label: 'Expand Territory', icon: '🔷', cpuCost: 3, estTime: '~2min', description: 'Push borders outward', category: 'military',
@@ -69,8 +73,9 @@ const AGENT_ACTIONS: Record<AgentTier, AgentAction[]> = {
       ],
     },
     { id: 'deploy', label: 'Deploy Agent', icon: '🛰', cpuCost: 4, estTime: '~3min', description: 'Claim a star system with Haiku sub-agent', category: 'military' },
+    { id: 'report-status', label: 'Report Status', icon: '📊', cpuCost: 0, estTime: '~5s', description: 'Agent reports current state', category: 'intel' },
     { id: 'scan-local', label: 'Scan Vicinity', icon: '📡', cpuCost: 2, estTime: '~1min', description: 'Reveal nearby agents', category: 'intel' },
-    { id: 'send-haiku', label: 'Compose Haiku', icon: '✍', cpuCost: 1, estTime: '~30s', description: 'Transmit haiku to target', category: 'social' },
+    { id: 'send-message', label: 'Send Message', icon: '💬', cpuCost: 1, estTime: '~30s', description: 'Send message to galaxy chat', category: 'social' },
   ],
   haiku: [
     { id: 'set-mining', label: 'Adjust Mining Rate', icon: '⛏', cpuCost: 1, estTime: '~30s', description: 'Reallocate mining output', category: 'economy',
@@ -80,10 +85,10 @@ const AGENT_ACTIONS: Record<AgentTier, AgentAction[]> = {
         { id: 'mining-boost', label: 'Boost Output (200%)', description: 'Double mining, costs extra CPU' },
       ],
     },
-    { id: 'set-cpu-save', label: 'CPU Power Save', icon: '⚡', cpuCost: 0, estTime: '~10s', description: 'Toggle low-power mode', category: 'economy',
+    { id: 'adjust-staked-cpu', label: 'Adjust Staked CPU', icon: '⚡', cpuCost: 0, estTime: '~10s', description: 'Stake CPU to secure the blockchain', category: 'economy',
       subChoices: [
-        { id: 'power-normal', label: 'Normal Power', description: 'Full CPU allocation' },
-        { id: 'power-save', label: 'Power Save Mode', description: 'Halve energy limit to conserve' },
+        { id: 'stake-none', label: 'No Stake (0)', description: 'Keep all CPU for operations' },
+        { id: 'stake-low', label: 'Low Stake (3)', description: '3 CPU/t to blockchain security' },
       ],
     },
     { id: 'fortify', label: 'Fortify Position', icon: '🛡', cpuCost: 1, estTime: '~1min', description: 'Strengthen border defense', category: 'military',
@@ -92,8 +97,9 @@ const AGENT_ACTIONS: Record<AgentTier, AgentAction[]> = {
         { id: 'pressure-0', label: 'Stand Down (0)', description: 'Remove defense allocation' },
       ],
     },
+    { id: 'report-status', label: 'Report Status', icon: '📊', cpuCost: 0, estTime: '~5s', description: 'Agent reports current state', category: 'intel' },
     { id: 'ping', label: 'Ping Sector', icon: '📡', cpuCost: 1, estTime: '~20s', description: 'Quick scan of surroundings', category: 'intel' },
-    { id: 'send-haiku', label: 'Compose Haiku', icon: '✍', cpuCost: 0, estTime: '~15s', description: 'Transmit haiku message', category: 'social' },
+    { id: 'send-message', label: 'Send Message', icon: '💬', cpuCost: 0, estTime: '~15s', description: 'Send message to galaxy chat', category: 'social' },
   ],
 };
 
@@ -114,10 +120,10 @@ const ACTION_RESPONSES: Record<string, Record<AgentTier, string>> = {
     sonnet: 'Mining flow adjusted—\nnew extraction rate confirmed.\nPipeline recalibrated.',
     haiku: 'Mining rate updated.\nOutput adjusted.',
   },
-  'set-cpu-save': {
-    opus: 'Power configuration updated.\nEnergy limit recalibrated.\nSystem efficiency optimized.',
-    sonnet: 'Power mode switched—\nenergy conservation active.\nLimits recalibrated.',
-    haiku: 'Power mode changed.\nLimits updated.',
+  'adjust-staked-cpu': {
+    opus: 'Staking configuration updated.\nCPU allocation to blockchain security recalibrated.\nEnergy cost per turn adjusted.',
+    sonnet: 'Staking level adjusted—\nblockchain contribution updated.\nCPU allocation confirmed.',
+    haiku: 'Stake updated.\nBlockchain contribution set.',
   },
   'expand-border': {
     opus: 'Border pressure reallocated.\nTerritory vectors updated.\nAGNTC flow adjusted for expansion.',
@@ -149,10 +155,10 @@ const ACTION_RESPONSES: Record<string, Record<AgentTier, string>> = {
     sonnet: '',
     haiku: 'Ping sent.\nSector response received.',
   },
-  'send-haiku': {
+  'send-message': {
     opus: '',
-    sonnet: 'Haiku composed and\ntransmitted to the network.\nAwaiting response.',
-    haiku: 'Message sent.\nHaiku delivered.',
+    sonnet: 'Message composed and\ntransmitted to galaxy chat.\nAwaiting response.',
+    haiku: 'Message sent.\nDelivered to chat.',
   },
   'diplomatic-msg': {
     opus: 'Diplomatic broadcast sent.\nAll agents within border range\nhave received your transmission.',
@@ -168,9 +174,11 @@ interface AgentChatProps {
   onClose: () => void;
   /** Called when this agent deploys a new sub-agent — passes the new agent ID */
   onDeploy?: (newAgentId: string) => void;
+  /** Chain service for real blockchain operations (null = mock mode) */
+  chainService?: import('@/services/chainService').ChainService | null;
 }
 
-export default function AgentChat({ agent, onClose, onDeploy }: AgentChatProps) {
+export default function AgentChat({ agent, onClose, onDeploy, chainService }: AgentChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'init',
@@ -201,6 +209,7 @@ export default function AgentChat({ agent, onClose, onDeploy }: AgentChatProps) 
   const setBorderPressure = useGameStore((s) => s.setBorderPressure);
   const setMiningRate = useGameStore((s) => s.setMiningRate);
   const setEnergyLimit = useGameStore((s) => s.setEnergyLimit);
+  const setStakedCpu = useGameStore((s) => s.setStakedCpu);
   const createAgent = useGameStore((s) => s.createAgent);
 
   const actions = AGENT_ACTIONS[agent.tier];
@@ -250,10 +259,12 @@ export default function AgentChat({ agent, onClose, onDeploy }: AgentChatProps) 
         else setMiningRate(agent.id, baseMining); // normal
         break;
       }
-      case 'set-cpu-save': {
-        const base = TIER_CPU_COST[agent.tier] * 5;
-        if (choiceId === 'power-save') setEnergyLimit(agent.id, Math.max(1, Math.floor(base / 2)));
-        else setEnergyLimit(agent.id, base); // normal
+      case 'adjust-staked-cpu': {
+        const stake = choiceId === 'stake-high' ? 20
+          : choiceId === 'stake-medium' ? 10
+          : choiceId === 'stake-low' ? (agent.tier === 'haiku' ? 3 : 5)
+          : 0;
+        setStakedCpu(agent.id, stake);
         break;
       }
       case 'expand-border':
@@ -269,13 +280,91 @@ export default function AgentChat({ agent, onClose, onDeploy }: AgentChatProps) 
       default:
         break;
     }
-  }, [agent, setBorderPressure, setMiningRate, setEnergyLimit]);
+  }, [agent, setBorderPressure, setMiningRate, setEnergyLimit, setStakedCpu]);
 
   /** User selects a top-level action */
   const selectAction = async (action: AgentAction) => {
     if (processing) return;
     if (energy < action.cpuCost) {
       addMsg('system', `Insufficient energy. Need ${action.cpuCost} CPU, have ${energy.toFixed(0)}.`);
+      return;
+    }
+
+    // Report Status — dynamic readout of agent state
+    if (action.id === 'report-status') {
+      addMsg('user', 'Report Status');
+      setProcessing(true);
+      await new Promise(r => setTimeout(r, 300 + Math.random() * 400));
+
+      const baseMining = TIER_MINING_RATE[agent.tier];
+      const baseCpu = TIER_CPU_COST[agent.tier];
+      const extraMining = Math.max(0, (agent.miningRate ?? baseMining) - baseMining);
+      const eLimit = agent.energyLimit ?? baseCpu * 5;
+      const currentMining = agent.miningRate ?? baseMining;
+      const cpuUsed = agent.cpuPerTurn;
+      const cpuCapacity = eLimit;
+      const utilisation = cpuCapacity > 0 ? Math.min(100, Math.round((cpuUsed / cpuCapacity) * 100)) : 0;
+
+      const stakedCpu = agent.stakedCpu ?? 0;
+
+      const lines = [
+        `— Status Report —`,
+        `Model: ${agent.tier.toUpperCase()}-class`,
+        `Position: (${agent.position.x.toFixed(0)}, ${agent.position.y.toFixed(0)})`,
+        `Mining: ${currentMining}/t${extraMining > 0 ? ` (+${extraMining} boost)` : ''}`,
+        `CPU: ${cpuUsed}/t (base ${baseCpu})`,
+        `Border Pressure: ${agent.borderPressure}/20`,
+        `Staked CPU: ${stakedCpu}/t${stakedCpu > 0 ? ' (securing blockchain)' : ''}`,
+        `Energy Limit: ${eLimit}`,
+        `Energy Pool: ${energy.toFixed(0)} | Minerals: ${minerals.toFixed(0)}`,
+        agent.isPrimary ? `Role: Homeworld ★` : `Role: Sub-agent`,
+        ``,
+        `— CPU Utilisation: ${utilisation}% —`,
+      ];
+
+      // Optimization advice
+      const advice: string[] = [];
+      const cpuHeadroom = eLimit - cpuUsed;
+
+      if (utilisation < 40) {
+        // Severely underutilised — suggest boosting mining, pressure, or staking
+        if (currentMining < baseMining * 2) {
+          const suggestMining = Math.min(baseMining * 2, currentMining + cpuHeadroom);
+          advice.push(`Mining can increase to ${suggestMining}/t (+${suggestMining - currentMining} CPU).`);
+        }
+        if (agent.borderPressure < 6) {
+          const suggestPressure = Math.min(6, agent.borderPressure + Math.floor(cpuHeadroom / 2) * 2);
+          advice.push(`Border pressure can rise to ${suggestPressure}/20.`);
+        }
+        if (stakedCpu === 0) {
+          advice.push(`Consider staking CPU to secure the blockchain.`);
+        }
+        advice.push(`Recommendation: Increase output to avoid idle CPU.`);
+      } else if (utilisation < 70) {
+        // Moderate usage — minor suggestions
+        if (currentMining < baseMining * 2 && cpuHeadroom >= 2) {
+          advice.push(`+${Math.min(cpuHeadroom, baseMining)} mining available within limits.`);
+        }
+        advice.push(`CPU allocation nominal.`);
+      } else if (utilisation > 90) {
+        // Near capacity — suggest conservation
+        if (currentMining > baseMining) {
+          advice.push(`Mining boost consuming ${extraMining} extra CPU.`);
+        }
+        if (agent.borderPressure > 6) {
+          advice.push(`High border pressure (${agent.borderPressure}) costs ${agent.borderPressure} CPU/t.`);
+        }
+        if (stakedCpu > 5) {
+          advice.push(`Staking ${stakedCpu} CPU/t for blockchain security.`);
+        }
+        advice.push(`Recommendation: Reduce load or raise energy limit.`);
+      } else {
+        advice.push(`CPU balance optimal. No changes recommended.`);
+      }
+
+      lines.push(...advice);
+      addMsg('agent', lines.join('\n'));
+      setProcessing(false);
       return;
     }
 
@@ -344,23 +433,47 @@ export default function AgentChat({ agent, onClose, onDeploy }: AgentChatProps) 
   const executeDeploy = async (tier: AgentTier, target: { id: string; x: number; y: number }) => {
     setDeployStep(null);
     setProcessing(true);
-    await new Promise(r => setTimeout(r, 800 + Math.random() * 1200));
 
-    const eCost = TIER_CLAIM_COST[tier];
-    if (energy < eCost) {
-      addMsg('system', `Insufficient energy. Need ${eCost}, have ${energy.toFixed(0)}.`);
-      setProcessing(false);
-      return;
-    }
+    const syncAgent = useGameStore.getState().syncAgentFromChain;
+    const chainMode = useGameStore.getState().chainMode;
 
-    const newId = createAgent(tier, { x: target.x, y: target.y });
-    if (newId) {
-      const response = ACTION_RESPONSES['deploy']?.[agent.tier] || 'Agent deployed.';
-      addMsg('agent', response);
-      if (onDeploy) onDeploy(newId);
+    // If connected to testnet and chainService is available, use real birth
+    if (chainMode === 'testnet' && chainService) {
+      try {
+        addMsg('agent', `Initiating star system birth...\nSpending AGNTC from wallet...`);
+        await new Promise(r => setTimeout(r, 400));
+
+        const newAgent = await chainService.registerAgent(
+          useGameStore.getState().currentUserId || 'unknown',
+          tier,
+        );
+        syncAgent(newAgent);
+
+        addMsg('agent', `Star system born at (${newAgent.position.x.toFixed(0)}, ${newAgent.position.y.toFixed(0)}).\nRing expansion confirmed.\nNew agent online.`);
+        if (onDeploy) onDeploy(newAgent.id);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Unknown error';
+        addMsg('system', `Birth failed: ${msg}`);
+      }
     } else {
-      addMsg('system', 'Deploy failed — insufficient resources or invalid target.');
+      // Fallback: local mock deploy (existing behavior)
+      await new Promise(r => setTimeout(r, 800 + Math.random() * 1200));
+      const eCost = TIER_CLAIM_COST[tier];
+      if (energy < eCost) {
+        addMsg('system', `Insufficient energy. Need ${eCost}, have ${energy.toFixed(0)}.`);
+        setProcessing(false);
+        return;
+      }
+      const newId = createAgent(tier, { x: target.x, y: target.y });
+      if (newId) {
+        const response = ACTION_RESPONSES['deploy']?.[agent.tier] || 'Agent deployed.';
+        addMsg('agent', response);
+        if (onDeploy) onDeploy(newId);
+      } else {
+        addMsg('system', 'Deploy failed — insufficient resources or invalid target.');
+      }
     }
+
     setDeployTarget(null);
     setProcessing(false);
   };
