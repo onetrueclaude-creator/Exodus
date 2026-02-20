@@ -450,6 +450,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService }: Ag
           useGameStore.getState().currentUserId || 'unknown',
           tier,
         );
+        if (deployIntro) newAgent.introMessage = deployIntro;
         syncAgent(newAgent);
 
         addMsg('agent', `Star system born at (${newAgent.position.x.toFixed(0)}, ${newAgent.position.y.toFixed(0)}).\nRing expansion confirmed.\nNew agent online.`);
