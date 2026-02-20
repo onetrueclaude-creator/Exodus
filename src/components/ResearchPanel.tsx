@@ -14,7 +14,7 @@ interface ResearchPanelProps {
   progress: Record<string, ResearchProgress>;
   completedIds: string[];
   onAllocateEnergy: (researchId: string, amount: number) => void;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 const CATEGORY_COLORS: Record<ResearchCategory, string> = {
@@ -36,12 +36,15 @@ export default function ResearchPanel({
   const available = getAvailableResearch(activeCategory, completedIds);
 
   return (
-    <div className="glass-card p-5 w-96 max-h-[80vh] overflow-y-auto">
+    <div className={onClose ? "glass-card p-5 w-96 max-h-[80vh] overflow-y-auto" : "flex-1 overflow-y-auto p-6"}>
+      <div className={onClose ? "" : "max-w-4xl mx-auto"}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-heading font-semibold text-text-primary">Research</h3>
         <div className="flex items-center gap-2">
           <span className="text-xs text-accent-cyan font-mono">Energy: {energy}</span>
-          <button onClick={onClose} className="text-text-muted hover:text-text-primary">&times;</button>
+          {onClose && (
+            <button onClick={onClose} className="text-text-muted hover:text-text-primary">&times;</button>
+          )}
         </div>
       </div>
 
@@ -99,6 +102,7 @@ export default function ResearchPanel({
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );

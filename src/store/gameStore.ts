@@ -6,6 +6,8 @@ interface Camera {
   zoom: number;
 }
 
+type GameTab = 'network' | 'account' | 'researches' | 'skills';
+
 interface GameState {
   // Entities
   agents: Record<string, Agent>;
@@ -20,6 +22,14 @@ interface GameState {
   // Camera
   camera: Camera;
 
+  // Resources
+  energy: number;
+  minerals: number;
+  agntcBalance: number;
+
+  // UI
+  activeTab: GameTab;
+
   // Actions
   addAgent: (agent: Agent) => void;
   moveAgent: (agentId: string, position: GridPosition) => void;
@@ -29,6 +39,8 @@ interface GameState {
   setCurrentUser: (userId: string, agentId: string) => void;
   setCamera: (position: GridPosition, zoom: number) => void;
   updateDiplomacy: (state: DiplomaticState) => void;
+  setActiveTab: (tab: GameTab) => void;
+  updateResources: (energy: number, minerals: number, agntc: number) => void;
   reset: () => void;
 }
 
@@ -40,6 +52,10 @@ const initialState = {
   currentUserId: null as string | null,
   currentAgentId: null as string | null,
   camera: { position: { x: 0, y: 0 }, zoom: 1 } as Camera,
+  energy: 100,
+  minerals: 0,
+  agntcBalance: 50,
+  activeTab: 'network' as GameTab,
 };
 
 export const useGameStore = create<GameState>((set) => ({
@@ -83,6 +99,11 @@ export const useGameStore = create<GameState>((set) => ({
     const key = [state.agentA, state.agentB].sort().join('-');
     set((s) => ({ diplomacy: { ...s.diplomacy, [key]: state } }));
   },
+
+  setActiveTab: (tab) => set({ activeTab: tab }),
+
+  updateResources: (energy, minerals, agntc) =>
+    set({ energy, minerals, agntcBalance: agntc }),
 
   reset: () => set(initialState),
 }));
