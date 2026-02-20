@@ -36,6 +36,7 @@ interface GameState {
   // Chain connection
   chainMode: 'testnet' | 'mock';
   testnetBlocks: number;
+  isInitializing: boolean;
 
   // UI
   activeTab: GameTab;
@@ -63,6 +64,7 @@ interface GameState {
   updateResources: (energy: number, minerals: number, agntc: number) => void;
   syncAgentFromChain: (agent: Agent) => void;
   setChainMode: (mode: 'testnet' | 'mock', blocks?: number) => void;
+  setInitializing: (v: boolean) => void;
   reset: () => void;
 }
 
@@ -81,6 +83,7 @@ const initialState = {
   turnInterval: null as number | null,
   chainMode: 'mock' as 'testnet' | 'mock',
   testnetBlocks: 0,
+  isInitializing: true,
   activeTab: 'network' as GameTab,
 };
 
@@ -374,6 +377,8 @@ export const useGameStore = create<GameState>((set) => ({
 
   setChainMode: (mode, blocks) =>
     set({ chainMode: mode, ...(blocks !== undefined ? { testnetBlocks: blocks } : {}) }),
+
+  setInitializing: (v) => set({ isInitializing: v }),
 
   reset: () => {
     const state = useGameStore.getState();

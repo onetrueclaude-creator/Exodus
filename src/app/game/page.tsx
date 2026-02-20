@@ -44,6 +44,8 @@ export default function GamePage() {
   const startTurnTimer = useGameStore((s) => s.startTurnTimer);
   const stopTurnTimer = useGameStore((s) => s.stopTurnTimer);
   const setChainMode = useGameStore((s) => s.setChainMode);
+  const isInitializing = useGameStore((s) => s.isInitializing);
+  const setInitializing = useGameStore((s) => s.setInitializing);
 
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [profileAgent, setProfileAgent] = useState<string | null>(null);
@@ -89,6 +91,8 @@ export default function GamePage() {
 
   useEffect(() => {
     async function init() {
+      setInitializing(true);
+
       // Try testnet API first, fall back to mock
       const online = await isTestnetOnline();
       const service: ChainService = online
@@ -112,6 +116,8 @@ export default function GamePage() {
           openTerminal(primary?.id ?? firstOwned.id);
         }
       }
+
+      setInitializing(false);
     }
     init();
 
@@ -168,6 +174,19 @@ export default function GamePage() {
 
   return (
     <div className="flex flex-col w-screen h-screen overflow-hidden bg-background">
+      {/* Loading overlay */}
+      {isInitializing && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background">
+          <div className="w-4 h-4 rounded-full bg-accent-cyan animate-ping mb-6" />
+          <div className="text-lg font-heading text-text-primary mb-2">
+            Connecting to Agentic Chain
+          </div>
+          <div className="text-sm text-text-muted font-mono">
+            Establishing ledger sync...
+          </div>
+        </div>
+      )}
+
       {/* Resource bar — always visible at top */}
       <ResourceBar />
 
