@@ -3,6 +3,7 @@ import type { GridPosition } from './grid';
 export type { GridPosition, FogLevel } from './grid';
 export type { AgentTier, Agent, Planet } from './agent';
 export type { HaikuMessage, DiplomaticState } from './haiku';
+export type { ResearchCategory, ResearchItem, ResearchProgress } from './research';
 
 export interface Empire {
   userId: string;
