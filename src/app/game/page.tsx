@@ -40,7 +40,6 @@ export default function GamePage() {
   const setActiveTab = useGameStore((s) => s.setActiveTab);
   const currentUserId = useGameStore((s) => s.currentUserId);
   const createAgent = useGameStore((s) => s.createAgent);
-  const claimNode = useGameStore((s) => s.claimNode);
   const startTurnTimer = useGameStore((s) => s.startTurnTimer);
   const stopTurnTimer = useGameStore((s) => s.stopTurnTimer);
   const setChainMode = useGameStore((s) => s.setChainMode);
@@ -48,9 +47,26 @@ export default function GamePage() {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [showPlanetCreator, setShowPlanetCreator] = useState(false);
   const [showAgentCreator, setShowAgentCreator] = useState(false);
-  const [chatAgentId, setChatAgentId] = useState<string | null>(null);
+  /** Set of agent IDs with open terminal windows */
+  const [openTerminals, setOpenTerminals] = useState<Set<string>>(new Set());
+  /** Which terminal is focused (rendered on top) */
+  const [focusedTerminal, setFocusedTerminal] = useState<string | null>(null);
   const [serverStartTime] = useState(() => Date.now() - 24 * 60 * 60 * 1000);
   const chainRef = useRef<ChainService | null>(null);
+
+  const openTerminal = useCallback((agentId: string) => {
+    setOpenTerminals(prev => new Set(prev).add(agentId));
+    setFocusedTerminal(agentId);
+  }, []);
+
+  const closeTerminal = useCallback((agentId: string) => {
+    setOpenTerminals(prev => {
+      const next = new Set(prev);
+      next.delete(agentId);
+      return next;
+    });
+    setFocusedTerminal(prev => prev === agentId ? null : prev);
+  }, []);
 
   /** Sync grid state from the chain service */
   const syncFromChain = useCallback(async () => {
@@ -89,6 +105,9 @@ export default function GamePage() {
         const firstOwned = agentList.find(a => a.userId !== '');
         if (firstOwned) {
           setCurrentUser(firstOwned.userId, firstOwned.id);
+          // Auto-open terminal for the primary agent
+          const primary = agentList.find(a => a.isPrimary && a.userId === firstOwned.userId);
+          openTerminal(primary?.id ?? firstOwned.id);
         }
       }
     }
@@ -122,14 +141,9 @@ export default function GamePage() {
       case 'haiku':
         // Focus haiku composer (could scroll to it)
         break;
-      case 'claim-haiku':
-        if (selectedAgent) claimNode(selectedAgent, 'haiku');
-        break;
-      case 'claim-sonnet':
-        if (selectedAgent) claimNode(selectedAgent, 'sonnet');
-        break;
-      case 'claim-opus':
-        if (selectedAgent) claimNode(selectedAgent, 'opus');
+      case 'deploy-via-terminal':
+        // Open the current agent's terminal — the deploy flow starts there
+        if (currentAgentId) openTerminal(currentAgentId);
         break;
       case 'research':
         setActiveTab('researches');
@@ -138,7 +152,7 @@ export default function GamePage() {
         setActiveTab('account');
         break;
       case 'terminal':
-        if (selectedAgent) setChatAgentId(selectedAgent);
+        if (selectedAgent) openTerminal(selectedAgent);
         break;
       case 'secure':
       case 'vote':
@@ -173,18 +187,26 @@ export default function GamePage() {
               <AgentDropdown onSelectAgent={setSelectedAgent} />
             </div>
 
-            {/* Agent Chat terminal — floating, bottom right */}
-            {chatAgentId && agents[chatAgentId] && (
-              <div className="absolute bottom-4 right-4 z-30">
-                <AgentChat
-                  agent={agents[chatAgentId]}
-                  onClose={() => setChatAgentId(null)}
-                />
+            {/* Agent Chat terminals — stacked horizontally from bottom-right */}
+            {Array.from(openTerminals).map((id, idx) => agents[id] && (
+              <div
+                key={id}
+                className="absolute bottom-4 z-30 transition-all"
+                style={{ right: `${16 + idx * 336}px` }}
+                onMouseDown={() => setFocusedTerminal(id)}
+              >
+                <div style={{ zIndex: focusedTerminal === id ? 40 : 30 }}>
+                  <AgentChat
+                    agent={agents[id]}
+                    onClose={() => closeTerminal(id)}
+                    onDeploy={(newId) => openTerminal(newId)}
+                  />
+                </div>
               </div>
-            )}
+            ))}
 
-            {/* Haiku composer — bottom right (shifts left when chat is open) */}
-            <div className={`absolute bottom-4 z-10 ${chatAgentId ? 'right-[340px]' : 'right-4'} transition-all`}>
+            {/* Haiku composer — shifts left to make room for terminals */}
+            <div className={`absolute bottom-4 z-10 transition-all`} style={{ right: `${16 + openTerminals.size * 336}px` }}>
               <HaikuComposer onSubmit={handleHaikuSubmit} />
             </div>
 

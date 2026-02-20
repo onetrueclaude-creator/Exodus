@@ -1,7 +1,7 @@
 "use client";
 
-import type { Agent, AgentTier } from '@/types';
-import { TIER_CLAIM_COST, TIER_MINING_RATE, TIER_CPU_COST } from '@/types/agent';
+import type { Agent } from '@/types';
+import { TIER_CPU_COST, TIER_MINING_RATE } from '@/types/agent';
 import { useGameStore } from '@/store';
 
 interface QuickActionMenuProps {
@@ -58,20 +58,11 @@ function CpuStepper({ label, value, min, max, step, unit, color, onChange }: {
 }
 
 export default function QuickActionMenu({ agent, isOwn, onClose, onAction }: QuickActionMenuProps) {
-  const energy = useGameStore((s) => s.energy);
-  const minerals = useGameStore((s) => s.minerals);
   const setBorderPressure = useGameStore((s) => s.setBorderPressure);
   const setMiningRate = useGameStore((s) => s.setMiningRate);
   const setEnergyLimit = useGameStore((s) => s.setEnergyLimit);
   const setPrimary = useGameStore((s) => s.setPrimary);
   const isUnclaimed = !agent.userId;
-
-  // Tier claim options
-  const claimTiers: { tier: AgentTier; label: string; color: string; accent: string }[] = [
-    { tier: 'haiku', label: 'Haiku', color: 'text-slate-400', accent: 'hover:bg-slate-400/20' },
-    { tier: 'sonnet', label: 'Sonnet', color: 'text-accent-purple', accent: 'hover:bg-accent-purple/20' },
-    { tier: 'opus', label: 'Opus', color: 'text-accent-cyan', accent: 'hover:bg-accent-cyan/20' },
-  ];
 
   if (isUnclaimed) {
     return (
@@ -88,54 +79,23 @@ export default function QuickActionMenu({ agent, isOwn, onClose, onAction }: Qui
 
         {/* Unclaimed status */}
         <div className="text-[10px] text-text-muted mb-2">
-          <div className="text-yellow-400/80 font-semibold mb-0.5">Unclaimed Node</div>
-          <div>Choose an agent model to deploy:</div>
+          <div className="text-yellow-400/80 font-semibold mb-0.5">Unclaimed Star System</div>
+          <div>Deploy an agent via your terminal to claim this node.</div>
         </div>
 
-        {/* 3 tier claim options */}
-        <div className="space-y-1.5 mb-2">
-          {claimTiers.map(({ tier, label, color, accent }) => {
-            const eCost = TIER_CLAIM_COST[tier];
-            const mCost = Math.ceil(TIER_CLAIM_COST[tier] * 0.3);
-            const canAfford = energy >= eCost && minerals >= mCost;
-            return (
-              <button
-                key={tier}
-                onClick={() => canAfford && onAction(`claim-${tier}`)}
-                disabled={!canAfford}
-                className={`w-full p-2 rounded border transition-all text-left ${
-                  canAfford
-                    ? `border-card-border ${accent} cursor-pointer`
-                    : 'border-card-border/30 opacity-40 cursor-not-allowed'
-                }`}
-              >
-                <div className="flex justify-between items-center mb-0.5">
-                  <span className={`text-xs font-semibold ${color}`}>{label}</span>
-                  <span className="text-[9px] text-text-muted">CPU: {TIER_CPU_COST[tier]}/t</span>
-                </div>
-                <div className="flex justify-between text-[9px] text-text-muted">
-                  <span>
-                    <span className={energy >= eCost ? 'text-green-400' : 'text-red-400'}>{eCost}E</span>
-                    {' + '}
-                    <span className={minerals >= mCost ? 'text-green-400' : 'text-red-400'}>{mCost}M</span>
-                  </span>
-                  <span className="text-green-400/70">+{TIER_MINING_RATE[tier]}/t mining</span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Your resources */}
-        <div className="text-[9px] text-text-muted flex justify-between px-1 border-t border-card-border/50 pt-1">
-          <span>Energy: {energy}</span>
-          <span>Minerals: {minerals}</span>
-        </div>
+        {/* Deploy via terminal */}
+        <button
+          onClick={() => onAction('deploy-via-terminal')}
+          className="w-full flex items-center gap-2 px-2 py-2 rounded text-xs font-semibold transition-colors border border-accent-cyan/30 hover:bg-accent-cyan/20 hover:text-accent-cyan text-text-muted"
+        >
+          <span className="text-sm">🛰</span>
+          <span>Deploy Agent Here</span>
+        </button>
 
         {/* Inspect */}
         <button
           onClick={() => onAction('inspect')}
-          className="w-full flex items-center gap-2 px-2 py-1.5 mt-2 rounded text-xs text-text-muted transition-colors hover:bg-accent-cyan/20 hover:text-accent-cyan"
+          className="w-full flex items-center gap-2 px-2 py-1.5 mt-1 rounded text-xs text-text-muted transition-colors hover:bg-accent-cyan/20 hover:text-accent-cyan"
         >
           <span className="text-sm">🔍</span>
           <span>Inspect</span>
