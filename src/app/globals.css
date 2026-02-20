@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #0A0A0F;
+  --color-background-light: #12121A;
+  --color-accent-cyan: #00D4FF;
+  --color-accent-purple: #8B5CF6;
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
+  --color-card-border: rgba(255, 255, 255, 0.06);
+  --color-card-border-hover: rgba(255, 255, 255, 0.12);
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-heading: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --shadow-glow: 0 0 20px rgba(0, 212, 255, 0.15);
+  --shadow-glow-lg: 0 0 40px rgba(0, 212, 255, 0.2);
+  --shadow-glow-purple: 0 0 20px rgba(139, 92, 246, 0.15);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-text-secondary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    color: var(--color-text-primary);
+  }
+}
+
+@utility gradient-text {
+  background-image: linear-gradient(to right, var(--color-accent-cyan), var(--color-accent-purple));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility glass-card {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-card-border);
+  backdrop-filter: blur(8px);
+  border-radius: 0.75rem;
+}
+
+@utility glass-card-hover {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-card-border);
+  backdrop-filter: blur(8px);
+  border-radius: 0.75rem;
+  transition: all 0.3s;
+  &:hover {
+    border-color: var(--color-card-border-hover);
+    box-shadow: var(--shadow-glow);
+  }
+}
+
+@utility grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
