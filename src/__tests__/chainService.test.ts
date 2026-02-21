@@ -9,11 +9,19 @@ describe('MockChainService', () => {
     service = new MockChainService();
   });
 
-  it('returns mock agents', async () => {
+  it('starts with only unclaimed slots (no simulated users)', async () => {
     const agents = await service.getAgents();
     expect(agents.length).toBeGreaterThan(0);
     expect(agents[0]).toHaveProperty('id');
     expect(agents[0]).toHaveProperty('tier');
+    // All agents should be unclaimed (userId is empty)
+    const owned = agents.filter(a => a.userId !== '');
+    expect(owned).toHaveLength(0);
+  });
+
+  it('haiku feed starts empty (no simulated users)', async () => {
+    const feed = await service.getHaikuFeed();
+    expect(feed).toHaveLength(0);
   });
 
   it('registers a new agent', async () => {

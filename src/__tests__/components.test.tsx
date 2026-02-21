@@ -415,13 +415,35 @@ describe('QuickActionMenu (unclaimed)', () => {
     expect(screen.getByText('Unclaimed Neural Node')).toBeDefined();
   });
 
-  it('shows Deploy Agent Here button', () => {
+  it('shows Claim as Homenode when user has no current agent', () => {
+    // After reset, currentAgentId is null — new user flow
+    const agent = makeAgent({ userId: '' });
+    render(<QuickActionMenu agent={agent} isOwn={false} onClose={() => {}} onAction={() => {}} />);
+    expect(screen.getByText('Claim as Homenode')).toBeDefined();
+    expect(screen.queryByText('Deploy Agent Here')).toBeNull();
+  });
+
+  it('fires claim-homenode action for new users', () => {
+    const onAction = vi.fn();
+    const agent = makeAgent({ userId: '' });
+    render(<QuickActionMenu agent={agent} isOwn={false} onClose={() => {}} onAction={onAction} />);
+    fireEvent.click(screen.getByText('Claim as Homenode'));
+    expect(onAction).toHaveBeenCalledWith('claim-homenode');
+  });
+
+  it('shows Deploy Agent Here when user already has an agent', () => {
+    // Simulate an existing user with a current agent
+    useGameStore.getState().setCurrentUser('u1', 'existing-agent');
+    useGameStore.getState().addAgent(makeAgent({ id: 'existing-agent' }));
     const agent = makeAgent({ userId: '' });
     render(<QuickActionMenu agent={agent} isOwn={false} onClose={() => {}} onAction={() => {}} />);
     expect(screen.getByText('Deploy Agent Here')).toBeDefined();
+    expect(screen.queryByText('Claim as Homenode')).toBeNull();
   });
 
-  it('fires deploy-via-terminal action', () => {
+  it('fires deploy-via-terminal action when user has agent', () => {
+    useGameStore.getState().setCurrentUser('u1', 'existing-agent');
+    useGameStore.getState().addAgent(makeAgent({ id: 'existing-agent' }));
     const onAction = vi.fn();
     const agent = makeAgent({ userId: '' });
     render(<QuickActionMenu agent={agent} isOwn={false} onClose={() => {}} onAction={onAction} />);
