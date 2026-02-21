@@ -21,6 +21,7 @@ import { MockChainService } from '@/services/chainService';
 import type { ChainService } from '@/services/chainService';
 import { TestnetChainService } from '@/services/testnetChainService';
 import { isTestnetOnline } from '@/services/testnetApi';
+import { useChainWebSocket } from '@/hooks/useChainWebSocket';
 import { getDistance } from '@/lib/proximity';
 import { getFogLevel } from '@/lib/fog';
 import { getClarityLevel } from '@/lib/diplomacy';
@@ -46,6 +47,10 @@ export default function GamePage() {
   const setChainMode = useGameStore((s) => s.setChainMode);
   const isInitializing = useGameStore((s) => s.isInitializing);
   const setInitializing = useGameStore((s) => s.setInitializing);
+  const chainMode = useGameStore((s) => s.chainMode);
+
+  // Connect WebSocket when in testnet mode
+  useChainWebSocket(chainMode === 'testnet');
 
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [profileAgent, setProfileAgent] = useState<string | null>(null);
@@ -76,8 +81,9 @@ export default function GamePage() {
   const syncFromChain = useCallback(async () => {
     const svc = chainRef.current;
     if (!svc) return;
+
+    // Refresh agents
     const freshAgents = await svc.getAgents();
-    // Merge chain agents into store (preserves local modifications like pressure/mining)
     const store = useGameStore.getState();
     freshAgents.forEach((a) => {
       const existing = store.agents[a.id];
@@ -87,6 +93,22 @@ export default function GamePage() {
       }
       store.addAgent(a);
     });
+
+    // Refresh chain status
+    if ('getStatus' in svc) {
+      try {
+        const status = await (svc as { getStatus(): Promise<import('@/types').TestnetStatus> }).getStatus();
+        store.setChainStatus({
+          poolRemaining: status.community_pool_remaining,
+          totalMined: status.total_mined,
+          stateRoot: status.state_root,
+          nextBlockIn: status.next_block_in,
+          blocks: status.blocks_processed,
+        });
+      } catch {
+        // Status fetch failed — keep stale data
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -141,7 +163,7 @@ export default function GamePage() {
     addHaiku(haiku);
   };
 
-  const handleQuickAction = (action: string) => {
+  const handleQuickAction = async (action: string) => {
     switch (action) {
       case 'inspect':
         // Already showing AgentPanel
@@ -165,6 +187,20 @@ export default function GamePage() {
       case 'profile':
         if (selectedAgent) setProfileAgent(selectedAgent);
         break;
+      case 'mine': {
+        const svc = chainRef.current;
+        if (!svc || !('mine' in svc)) break;
+        try {
+          const result = await (svc as { mine(): Promise<{ blockNumber: number; yields: Record<string, number> }> }).mine();
+          // Update block count
+          useGameStore.getState().setChainMode('testnet', result.blockNumber);
+          // Trigger full sync to get updated agents/status
+          syncFromChain();
+        } catch {
+          // Rate-limited (429) or other error — display will be handled by ResourceBar countdown
+        }
+        break;
+      }
       case 'secure':
       case 'vote':
         // TODO: Wire up blockchain actions
@@ -197,7 +233,7 @@ export default function GamePage() {
       <div className="flex-1 relative overflow-hidden">
         {/* Network tab — always mounted, hidden when inactive to preserve PixiJS canvas */}
         <div className={`absolute inset-0 ${activeTab !== 'network' ? 'hidden' : ''}`}>
-            <GalaxyGrid onSelectAgent={setSelectedAgent} />
+            <GalaxyGrid onSelectAgent={setSelectedAgent} onDeselect={() => setSelectedAgent(null)} />
 
             {/* Top bar: Time rewind + Agents dropdown */}
             <div className="absolute top-4 left-4 z-10 flex items-start gap-2">
@@ -282,7 +318,7 @@ export default function GamePage() {
                   onClick={() => setShowPlanetCreator(true)}
                   className="glass-card px-4 py-2 text-xs font-semibold text-accent-purple hover:text-text-primary transition-all"
                 >
-                  + Planet
+                  + Data Packet
                 </button>
               )}
             </div>
@@ -341,9 +377,17 @@ export default function GamePage() {
           agent={agents[profileAgent]}
           isOwn={currentUserId ? agents[profileAgent].userId === currentUserId : false}
           onClose={() => setProfileAgent(null)}
-          onSendMessage={(text) => {
-            // TODO: Wire to chain messaging endpoint when available
-            console.log('Message to', profileAgent, ':', text);
+          onSendMessage={async (text) => {
+            const svc = chainRef.current;
+            const sender = currentAgentId ? agents[currentAgentId] : null;
+            const target = agents[profileAgent];
+            if (svc && sender && target) {
+              try {
+                await svc.sendMessage(sender.position, target.position, text);
+              } catch {
+                // Silently fall through — message shown in UI regardless
+              }
+            }
             setProfileAgent(null);
           }}
           onOpenTerminal={() => {

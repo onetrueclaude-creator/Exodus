@@ -1,4 +1,4 @@
-import type { Agent, AgentTier, HaikuMessage, GridPosition } from '@/types';
+import type { Agent, AgentTier, HaikuMessage, GridPosition, MessageResult, MessageInfo } from '@/types';
 import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
 import { generateMockAgents, generateMockHaiku } from './mockData';
 
@@ -8,6 +8,12 @@ export interface ChainService {
   postHaiku(agentId: string, text: string): Promise<HaikuMessage>;
   getHaikuFeed(): Promise<HaikuMessage[]>;
   moveAgent(agentId: string, position: GridPosition): Promise<Agent>;
+  /** Send a point-to-point message between agents (140 chars max) */
+  sendMessage(senderCoord: { x: number; y: number }, targetCoord: { x: number; y: number }, text: string): Promise<MessageResult>;
+  /** Fetch message history for a coordinate (max 50 most recent) */
+  getMessages(coord: { x: number; y: number }): Promise<MessageInfo[]>;
+  /** Set intro greeting for an agent at a coordinate (140 chars max) */
+  setIntro(coord: { x: number; y: number }, message: string): Promise<void>;
 }
 
 export class MockChainService implements ChainService {
@@ -37,6 +43,7 @@ export class MockChainService implements ChainService {
       cpuPerTurn: TIER_CPU_COST[tier],
       miningRate: TIER_MINING_RATE[tier],
       energyLimit: TIER_CPU_COST[tier] * 5,
+      stakedCpu: 0,
     };
     this.agents.push(agent);
     return agent;
@@ -65,5 +72,23 @@ export class MockChainService implements ChainService {
     if (!agent) throw new Error(`Agent ${agentId} not found`);
     agent.position = position;
     return { ...agent };
+  }
+
+  async sendMessage(senderCoord: { x: number; y: number }, targetCoord: { x: number; y: number }, text: string): Promise<MessageResult> {
+    return {
+      id: `msg-${Date.now()}`,
+      timestamp: Date.now(),
+      text,
+      sender_coord: senderCoord,
+      target_coord: targetCoord,
+    };
+  }
+
+  async getMessages(): Promise<MessageInfo[]> {
+    return [];
+  }
+
+  async setIntro(): Promise<void> {
+    // No-op in mock mode
   }
 }

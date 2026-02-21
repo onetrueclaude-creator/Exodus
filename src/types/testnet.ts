@@ -18,6 +18,7 @@ export interface TestnetStatus {
   community_pool_remaining: number;
   blocks_processed: number;
   total_mined: number;
+  next_block_in: number;
 }
 
 // GET /api/coordinate/{x}/{y}
@@ -62,6 +63,11 @@ export interface GridCell {
 export interface MineResult {
   block_number: number;
   yields: Record<string, number>;
+  block_time: number;
+  next_block_at: number;
+  verification_outcome: string;
+  verifiers_assigned: number;
+  valid_proofs: number;
 }
 
 // POST /api/birth
@@ -71,4 +77,40 @@ export interface BirthResult {
   birth_cost: number;
   records_created: number;
   new_claim_count: number;
+}
+
+// POST /api/intro — set agent intro message (max 140 chars)
+export interface IntroRequest {
+  wallet_index: number;
+  agent_coordinate: { x: number; y: number };
+  message: string;
+}
+
+export interface IntroResult {
+  status: string;
+  message: string;
+}
+
+// POST /api/message — send agent-to-agent message (max 140 chars)
+export interface MessageRequest {
+  sender_wallet: number;
+  sender_coord: { x: number; y: number };
+  target_coord: { x: number; y: number };
+  text: string;
+}
+
+export interface MessageResult {
+  id: string;
+  timestamp: number;
+  text: string;
+  sender_coord: { x: number; y: number };
+  target_coord: { x: number; y: number };
+}
+
+// GET /api/messages/{x}/{y} — fetch message history (max 50 most recent)
+export interface MessageInfo {
+  id: string;
+  sender_coord: { x: number; y: number };
+  text: string;
+  timestamp: number;
 }

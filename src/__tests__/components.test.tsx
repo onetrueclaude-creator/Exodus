@@ -1,0 +1,395 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { useGameStore } from '@/store';
+import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
+import type { Agent, AgentTier } from '@/types';
+
+/* ── Helpers ──────────────────────────────────────────── */
+
+function makeAgent(overrides: Partial<Agent> = {}): Agent {
+  return {
+    id: 'a1',
+    userId: 'u1',
+    position: { x: 100, y: 200 },
+    tier: 'opus',
+    isPrimary: true,
+    planets: [],
+    createdAt: Date.now(),
+    borderRadius: TIER_BASE_BORDER.opus,
+    borderPressure: 0,
+    cpuPerTurn: TIER_CPU_COST.opus,
+    miningRate: TIER_MINING_RATE.opus,
+    energyLimit: TIER_CPU_COST.opus * 5,
+    stakedCpu: 0,
+    ...overrides,
+  };
+}
+
+/* ── TabNavigation ─────────────────────────────────────── */
+
+describe('TabNavigation', () => {
+  // Dynamic import to avoid issues with "use client"
+  let TabNavigation: React.ComponentType;
+
+  beforeEach(async () => {
+    useGameStore.getState().reset();
+    const mod = await import('@/components/TabNavigation');
+    TabNavigation = mod.default;
+  });
+
+  it('renders all 4 tabs', () => {
+    render(<TabNavigation />);
+    expect(screen.getByText('Network')).toBeDefined();
+    expect(screen.getByText('Account View')).toBeDefined();
+    expect(screen.getByText('Researches')).toBeDefined();
+    expect(screen.getByText('Skills')).toBeDefined();
+  });
+
+  it('clicking a tab switches the active tab in store', () => {
+    render(<TabNavigation />);
+    fireEvent.click(screen.getByText('Account View'));
+    expect(useGameStore.getState().activeTab).toBe('account');
+    fireEvent.click(screen.getByText('Researches'));
+    expect(useGameStore.getState().activeTab).toBe('researches');
+    fireEvent.click(screen.getByText('Skills'));
+    expect(useGameStore.getState().activeTab).toBe('skills');
+    fireEvent.click(screen.getByText('Network'));
+    expect(useGameStore.getState().activeTab).toBe('network');
+  });
+});
+
+/* ── AgentCreator ──────────────────────────────────────── */
+
+describe('AgentCreator', () => {
+  let AgentCreator: React.ComponentType<{
+    energy: number;
+    onCreateAgent: (tier: AgentTier) => void;
+    onClose: () => void;
+  }>;
+
+  beforeEach(async () => {
+    const mod = await import('@/components/AgentCreator');
+    AgentCreator = mod.default;
+  });
+
+  it('renders tier selection buttons', () => {
+    render(<AgentCreator energy={1000} onCreateAgent={() => {}} onClose={() => {}} />);
+    expect(screen.getByText('Haiku')).toBeDefined();
+    expect(screen.getByText('Sonnet')).toBeDefined();
+    expect(screen.getByText('Opus')).toBeDefined();
+  });
+
+  it('defaults to sonnet tier', () => {
+    render(<AgentCreator energy={1000} onCreateAgent={() => {}} onClose={() => {}} />);
+    // Sonnet is default: cost = TIER_CPU_COST.sonnet * 5 = 15
+    expect(screen.getByText(`${TIER_CPU_COST.sonnet * 5} CPU`)).toBeDefined();
+  });
+
+  it('updates cost when tier is changed', () => {
+    render(<AgentCreator energy={1000} onCreateAgent={() => {}} onClose={() => {}} />);
+    fireEvent.click(screen.getByText('Opus'));
+    expect(screen.getByText(`${TIER_CPU_COST.opus * 5} CPU`)).toBeDefined();
+  });
+
+  it('calls onCreateAgent with the selected tier', () => {
+    const onCreateAgent = vi.fn();
+    render(<AgentCreator energy={1000} onCreateAgent={onCreateAgent} onClose={() => {}} />);
+    fireEvent.click(screen.getByText('Haiku'));
+    // Click the deploy button
+    const deployBtn = screen.getByText(/Deploy Haiku Agent/i);
+    fireEvent.click(deployBtn);
+    expect(onCreateAgent).toHaveBeenCalledWith('haiku');
+  });
+
+  it('disables deploy button when not enough energy', () => {
+    const onCreateAgent = vi.fn();
+    render(<AgentCreator energy={0} onCreateAgent={onCreateAgent} onClose={() => {}} />);
+    const btn = screen.getByText('Not enough CPU');
+    fireEvent.click(btn);
+    expect(onCreateAgent).not.toHaveBeenCalled();
+  });
+
+  it('calls onClose when close button is clicked', () => {
+    const onClose = vi.fn();
+    render(<AgentCreator energy={1000} onCreateAgent={() => {}} onClose={onClose} />);
+    const closeBtn = screen.getByText('✕');
+    fireEvent.click(closeBtn);
+    expect(onClose).toHaveBeenCalled();
+  });
+});
+
+/* ── PlanetCreator ────────────────────────────────────── */
+
+describe('PlanetCreator', () => {
+  let PlanetCreator: React.ComponentType<{
+    agentId: string;
+    onSubmit: (planet: any) => void;
+    onClose: () => void;
+  }>;
+
+  beforeEach(async () => {
+    const mod = await import('@/components/PlanetCreator');
+    PlanetCreator = mod.default;
+  });
+
+  it('renders content type buttons', () => {
+    render(<PlanetCreator agentId="a1" onSubmit={() => {}} onClose={() => {}} />);
+    expect(screen.getByText('post')).toBeDefined();
+    expect(screen.getByText('text')).toBeDefined();
+    expect(screen.getByText('chat')).toBeDefined();
+    expect(screen.getByText('prompt')).toBeDefined();
+  });
+
+  it('submits with content and selected type', () => {
+    const onSubmit = vi.fn();
+    render(<PlanetCreator agentId="a1" onSubmit={onSubmit} onClose={() => {}} />);
+
+    // Type content
+    const textarea = screen.getByPlaceholderText("What's in this packet?");
+    fireEvent.change(textarea, { target: { value: 'Hello world' } });
+
+    // Select "chat" type
+    fireEvent.click(screen.getByText('chat'));
+
+    // Submit
+    fireEvent.click(screen.getByText('Create Data Packet'));
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      agentId: 'a1',
+      content: 'Hello world',
+      contentType: 'chat',
+      isZeroKnowledge: false,
+    }));
+  });
+
+  it('ZK checkbox toggles isZeroKnowledge', () => {
+    const onSubmit = vi.fn();
+    render(<PlanetCreator agentId="a1" onSubmit={onSubmit} onClose={() => {}} />);
+
+    const textarea = screen.getByPlaceholderText("What's in this packet?");
+    fireEvent.change(textarea, { target: { value: 'Secret data' } });
+
+    // Check ZK checkbox
+    const checkbox = screen.getByRole('checkbox');
+    fireEvent.click(checkbox);
+
+    fireEvent.click(screen.getByText('Create Data Packet'));
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      isZeroKnowledge: true,
+    }));
+  });
+
+  it('does not submit when content is empty', () => {
+    const onSubmit = vi.fn();
+    render(<PlanetCreator agentId="a1" onSubmit={onSubmit} onClose={() => {}} />);
+    const btn = screen.getByText('Create Data Packet');
+    fireEvent.click(btn);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+});
+
+/* ── GalaxyChatRoom ───────────────────────────────────── */
+
+describe('GalaxyChatRoom', () => {
+  let GalaxyChatRoom: React.ComponentType<{ onSend: (text: string) => void }>;
+
+  beforeEach(async () => {
+    useGameStore.getState().reset();
+    const mod = await import('@/components/GalaxyChatRoom');
+    GalaxyChatRoom = mod.default;
+  });
+
+  it('renders input and send button', () => {
+    render(<GalaxyChatRoom onSend={() => {}} />);
+    expect(screen.getByPlaceholderText('Encode neural packet...')).toBeDefined();
+    expect(screen.getByText('Send')).toBeDefined();
+  });
+
+  it('calls onSend when send button is clicked with text', () => {
+    const onSend = vi.fn();
+    render(<GalaxyChatRoom onSend={onSend} />);
+    const input = screen.getByPlaceholderText('Encode neural packet...');
+    fireEvent.change(input, { target: { value: 'Hello galaxy' } });
+    fireEvent.click(screen.getByText('Send'));
+    expect(onSend).toHaveBeenCalledWith('Hello galaxy');
+  });
+
+  it('calls onSend on Enter key', () => {
+    const onSend = vi.fn();
+    render(<GalaxyChatRoom onSend={onSend} />);
+    const input = screen.getByPlaceholderText('Encode neural packet...');
+    fireEvent.change(input, { target: { value: 'Enter test' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(onSend).toHaveBeenCalledWith('Enter test');
+  });
+
+  it('does not send empty messages', () => {
+    const onSend = vi.fn();
+    render(<GalaxyChatRoom onSend={onSend} />);
+    fireEvent.click(screen.getByText('Send'));
+    expect(onSend).not.toHaveBeenCalled();
+  });
+
+  it('clears input after sending', () => {
+    render(<GalaxyChatRoom onSend={() => {}} />);
+    const input = screen.getByPlaceholderText('Encode neural packet...') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'test' } });
+    fireEvent.click(screen.getByText('Send'));
+    expect(input.value).toBe('');
+  });
+
+  it('can collapse and expand', () => {
+    render(<GalaxyChatRoom onSend={() => {}} />);
+    // Click collapse button
+    fireEvent.click(screen.getByText('▾'));
+    // Should show collapsed state with Network Chat label
+    expect(screen.getByText('Network Chat')).toBeDefined();
+  });
+
+  it('shows empty state message when no messages', () => {
+    render(<GalaxyChatRoom onSend={() => {}} />);
+    expect(screen.getByText('No messages yet. Be the first to transmit.')).toBeDefined();
+  });
+});
+
+/* ── ResourceBar ──────────────────────────────────────── */
+
+describe('ResourceBar', () => {
+  let ResourceBar: React.ComponentType;
+
+  beforeEach(async () => {
+    useGameStore.getState().reset();
+    useGameStore.getState().setCurrentUser('u1', 'a1');
+    useGameStore.getState().addAgent(makeAgent());
+    const mod = await import('@/components/ResourceBar');
+    ResourceBar = mod.default;
+  });
+
+  it('renders resource labels', () => {
+    render(<ResourceBar />);
+    expect(screen.getByText('Energy')).toBeDefined();
+    expect(screen.getByText('Data Frags')).toBeDefined();
+    expect(screen.getByText('AGNTC')).toBeDefined();
+    expect(screen.getByText('Turn')).toBeDefined();
+  });
+
+  it('shows chain mode badge', () => {
+    render(<ResourceBar />);
+    expect(screen.getByText('OFFLINE')).toBeDefined();
+  });
+
+  it('shows TESTNET badge when connected', () => {
+    useGameStore.getState().setChainMode('testnet', 5);
+    render(<ResourceBar />);
+    expect(screen.getByText('TESTNET')).toBeDefined();
+  });
+});
+
+/* ── QuickActionMenu (claimed agent) ──────────────────── */
+
+describe('QuickActionMenu (claimed)', () => {
+  let QuickActionMenu: React.ComponentType<{
+    agent: Agent;
+    isOwn: boolean;
+    onClose: () => void;
+    onAction: (action: string) => void;
+  }>;
+
+  beforeEach(async () => {
+    useGameStore.getState().reset();
+    const mod = await import('@/components/QuickActionMenu');
+    QuickActionMenu = mod.default;
+  });
+
+  it('renders action buttons for own agent', () => {
+    const agent = makeAgent();
+    render(<QuickActionMenu agent={agent} isOwn={true} onClose={() => {}} onAction={() => {}} />);
+    expect(screen.getByText('Open Terminal')).toBeDefined();
+    expect(screen.getByText('Inspect')).toBeDefined();
+    expect(screen.getByText('Network Chat')).toBeDefined();
+    expect(screen.getByText('Research')).toBeDefined();
+    expect(screen.getByText('Manage')).toBeDefined();
+    expect(screen.getByText('ZK Secure')).toBeDefined();
+    expect(screen.getByText('Vote')).toBeDefined();
+  });
+
+  it('hides ownOnly actions for foreign agents', () => {
+    const agent = makeAgent({ userId: 'other' });
+    render(<QuickActionMenu agent={agent} isOwn={false} onClose={() => {}} onAction={() => {}} />);
+    expect(screen.queryByText('Open Terminal')).toBeNull();
+    expect(screen.queryByText('Manage')).toBeNull();
+    expect(screen.getByText('Inspect')).toBeDefined();
+    expect(screen.getByText('Vote')).toBeDefined();
+  });
+
+  it('fires onAction with action id', () => {
+    const onAction = vi.fn();
+    const agent = makeAgent();
+    render(<QuickActionMenu agent={agent} isOwn={true} onClose={() => {}} onAction={onAction} />);
+    fireEvent.click(screen.getByText('Inspect'));
+    expect(onAction).toHaveBeenCalledWith('inspect');
+    fireEvent.click(screen.getByText('Research'));
+    expect(onAction).toHaveBeenCalledWith('research');
+  });
+
+  it('shows CPU distribution steppers for own agent', () => {
+    const agent = makeAgent();
+    useGameStore.getState().addAgent(agent);
+    render(<QuickActionMenu agent={agent} isOwn={true} onClose={() => {}} onAction={() => {}} />);
+    expect(screen.getByText('CPU Distribution')).toBeDefined();
+    expect(screen.getByText('Pressure')).toBeDefined();
+    expect(screen.getByText('Mining')).toBeDefined();
+    expect(screen.getByText('E. Limit')).toBeDefined();
+  });
+
+  it('shows Set Primary button for non-primary agents', () => {
+    const agent = makeAgent({ isPrimary: false });
+    useGameStore.getState().addAgent(agent);
+    render(<QuickActionMenu agent={agent} isOwn={true} onClose={() => {}} onAction={() => {}} />);
+    expect(screen.getByText('Set as Primary Node')).toBeDefined();
+  });
+});
+
+/* ── QuickActionMenu (unclaimed node) ─────────────────── */
+
+describe('QuickActionMenu (unclaimed)', () => {
+  let QuickActionMenu: React.ComponentType<{
+    agent: Agent;
+    isOwn: boolean;
+    onClose: () => void;
+    onAction: (action: string) => void;
+  }>;
+
+  beforeEach(async () => {
+    useGameStore.getState().reset();
+    const mod = await import('@/components/QuickActionMenu');
+    QuickActionMenu = mod.default;
+  });
+
+  it('shows unclaimed status for nodes with no userId', () => {
+    const agent = makeAgent({ userId: '' });
+    render(<QuickActionMenu agent={agent} isOwn={false} onClose={() => {}} onAction={() => {}} />);
+    expect(screen.getByText('Unclaimed Neural Node')).toBeDefined();
+  });
+
+  it('shows Deploy Agent Here button', () => {
+    const agent = makeAgent({ userId: '' });
+    render(<QuickActionMenu agent={agent} isOwn={false} onClose={() => {}} onAction={() => {}} />);
+    expect(screen.getByText('Deploy Agent Here')).toBeDefined();
+  });
+
+  it('fires deploy-via-terminal action', () => {
+    const onAction = vi.fn();
+    const agent = makeAgent({ userId: '' });
+    render(<QuickActionMenu agent={agent} isOwn={false} onClose={() => {}} onAction={onAction} />);
+    fireEvent.click(screen.getByText('Deploy Agent Here'));
+    expect(onAction).toHaveBeenCalledWith('deploy-via-terminal');
+  });
+
+  it('fires inspect action', () => {
+    const onAction = vi.fn();
+    const agent = makeAgent({ userId: '' });
+    render(<QuickActionMenu agent={agent} isOwn={false} onClose={() => {}} onAction={onAction} />);
+    fireEvent.click(screen.getByText('Inspect'));
+    expect(onAction).toHaveBeenCalledWith('inspect');
+  });
+});

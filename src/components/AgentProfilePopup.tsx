@@ -122,7 +122,7 @@ export default function AgentProfilePopup({
             </div>
             <div>
               <div className="text-[10px] text-text-muted font-mono">ROLE</div>
-              <div className="text-sm font-mono text-text-primary">{agent.isPrimary ? 'Homeworld' : 'Outpost'}</div>
+              <div className="text-sm font-mono text-text-primary">{agent.isPrimary ? 'Primary Node' : 'Sub-agent'}</div>
             </div>
           </div>
         )}

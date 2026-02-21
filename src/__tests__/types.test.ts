@@ -25,6 +25,7 @@ describe('Type definitions', () => {
       cpuPerTurn: 8,
       miningRate: 12,
       energyLimit: 40,
+      stakedCpu: 0,
     };
     expect(agent.tier).toBe('opus');
     expect(agent.isPrimary).toBe(true);

@@ -2,7 +2,7 @@ import { Graphics, Text, Container } from 'pixi.js';
 import type { Agent, FogLevel } from '@/types';
 
 const TIER_RADIUS = { opus: 10, sonnet: 7, haiku: 4 };
-const TIER_COLOR = { opus: 0x00d4ff, sonnet: 0x8b5cf6, haiku: 0x64748b };
+const TIER_COLOR = { opus: 0x8b5cf6, sonnet: 0x00d4ff, haiku: 0xfacc15 };
 
 const FOG_ALPHA: Record<FogLevel, number> = {
   clear: 1.0,

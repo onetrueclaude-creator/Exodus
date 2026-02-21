@@ -40,7 +40,7 @@ export default function LoginPage() {
         <div className="w-full glass-card p-6 flex flex-col gap-4">
           <div className="text-center mb-2">
             <h2 className="text-lg font-heading text-text-primary">Enter the Network</h2>
-            <p className="text-xs text-text-muted mt-1">Sign in to claim your star system</p>
+            <p className="text-xs text-text-muted mt-1">Sign in to claim your neural node</p>
           </div>
 
           <button

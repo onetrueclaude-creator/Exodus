@@ -18,14 +18,17 @@ const MAX_ZOOM = 3;
 
 interface GalaxyGridProps {
   onSelectAgent?: (agentId: string) => void;
+  onDeselect?: () => void;
 }
 
-export default function GalaxyGrid({ onSelectAgent }: GalaxyGridProps) {
+export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const worldRef = useRef<Container | null>(null);
   const hasCentered = useRef(false);
   const bordersRef = useRef<Graphics | null>(null);
+  /** Tracks when a node was last tapped — canvas pointerup uses this to avoid deselecting on node clicks */
+  const lastNodeTapMsRef = useRef(0);
 
   const agents = useGameStore((s) => s.agents);
   const currentAgentId = useGameStore((s) => s.currentAgentId);
@@ -68,8 +71,11 @@ export default function GalaxyGrid({ onSelectAgent }: GalaxyGridProps) {
       setZoom(world.scale.x);
     };
 
+    let hasMoved = false;
+
     app.canvas.addEventListener('pointerdown', (e: PointerEvent) => {
       dragging = true;
+      hasMoved = false;
       dragStart = { x: e.clientX - world.position.x, y: e.clientY - world.position.y };
     });
 
@@ -83,12 +89,20 @@ export default function GalaxyGrid({ onSelectAgent }: GalaxyGridProps) {
       setCursorCoords({ x: worldX, y: worldY });
 
       if (!dragging) return;
+      const dx = e.clientX - (dragStart.x + world.position.x);
+      const dy = e.clientY - (dragStart.y + world.position.y);
+      if (Math.sqrt(dx * dx + dy * dy) > 5) hasMoved = true;
       world.position.set(e.clientX - dragStart.x, e.clientY - dragStart.y);
     });
 
     app.canvas.addEventListener('pointerup', () => {
       if (dragging) syncCamera();
+      // If it was a click (not a drag) and no node was just tapped, deselect
+      if (!hasMoved && Date.now() - lastNodeTapMsRef.current > 100) {
+        onDeselect?.();
+      }
       dragging = false;
+      hasMoved = false;
     });
     app.canvas.addEventListener('pointerleave', () => {
       if (dragging) syncCamera();
@@ -167,6 +181,7 @@ export default function GalaxyGrid({ onSelectAgent }: GalaxyGridProps) {
     const addClickableStarNode = (agent: Agent, fogLevel: FogLevel) => {
       const node = createStarNode(agent, fogLevel);
       node.on('pointertap', () => {
+        lastNodeTapMsRef.current = Date.now();
         onSelectAgent?.(agent.id);
       });
       world.addChild(node);
@@ -226,7 +241,7 @@ export default function GalaxyGrid({ onSelectAgent }: GalaxyGridProps) {
     }
   }, [appReady, turn, agents, currentUserId]);
 
-  // Center on home star system
+  // Center on home neural node
   const handleCenterHome = useCallback(() => {
     const world = worldRef.current;
     const app = appRef.current;
@@ -271,7 +286,7 @@ export default function GalaxyGrid({ onSelectAgent }: GalaxyGridProps) {
         <button
           onClick={handleCenterHome}
           className="text-[10px] text-text-muted hover:text-accent-cyan transition-colors px-1"
-          title="Center on home star system"
+          title="Center on home neural node"
         >
           ⌂
         </button>

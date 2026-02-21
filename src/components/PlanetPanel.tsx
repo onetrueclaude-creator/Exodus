@@ -17,7 +17,7 @@ export default function PlanetPanel({ agentId, fogLevel, clarityLevel, isOwner }
   const agentPlanets = Object.values(planets).filter(p => p.agentId === agentId);
 
   if (agentPlanets.length === 0) {
-    return <p className="text-xs text-text-muted italic">No planets in this system</p>;
+    return <p className="text-xs text-text-muted italic">No data packets linked to this node</p>;
   }
 
   return (
@@ -37,7 +37,7 @@ export default function PlanetPanel({ agentId, fogLevel, clarityLevel, isOwner }
               <p className="text-sm text-text-secondary">{planet.content}</p>
             ) : (
               <p className="text-sm text-text-muted italic">
-                {planet.isZeroKnowledge ? 'Encrypted content' : 'Build diplomatic trust to view'}
+                {planet.isZeroKnowledge ? 'Encrypted content' : 'Build network trust to view'}
               </p>
             )}
             {isOwner && (

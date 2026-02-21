@@ -2,9 +2,9 @@ import { Graphics } from 'pixi.js';
 import type { Agent } from '@/types';
 
 const TIER_BORDER_COLOR: Record<string, number> = {
-  opus: 0x00d4ff,
-  sonnet: 0x8b5cf6,
-  haiku: 0x64748b,
+  opus: 0x8b5cf6,
+  sonnet: 0x00d4ff,
+  haiku: 0xfacc15,
 };
 
 const SEGMENTS = 48;

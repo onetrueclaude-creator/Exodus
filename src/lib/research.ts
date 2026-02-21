@@ -6,23 +6,23 @@ export const RESEARCH_TREES: Record<ResearchCategory, ResearchItem[]> = {
   security: [
     {
       id: 'sec-1', category: 'security', tier: 1,
-      name: 'Basic Encryption', description: 'Enable Zero-Knowledge privacy on planets',
+      name: 'Basic Encryption', description: 'Enable Zero-Knowledge privacy on data packets',
       energyCost: 50, prerequisiteIds: [],
-      effect: 'Unlock ZK planet toggle',
+      effect: 'Unlock ZK data packet toggle',
     },
     {
       id: 'sec-2', category: 'security', tier: 2,
-      name: 'Border Shields', description: 'Hide empire borders from distant viewers',
+      name: 'Border Shields', description: 'Hide network borders from distant agents',
       energyCost: 120, prerequisiteIds: ['sec-1'],
-      effect: 'Empire borders invisible beyond fog',
+      effect: 'Network borders invisible beyond signal range',
     },
   ],
   infrastructure: [
     {
       id: 'inf-1', category: 'infrastructure', tier: 1,
-      name: 'Expanded Storage', description: 'Increase planet capacity per star system',
+      name: 'Expanded Storage', description: 'Increase data packet capacity per neural node',
       energyCost: 40, prerequisiteIds: [],
-      effect: '+2 planet slots per star',
+      effect: '+2 data packet slots per node',
     },
     {
       id: 'inf-2', category: 'infrastructure', tier: 2,
@@ -48,15 +48,15 @@ export const RESEARCH_TREES: Record<ResearchCategory, ResearchItem[]> = {
   diplomacy: [
     {
       id: 'dip-1', category: 'diplomacy', tier: 1,
-      name: 'First Contact Protocols', description: 'Gain diplomatic clarity faster',
+      name: 'Trust Protocols', description: 'Build network trust with other agents faster',
       energyCost: 45, prerequisiteIds: [],
-      effect: '2x clarity gain per haiku exchange',
+      effect: '2x trust gain per packet exchange',
     },
     {
       id: 'dip-2', category: 'diplomacy', tier: 2,
-      name: 'Envoy Training', description: 'Deploy envoys to improve relations passively',
+      name: 'Relay Training', description: 'Deploy relays to improve connections passively',
       energyCost: 130, prerequisiteIds: ['dip-1'],
-      effect: 'Unlock envoy assignments',
+      effect: 'Unlock relay assignments',
     },
   ],
 };
