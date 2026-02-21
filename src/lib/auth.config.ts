@@ -13,12 +13,14 @@ export const authConfig: NextAuthConfig = {
     }),
   ],
   pages: {
-    signIn: '/login',
+    signIn: '/',
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const isProtected = nextUrl.pathname.startsWith('/game');
+      const isProtected = nextUrl.pathname.startsWith('/game') ||
+                          nextUrl.pathname.startsWith('/onboard') ||
+                          nextUrl.pathname.startsWith('/subscribe');
       if (isProtected && !isLoggedIn) return false;
       return true;
     },
