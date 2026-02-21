@@ -8,9 +8,9 @@ interface AgentDropdownProps {
 }
 
 const TIER_DOT: Record<string, string> = {
-  opus: 'bg-accent-cyan',
-  sonnet: 'bg-accent-purple',
-  haiku: 'bg-slate-500',
+  opus: 'bg-accent-purple',
+  sonnet: 'bg-accent-cyan',
+  haiku: 'bg-yellow-400',
 };
 
 const TIER_LABEL: Record<string, string> = {

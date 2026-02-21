@@ -7,6 +7,7 @@
 import type {
   TestnetStatus, CoordinateInfo, ClaimInfo,
   GridRegion, MineResult, BirthResult,
+  IntroResult, MessageResult, MessageInfo,
 } from '@/types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_TESTNET_API ?? 'http://localhost:8080';
@@ -75,6 +76,39 @@ export function birthStarSystem(walletIndex: number): Promise<BirthResult> {
 /** POST /api/reset — wipe ledger and rebuild from fresh genesis */
 export function resetTestnet(): Promise<{ status: string }> {
   return post<{ status: string }>('/api/reset');
+}
+
+/** POST /api/intro — set agent intro message (max 140 chars) */
+export function setIntro(
+  walletIndex: number,
+  coord: { x: number; y: number },
+  message: string,
+): Promise<IntroResult> {
+  return post<IntroResult>('/api/intro', {
+    wallet_index: walletIndex,
+    agent_coordinate: coord,
+    message,
+  });
+}
+
+/** POST /api/message — send agent-to-agent message (max 140 chars) */
+export function sendMessage(
+  senderWallet: number,
+  senderCoord: { x: number; y: number },
+  targetCoord: { x: number; y: number },
+  text: string,
+): Promise<MessageResult> {
+  return post<MessageResult>('/api/message', {
+    sender_wallet: senderWallet,
+    sender_coord: senderCoord,
+    target_coord: targetCoord,
+    text,
+  });
+}
+
+/** GET /api/messages/{x}/{y} — fetch message history (max 50 most recent) */
+export function getMessages(x: number, y: number): Promise<MessageInfo[]> {
+  return get<MessageInfo[]>(`/api/messages/${x}/${y}`);
 }
 
 /** Check if the testnet API is reachable */

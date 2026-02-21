@@ -63,6 +63,15 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+// --- Waitlist ---
+
+model WaitlistEntry {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  ip        String?             // for rate-limiting spam from same IP
+  createdAt DateTime @default(now())
+}
+
 // --- Subscription tiers ---
 
 enum SubscriptionTier {

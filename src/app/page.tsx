@@ -1,11 +1,4 @@
-"use client";
-
-import { useState } from 'react';
-
 export default function Home() {
-  const [email, setEmail] = useState('');
-  const [joined, setJoined] = useState(false);
-
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-background grid-bg relative overflow-hidden">
       {/* Animated gradient orbs */}
@@ -25,7 +18,6 @@ export default function Home() {
 
       {/* Main content */}
       <div className="text-center max-w-2xl px-6 relative z-10">
-        {/* Logo / Brand */}
         <div className="mb-2 text-[10px] font-bold tracking-[0.4em] text-accent-cyan/60 font-mono uppercase">
           Zero-Knowledge Privacy Chain
         </div>
@@ -39,7 +31,7 @@ export default function Home() {
           privacy-based CPU staking reward network.
         </p>
         <div className="text-xs text-text-muted font-mono mb-8">
-          Proof of AI Verification &middot; AGNTC Token &middot; 42M Genesis Supply
+          Proof of AI Verification &middot; AGNTC&trade; Token &middot; 42M Genesis Supply
         </div>
 
         {/* Under Development card */}
@@ -56,28 +48,31 @@ export default function Home() {
             The network is being calibrated and audited before public launch.
           </p>
 
-          {/* Waitlist */}
-          {joined ? (
-            <div className="text-sm text-green-400 font-semibold py-2">
-              You&apos;re on the list. We&apos;ll notify you when testnet opens.
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 max-w-sm mx-auto">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                className="flex-1 px-4 py-2.5 rounded-lg bg-background border border-card-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent-cyan/50 transition-colors"
-              />
-              <button
-                onClick={() => { if (email.includes('@')) setJoined(true); }}
-                className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-accent-cyan to-accent-purple text-background text-sm font-semibold hover:shadow-glow-lg transition-shadow whitespace-nowrap"
-              >
-                Join Waitlist
-              </button>
-            </div>
-          )}
+          {/* Two clickable links */}
+          <div className="flex flex-col gap-3 max-w-sm mx-auto">
+            <a
+              href="https://zkagentic.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2.5 px-5 py-3 rounded-lg bg-gradient-to-r from-accent-cyan to-accent-purple text-background text-sm font-semibold hover:shadow-glow-lg transition-all"
+            >
+              <span>Explore the Technology</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+            <a
+              href="https://zkagentic.ai/whitepaper"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2.5 px-5 py-3 rounded-lg glass-card-hover text-text-primary text-sm font-semibold"
+            >
+              <span>Read the Whitepaper</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </a>
+          </div>
         </div>
 
         {/* Stats row */}
@@ -113,7 +108,10 @@ export default function Home() {
           </a>
         </p>
         <p className="mt-1 text-text-muted/50">
-          Built by agents and vibe coding
+          &copy; {new Date().getFullYear()} ZK Agentic Network&trade;. All rights reserved.
+        </p>
+        <p className="mt-0.5 text-[9px] text-text-muted/30">
+          ZK Agentic Chain&trade;, ZK Agentic Network&trade;, and AGNTC&trade; are trademarks of their respective owners.
         </p>
       </div>
     </main>

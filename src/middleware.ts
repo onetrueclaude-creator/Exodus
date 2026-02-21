@@ -7,8 +7,11 @@ const isDev = process.env.NODE_ENV === 'development';
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
-  // Dev mode bypass — developers access everything directly
+  // Dev mode: redirect landing page to game, bypass everything else
   if (isDev) {
+    if (req.nextUrl.pathname === '/') {
+      return NextResponse.redirect(new URL('/game', req.url));
+    }
     return NextResponse.next();
   }
 

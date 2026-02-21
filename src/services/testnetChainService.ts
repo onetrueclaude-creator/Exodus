@@ -9,7 +9,7 @@
  *   Frontend grid: -4000 to 4000  (8000-unit visual space)
  *   Scale factor:  8000 / 6480 ≈ 1.2346
  */
-import type { Agent, AgentTier, HaikuMessage, GridPosition, ClaimInfo, TestnetStatus } from '@/types';
+import type { Agent, AgentTier, HaikuMessage, GridPosition, ClaimInfo, TestnetStatus, MessageResult, MessageInfo } from '@/types';
 import { CHAIN_GRID_MIN, CHAIN_GRID_SPAN } from '@/types/testnet';
 import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
 import type { ChainService } from './chainService';
@@ -180,7 +180,8 @@ export class TestnetChainService implements ChainService {
   }
 
   async postHaiku(agentId: string, text: string): Promise<HaikuMessage> {
-    // Haiku is local for now — will wire to chain storage later
+    // Local broadcast — GalaxyChatRoom uses this for network-wide chat
+    // Point-to-point messaging uses sendMessage() instead
     return {
       id: `haiku-${Date.now()}`,
       senderAgentId: agentId,
@@ -192,7 +193,27 @@ export class TestnetChainService implements ChainService {
   }
 
   async getHaikuFeed(): Promise<HaikuMessage[]> {
-    return []; // No on-chain haiku storage yet
+    return []; // Network chat is local — on-chain messaging is point-to-point
+  }
+
+  async sendMessage(
+    senderCoord: { x: number; y: number },
+    targetCoord: { x: number; y: number },
+    text: string,
+  ): Promise<MessageResult> {
+    const senderChain = visualToChain(senderCoord.x, senderCoord.y);
+    const targetChain = visualToChain(targetCoord.x, targetCoord.y);
+    return api.sendMessage(0, senderChain, targetChain, text);
+  }
+
+  async getMessages(coord: { x: number; y: number }): Promise<MessageInfo[]> {
+    const chain = visualToChain(coord.x, coord.y);
+    return api.getMessages(chain.x, chain.y);
+  }
+
+  async setIntro(coord: { x: number; y: number }, message: string): Promise<void> {
+    const chain = visualToChain(coord.x, coord.y);
+    await api.setIntro(0, chain, message);
   }
 
   async moveAgent(agentId: string, position: GridPosition): Promise<Agent> {

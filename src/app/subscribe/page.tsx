@@ -124,7 +124,7 @@ export default function SubscribePage() {
                   <span className="text-accent-cyan font-mono">{plan.startAgntc}</span>
                 </div>
                 <div>
-                  <span className="text-text-muted">Minerals: </span>
+                  <span className="text-text-muted">Data Frags: </span>
                   <span className="text-green-300 font-mono">{plan.startMinerals}</span>
                 </div>
               </div>
@@ -169,7 +169,7 @@ export default function SubscribePage() {
       {/* Footer */}
       <div className="mt-8 text-center text-[10px] text-text-muted">
         <p>All plans include testnet access. Paid plans will use Stripe for billing.</p>
-        <p className="mt-1">A star system coordinate and starting agent will be assigned upon selection.</p>
+        <p className="mt-1">A neural node coordinate and starting agent will be assigned upon selection.</p>
       </div>
     </div>
   );

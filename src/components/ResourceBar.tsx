@@ -29,6 +29,8 @@ export default function ResourceBar() {
   const agents = useGameStore((s) => s.agents);
   const chainMode = useGameStore((s) => s.chainMode);
   const testnetBlocks = useGameStore((s) => s.testnetBlocks);
+  const poolRemaining = useGameStore((s) => s.poolRemaining);
+  const nextBlockIn = useGameStore((s) => s.nextBlockIn);
   const agent = currentAgentId ? agents[currentAgentId] : null;
 
   // Calculate net production for display
@@ -64,11 +66,15 @@ export default function ResourceBar() {
 
       {/* Empire name */}
       <div className="flex items-center gap-2">
-        <div className="w-2 h-2 rounded-full bg-accent-cyan animate-pulse" />
+        <div className={`w-2 h-2 rounded-full animate-pulse ${
+          agent?.tier === 'opus' ? 'bg-accent-purple' : agent?.tier === 'haiku' ? 'bg-yellow-400' : 'bg-accent-cyan'
+        }`} />
         <span className="text-sm font-heading text-text-primary">
-          {agent?.username || 'Your Empire'}
+          {agent?.username || 'Your Network'}
         </span>
-        <span className="text-xs font-mono text-text-muted capitalize">{agent?.tier || 'sonnet'}</span>
+        <span className={`text-xs font-mono capitalize ${
+          agent?.tier === 'opus' ? 'text-accent-purple' : agent?.tier === 'haiku' ? 'text-yellow-400' : 'text-accent-cyan'
+        }`}>{agent?.tier || 'sonnet'}</span>
       </div>
 
       <div className="h-4 w-px bg-card-border" />
@@ -82,7 +88,7 @@ export default function ResourceBar() {
         </span>
       </div>
       <div className="flex items-center gap-1">
-        <span className="text-xs text-green-400 font-semibold">Minerals</span>
+        <span className="text-xs text-green-400 font-semibold">Data Frags</span>
         <span className="text-sm font-mono text-green-300">{sciFormat(minerals)}</span>
         <span className="text-[10px] font-mono text-green-400">{sciRate(mineralGain)}/t</span>
       </div>
@@ -93,6 +99,23 @@ export default function ResourceBar() {
           <span className="text-[10px] font-mono text-red-400">{sciRate(-totalPressureCost)}/t</span>
         )}
       </div>
+
+      {/* Chain status — testnet only */}
+      {chainMode === 'testnet' && (
+        <>
+          <div className="h-4 w-px bg-card-border" />
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-text-muted font-semibold">Pool</span>
+            <span className="text-sm font-mono text-text-secondary">{sciFormat(poolRemaining)}</span>
+          </div>
+          {nextBlockIn > 0 && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-text-muted font-semibold">Next</span>
+              <span className="text-sm font-mono text-text-secondary tabular-nums">{Math.ceil(nextBlockIn)}s</span>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Spacer */}
       <div className="flex-1" />

@@ -41,6 +41,7 @@ export function generateMockAgents(count: number = 3): Agent[] {
       cpuPerTurn: TIER_CPU_COST[tier],
       miningRate: TIER_MINING_RATE[tier],
       energyLimit: TIER_CPU_COST[tier] * 5,
+      stakedCpu: 0,
     };
   });
 
@@ -59,6 +60,7 @@ export function generateMockAgents(count: number = 3): Agent[] {
     cpuPerTurn: 0,    // no cost while unclaimed
     miningRate: 0,    // no mining while unclaimed
     energyLimit: 0,
+    stakedCpu: 0,
   }));
 
   return [...userAgents, ...unclaimedSlots];

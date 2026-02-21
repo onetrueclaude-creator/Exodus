@@ -40,4 +40,25 @@ describe('MockChainService', () => {
     const moved = await service.moveAgent(agents[0].id, { x: 999, y: 888 });
     expect(moved.position).toEqual({ x: 999, y: 888 });
   });
+
+  it('sends a message (mock)', async () => {
+    const result = await service.sendMessage(
+      { x: 0, y: 0 },
+      { x: 100, y: 100 },
+      'Hello agent',
+    );
+    expect(result.text).toBe('Hello agent');
+    expect(result.sender_coord).toEqual({ x: 0, y: 0 });
+    expect(result.target_coord).toEqual({ x: 100, y: 100 });
+    expect(result.id).toBeDefined();
+  });
+
+  it('returns empty messages (mock)', async () => {
+    const messages = await service.getMessages({ x: 0, y: 0 });
+    expect(messages).toEqual([]);
+  });
+
+  it('setIntro resolves without error (mock)', async () => {
+    await expect(service.setIntro({ x: 0, y: 0 }, 'Welcome!')).resolves.toBeUndefined();
+  });
 });
