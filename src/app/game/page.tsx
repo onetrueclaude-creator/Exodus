@@ -66,8 +66,17 @@ export default function GamePage() {
   const [showPlanetCreator, setShowPlanetCreator] = useState(false);
   const [showAgentCreator, setShowAgentCreator] = useState(false);
   const setActiveDockPanel = useGameStore((s) => s.setActiveDockPanel);
+  const switchAgent = useGameStore((s) => s.switchAgent);
+  const activeDockPanel = useGameStore((s) => s.activeDockPanel);
   /** When deploying via sidebar, pass the target node ID to the terminal */
   const [deployTargetForTerminal, setDeployTargetForTerminal] = useState<string | null>(null);
+
+  // Clear deploy target when the terminal panel is closed without completing a deploy
+  useEffect(() => {
+    if (activeDockPanel !== 'terminal') {
+      setDeployTargetForTerminal(null);
+    }
+  }, [activeDockPanel]);
   const [serverStartTime] = useState(() => Date.now() - 24 * 60 * 60 * 1000);
 
   /** Unclaimed neural nodes sorted by proximity to current agent */
@@ -312,7 +321,7 @@ export default function GamePage() {
               onHaikuSubmit={handleHaikuSubmit}
               currentAgent={currentAgentId ? agents[currentAgentId] ?? null : null}
               chainService={chainRef.current}
-              onAgentDeploy={(newId) => { setDeployTargetForTerminal(null); setActiveDockPanel('terminal'); }}
+              onAgentDeploy={(newId) => { switchAgent(newId); setDeployTargetForTerminal(null); setActiveDockPanel('terminal'); }}
               onFocusNode={(nodeId) => {
                 const node = agents[nodeId];
                 if (node) {
