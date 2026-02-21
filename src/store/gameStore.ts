@@ -9,6 +9,7 @@ interface Camera {
 }
 
 export type GameTab = 'network' | 'account' | 'researches' | 'skills';
+export type DockPanelId = 'chat' | 'terminal' | 'deploy' | 'stats' | 'timeRewind';
 
 interface GameState {
   // Entities
@@ -54,6 +55,7 @@ interface GameState {
   // UI
   activeTab: GameTab;
   empireColor: number;
+  activeDockPanel: DockPanelId | null;
 
   // Actions
   addAgent: (agent: Agent) => void;
@@ -84,6 +86,7 @@ interface GameState {
   setChainStatus: (status: { poolRemaining: number; totalMined: number; stateRoot: string; nextBlockIn: number; blocks: number }) => void;
   setInitializing: (v: boolean) => void;
   setEmpireColor: (color: number) => void;
+  setActiveDockPanel: (panel: DockPanelId | null) => void;
   setMaxDeployTier: (tier: AgentTier) => void;
   reset: () => void;
 }
@@ -113,6 +116,7 @@ const initialState = {
   maxDeployTier: 'haiku' as AgentTier, // default: Community tier (haiku only)
   activeTab: 'network' as GameTab,
   empireColor: 0x8b5cf6, // default: purple (Opus)
+  activeDockPanel: null as DockPanelId | null,
 };
 
 export const useGameStore = create<GameState>((set) => ({
@@ -449,6 +453,11 @@ export const useGameStore = create<GameState>((set) => ({
   setInitializing: (v) => set({ isInitializing: v }),
 
   setEmpireColor: (color) => set({ empireColor: color }),
+
+  setActiveDockPanel: (panel) =>
+    set((s) => ({
+      activeDockPanel: s.activeDockPanel === panel ? null : panel,
+    })),
 
   setMaxDeployTier: (tier) => set({ maxDeployTier: tier }),
 
