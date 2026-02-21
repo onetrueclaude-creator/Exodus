@@ -125,7 +125,7 @@ export default function DockPanel({
 
       {/* Floating Panel */}
       {activeDockPanel && (
-        <div className="absolute right-12 top-2 bottom-10 z-25 w-80 glass-panel-floating animate-slide-left overflow-hidden flex flex-col">
+        <div className="absolute right-12 top-2 bottom-10 z-[25]w-80 glass-panel-floating animate-slide-left overflow-hidden flex flex-col">
           <div className="relative z-10 flex-1 min-h-0">
             {renderPanel()}
           </div>

@@ -266,6 +266,7 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
 
   // Focus on a specific node when requested via store
   const focusRequest = useGameStore((s) => s.focusRequest);
+  const clearFocusRequest = useGameStore((s) => s.clearFocusRequest);
   useEffect(() => {
     if (!focusRequest) return;
     const world = worldRef.current;
@@ -280,7 +281,8 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
       centerY - target.position.y * world.scale.x,
     );
     setCamera({ x: world.position.x, y: world.position.y }, world.scale.x);
-  }, [focusRequest, agents, setCamera]);
+    clearFocusRequest();
+  }, [focusRequest, clearFocusRequest, setCamera]);
 
   // Center on home neural node
   const handleCenterHome = useCallback(() => {

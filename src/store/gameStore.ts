@@ -90,6 +90,7 @@ interface GameState {
   setActiveDockPanel: (panel: DockPanelId | null) => void;
   switchAgent: (agentId: string) => void;
   requestFocus: (nodeId: string) => void;
+  clearFocusRequest: () => void;
   setMaxDeployTier: (tier: AgentTier) => void;
   reset: () => void;
 }
@@ -460,7 +461,7 @@ export const useGameStore = create<GameState>((set) => ({
 
   setActiveDockPanel: (panel) =>
     set((s) => ({
-      activeDockPanel: s.activeDockPanel === panel ? null : panel,
+      activeDockPanel: panel === null ? null : (s.activeDockPanel === panel ? null : panel),
     })),
 
   switchAgent: (agentId) =>
@@ -472,6 +473,8 @@ export const useGameStore = create<GameState>((set) => ({
 
   requestFocus: (nodeId) =>
     set({ focusRequest: { nodeId, ts: Date.now() } }),
+
+  clearFocusRequest: () => set({ focusRequest: null }),
 
   setMaxDeployTier: (tier) => set({ maxDeployTier: tier }),
 
