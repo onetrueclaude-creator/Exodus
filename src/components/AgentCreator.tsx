@@ -1,116 +1,167 @@
 "use client";
 
 import { useState } from 'react';
-import { TIER_CPU_COST } from '@/types/agent';
+import { TIER_CPU_COST, TIER_CLAIM_COST, TIER_MINING_RATE } from '@/types/agent';
 import type { AgentTier } from '@/types';
 
 interface AgentCreatorProps {
+  currentAgentTier: AgentTier;
   energy: number;
-  onCreateAgent: (tier: AgentTier) => void;
+  minerals: number;
+  unclaimedNodes: { id: string; x: number; y: number; dist: number }[];
+  onClaimNode: (slotId: string, tier: AgentTier) => void;
   onClose: () => void;
 }
 
-const TIERS: { tier: AgentTier; label: string; color: string; borderColor: string; bgColor: string; shadowColor: string; symbol: string }[] = [
-  {
-    tier: 'haiku',
+const TIER_STYLES: Record<AgentTier, { label: string; color: string; borderColor: string; bgColor: string; symbol: string }> = {
+  haiku: {
     label: 'Haiku',
-    color: 'text-yellow-400 border-yellow-400/30',
+    color: 'text-yellow-400',
     borderColor: 'border-yellow-400/50',
     bgColor: 'bg-yellow-400/10',
-    shadowColor: 'shadow-[0_0_12px_rgba(250,204,21,0.2)]',
-    symbol: '\u25CB', // ○
+    symbol: '\u25CB',
   },
-  {
-    tier: 'sonnet',
+  sonnet: {
     label: 'Sonnet',
-    color: 'text-accent-cyan border-accent-cyan/30',
+    color: 'text-accent-cyan',
     borderColor: 'border-accent-cyan/50',
     bgColor: 'bg-accent-cyan/10',
-    shadowColor: 'shadow-[0_0_12px_rgba(0,212,255,0.2)]',
-    symbol: '\u25C6', // ◆
+    symbol: '\u25C6',
   },
-  {
-    tier: 'opus',
+  opus: {
     label: 'Opus',
-    color: 'text-accent-purple border-accent-purple/30',
+    color: 'text-accent-purple',
     borderColor: 'border-accent-purple/50',
     bgColor: 'bg-accent-purple/10',
-    shadowColor: 'shadow-[0_0_12px_rgba(139,92,246,0.2)]',
-    symbol: '\u2726', // ✦
+    symbol: '\u2726',
   },
-];
+};
 
-export default function AgentCreator({ energy, onCreateAgent, onClose }: AgentCreatorProps) {
-  const [selectedTier, setSelectedTier] = useState<AgentTier>('sonnet');
+/** Tier hierarchy: which tiers can this agent deploy? */
+function getDeployableTiers(tier: AgentTier): AgentTier[] {
+  if (tier === 'opus') return ['sonnet', 'haiku'];
+  if (tier === 'sonnet') return ['haiku'];
+  return []; // haiku can't deploy
+}
 
-  const upfrontCost = TIER_CPU_COST[selectedTier] * 5;
-  const perTurnCost = TIER_CPU_COST[selectedTier];
-  const canAfford = energy >= upfrontCost;
+export default function AgentCreator({
+  currentAgentTier,
+  energy,
+  minerals,
+  unclaimedNodes,
+  onClaimNode,
+  onClose,
+}: AgentCreatorProps) {
+  const [step, setStep] = useState<'pick-node' | 'pick-tier'>('pick-node');
+  const [selectedNode, setSelectedNode] = useState<{ id: string; x: number; y: number; dist: number } | null>(null);
 
-  const currentTierData = TIERS.find(t => t.tier === selectedTier)!;
+  const deployableTiers = getDeployableTiers(currentAgentTier);
 
+  // Step 1: Pick an unclaimed neural node
+  if (step === 'pick-node') {
+    return (
+      <div className="glass-card p-3 w-64 animate-slide-up">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-heading font-semibold text-text-primary tracking-wide">Claim Neural Node</span>
+          <button onClick={onClose} className="text-text-muted hover:text-text-primary text-xs transition-colors">
+            {'\u2715'}
+          </button>
+        </div>
+        <div className="text-[9px] text-text-muted mb-2 font-mono tracking-widest">SELECT TARGET:</div>
+        {unclaimedNodes.length === 0 ? (
+          <p className="text-[10px] text-text-muted italic py-2">No unclaimed neural nodes in range.</p>
+        ) : (
+          <div className="space-y-1 max-h-48 overflow-y-auto">
+            {unclaimedNodes.map(node => (
+              <button
+                key={node.id}
+                onClick={() => { setSelectedNode(node); setStep('pick-tier'); }}
+                className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-left transition-all duration-150 hover:bg-card-border/50 border border-transparent hover:border-card-border-hover"
+              >
+                <div>
+                  <div className="text-[10px] font-mono font-semibold text-text-primary">[{node.id.slice(0, 8)}]</div>
+                  <div className="text-[9px] text-text-muted font-mono">
+                    ({node.x.toFixed(0)}, {node.y.toFixed(0)})
+                  </div>
+                </div>
+                <span className="text-[9px] font-mono text-accent-cyan">{node.dist.toFixed(0)}u</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Step 2: Pick agent tier for the selected node
   return (
-    <div className="glass-card p-3 w-56 animate-slide-up">
+    <div className="glass-card p-3 w-64 animate-slide-up">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-heading font-semibold text-text-primary tracking-wide">Create Agent</span>
+        <span className="text-xs font-heading font-semibold text-text-primary tracking-wide">Select Model</span>
         <button onClick={onClose} className="text-text-muted hover:text-text-primary text-xs transition-colors">
-          &#x2715;
+          {'\u2715'}
         </button>
       </div>
 
-      {/* Tier selection */}
-      <div className="flex gap-1.5 mb-3">
-        {TIERS.map(({ tier, label, color, borderColor, bgColor, shadowColor, symbol }) => {
-          const isSelected = selectedTier === tier;
+      {selectedNode && (
+        <div className="text-[9px] text-text-muted mb-2 font-mono px-0.5">
+          Node: [{selectedNode.id.slice(0, 8)}] ({selectedNode.x.toFixed(0)}, {selectedNode.y.toFixed(0)})
+        </div>
+      )}
+
+      <div className="space-y-1.5">
+        {deployableTiers.map(tier => {
+          const style = TIER_STYLES[tier];
+          const eCost = TIER_CLAIM_COST[tier];
+          const mCost = Math.ceil(eCost * 0.3);
+          const canAfford = energy >= eCost && minerals >= mCost;
           return (
             <button
               key={tier}
-              onClick={() => setSelectedTier(tier)}
-              className={`flex-1 py-2 rounded-lg text-[10px] font-semibold border transition-all duration-200 flex flex-col items-center gap-0.5 ${
-                isSelected
-                  ? `${color} ${bgColor} ${borderColor} ${shadowColor}`
-                  : 'text-text-muted border-card-border hover:border-text-muted/30 hover:bg-white/[0.02]'
+              onClick={() => { if (canAfford && selectedNode) onClaimNode(selectedNode.id, tier); }}
+              disabled={!canAfford}
+              className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg border transition-all duration-200 ${
+                canAfford
+                  ? `${style.borderColor} ${style.bgColor} hover:shadow-glow active:scale-[0.98] cursor-pointer`
+                  : 'border-card-border/20 opacity-30 cursor-not-allowed'
               }`}
             >
-              <span className={`text-sm transition-transform duration-200 ${isSelected ? 'scale-110' : ''}`}>
-                {symbol}
-              </span>
-              <span>{label}</span>
+              <div className="flex items-center gap-2">
+                <span className={`text-sm ${style.color}`}>{style.symbol}</span>
+                <div>
+                  <div className={`text-[11px] font-semibold capitalize ${style.color}`}>{tier}</div>
+                  <div className="text-[9px] text-text-muted font-mono">
+                    CPU: {TIER_CPU_COST[tier]}/t {'\u00B7'} Mining: {TIER_MINING_RATE[tier]}/t
+                  </div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className={`text-[10px] font-mono ${canAfford ? 'text-success' : 'text-danger'}`}>
+                  {eCost}E + {mCost}M
+                </div>
+              </div>
             </button>
           );
         })}
       </div>
 
-      {/* Cost breakdown */}
-      <div className="text-[10px] text-text-muted space-y-1 mb-3 px-0.5">
+      {/* Cost summary */}
+      <div className="text-[9px] text-text-muted mt-2 px-0.5 font-mono">
         <div className="flex justify-between">
-          <span>Creation cost:</span>
-          <span className={`font-mono ${canAfford ? 'text-success' : 'text-danger'}`}>
-            {upfrontCost} CPU
-          </span>
+          <span>Energy:</span>
+          <span className="text-text-secondary">{energy.toFixed(0)}</span>
         </div>
         <div className="flex justify-between">
-          <span>Maintenance:</span>
-          <span className="font-mono">{perTurnCost} CPU/turn</span>
-        </div>
-        <div className="divider-gradient my-1.5" />
-        <div className="flex justify-between">
-          <span>Your energy:</span>
-          <span className="font-mono text-text-secondary">{energy} CPU</span>
+          <span>Data Frags:</span>
+          <span className="text-text-secondary">{minerals}</span>
         </div>
       </div>
 
-      {/* Create button */}
       <button
-        onClick={() => canAfford && onCreateAgent(selectedTier)}
-        disabled={!canAfford}
-        className={`w-full py-2.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
-          canAfford
-            ? `${currentTierData.bgColor} ${currentTierData.color.split(' ')[0]} border ${currentTierData.borderColor} hover:shadow-glow active:scale-[0.98]`
-            : 'bg-card-border/20 text-text-muted cursor-not-allowed border border-transparent'
-        }`}
+        onClick={() => { setStep('pick-node'); setSelectedNode(null); }}
+        className="w-full px-2.5 py-1.5 mt-2 rounded-lg text-[10px] text-text-muted hover:text-text-secondary transition-colors font-mono"
       >
-        {canAfford ? `Deploy ${selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)} Agent` : 'Not enough CPU'}
+        {'\u2190'} Back
       </button>
     </div>
   );

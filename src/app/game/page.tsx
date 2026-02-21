@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import GalaxyGrid from '@/components/GalaxyGrid';
 import GalaxyChatRoom from '@/components/GalaxyChatRoom';
 import AgentPanel from '@/components/AgentPanel';
@@ -38,6 +38,7 @@ export default function GamePage() {
   const activeTab = useGameStore((s) => s.activeTab);
   const agents = useGameStore((s) => s.agents);
   const energy = useGameStore((s) => s.energy);
+  const minerals = useGameStore((s) => s.minerals);
   const addPlanet = useGameStore((s) => s.addPlanet);
   const setActiveTab = useGameStore((s) => s.setActiveTab);
   const currentUserId = useGameStore((s) => s.currentUserId);
@@ -61,6 +62,22 @@ export default function GamePage() {
   /** Which terminal is focused (rendered on top) */
   const [focusedTerminal, setFocusedTerminal] = useState<string | null>(null);
   const [serverStartTime] = useState(() => Date.now() - 24 * 60 * 60 * 1000);
+
+  /** Unclaimed neural nodes sorted by proximity to current agent */
+  const nearbyUnclaimedNodes = useMemo(() => {
+    const viewer = currentAgentId ? agents[currentAgentId] : null;
+    if (!viewer) return [];
+    return Object.values(agents)
+      .filter(a => !a.userId)
+      .map(a => ({
+        id: a.id,
+        x: a.position.x,
+        y: a.position.y,
+        dist: getDistance(viewer.position, a.position),
+      }))
+      .sort((a, b) => a.dist - b.dist)
+      .slice(0, 8);
+  }, [agents, currentAgentId]);
   const chainRef = useRef<ChainService | null>(null);
 
   const openTerminal = useCallback((agentId: string) => {
@@ -192,8 +209,9 @@ export default function GamePage() {
         if (!svc || !('mine' in svc)) break;
         try {
           const result = await (svc as { mine(): Promise<{ blockNumber: number; yields: Record<string, number> }> }).mine();
-          // Update block count
-          useGameStore.getState().setChainMode('testnet', result.blockNumber);
+          // Update block count (preserve current mode)
+          const store = useGameStore.getState();
+          store.setChainMode(store.chainMode, result.blockNumber);
           // Trigger full sync to get updated agents/status
           syncFromChain();
         } catch {
@@ -202,8 +220,12 @@ export default function GamePage() {
         break;
       }
       case 'secure':
+        // CPU staking is the security mechanism — open terminal for staking controls
+        if (selectedAgent) openTerminal(selectedAgent);
+        break;
       case 'vote':
-        // TODO: Wire up blockchain actions
+        // Governance voting — open profile for now (full voting with mainnet)
+        if (selectedAgent) setProfileAgent(selectedAgent);
         break;
     }
   };
@@ -273,31 +295,32 @@ export default function GamePage() {
 
             {/* Bottom left controls: Agent creator + Planet creator */}
             <div className="absolute bottom-14 left-4 z-10 flex flex-col gap-2">
-              {/* Agent Creator */}
-              {showAgentCreator ? (
-                <AgentCreator
-                  energy={energy}
-                  onCreateAgent={(tier) => {
-                    // Place new agent near the player's current agent with some random offset
-                    const viewer = currentAgentId ? agents[currentAgentId] : null;
-                    if (!viewer) return;
-                    const offset = { x: (Math.random() - 0.5) * 200, y: (Math.random() - 0.5) * 200 };
-                    const position = { x: viewer.position.x + offset.x, y: viewer.position.y + offset.y };
-                    const newId = createAgent(tier, position);
-                    if (newId) {
-                      setShowAgentCreator(false);
-                      setSelectedAgent(newId);
-                    }
-                  }}
-                  onClose={() => setShowAgentCreator(false)}
-                />
-              ) : (
-                <button
-                  onClick={() => setShowAgentCreator(true)}
-                  className="glass-card px-4 py-2 text-xs font-semibold text-accent-cyan hover:text-text-primary transition-all"
-                >
-                  + Agent
-                </button>
+              {/* Agent Creator — only show if current agent can deploy (not haiku) */}
+              {currentAgentId && agents[currentAgentId]?.tier !== 'haiku' && (
+                showAgentCreator ? (
+                  <AgentCreator
+                    currentAgentTier={agents[currentAgentId]?.tier ?? 'sonnet'}
+                    energy={energy}
+                    minerals={minerals}
+                    unclaimedNodes={nearbyUnclaimedNodes}
+                    onClaimNode={(slotId, tier) => {
+                      const parentId = currentAgentId || undefined;
+                      const success = useGameStore.getState().claimNode(slotId, tier, parentId);
+                      if (success) {
+                        setShowAgentCreator(false);
+                        setSelectedAgent(slotId);
+                      }
+                    }}
+                    onClose={() => setShowAgentCreator(false)}
+                  />
+                ) : (
+                  <button
+                    onClick={() => setShowAgentCreator(true)}
+                    className="glass-card px-4 py-2 text-xs font-semibold text-accent-cyan hover:text-text-primary transition-all"
+                  >
+                    + Agent
+                  </button>
+                )
               )}
 
               {/* Planet Creator */}
@@ -334,7 +357,7 @@ export default function GamePage() {
               const dipState = useGameStore.getState().diplomacy[dipKey];
               const clarity = dipState ? getClarityLevel(dipState.exchangeCount) : (isOwn ? 4 : 0);
               return (
-                <div className="absolute top-0 left-0 bottom-0 z-20 w-60 bg-background-light/95 border-r border-card-border overflow-y-auto flex flex-col gap-0">
+                <div className="absolute top-0 left-0 bottom-0 z-20 w-72 bg-background-light/95 border-r border-card-border overflow-y-auto flex flex-col gap-0">
                   <QuickActionMenu
                     agent={selected}
                     isOwn={isOwn}

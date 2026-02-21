@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { useGameStore } from '@/store';
-import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
+import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE, TIER_CLAIM_COST } from '@/types/agent';
 import type { Agent, AgentTier } from '@/types';
 
 /* ── Helpers ──────────────────────────────────────────── */
@@ -60,10 +60,19 @@ describe('TabNavigation', () => {
 
 /* ── AgentCreator ──────────────────────────────────────── */
 
+const mockNodes = [
+  { id: 'node-alpha-001', x: 150, y: 250, dist: 80 },
+  { id: 'node-beta-002', x: 300, y: 400, dist: 220 },
+  { id: 'node-gamma-003', x: -100, y: -200, dist: 350 },
+];
+
 describe('AgentCreator', () => {
   let AgentCreator: React.ComponentType<{
+    currentAgentTier: AgentTier;
     energy: number;
-    onCreateAgent: (tier: AgentTier) => void;
+    minerals: number;
+    unclaimedNodes: { id: string; x: number; y: number; dist: number }[];
+    onClaimNode: (slotId: string, tier: AgentTier) => void;
     onClose: () => void;
   }>;
 
@@ -72,47 +81,82 @@ describe('AgentCreator', () => {
     AgentCreator = mod.default;
   });
 
-  it('renders tier selection buttons', () => {
-    render(<AgentCreator energy={1000} onCreateAgent={() => {}} onClose={() => {}} />);
-    expect(screen.getByText('Haiku')).toBeDefined();
-    expect(screen.getByText('Sonnet')).toBeDefined();
-    expect(screen.getByText('Opus')).toBeDefined();
+  it('renders node selection as first step', () => {
+    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
+    expect(screen.getByText('Claim Neural Node')).toBeDefined();
+    expect(screen.getByText('SELECT TARGET:')).toBeDefined();
   });
 
-  it('defaults to sonnet tier', () => {
-    render(<AgentCreator energy={1000} onCreateAgent={() => {}} onClose={() => {}} />);
-    // Sonnet is default: cost = TIER_CPU_COST.sonnet * 5 = 15
-    expect(screen.getByText(`${TIER_CPU_COST.sonnet * 5} CPU`)).toBeDefined();
+  it('shows unclaimed nodes with coordinates', () => {
+    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
+    expect(screen.getByText('[node-alp]')).toBeDefined();
+    expect(screen.getByText('80u')).toBeDefined();
   });
 
-  it('updates cost when tier is changed', () => {
-    render(<AgentCreator energy={1000} onCreateAgent={() => {}} onClose={() => {}} />);
-    fireEvent.click(screen.getByText('Opus'));
-    expect(screen.getByText(`${TIER_CPU_COST.opus * 5} CPU`)).toBeDefined();
+  it('shows empty message when no unclaimed nodes', () => {
+    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={[]} onClaimNode={() => {}} onClose={() => {}} />);
+    expect(screen.getByText('No unclaimed neural nodes in range.')).toBeDefined();
   });
 
-  it('calls onCreateAgent with the selected tier', () => {
-    const onCreateAgent = vi.fn();
-    render(<AgentCreator energy={1000} onCreateAgent={onCreateAgent} onClose={() => {}} />);
-    fireEvent.click(screen.getByText('Haiku'));
-    // Click the deploy button
-    const deployBtn = screen.getByText(/Deploy Haiku Agent/i);
-    fireEvent.click(deployBtn);
-    expect(onCreateAgent).toHaveBeenCalledWith('haiku');
+  it('advances to tier selection after picking a node', () => {
+    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
+    fireEvent.click(screen.getByText('[node-alp]'));
+    expect(screen.getByText('Select Model')).toBeDefined();
   });
 
-  it('disables deploy button when not enough energy', () => {
-    const onCreateAgent = vi.fn();
-    render(<AgentCreator energy={0} onCreateAgent={onCreateAgent} onClose={() => {}} />);
-    const btn = screen.getByText('Not enough CPU');
-    fireEvent.click(btn);
-    expect(onCreateAgent).not.toHaveBeenCalled();
+  it('opus agent shows sonnet and haiku tiers', () => {
+    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
+    fireEvent.click(screen.getByText('[node-alp]'));
+    expect(screen.getByText('sonnet')).toBeDefined();
+    expect(screen.getByText('haiku')).toBeDefined();
+    // Should NOT show opus (can't deploy same tier)
+    expect(screen.queryByText('opus')).toBeNull();
+  });
+
+  it('sonnet agent shows only haiku tier', () => {
+    render(<AgentCreator currentAgentTier="sonnet" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
+    fireEvent.click(screen.getByText('[node-alp]'));
+    expect(screen.getByText('haiku')).toBeDefined();
+    expect(screen.queryByText('sonnet')).toBeNull();
+    expect(screen.queryByText('opus')).toBeNull();
+  });
+
+  it('calls onClaimNode with correct slotId and tier', () => {
+    const onClaimNode = vi.fn();
+    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={onClaimNode} onClose={() => {}} />);
+    fireEvent.click(screen.getByText('[node-alp]'));
+    fireEvent.click(screen.getByText('haiku'));
+    expect(onClaimNode).toHaveBeenCalledWith('node-alpha-001', 'haiku');
+  });
+
+  it('shows cost for each tier', () => {
+    const eCost = TIER_CLAIM_COST.haiku;
+    const mCost = Math.ceil(eCost * 0.3);
+    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
+    fireEvent.click(screen.getByText('[node-alp]'));
+    expect(screen.getByText(`${eCost}E + ${mCost}M`)).toBeDefined();
+  });
+
+  it('disables tier when insufficient resources', () => {
+    const onClaimNode = vi.fn();
+    render(<AgentCreator currentAgentTier="opus" energy={0} minerals={0} unclaimedNodes={mockNodes} onClaimNode={onClaimNode} onClose={() => {}} />);
+    fireEvent.click(screen.getByText('[node-alp]'));
+    fireEvent.click(screen.getByText('haiku'));
+    expect(onClaimNode).not.toHaveBeenCalled();
+  });
+
+  it('back button returns to node selection', () => {
+    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
+    fireEvent.click(screen.getByText('[node-alp]'));
+    expect(screen.getByText('Select Model')).toBeDefined();
+    fireEvent.click(screen.getByText('\u2190 Back'));
+    expect(screen.getByText('Claim Neural Node')).toBeDefined();
   });
 
   it('calls onClose when close button is clicked', () => {
     const onClose = vi.fn();
-    render(<AgentCreator energy={1000} onCreateAgent={() => {}} onClose={onClose} />);
-    const closeBtn = screen.getByText('✕');
+    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={onClose} />);
+    const closeBtn = screen.getByText('\u2715');
     fireEvent.click(closeBtn);
     expect(onClose).toHaveBeenCalled();
   });
