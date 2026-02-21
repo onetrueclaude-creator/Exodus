@@ -1,176 +1,121 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { SUBSCRIPTION_PLANS } from '@/types/subscription';
 import type { SubscriptionTier } from '@/types/subscription';
 
-/** Registration gate — set to false during test runs */
-const REGISTRATION_OPEN = false;
+const REGISTRATION_OPEN = true;
 
 export default function SubscribePage() {
   const router = useRouter();
-  const [selecting, setSelecting] = useState<SubscriptionTier | null>(null);
-  const [waitlistEmail, setWaitlistEmail] = useState('');
-  const [joined, setJoined] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSelect = async (tier: SubscriptionTier) => {
-    if (!REGISTRATION_OPEN) return;
-    setSelecting(tier);
+    setSubmitting(true);
+    setError('');
     try {
       const res = await fetch('/api/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tier }),
       });
-      if (!res.ok) throw new Error('Subscription failed');
+      if (!res.ok) {
+        const data = await res.json();
+        if (data.error === 'Already subscribed') {
+          router.push('/game');
+          return;
+        }
+        throw new Error(data.error || 'Subscription failed');
+      }
       router.push('/game');
-    } catch {
-      setSelecting(null);
+    } catch (err) {
+      console.error('Subscribe error:', err);
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setSubmitting(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="text-[10px] font-bold tracking-[0.3em] text-yellow-400 mb-2">
-          TESTNET
+  if (!REGISTRATION_OPEN) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center bg-background">
+        <div className="flex flex-col items-center w-full max-w-lg px-6 text-center">
+          <h1
+            className="text-[22px] font-semibold text-text-primary mb-3"
+            style={{ fontFamily: "'Outfit', sans-serif" }}
+          >
+            Registration Opening Soon
+          </h1>
+          <p className="text-[13px] text-text-muted">
+            Join the waitlist to be notified when the network goes live.
+          </p>
         </div>
-        <h1 className="text-2xl font-heading text-text-primary mb-2">
-          Choose Your Fleet
-        </h1>
-        <p className="text-sm text-text-muted max-w-md">
-          Your subscription determines your starting agent, energy reserves,
-          and AGNTC token allocation on the network.
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen flex flex-col items-center justify-center bg-background relative">
+      <div className="flex flex-col items-center w-full max-w-lg px-6">
+        <h2
+          className="text-[22px] font-semibold text-text-primary mb-2"
+          style={{ fontFamily: "'Outfit', sans-serif" }}
+        >
+          Choose your plan
+        </h2>
+        <p className="text-[13px] text-text-muted mb-8">
+          This determines your starting resources and agent tier.
+        </p>
+
+        {error && (
+          <div className="w-full mb-4 text-center text-[12px] text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg py-2 px-4">
+            {error}
+          </div>
+        )}
+
+        <div className="w-full grid gap-3">
+          {SUBSCRIPTION_PLANS.map((plan) => {
+            const accentParts = plan.accent.split(' ');
+            const textClass = accentParts[0];
+            const borderClass = accentParts[1];
+            const bgClass = accentParts[2];
+            return (
+              <button
+                key={plan.tier}
+                onClick={() => handleSelect(plan.tier)}
+                disabled={submitting}
+                className={`w-full text-left p-5 rounded-xl border ${borderClass} ${bgClass} hover:bg-white/[0.04] transition-all duration-200 disabled:opacity-40 group`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <span className={`text-[15px] font-semibold ${textClass}`} style={{ fontFamily: "'Outfit', sans-serif" }}>
+                      {plan.name}
+                    </span>
+                    <span className="ml-2 text-[11px] text-text-muted/40" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      {plan.startAgent.toUpperCase()} agent
+                    </span>
+                  </div>
+                  <span className={`text-[13px] font-semibold ${textClass}`} style={{ fontFamily: "'Fira Code', monospace" }}>
+                    {plan.priceLabel}
+                  </span>
+                </div>
+                <div className="flex gap-4 text-[10px] text-text-muted/50" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <span>{plan.startEnergy} Energy</span>
+                  <span>{plan.startAgntc} AGNTC</span>
+                  <span>{plan.startMinerals} Minerals</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        <p className="mt-6 text-[11px] text-text-muted/30 text-center max-w-sm">
+          Your AGNTC blockchain token coordinate will be assigned automatically.
+          <br />
+          Phantom wallet connection is available later for on-chain actions.
         </p>
       </div>
-
-      {/* Closed registration banner */}
-      {!REGISTRATION_OPEN && (
-        <div className="w-full max-w-4xl mb-6 p-4 rounded-lg border border-yellow-400/30 bg-yellow-400/5 text-center">
-          <div className="text-sm font-semibold text-yellow-400 mb-1">
-            Registration Closed — Testnet Dry-Run
-          </div>
-          <p className="text-xs text-text-muted mb-3">
-            We're running internal test cycles on the blockchain ledger.
-            Join the waitlist to be notified when registration opens.
-          </p>
-          {joined ? (
-            <div className="text-xs text-green-400 font-semibold">
-              You're on the list. We'll notify you when testnet opens.
-            </div>
-          ) : (
-            <div className="flex items-center justify-center gap-2 max-w-sm mx-auto">
-              <input
-                type="email"
-                value={waitlistEmail}
-                onChange={(e) => setWaitlistEmail(e.target.value)}
-                placeholder="your@email.com"
-                className="flex-1 px-3 py-2 rounded bg-background border border-card-border text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-yellow-400/50"
-              />
-              <button
-                onClick={() => { if (waitlistEmail.includes('@')) setJoined(true); }}
-                className="px-4 py-2 rounded bg-yellow-400/20 text-yellow-400 text-xs font-semibold hover:bg-yellow-400/30 transition-colors"
-              >
-                Join Waitlist
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Plan cards */}
-      <div className="flex flex-col md:flex-row gap-4 max-w-4xl w-full">
-        {SUBSCRIPTION_PLANS.map((plan) => (
-          <div
-            key={plan.tier}
-            className={`flex-1 rounded-lg border p-6 flex flex-col transition-all ${plan.accent} ${
-              plan.tier === 'PROFESSIONAL' ? 'md:scale-105 md:shadow-lg' : ''
-            }`}
-          >
-            {/* Plan header */}
-            <div className="mb-4">
-              {plan.tier === 'PROFESSIONAL' && (
-                <div className="text-[9px] font-bold tracking-wider text-accent-purple mb-1">
-                  RECOMMENDED
-                </div>
-              )}
-              <h2 className="text-lg font-heading text-text-primary">{plan.name}</h2>
-              <div className="mt-1">
-                <span className="text-2xl font-bold text-text-primary">{plan.priceLabel}</span>
-                {plan.price > 0 && (
-                  <span className="text-xs text-text-muted ml-1">per month</span>
-                )}
-              </div>
-            </div>
-
-            {/* Starting conditions */}
-            <div className="mb-4 p-3 rounded bg-background/50 border border-card-border/30">
-              <div className="text-[10px] font-semibold text-text-muted mb-1.5">
-                STARTING CONDITIONS
-              </div>
-              <div className="grid grid-cols-2 gap-1 text-xs">
-                <div>
-                  <span className="text-text-muted">Agent: </span>
-                  <span className="text-text-primary capitalize font-semibold">{plan.startAgent}</span>
-                </div>
-                <div>
-                  <span className="text-text-muted">Energy: </span>
-                  <span className="text-yellow-300 font-mono">{plan.startEnergy}</span>
-                </div>
-                <div>
-                  <span className="text-text-muted">AGNTC: </span>
-                  <span className="text-accent-cyan font-mono">{plan.startAgntc}</span>
-                </div>
-                <div>
-                  <span className="text-text-muted">Data Frags: </span>
-                  <span className="text-green-300 font-mono">{plan.startMinerals}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Features */}
-            <ul className="flex-1 space-y-1.5 mb-6">
-              {plan.features.map((f) => (
-                <li key={f} className="text-xs text-text-muted flex items-start gap-2">
-                  <span className="text-green-400 mt-0.5 shrink-0">+</span>
-                  <span>{f}</span>
-                </li>
-              ))}
-            </ul>
-
-            {/* Select button */}
-            <button
-              onClick={() => handleSelect(plan.tier)}
-              disabled={!REGISTRATION_OPEN || selecting !== null}
-              className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                !REGISTRATION_OPEN
-                  ? 'bg-card-border/30 text-text-muted cursor-not-allowed'
-                  : selecting === plan.tier
-                    ? 'bg-text-muted/20 text-text-muted cursor-wait'
-                    : plan.tier === 'PROFESSIONAL'
-                      ? 'bg-accent-purple text-white hover:bg-accent-purple/80'
-                      : plan.tier === 'MAX'
-                        ? 'bg-accent-cyan text-background hover:bg-accent-cyan/80'
-                        : 'bg-card-border text-text-primary hover:bg-card-border/80'
-              }`}
-            >
-              {!REGISTRATION_OPEN
-                ? 'Coming Soon'
-                : selecting === plan.tier
-                  ? 'Deploying...'
-                  : `Select ${plan.name}`}
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {/* Footer */}
-      <div className="mt-8 text-center text-[10px] text-text-muted">
-        <p>All plans include testnet access. Paid plans will use Stripe for billing.</p>
-        <p className="mt-1">A neural node coordinate and starting agent will be assigned upon selection.</p>
-      </div>
-    </div>
+    </main>
   );
 }
