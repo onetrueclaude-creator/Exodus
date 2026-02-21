@@ -516,21 +516,23 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService }: Ag
         addMsg('system', `Birth failed: ${msg}`);
       }
     } else {
-      // Fallback: local mock deploy (existing behavior)
+      // Mock deploy — claim existing neural node
       await new Promise(r => setTimeout(r, 800 + Math.random() * 1200));
       const eCost = TIER_CLAIM_COST[tier];
-      if (energy < eCost) {
-        addMsg('system', `Insufficient energy. Need ${eCost}, have ${energy.toFixed(0)}.`);
+      const mCost = Math.ceil(eCost * 0.3);
+      const currentMinerals = useGameStore.getState().minerals;
+      if (energy < eCost || currentMinerals < mCost) {
+        addMsg('system', `Insufficient resources. Need ${eCost}E + ${mCost}M.`);
         setProcessing(false);
         return;
       }
-      const newId = createAgent(tier, { x: target.x, y: target.y });
-      if (newId) {
+      const claimSuccess = useGameStore.getState().claimNode(target.id, tier, agent.id);
+      if (claimSuccess) {
         const response = ACTION_RESPONSES['deploy']?.[agent.tier] || 'Agent deployed.';
         addMsg('agent', response);
-        if (onDeploy) onDeploy(newId);
+        if (onDeploy) onDeploy(target.id);
       } else {
-        addMsg('system', 'Deploy failed \u2014 insufficient resources or invalid target.');
+        addMsg('system', 'Deploy failed \u2014 node unavailable or insufficient resources.');
       }
     }
 

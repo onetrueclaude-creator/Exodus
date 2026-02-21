@@ -50,7 +50,7 @@ interface GameState {
   // Actions
   addAgent: (agent: Agent) => void;
   createAgent: (tier: AgentTier, position: GridPosition, name?: string, parentAgentId?: string) => string | null;
-  claimNode: (slotId: string, tier: AgentTier) => boolean;
+  claimNode: (slotId: string, tier: AgentTier, parentAgentId?: string) => boolean;
   tick: () => void;           // advance one turn — apply net resource production
   startTurnTimer: () => void; // start auto-ticking every 10 seconds
   stopTurnTimer: () => void;
@@ -136,7 +136,7 @@ export const useGameStore = create<GameState>((set) => ({
     return id;
   },
 
-  claimNode: (slotId, tier) => {
+  claimNode: (slotId, tier, parentAgentId) => {
     const state = useGameStore.getState();
     const slot = state.agents[slotId];
     if (!slot || slot.userId) return false;
@@ -156,6 +156,7 @@ export const useGameStore = create<GameState>((set) => ({
       energyLimit: TIER_CPU_COST[tier] * 5,
       stakedCpu: 0,
       createdAt: Date.now(),
+      parentAgentId,
     };
 
     set((s) => ({

@@ -19,6 +19,7 @@ export interface ChainService {
 export class MockChainService implements ChainService {
   private agents: Agent[];
   private haiku: HaikuMessage[];
+  private blockNumber = 0;
 
   constructor() {
     this.agents = generateMockAgents(3);
@@ -84,11 +85,16 @@ export class MockChainService implements ChainService {
     };
   }
 
-  async getMessages(): Promise<MessageInfo[]> {
+  async getMessages(_coord: { x: number; y: number }): Promise<MessageInfo[]> {
     return [];
   }
 
-  async setIntro(): Promise<void> {
+  async setIntro(_coord: { x: number; y: number }, _message: string): Promise<void> {
     // No-op in mock mode
+  }
+
+  async mine(): Promise<{ blockNumber: number; yields: Record<string, number> }> {
+    this.blockNumber++;
+    return { blockNumber: this.blockNumber, yields: {} };
   }
 }

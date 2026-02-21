@@ -61,4 +61,12 @@ describe('MockChainService', () => {
   it('setIntro resolves without error (mock)', async () => {
     await expect(service.setIntro({ x: 0, y: 0 }, 'Welcome!')).resolves.toBeUndefined();
   });
+
+  it('mine increments block number', async () => {
+    const result1 = await service.mine();
+    expect(result1.blockNumber).toBe(1);
+    expect(result1.yields).toEqual({});
+    const result2 = await service.mine();
+    expect(result2.blockNumber).toBe(2);
+  });
 });

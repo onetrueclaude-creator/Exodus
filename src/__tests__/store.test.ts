@@ -171,6 +171,18 @@ describe('gameStore', () => {
       const result = useGameStore.getState().claimNode('unclaimed-1', 'opus');
       expect(result).toBe(false);
     });
+
+    it('sets parentAgentId when provided', () => {
+      const result = useGameStore.getState().claimNode('unclaimed-1', 'haiku', 'parent-opus');
+      expect(result).toBe(true);
+      expect(useGameStore.getState().agents['unclaimed-1'].parentAgentId).toBe('parent-opus');
+    });
+
+    it('leaves parentAgentId undefined when not provided', () => {
+      const result = useGameStore.getState().claimNode('unclaimed-1', 'haiku');
+      expect(result).toBe(true);
+      expect(useGameStore.getState().agents['unclaimed-1'].parentAgentId).toBeUndefined();
+    });
   });
 
   /* ── CPU Distribution ── */
