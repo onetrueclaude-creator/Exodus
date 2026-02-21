@@ -9,7 +9,7 @@ interface Camera {
 }
 
 export type GameTab = 'network' | 'account' | 'researches' | 'skills';
-export type DockPanelId = 'chat' | 'terminal' | 'deploy' | 'stats' | 'timeRewind';
+export type DockPanelId = 'chat' | 'terminal' | 'deploy' | 'stats' | 'timeRewind' | 'nodes';
 
 interface GameState {
   // Entities
@@ -56,6 +56,7 @@ interface GameState {
   activeTab: GameTab;
   empireColor: number;
   activeDockPanel: DockPanelId | null;
+  focusRequest: { nodeId: string; ts: number } | null;
 
   // Actions
   addAgent: (agent: Agent) => void;
@@ -87,6 +88,8 @@ interface GameState {
   setInitializing: (v: boolean) => void;
   setEmpireColor: (color: number) => void;
   setActiveDockPanel: (panel: DockPanelId | null) => void;
+  switchAgent: (agentId: string) => void;
+  requestFocus: (nodeId: string) => void;
   setMaxDeployTier: (tier: AgentTier) => void;
   reset: () => void;
 }
@@ -117,6 +120,7 @@ const initialState = {
   activeTab: 'network' as GameTab,
   empireColor: 0x8b5cf6, // default: purple (Opus)
   activeDockPanel: null as DockPanelId | null,
+  focusRequest: null as { nodeId: string; ts: number } | null,
 };
 
 export const useGameStore = create<GameState>((set) => ({
@@ -458,6 +462,16 @@ export const useGameStore = create<GameState>((set) => ({
     set((s) => ({
       activeDockPanel: s.activeDockPanel === panel ? null : panel,
     })),
+
+  switchAgent: (agentId) =>
+    set((s) => {
+      const agent = s.agents[agentId];
+      if (!agent || agent.userId !== s.currentUserId) return s;
+      return { currentAgentId: agentId };
+    }),
+
+  requestFocus: (nodeId) =>
+    set({ focusRequest: { nodeId, ts: Date.now() } }),
 
   setMaxDeployTier: (tier) => set({ maxDeployTier: tier }),
 

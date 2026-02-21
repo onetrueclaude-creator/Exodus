@@ -264,6 +264,24 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     });
   }, [hoveredNodeId]);
 
+  // Focus on a specific node when requested via store
+  const focusRequest = useGameStore((s) => s.focusRequest);
+  useEffect(() => {
+    if (!focusRequest) return;
+    const world = worldRef.current;
+    const app = appRef.current;
+    const target = agents[focusRequest.nodeId];
+    if (!world || !app || !target) return;
+
+    const centerX = app.screen.width / 2;
+    const centerY = app.screen.height / 2;
+    world.position.set(
+      centerX - target.position.x * world.scale.x,
+      centerY - target.position.y * world.scale.x,
+    );
+    setCamera({ x: world.position.x, y: world.position.y }, world.scale.x);
+  }, [focusRequest, agents, setCamera]);
+
   // Center on home neural node
   const handleCenterHome = useCallback(() => {
     const world = worldRef.current;
