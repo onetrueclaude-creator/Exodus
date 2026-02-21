@@ -14,7 +14,7 @@ function LiveClock() {
   }, []);
 
   return (
-    <span className="text-xs font-mono text-text-muted tabular-nums">
+    <span className="text-xs font-mono text-text-muted tabular-nums" suppressHydrationWarning>
       {time.toLocaleTimeString('en-GB', { hour12: false })}
     </span>
   );
