@@ -352,6 +352,8 @@ describe('gameStore', () => {
       agentA: 'b-agent',
       agentB: 'a-agent',
       exchangeCount: 3,
+      opinion: 0,
+      clarityLevel: 0,
       lastExchange: Date.now(),
     };
     useGameStore.getState().updateDiplomacy(state);

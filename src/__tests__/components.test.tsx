@@ -77,6 +77,7 @@ describe('AgentCreator', () => {
   }>;
 
   beforeEach(async () => {
+    useGameStore.getState().reset();
     const mod = await import('@/components/AgentCreator');
     AgentCreator = mod.default;
   });
@@ -105,6 +106,8 @@ describe('AgentCreator', () => {
   });
 
   it('opus agent shows sonnet and haiku tiers', () => {
+    // Set maxDeployTier to sonnet so both sonnet and haiku are available
+    useGameStore.getState().setMaxDeployTier('sonnet');
     render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
     fireEvent.click(screen.getByText('[node-alp]'));
     expect(screen.getByText('sonnet')).toBeDefined();
@@ -308,12 +311,11 @@ describe('ResourceBar', () => {
     ResourceBar = mod.default;
   });
 
-  it('renders resource labels', () => {
+  it('renders turn counter and network indicator', () => {
     render(<ResourceBar />);
-    expect(screen.getByText('Energy')).toBeDefined();
-    expect(screen.getByText('Data Frags')).toBeDefined();
-    expect(screen.getByText('AGNTC')).toBeDefined();
     expect(screen.getByText('Turn')).toBeDefined();
+    // Chain mode defaults to offline
+    expect(screen.getByText('OFFLINE')).toBeDefined();
   });
 
   it('shows chain mode badge', () => {
@@ -375,14 +377,14 @@ describe('QuickActionMenu (claimed)', () => {
     expect(onAction).toHaveBeenCalledWith('research');
   });
 
-  it('shows CPU distribution steppers for own agent', () => {
+  it('shows node status for own agent', () => {
     const agent = makeAgent();
     useGameStore.getState().addAgent(agent);
     render(<QuickActionMenu agent={agent} isOwn={true} onClose={() => {}} onAction={() => {}} />);
-    expect(screen.getByText('CPU Distribution')).toBeDefined();
-    expect(screen.getByText('Pressure')).toBeDefined();
+    expect(screen.getByText('Node Status')).toBeDefined();
     expect(screen.getByText('Mining')).toBeDefined();
-    expect(screen.getByText('E. Limit')).toBeDefined();
+    expect(screen.getByText('Perimeter')).toBeDefined();
+    expect(screen.getByText('Energy Limit')).toBeDefined();
   });
 
   it('shows Set Primary button for non-primary agents', () => {
