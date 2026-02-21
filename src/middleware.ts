@@ -8,6 +8,11 @@ export default auth(async (req) => {
   const { pathname } = req.nextUrl;
   const isLoggedIn = !!req.auth?.user;
 
+  // DEV BYPASS: skip all auth checks in development
+  if (process.env.NODE_ENV === 'development') {
+    return NextResponse.next();
+  }
+
   // Always allow auth API, static assets, and public API routes
   if (
     pathname.startsWith('/api/auth') ||
