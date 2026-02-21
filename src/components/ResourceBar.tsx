@@ -68,7 +68,7 @@ export default function ResourceBar() {
   const totalPressureCost = ownAgents.reduce((sum, a) => sum + (a.borderPressure ?? 0) * 0.1, 0);
 
   return (
-    <div className="h-10 bg-background-light border-b border-card-border flex items-center px-4 gap-5 shrink-0">
+    <div className="h-8 bg-background-light border-b border-card-border flex items-center px-3 gap-3 shrink-0">
       {/* Network badge */}
       <div className={`px-2 py-0.5 rounded border flex items-center gap-1.5 ${
         chainMode === 'testnet'
@@ -104,37 +104,37 @@ export default function ResourceBar() {
       <div className="h-4 w-px bg-card-border" />
 
       {/* CPU Energy — yellow */}
-      <div className="flex items-center gap-1">
-        <span className="text-xs text-yellow-400 font-semibold">CPU Energy</span>
-        <span className="text-sm font-mono text-yellow-300 tabular-nums">{sciFormat(energy)}</span>
-        <DeltaFlash resourceKey="energy" />
-        <span className={`text-[10px] font-mono ${netEnergy >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+      <div className="flex items-center gap-1 group">
+        <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
+        <span className="text-xs font-mono text-yellow-300 tabular-nums">{sciFormat(energy)}</span>
+        <sup className="text-[9px] leading-none"><DeltaFlash resourceKey="energy" /></sup>
+        <span className={`text-[9px] font-mono hidden group-hover:inline ${netEnergy >= 0 ? 'text-green-400' : 'text-red-400'}`}>
           {sciRate(netEnergy)}/t
         </span>
       </div>
 
       {/* Secured Chains — green */}
       <div className="flex items-center gap-1">
-        <span className="text-xs text-emerald-400 font-semibold">Secured</span>
-        <span className="text-sm font-mono text-emerald-300 tabular-nums">{securedChains}</span>
-        <DeltaFlash resourceKey="securedChains" />
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+        <span className="text-xs font-mono text-emerald-300 tabular-nums">{securedChains}</span>
+        <sup className="text-[9px] leading-none"><DeltaFlash resourceKey="securedChains" /></sup>
       </div>
 
       {/* AGNTC */}
-      <div className="flex items-center gap-1">
-        <span className="text-xs text-accent-cyan font-semibold">AGNTC</span>
-        <span className="text-sm font-mono text-accent-cyan tabular-nums">{sciFormat(agntcBalance)}</span>
-        <DeltaFlash resourceKey="agntc" />
+      <div className="flex items-center gap-1 group">
+        <div className="w-1.5 h-1.5 rounded-full bg-accent-cyan shrink-0" />
+        <span className="text-xs font-mono text-accent-cyan tabular-nums">{sciFormat(agntcBalance)}</span>
+        <sup className="text-[9px] leading-none"><DeltaFlash resourceKey="agntc" /></sup>
         {totalPressureCost > 0 && (
-          <span className="text-[10px] font-mono text-red-400">{sciRate(-totalPressureCost)}/t</span>
+          <span className="text-[9px] font-mono hidden group-hover:inline text-red-400">{sciRate(-totalPressureCost)}/t</span>
         )}
       </div>
 
       {/* Data Frags */}
-      <div className="flex items-center gap-1">
-        <span className="text-xs text-blue-400 font-semibold">Data Frags</span>
-        <span className="text-sm font-mono text-blue-300 tabular-nums">{sciFormat(minerals)}</span>
-        <span className="text-[10px] font-mono text-blue-400">{sciRate(mineralGain)}/t</span>
+      <div className="flex items-center gap-1 group">
+        <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
+        <span className="text-xs font-mono text-blue-300 tabular-nums">{sciFormat(minerals)}</span>
+        <span className="text-[9px] font-mono hidden group-hover:inline text-blue-400">{sciRate(mineralGain)}/t</span>
       </div>
 
       {/* Spacer */}
