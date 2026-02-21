@@ -17,6 +17,11 @@ describe('Testnet integration', () => {
         { x: 0, y: 0, owner: 'abc123def456', stake: 100, density: 0.5, storage_slots: 5 },
       ],
     });
+    // Mock /api/nodes response (second fetch in getAgents)
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [],
+    });
 
     const { TestnetChainService } = await import('@/services/testnetChainService');
     const svc = new TestnetChainService();
