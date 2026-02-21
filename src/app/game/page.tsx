@@ -317,7 +317,7 @@ export default function GamePage() {
                 const node = agents[nodeId];
                 if (node) {
                   setSelectedAgent(nodeId);
-                  useGameStore.getState().setCamera(node.position, 2);
+                  useGameStore.getState().requestFocus(nodeId);
                 }
               }}
               deployTargetForTerminal={deployTargetForTerminal}

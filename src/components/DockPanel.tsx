@@ -7,6 +7,7 @@ import GalaxyChatRoom from '@/components/GalaxyChatRoom';
 import AgentChat from '@/components/AgentChat';
 import TimechainStats from '@/components/TimechainStats';
 import TimeRewind from '@/components/TimeRewind';
+import SecuredNodes from '@/components/SecuredNodes';
 import type { Agent } from '@/types';
 import type { ChainService } from '@/services/chainService';
 
@@ -22,6 +23,7 @@ interface DockPanelProps {
 }
 
 const DOCK_ITEMS: { id: DockPanelId; icon: string; label: string }[] = [
+  { id: 'nodes',      icon: '\u2B22', label: 'Secured Nodes' },
   { id: 'chat',       icon: '\u25C8', label: 'Network Chat' },
   { id: 'terminal',   icon: '\u25A3', label: 'Agent Terminal' },
   { id: 'deploy',     icon: '\u26A1', label: 'Deploy Agent' },
@@ -52,6 +54,8 @@ export default function DockPanel({
 
   const renderPanel = useCallback(() => {
     switch (activeDockPanel) {
+      case 'nodes':
+        return <SecuredNodes onFocusNode={onFocusNode} />;
       case 'chat':
         return <GalaxyChatRoom onSend={onHaikuSubmit} />;
       case 'terminal':
@@ -121,7 +125,7 @@ export default function DockPanel({
 
       {/* Floating Panel */}
       {activeDockPanel && (
-        <div className="absolute right-12 top-2 bottom-10 z-25 w-80 max-h-[70vh] glass-panel-floating animate-slide-left overflow-y-auto overflow-x-hidden flex flex-col">
+        <div className="absolute right-12 top-2 bottom-10 z-25 w-80 glass-panel-floating animate-slide-left overflow-hidden flex flex-col">
           <div className="relative z-10 flex-1 min-h-0">
             {renderPanel()}
           </div>
