@@ -392,3 +392,46 @@
     animation: deploy-progress 0.6s ease-out forwards;
   }
 }
+
+/* ── Dock + Floating Panel ────────────────────────────────── */
+
+@keyframes slide-left {
+  0%   { opacity: 0; transform: translateX(12px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@utility animate-slide-left {
+  animation: slide-left 0.18s ease-out;
+}
+
+@utility glass-panel-floating {
+  background: linear-gradient(
+    170deg,
+    rgba(18, 18, 26, 0.95) 0%,
+    rgba(10, 10, 15, 0.98) 100%
+  );
+  border: 1px solid var(--color-card-border);
+  backdrop-filter: blur(4px);
+  border-radius: 0.75rem;
+  border-left: 2px solid rgba(0, 212, 255, 0.2);
+}
+
+@utility dock-icon {
+  width: 40px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+  }
+}
+
+@utility dock-icon-active {
+  background-color: rgba(0, 212, 255, 0.06);
+}
