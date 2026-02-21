@@ -183,6 +183,25 @@ describe('gameStore', () => {
       expect(result).toBe(true);
       expect(useGameStore.getState().agents['unclaimed-1'].parentAgentId).toBeUndefined();
     });
+
+    it('homenode flow: claim + setPrimary bootstraps game state', () => {
+      // Simulate new user with userId but no currentAgentId
+      useGameStore.getState().reset();
+      useGameStore.setState({ currentUserId: 'new-user' });
+      useGameStore.getState().addAgent(makeAgent({ id: 'slot-first', userId: '', tier: 'haiku' }));
+
+      // Claim as sonnet (community default)
+      const success = useGameStore.getState().claimNode('slot-first', 'sonnet');
+      expect(success).toBe(true);
+
+      // Set as primary — this also sets currentAgentId
+      useGameStore.getState().setPrimary('slot-first');
+      const state = useGameStore.getState();
+      expect(state.currentAgentId).toBe('slot-first');
+      expect(state.agents['slot-first'].isPrimary).toBe(true);
+      expect(state.agents['slot-first'].userId).toBe('new-user');
+      expect(state.agents['slot-first'].tier).toBe('sonnet');
+    });
   });
 
   /* ── CPU Distribution ── */

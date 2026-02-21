@@ -146,14 +146,16 @@ export default function GamePage() {
       const feed = await service.getHaikuFeed();
       feed.forEach(addHaiku);
 
-      if (agentList.length > 0) {
-        const firstOwned = agentList.find(a => a.userId !== '');
-        if (firstOwned) {
-          setCurrentUser(firstOwned.userId, firstOwned.id);
-          // Auto-open terminal for the primary agent
-          const primary = agentList.find(a => a.isPrimary && a.userId === firstOwned.userId);
-          openTerminal(primary?.id ?? firstOwned.id);
-        }
+      const firstOwned = agentList.find(a => a.userId !== '');
+      if (firstOwned) {
+        setCurrentUser(firstOwned.userId, firstOwned.id);
+        // Auto-open terminal for the primary agent
+        const primary = agentList.find(a => a.isPrimary && a.userId === firstOwned.userId);
+        openTerminal(primary?.id ?? firstOwned.id);
+      } else {
+        // New user — generate an ID so they can claim their first neural node
+        const newUserId = `user-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        useGameStore.setState({ currentUserId: newUserId });
       }
 
       setInitializing(false);
@@ -192,6 +194,18 @@ export default function GamePage() {
         // Open the current agent's terminal — the deploy flow starts there
         if (currentAgentId) openTerminal(currentAgentId);
         break;
+      case 'claim-homenode': {
+        // First-time user: claim an unclaimed node as their Homenode (primary agent)
+        if (!selectedAgent) break;
+        const store = useGameStore.getState();
+        const success = store.claimNode(selectedAgent, 'sonnet');
+        if (success) {
+          store.setPrimary(selectedAgent);
+          openTerminal(selectedAgent);
+          setSelectedAgent(null);
+        }
+        break;
+      }
       case 'research':
         setActiveTab('researches');
         break;

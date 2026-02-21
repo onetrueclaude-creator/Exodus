@@ -63,6 +63,7 @@ export default function QuickActionMenu({ agent, isOwn, onClose, onAction }: Qui
   const setMiningRate = useGameStore((s) => s.setMiningRate);
   const setEnergyLimit = useGameStore((s) => s.setEnergyLimit);
   const setPrimary = useGameStore((s) => s.setPrimary);
+  const currentAgentId = useGameStore((s) => s.currentAgentId);
   const isUnclaimed = !agent.userId;
 
   if (isUnclaimed) {
@@ -84,17 +85,31 @@ export default function QuickActionMenu({ agent, isOwn, onClose, onAction }: Qui
             <span className="text-[9px]">{'\u25CB'}</span>
             Unclaimed Neural Node
           </div>
-          <div className="pl-3.5">Deploy an agent via your terminal to claim this node.</div>
+          <div className="pl-3.5">
+            {currentAgentId
+              ? 'Deploy an agent via your terminal to claim this node.'
+              : 'Claim this node as your Homenode to begin.'}
+          </div>
         </div>
 
-        {/* Deploy via terminal */}
-        <button
-          onClick={() => onAction('deploy-via-terminal')}
-          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-200 border border-accent-cyan/25 hover:bg-accent-cyan/15 hover:text-accent-cyan hover:border-accent-cyan/40 hover:shadow-glow text-text-muted group"
-        >
-          <span className="text-[11px] text-text-muted group-hover:text-accent-cyan transition-colors">{'\u2604'}</span>
-          <span>Deploy Agent Here</span>
-        </button>
+        {/* Claim as Homenode (first-time user) or Deploy via terminal */}
+        {currentAgentId ? (
+          <button
+            onClick={() => onAction('deploy-via-terminal')}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-200 border border-accent-cyan/25 hover:bg-accent-cyan/15 hover:text-accent-cyan hover:border-accent-cyan/40 hover:shadow-glow text-text-muted group"
+          >
+            <span className="text-[11px] text-text-muted group-hover:text-accent-cyan transition-colors">{'\u2604'}</span>
+            <span>Deploy Agent Here</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => onAction('claim-homenode')}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-200 border border-yellow-400/25 hover:bg-yellow-400/15 hover:text-yellow-400 hover:border-yellow-400/40 hover:shadow-glow text-text-muted group"
+          >
+            <span className="text-[11px] text-text-muted group-hover:text-yellow-400 transition-colors">{'\u2605'}</span>
+            <span>Claim as Homenode</span>
+          </button>
+        )}
 
         {/* Inspect */}
         <button

@@ -22,7 +22,7 @@ export class MockChainService implements ChainService {
   private blockNumber = 0;
 
   constructor() {
-    this.agents = generateMockAgents(3);
+    this.agents = generateMockAgents(0);
     this.haiku = generateMockHaiku(this.agents);
   }
 
