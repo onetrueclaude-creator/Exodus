@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useGameStore } from '@/store';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { sciFormat, sciRate } from '@/lib/format';
 
 function LiveClock() {
@@ -19,18 +20,42 @@ function LiveClock() {
   );
 }
 
+/** Flash delta indicator — shows +N or -N for 3 seconds after a resource change */
+function DeltaFlash({ resourceKey }: { resourceKey: string }) {
+  const delta = useGameStore((s) => s.resourceDeltas[resourceKey]);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (!delta) return;
+    setVisible(true);
+    const timer = setTimeout(() => setVisible(false), 3000);
+    return () => clearTimeout(timer);
+  }, [delta?.ts]);
+
+  if (!visible || !delta) return null;
+
+  const isPositive = delta.value > 0;
+  return (
+    <span className={`text-[10px] font-mono font-bold animate-pulse ${
+      isPositive ? 'text-green-400' : 'text-red-400'
+    }`}>
+      {isPositive ? '+' : ''}{delta.value}
+    </span>
+  );
+}
+
 export default function ResourceBar() {
+  const { publicKey } = useWallet();
   const energy = useGameStore((s) => s.energy);
   const minerals = useGameStore((s) => s.minerals);
   const agntcBalance = useGameStore((s) => s.agntcBalance);
+  const securedChains = useGameStore((s) => s.securedChains);
   const turn = useGameStore((s) => s.turn);
   const currentUserId = useGameStore((s) => s.currentUserId);
   const currentAgentId = useGameStore((s) => s.currentAgentId);
   const agents = useGameStore((s) => s.agents);
   const chainMode = useGameStore((s) => s.chainMode);
   const testnetBlocks = useGameStore((s) => s.testnetBlocks);
-  const poolRemaining = useGameStore((s) => s.poolRemaining);
-  const nextBlockIn = useGameStore((s) => s.nextBlockIn);
   const agent = currentAgentId ? agents[currentAgentId] : null;
 
   // Calculate net production for display
@@ -40,11 +65,10 @@ export default function ResourceBar() {
   const baseIncome = 1000; // simulation testnet faucet
   const netEnergy = baseIncome + totalMining - totalCpuCost;
   const mineralGain = ownAgents.length;
-  // AGNTC cost from border pressure (0.1 per pressure point per turn)
   const totalPressureCost = ownAgents.reduce((sum, a) => sum + (a.borderPressure ?? 0) * 0.1, 0);
 
   return (
-    <div className="h-10 bg-background-light border-b border-card-border flex items-center px-4 gap-6 shrink-0">
+    <div className="h-10 bg-background-light border-b border-card-border flex items-center px-4 gap-5 shrink-0">
       {/* Network badge */}
       <div className={`px-2 py-0.5 rounded border flex items-center gap-1.5 ${
         chainMode === 'testnet'
@@ -79,46 +103,61 @@ export default function ResourceBar() {
 
       <div className="h-4 w-px bg-card-border" />
 
-      {/* Resources with net production — scientific notation */}
+      {/* CPU Energy — yellow */}
       <div className="flex items-center gap-1">
-        <span className="text-xs text-yellow-400 font-semibold">Energy</span>
-        <span className="text-sm font-mono text-yellow-300">{sciFormat(energy)}</span>
+        <span className="text-xs text-yellow-400 font-semibold">CPU Energy</span>
+        <span className="text-sm font-mono text-yellow-300 tabular-nums">{sciFormat(energy)}</span>
+        <DeltaFlash resourceKey="energy" />
         <span className={`text-[10px] font-mono ${netEnergy >= 0 ? 'text-green-400' : 'text-red-400'}`}>
           {sciRate(netEnergy)}/t
         </span>
       </div>
+
+      {/* Secured Chains — green */}
       <div className="flex items-center gap-1">
-        <span className="text-xs text-green-400 font-semibold">Data Frags</span>
-        <span className="text-sm font-mono text-green-300">{sciFormat(minerals)}</span>
-        <span className="text-[10px] font-mono text-green-400">{sciRate(mineralGain)}/t</span>
+        <span className="text-xs text-emerald-400 font-semibold">Secured</span>
+        <span className="text-sm font-mono text-emerald-300 tabular-nums">{securedChains}</span>
+        <DeltaFlash resourceKey="securedChains" />
       </div>
+
+      {/* AGNTC */}
       <div className="flex items-center gap-1">
         <span className="text-xs text-accent-cyan font-semibold">AGNTC</span>
-        <span className="text-sm font-mono text-accent-cyan">{sciFormat(agntcBalance)}</span>
+        <span className="text-sm font-mono text-accent-cyan tabular-nums">{sciFormat(agntcBalance)}</span>
+        <DeltaFlash resourceKey="agntc" />
         {totalPressureCost > 0 && (
           <span className="text-[10px] font-mono text-red-400">{sciRate(-totalPressureCost)}/t</span>
         )}
       </div>
 
-      {/* Chain status — testnet only */}
-      {chainMode === 'testnet' && (
-        <>
-          <div className="h-4 w-px bg-card-border" />
-          <div className="flex items-center gap-1">
-            <span className="text-xs text-text-muted font-semibold">Pool</span>
-            <span className="text-sm font-mono text-text-secondary">{sciFormat(poolRemaining)}</span>
-          </div>
-          {nextBlockIn > 0 && (
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-text-muted font-semibold">Next</span>
-              <span className="text-sm font-mono text-text-secondary tabular-nums">{Math.ceil(nextBlockIn)}s</span>
-            </div>
-          )}
-        </>
-      )}
+      {/* Data Frags */}
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-blue-400 font-semibold">Data Frags</span>
+        <span className="text-sm font-mono text-blue-300 tabular-nums">{sciFormat(minerals)}</span>
+        <span className="text-[10px] font-mono text-blue-400">{sciRate(mineralGain)}/t</span>
+      </div>
 
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* Wallet indicator */}
+      <div className="flex items-center gap-1.5">
+        {publicKey ? (
+          <>
+            <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+            <span className="text-[10px] font-mono text-purple-400/80">
+              {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
+            </span>
+          </>
+        ) : (
+          <>
+            <div className="w-1.5 h-1.5 rounded-full bg-text-muted/40" />
+            <span className="text-[10px] font-mono text-text-muted/40">No wallet</span>
+          </>
+        )}
+      </div>
+
+      <div className="h-4 w-px bg-card-border" />
 
       {/* Turn counter */}
       <div className="flex items-center gap-1 mr-2">

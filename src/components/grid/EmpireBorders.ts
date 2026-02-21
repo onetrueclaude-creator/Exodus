@@ -191,6 +191,7 @@ function drawMergedEmpire(
 
 interface BorderOptions {
   viewerUserId: string | null;
+  viewerEmpireColor?: number;
 }
 
 /**
@@ -203,7 +204,7 @@ export function createEmpireBorders(
   options: BorderOptions = { viewerUserId: null },
 ): Graphics {
   const gfx = new Graphics();
-  const { viewerUserId } = options;
+  const { viewerUserId, viewerEmpireColor } = options;
 
   // Group claimed agents by userId
   const empires = new Map<string, Agent[]>();
@@ -221,10 +222,10 @@ export function createEmpireBorders(
     drawMergedEmpire(gfx, empireAgents, agents, primaryColor, 0.3);
   }
 
-  // Draw viewer's empire last (on top) — prominent
+  // Draw viewer's empire last (on top) — use user-selected color
   if (viewerUserId && empires.has(viewerUserId)) {
     const ownAgents = empires.get(viewerUserId)!;
-    const primaryColor = TIER_BORDER_COLOR[ownAgents[0].tier] ?? 0x8b5cf6;
+    const primaryColor = viewerEmpireColor ?? 0x8b5cf6;
     drawMergedEmpire(gfx, ownAgents, agents, primaryColor, 1.0);
   }
 

@@ -64,7 +64,7 @@ export default function AgentPanel({ agent, fogLevel, clarityLevel, onClose }: A
   const fogInfo = FOG_DISPLAY[fogLevel] || FOG_DISPLAY.hidden;
 
   return (
-    <div className={`glass-card p-5 w-80 max-h-[80vh] overflow-y-auto animate-slide-up border ${TIER_BORDER[agent.tier]} ${TIER_GLOW[agent.tier]}`}>
+    <div className={`glass-card p-4 w-full max-h-[80vh] overflow-y-auto animate-slide-up border ${TIER_BORDER[agent.tier]} ${TIER_GLOW[agent.tier]}`}>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-heading font-semibold text-text-primary tracking-wide">
           {clarityLevel >= 1 ? (agent.username || 'Unknown') : '???'}
@@ -74,16 +74,38 @@ export default function AgentPanel({ agent, fogLevel, clarityLevel, onClose }: A
         </button>
       </div>
 
-      {/* Model / Tier — prominent display */}
-      <div className="mb-3 flex items-center gap-2.5 bg-white/[0.02] rounded-lg px-3 py-2 border border-card-border">
-        <div className="relative">
-          <div className={`w-3 h-3 rounded-full ${TIER_BG[agent.tier]}`} />
-          <div className={`absolute inset-0 w-3 h-3 rounded-full ${TIER_BG[agent.tier]} opacity-40 animate-ping`} />
+      {/* Model / Tier — only for claimed agents */}
+      {agent.userId ? (
+        <div className="mb-3 flex items-center gap-2.5 bg-white/[0.02] rounded-lg px-3 py-2 border border-card-border">
+          <div className="relative">
+            <div className={`w-3 h-3 rounded-full ${TIER_BG[agent.tier]}`} />
+            <div className={`absolute inset-0 w-3 h-3 rounded-full ${TIER_BG[agent.tier]} opacity-40 animate-ping`} />
+          </div>
+          <span className={`text-sm font-mono font-semibold ${TIER_COLOR[agent.tier]}`}>
+            {TIER_MODEL[agent.tier]}
+          </span>
         </div>
-        <span className={`text-sm font-mono font-semibold ${TIER_COLOR[agent.tier]}`}>
-          {TIER_MODEL[agent.tier]}
-        </span>
-      </div>
+      ) : (
+        /* Unclaimed node — show density & volume instead of model */
+        <div className="mb-3 bg-white/[0.02] rounded-lg px-3 py-2.5 border border-card-border space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-text-muted">Density</span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-16 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-yellow-400/70"
+                  style={{ width: `${(agent.density ?? 0) * 100}%` }}
+                />
+              </div>
+              <span className="text-[10px] font-mono text-yellow-400">{((agent.density ?? 0) * 100).toFixed(0)}%</span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-text-muted">Volume</span>
+            <span className="text-[10px] font-mono text-accent-cyan">{agent.storageSlots ?? 0} slots</span>
+          </div>
+        </div>
+      )}
 
       {/* Position */}
       <div className="text-xs text-text-muted mb-3 font-mono flex items-center gap-1.5">

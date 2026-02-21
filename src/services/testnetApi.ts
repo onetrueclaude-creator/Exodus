@@ -6,7 +6,7 @@
  */
 import type {
   TestnetStatus, CoordinateInfo, ClaimInfo,
-  GridRegion, MineResult, BirthResult,
+  GridRegion, MineResult, BirthResult, ClaimNodeResult, NodeInfo,
   IntroResult, MessageResult, MessageInfo,
 } from '@/types';
 
@@ -73,6 +73,20 @@ export function birthStarSystem(walletIndex: number): Promise<BirthResult> {
   return post<BirthResult>('/api/birth', { wallet_index: walletIndex });
 }
 
+/** POST /api/claim — lightweight node claiming (no Record creation) */
+export function claimNode(
+  walletIndex: number,
+  x?: number,
+  y?: number,
+  stake: number = 200,
+): Promise<ClaimNodeResult> {
+  return post<ClaimNodeResult>('/api/claim', {
+    wallet_index: walletIndex,
+    ...(x !== undefined && y !== undefined ? { x, y } : {}),
+    stake,
+  });
+}
+
 /** POST /api/reset — wipe ledger and rebuild from fresh genesis */
 export function resetTestnet(): Promise<{ status: string }> {
   return post<{ status: string }>('/api/reset');
@@ -109,6 +123,11 @@ export function sendMessage(
 /** GET /api/messages/{x}/{y} — fetch message history (max 50 most recent) */
 export function getMessages(x: number, y: number): Promise<MessageInfo[]> {
   return get<MessageInfo[]>(`/api/messages/${x}/${y}`);
+}
+
+/** GET /api/nodes — deterministic neural nodes from chain coordinate grid */
+export function getNodes(count: number = 1000, seed: number = 42): Promise<NodeInfo[]> {
+  return get<NodeInfo[]>(`/api/nodes?count=${count}&seed=${seed}`);
 }
 
 /** Check if the testnet API is reachable */

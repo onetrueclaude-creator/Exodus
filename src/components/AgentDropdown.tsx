@@ -23,9 +23,10 @@ export default function AgentDropdown({ onSelectAgent }: AgentDropdownProps) {
   const [expanded, setExpanded] = useState(false);
   const agents = useGameStore((s) => s.agents);
   const currentAgentId = useGameStore((s) => s.currentAgentId);
+  const currentUserId = useGameStore((s) => s.currentUserId);
 
-  const agentList = Object.values(agents);
-  const currentAgent = currentAgentId ? agents[currentAgentId] : null;
+  // Only show the user's owned agents — unclaimed nodes are NOT agents
+  const myAgents = Object.values(agents).filter(a => a.userId === currentUserId);
 
   return (
     <div className="relative">
@@ -33,17 +34,17 @@ export default function AgentDropdown({ onSelectAgent }: AgentDropdownProps) {
         onClick={() => setExpanded(!expanded)}
         className="glass-card px-3 py-1.5 text-[11px] font-semibold text-text-primary hover:text-accent-cyan transition-colors flex items-center gap-2"
       >
-        <span className="text-text-muted">Agents</span>
-        <span className="text-accent-cyan font-mono">{agentList.length}</span>
+        <span className="text-text-muted">My Agents</span>
+        <span className="text-accent-cyan font-mono">{myAgents.length}</span>
         <span className="text-[8px] text-text-muted">{expanded ? '▲' : '▼'}</span>
       </button>
 
       {expanded && (
         <div className="absolute top-full mt-1 left-0 glass-card w-64 max-h-80 overflow-y-auto z-30">
-          {agentList.length === 0 ? (
-            <div className="p-3 text-xs text-text-muted">No agents</div>
+          {myAgents.length === 0 ? (
+            <div className="p-3 text-xs text-text-muted">No agents — claim a neural node to begin</div>
           ) : (
-            agentList.map(agent => (
+            myAgents.map(agent => (
               <button
                 key={agent.id}
                 onClick={() => {

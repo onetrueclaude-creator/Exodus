@@ -28,6 +28,10 @@ interface GameState {
   energy: number;
   minerals: number;
   agntcBalance: number;
+  securedChains: number;
+
+  // Resource deltas (flash indicators)
+  resourceDeltas: Record<string, { value: number; ts: number }>;
 
   // Turn system
   turn: number;
@@ -44,8 +48,12 @@ interface GameState {
   stateRoot: string;
   nextBlockIn: number;
 
+  // Subscription restriction
+  maxDeployTier: AgentTier; // highest tier this user can deploy (from subscription)
+
   // UI
   activeTab: GameTab;
+  empireColor: number;
 
   // Actions
   addAgent: (agent: Agent) => void;
@@ -68,10 +76,15 @@ interface GameState {
   updateDiplomacy: (state: DiplomaticState) => void;
   setActiveTab: (tab: GameTab) => void;
   updateResources: (energy: number, minerals: number, agntc: number) => void;
+  spendEnergy: (amount: number, reason: string) => boolean;
+  addSecuredChain: () => void;
+  flashDelta: (key: string, value: number) => void;
   syncAgentFromChain: (agent: Agent) => void;
   setChainMode: (mode: 'testnet' | 'mock', blocks?: number) => void;
   setChainStatus: (status: { poolRemaining: number; totalMined: number; stateRoot: string; nextBlockIn: number; blocks: number }) => void;
   setInitializing: (v: boolean) => void;
+  setEmpireColor: (color: number) => void;
+  setMaxDeployTier: (tier: AgentTier) => void;
   reset: () => void;
 }
 
@@ -86,6 +99,8 @@ const initialState = {
   energy: 1000,
   minerals: 50,
   agntcBalance: 50,
+  securedChains: 0,
+  resourceDeltas: {} as Record<string, { value: number; ts: number }>,
   turn: 0,
   turnInterval: null as number | null,
   chainMode: 'mock' as 'testnet' | 'mock',
@@ -95,7 +110,9 @@ const initialState = {
   totalMined: 0,
   stateRoot: '',
   nextBlockIn: 60,
+  maxDeployTier: 'haiku' as AgentTier, // default: Community tier (haiku only)
   activeTab: 'network' as GameTab,
+  empireColor: 0x8b5cf6, // default: purple (Opus)
 };
 
 export const useGameStore = create<GameState>((set) => ({
@@ -320,6 +337,36 @@ export const useGameStore = create<GameState>((set) => ({
   updateResources: (energy, minerals, agntc) =>
     set({ energy, minerals, agntcBalance: agntc }),
 
+  spendEnergy: (amount, _reason) => {
+    const s = useGameStore.getState();
+    if (s.energy < amount) return false;
+    set({
+      energy: s.energy - amount,
+      resourceDeltas: {
+        ...s.resourceDeltas,
+        energy: { value: -amount, ts: Date.now() },
+      },
+    });
+    return true;
+  },
+
+  addSecuredChain: () =>
+    set((s) => ({
+      securedChains: s.securedChains + 1,
+      resourceDeltas: {
+        ...s.resourceDeltas,
+        securedChains: { value: 1, ts: Date.now() },
+      },
+    })),
+
+  flashDelta: (key, value) =>
+    set((s) => ({
+      resourceDeltas: {
+        ...s.resourceDeltas,
+        [key]: { value, ts: Date.now() },
+      },
+    })),
+
   /**
    * Advance one turn. Calculate net resource production:
    *   netEnergy = baseIncome + sum(miningRate) - sum(cpuPerTurn)
@@ -400,6 +447,10 @@ export const useGameStore = create<GameState>((set) => ({
     }),
 
   setInitializing: (v) => set({ isInitializing: v }),
+
+  setEmpireColor: (color) => set({ empireColor: color }),
+
+  setMaxDeployTier: (tier) => set({ maxDeployTier: tier }),
 
   reset: () => {
     const state = useGameStore.getState();

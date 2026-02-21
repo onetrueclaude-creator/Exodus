@@ -35,6 +35,7 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
   const currentUserId = useGameStore((s) => s.currentUserId);
   const turn = useGameStore((s) => s.turn);
   const setCamera = useGameStore((s) => s.setCamera);
+  const empireColor = useGameStore((s) => s.empireColor);
 
   const [zoom, setZoom] = useState(1);
   const [cursorCoords, setCursorCoords] = useState<{ x: number; y: number } | null>(null);
@@ -197,7 +198,7 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     const others = agentList.filter(a => a.id !== viewer.id);
 
     // Empire borders placeholder — actual borders drawn in separate turn-based effect
-    const borders = createEmpireBorders(agentList, { viewerUserId: currentUserId });
+    const borders = createEmpireBorders(agentList, { viewerUserId: currentUserId, viewerEmpireColor: empireColor });
     world.addChildAt(borders, 1); // index 1 = right after grid background
     bordersRef.current = borders;
 
@@ -235,11 +236,11 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     const idx = world.children.indexOf(bordersRef.current);
     if (idx >= 0) {
       world.removeChildAt(idx);
-      const newBorders = createEmpireBorders(agentList, { viewerUserId: currentUserId });
+      const newBorders = createEmpireBorders(agentList, { viewerUserId: currentUserId, viewerEmpireColor: empireColor });
       world.addChildAt(newBorders, idx);
       bordersRef.current = newBorders;
     }
-  }, [appReady, turn, agents, currentUserId]);
+  }, [appReady, turn, agents, currentUserId, empireColor]);
 
   // Center on home neural node
   const handleCenterHome = useCallback(() => {

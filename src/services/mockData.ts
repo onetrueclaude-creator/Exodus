@@ -50,17 +50,19 @@ export function generateMockAgents(count: number = 3): Agent[] {
     id: `slot-${String(i).padStart(4, '0')}`,
     userId: '',       // no owner — governed by testnet
     position: randomPosition(),
-    tier: 'haiku' as const, // base tier until claimed and upgraded
+    tier: 'haiku' as const, // placeholder tier — reassigned on claim
     isPrimary: false,
     planets: [],
     createdAt: Date.now() - 86400000, // minted at server start
-    username: `Slot-${String(i).padStart(4, '0')}`,
+    username: `Node-${String(i).padStart(4, '0')}`,
     borderRadius: 30, // minimal territory footprint
     borderPressure: 0,
     cpuPerTurn: 0,    // no cost while unclaimed
     miningRate: 0,    // no mining while unclaimed
     energyLimit: 0,
     stakedCpu: 0,
+    density: Math.round((0.1 + Math.random() * 0.9) * 100) / 100, // 0.10–1.00
+    storageSlots: 1 + Math.floor(Math.random() * 8), // 1–8 data packet slots
   }));
 
   return [...userAgents, ...unclaimedSlots];

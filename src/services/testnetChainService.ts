@@ -9,7 +9,7 @@
  *   Frontend grid: -4000 to 4000  (8000-unit visual space)
  *   Scale factor:  8000 / 6480 ≈ 1.2346
  */
-import type { Agent, AgentTier, HaikuMessage, GridPosition, ClaimInfo, TestnetStatus, MessageResult, MessageInfo } from '@/types';
+import type { Agent, AgentTier, HaikuMessage, GridPosition, ClaimInfo, ClaimNodeResult, NodeInfo, TestnetStatus, MessageResult, MessageInfo } from '@/types';
 import { CHAIN_GRID_MIN, CHAIN_GRID_SPAN } from '@/types/testnet';
 import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
 import type { ChainService } from './chainService';
@@ -18,9 +18,6 @@ import * as api from './testnetApi';
 /** Visual grid extent (matches GalaxyGrid GRID_EXTENT / 2) */
 const VISUAL_HALF = 4000;
 const VISUAL_SPAN = VISUAL_HALF * 2; // 8000
-
-/** How many unclaimed nodes to sample from the chain grid */
-const UNCLAIMED_SAMPLE_COUNT = 1000;
 
 // ---------------------------------------------------------------------------
 // Coordinate mapping
@@ -43,35 +40,12 @@ export function visualToChain(vx: number, vy: number): { x: number; y: number } 
 }
 
 // ---------------------------------------------------------------------------
-// Deterministic unclaimed node sampling
-// ---------------------------------------------------------------------------
-
-/**
- * Simple deterministic hash for sampling unclaimed coordinates.
- * Produces the same set of coordinates every time, matching what the chain would have.
- */
-function sampleUnclaimedCoords(count: number, seed: number = 42): { x: number; y: number }[] {
-  const coords: { x: number; y: number }[] = [];
-  let state = seed;
-  for (let i = 0; i < count; i++) {
-    // LCG pseudo-random — deterministic, matching chain's seeded RNG
-    state = (state * 1664525 + 1013904223) & 0x7fffffff;
-    const x = CHAIN_GRID_MIN + (state % (CHAIN_GRID_SPAN + 1));
-    state = (state * 1664525 + 1013904223) & 0x7fffffff;
-    const y = CHAIN_GRID_MIN + (state % (CHAIN_GRID_SPAN + 1));
-    coords.push({ x, y });
-  }
-  return coords;
-}
-
-// ---------------------------------------------------------------------------
-// Claim → Agent mapping
+// Claim / Node → Agent mapping
 // ---------------------------------------------------------------------------
 
 /** Map a blockchain claim to a frontend Agent. */
 function claimToAgent(claim: ClaimInfo, index: number): Agent {
   const position = chainToVisual(claim.x, claim.y);
-  // Infer tier from stake amount (higher stake = higher tier)
   const tier: AgentTier = claim.stake >= 80 ? 'opus'
     : claim.stake >= 30 ? 'sonnet'
     : 'haiku';
@@ -81,7 +55,7 @@ function claimToAgent(claim: ClaimInfo, index: number): Agent {
     userId: claim.owner,
     position,
     tier,
-    isPrimary: index === 0, // first claim for this owner is primary
+    isPrimary: index === 0,
     planets: [],
     createdAt: Date.now(),
     username: `${claim.owner.slice(0, 6)}...${claim.owner.slice(-4)}`,
@@ -91,27 +65,31 @@ function claimToAgent(claim: ClaimInfo, index: number): Agent {
     miningRate: Math.round(claim.density * TIER_MINING_RATE[tier] * 10) / 10,
     energyLimit: TIER_CPU_COST[tier] * 5,
     stakedCpu: 0,
+    density: claim.density,
+    storageSlots: claim.storage_slots,
   };
 }
 
-/** Create an unclaimed star system node from a chain coordinate. */
-function coordToSlot(coord: { x: number; y: number }, index: number): Agent {
-  const position = chainToVisual(coord.x, coord.y);
+/** Map a chain NodeInfo to a frontend unclaimed Agent slot. */
+function nodeToSlot(node: NodeInfo): Agent {
+  const position = chainToVisual(node.x, node.y);
   return {
-    id: `slot-${String(index).padStart(4, '0')}`,
-    userId: '',
+    id: node.id,
+    userId: node.owner ?? '',
     position,
     tier: 'haiku' as const,
     isPrimary: false,
     planets: [],
     createdAt: Date.now() - 86400000,
-    username: `(${coord.x}, ${coord.y})`,
+    username: node.name,
     borderRadius: 30,
     borderPressure: 0,
     cpuPerTurn: 0,
     miningRate: 0,
     energyLimit: 0,
     stakedCpu: 0,
+    density: node.density,
+    storageSlots: node.storage_slots,
   };
 }
 
@@ -122,18 +100,11 @@ function coordToSlot(coord: { x: number; y: number }, index: number): Agent {
 export class TestnetChainService implements ChainService {
   private cachedAgents: Agent[] | null = null;
 
-  /** Fetch claims from testnet + generate unclaimed nodes → Agent[] */
+  /** Fetch all grid data from the blockchain: claims + unclaimed nodes */
   async getAgents(): Promise<Agent[]> {
-    // 1. Fetch on-chain claims
+    // 1. Fetch on-chain claims (owned agents)
     const claims = await api.getClaims();
-
-    // Build a set of claimed coordinates to avoid duplicating them as unclaimed
-    const claimedSet = new Set(claims.map(c => `${c.x},${c.y}`));
-
-    // Track per-owner primary assignment
     const ownerFirstSeen = new Set<string>();
-
-    // 2. Map claims → owned agents
     const ownedAgents: Agent[] = claims.map((claim, i) => {
       const agent = claimToAgent(claim, i);
       if (!ownerFirstSeen.has(claim.owner)) {
@@ -145,11 +116,11 @@ export class TestnetChainService implements ChainService {
       return agent;
     });
 
-    // 3. Sample unclaimed coordinates (deterministic)
-    const sampledCoords = sampleUnclaimedCoords(UNCLAIMED_SAMPLE_COUNT);
-    const unclaimedSlots: Agent[] = sampledCoords
-      .filter(c => !claimedSet.has(`${c.x},${c.y}`))
-      .map((coord, i) => coordToSlot(coord, i));
+    // 2. Fetch unclaimed neural nodes from chain coordinate grid
+    const chainNodes = await api.getNodes(1000, 42);
+    const unclaimedSlots: Agent[] = chainNodes
+      .filter(n => !n.claimed)
+      .map(n => nodeToSlot(n));
 
     this.cachedAgents = [...ownedAgents, ...unclaimedSlots];
     return this.cachedAgents;
@@ -214,6 +185,11 @@ export class TestnetChainService implements ChainService {
   async setIntro(coord: { x: number; y: number }, message: string): Promise<void> {
     const chain = visualToChain(coord.x, coord.y);
     await api.setIntro(0, chain, message);
+  }
+
+  async claimNode(chainX: number, chainY: number, stake: number = 200): Promise<ClaimNodeResult> {
+    // wallet_index 0 for testnet (single-user dev mode)
+    return api.claimNode(0, chainX, chainY, stake);
   }
 
   async moveAgent(agentId: string, position: GridPosition): Promise<Agent> {

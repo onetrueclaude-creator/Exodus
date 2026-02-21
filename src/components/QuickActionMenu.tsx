@@ -59,9 +59,6 @@ function CpuStepper({ label, value, min, max, step, unit, color, onChange }: {
 }
 
 export default function QuickActionMenu({ agent, isOwn, onClose, onAction }: QuickActionMenuProps) {
-  const setBorderPressure = useGameStore((s) => s.setBorderPressure);
-  const setMiningRate = useGameStore((s) => s.setMiningRate);
-  const setEnergyLimit = useGameStore((s) => s.setEnergyLimit);
   const setPrimary = useGameStore((s) => s.setPrimary);
   const currentAgentId = useGameStore((s) => s.currentAgentId);
   const isUnclaimed = !agent.userId;
@@ -153,83 +150,46 @@ export default function QuickActionMenu({ agent, isOwn, onClose, onAction }: Qui
         </button>
       </div>
 
-      {/* CPU Distribution — own agents only */}
+      {/* CPU Overview — own agents only (read-only, adjust via terminal) */}
       {isOwn && (
-        <div className="px-1 py-2 mb-1.5 space-y-1.5 border-b border-card-border/50">
+        <div className="px-1 py-2 mb-1.5 space-y-1 border-b border-card-border/50">
           <div className="flex items-center justify-between px-1">
-            <span className="text-[10px] font-heading font-semibold text-accent-cyan tracking-wide">CPU Distribution</span>
+            <span className="text-[10px] font-heading font-semibold text-accent-cyan tracking-wide">Node Status</span>
             <span className="text-[10px] font-mono text-yellow-400">{agent.cpuPerTurn} CPU/t</span>
           </div>
 
-          {/* Base cost (not adjustable) */}
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[10px] text-text-muted">Base ({agent.tier})</span>
-            <span className="text-[10px] font-mono text-text-muted">{TIER_CPU_COST[agent.tier]} CPU</span>
-          </div>
-
-          {/* Adjustable: Border Pressure */}
-          <CpuStepper
-            label="Pressure"
-            value={agent.borderPressure}
-            min={0}
-            max={20}
-            step={2}
-            unit="/20"
-            color="text-green-400"
-            onChange={(v) => setBorderPressure(agent.id, v)}
-          />
-
-          {/* Adjustable: Mining Rate */}
-          <CpuStepper
-            label="Mining"
-            value={agent.miningRate ?? baseMining}
-            min={0}
-            max={50}
-            step={1}
-            unit="/t"
-            color="text-yellow-300"
-            onChange={(v) => setMiningRate(agent.id, v)}
-          />
-
-          {/* Adjustable: Energy Limit */}
-          <CpuStepper
-            label="E. Limit"
-            value={agent.energyLimit ?? TIER_CPU_COST[agent.tier] * 5}
-            min={1}
-            max={200}
-            step={5}
-            unit="max"
-            color="text-accent-cyan"
-            onChange={(v) => setEnergyLimit(agent.id, v)}
-          />
-
-          {/* CPU breakdown */}
-          <div className="px-1 pt-1.5 border-t border-card-border/30 text-[9px] text-text-muted space-y-0.5 font-mono">
+          {/* Read-only stats */}
+          <div className="px-1 text-[9px] text-text-muted space-y-0.5 font-mono">
             <div className="flex justify-between">
-              <span>Base</span><span>{TIER_CPU_COST[agent.tier]}</span>
+              <span>Base ({agent.tier})</span><span>{TIER_CPU_COST[agent.tier]} CPU</span>
             </div>
-            {agent.borderPressure > 0 && (
-              <div className="flex justify-between">
-                <span>+ Pressure</span><span className="text-green-400">+{agent.borderPressure}</span>
-              </div>
-            )}
+            <div className="flex justify-between">
+              <span>Mining</span><span className="text-yellow-300">{agent.miningRate ?? baseMining}/t</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Perimeter</span><span className="text-green-400">{agent.borderPressure}/20</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Staked</span><span className="text-accent-purple">{agent.stakedCpu ?? 0}/t</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Energy Limit</span><span className="text-accent-cyan">{agent.energyLimit ?? TIER_CPU_COST[agent.tier] * 5}</span>
+            </div>
             {extraMining > 0 && (
-              <div className="flex justify-between">
-                <span>+ Mining boost</span><span className="text-yellow-400">+{extraMining}</span>
-              </div>
-            )}
-            {(agent.stakedCpu ?? 0) > 0 && (
-              <div className="flex justify-between">
-                <span>+ Staked</span><span className="text-accent-purple">+{agent.stakedCpu}</span>
+              <div className="flex justify-between text-yellow-400/60">
+                <span>Mining boost</span><span>+{extraMining}</span>
               </div>
             )}
             <div className="divider-gradient my-1" />
             <div className="flex justify-between font-semibold text-[10px] text-text-primary">
               <span>Total</span><span>{agent.cpuPerTurn} CPU/turn</span>
             </div>
+            <div className="text-[8px] text-text-muted/40 pt-0.5">
+              Adjust via agent terminal
+            </div>
           </div>
 
-          {/* Set as Homeworld */}
+          {/* Set as Primary Node */}
           {!agent.isPrimary && (
             <button
               onClick={() => setPrimary(agent.id)}

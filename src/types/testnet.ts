@@ -107,6 +107,36 @@ export interface MessageResult {
   target_coord: { x: number; y: number };
 }
 
+// POST /api/claim — lightweight node claiming
+export interface ClaimNodeRequest {
+  wallet_index: number;
+  x?: number;
+  y?: number;
+  stake?: number;
+}
+
+export interface ClaimNodeResult {
+  coordinate: { x: number; y: number };
+  stake: number;
+  density: number;
+  storage_slots: number;
+  validator_id: number;
+  message: string;
+}
+
+// GET /api/nodes — deterministic neural nodes from chain coordinate grid
+export interface NodeInfo {
+  id: string;
+  x: number;
+  y: number;
+  name: string;
+  density: number;
+  storage_slots: number;
+  claimed: boolean;
+  owner: string | null;
+  stake: number | null;
+}
+
 // GET /api/messages/{x}/{y} — fetch message history (max 50 most recent)
 export interface MessageInfo {
   id: string;

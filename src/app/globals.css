@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme inline {
@@ -300,4 +300,95 @@
   background: linear-gradient(90deg, var(--color-accent-cyan), var(--color-accent-purple));
   border-radius: 2px;
   transition: width 0.5s ease;
+}
+
+/* ── Neural Terminal ───────────────────────────────────────── */
+
+@keyframes neural-breathe {
+  0%, 100% { box-shadow: 0 0 12px var(--neural-glow, rgba(0,212,255,0.08)); }
+  50% { box-shadow: 0 0 24px var(--neural-glow, rgba(0,212,255,0.18)); }
+}
+
+@keyframes neural-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.4); opacity: 1; }
+}
+
+@keyframes signal-flow {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes typing-cursor {
+  0%, 100% { border-right-color: currentColor; }
+  50% { border-right-color: transparent; }
+}
+
+@keyframes deploy-progress {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+/* Neural terminal container with breathing glow */
+@utility neural-terminal {
+  position: relative;
+  background: linear-gradient(
+    170deg,
+    rgba(18, 18, 26, 0.98) 0%,
+    rgba(10, 10, 15, 0.99) 100%
+  );
+  border-radius: 12px;
+  overflow: hidden;
+  animation: neural-breathe 4s ease-in-out infinite;
+
+  /* Noise texture overlay */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Subtle scan line */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      transparent 0px,
+      transparent 2px,
+      rgba(0, 0, 0, 0.015) 2px,
+      rgba(0, 0, 0, 0.015) 4px
+    );
+    pointer-events: none;
+    z-index: 2;
+  }
+}
+
+/* Signal flow line — animated gradient streak */
+@utility signal-flow {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--signal-color, rgba(0, 212, 255, 0.3)) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: signal-flow 3s linear infinite;
+}
+
+/* Deploy step indicator */
+@utility deploy-step-active {
+  position: relative;
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: var(--step-color, var(--color-accent-cyan));
+    animation: deploy-progress 0.6s ease-out forwards;
+  }
 }
