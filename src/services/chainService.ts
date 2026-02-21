@@ -1,4 +1,4 @@
-import type { Agent, AgentTier, HaikuMessage, GridPosition, MessageResult, MessageInfo } from '@/types';
+import type { Agent, AgentTier, HaikuMessage, GridPosition, MessageResult, MessageInfo, ClaimNodeResult } from '@/types';
 import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
 import { generateMockAgents, generateMockHaiku } from './mockData';
 
@@ -14,6 +14,8 @@ export interface ChainService {
   getMessages(coord: { x: number; y: number }): Promise<MessageInfo[]>;
   /** Set intro greeting for an agent at a coordinate (140 chars max) */
   setIntro(coord: { x: number; y: number }, message: string): Promise<void>;
+  /** Claim a grid node on-chain (lightweight, no Record creation) */
+  claimNode(chainX: number, chainY: number, stake?: number): Promise<ClaimNodeResult>;
 }
 
 export class MockChainService implements ChainService {
@@ -91,6 +93,17 @@ export class MockChainService implements ChainService {
 
   async setIntro(_coord: { x: number; y: number }, _message: string): Promise<void> {
     // No-op in mock mode
+  }
+
+  async claimNode(chainX: number, chainY: number, stake: number = 200): Promise<ClaimNodeResult> {
+    return {
+      coordinate: { x: chainX, y: chainY },
+      stake,
+      density: 0.5,
+      storage_slots: 4,
+      validator_id: this.agents.length,
+      message: `Agent created at (${chainX},${chainY}). Node colonized.`,
+    };
   }
 
   async mine(): Promise<{ blockNumber: number; yields: Record<string, number> }> {

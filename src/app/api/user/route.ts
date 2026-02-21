@@ -4,6 +4,19 @@ import { prisma } from '@/lib/prisma';
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
 
+/** GET /api/user?username=xyz — check if username is available */
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const username = searchParams.get('username')?.trim();
+
+  if (!username || !USERNAME_REGEX.test(username)) {
+    return NextResponse.json({ available: false, error: 'Invalid format' });
+  }
+
+  const existing = await prisma.user.findUnique({ where: { username } });
+  return NextResponse.json({ available: !existing });
+}
+
 /** PATCH /api/user — set username (one-time during onboarding) */
 export async function PATCH(req: Request) {
   const session = await auth();

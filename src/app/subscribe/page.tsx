@@ -87,23 +87,26 @@ export default function SubscribePage() {
                 disabled={submitting}
                 className={`w-full text-left p-5 rounded-xl border ${borderClass} ${bgClass} hover:bg-white/[0.04] transition-all duration-200 disabled:opacity-40 group`}
               >
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-2">
                   <div>
                     <span className={`text-[15px] font-semibold ${textClass}`} style={{ fontFamily: "'Outfit', sans-serif" }}>
                       {plan.name}
                     </span>
-                    <span className="ml-2 text-[11px] text-text-muted/40" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      {plan.startAgent.toUpperCase()} agent
+                    <span className={`ml-2 text-[11px] ${textClass} opacity-60`} style={{ fontFamily: "'Fira Code', monospace" }}>
+                      {plan.homenode}
                     </span>
                   </div>
                   <span className={`text-[13px] font-semibold ${textClass}`} style={{ fontFamily: "'Fira Code', monospace" }}>
                     {plan.priceLabel}
                   </span>
                 </div>
-                <div className="flex gap-4 text-[10px] text-text-muted/50" style={{ fontFamily: "'Fira Code', monospace" }}>
-                  <span>{plan.startEnergy} Energy</span>
+                <div className="flex gap-4 text-[10px] text-text-muted/50 mb-2" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <span>{plan.startEnergy} CPU Energy</span>
                   <span>{plan.startAgntc} AGNTC</span>
-                  <span>{plan.startMinerals} Minerals</span>
+                  <span>{plan.startMinerals} Data Frags</span>
+                </div>
+                <div className="text-[9px] text-text-muted/30" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  Max deploy: {plan.maxAgentTier === 'opus' ? 'Opus / Sonnet / Haiku' : 'Haiku only'}
                 </div>
               </button>
             );

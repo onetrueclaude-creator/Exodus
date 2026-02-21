@@ -20,6 +20,8 @@ export interface Agent {
   stakedCpu: number;       // CPU per turn staked to secure the blockchain network
   introMessage?: string;   // agent's public greeting (max 140 chars)
   parentAgentId?: string;  // controlling agent (Opus -> Sonnet -> Haiku hierarchy)
+  density?: number;        // blockchain coordinate density (0–1, from chain)
+  storageSlots?: number;   // data packet capacity at this coordinate (volume)
 }
 
 /** CPU cost per turn by tier */

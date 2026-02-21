@@ -3,6 +3,10 @@
 import { useState } from 'react';
 import { TIER_CPU_COST, TIER_CLAIM_COST, TIER_MINING_RATE } from '@/types/agent';
 import type { AgentTier } from '@/types';
+import { useGameStore } from '@/store';
+
+/** Tier rank for comparison: higher number = higher tier */
+const TIER_RANK: Record<AgentTier, number> = { haiku: 0, sonnet: 1, opus: 2 };
 
 interface AgentCreatorProps {
   currentAgentTier: AgentTier;
@@ -37,11 +41,14 @@ const TIER_STYLES: Record<AgentTier, { label: string; color: string; borderColor
   },
 };
 
-/** Tier hierarchy: which tiers can this agent deploy? */
-function getDeployableTiers(tier: AgentTier): AgentTier[] {
-  if (tier === 'opus') return ['sonnet', 'haiku'];
-  if (tier === 'sonnet') return ['haiku'];
-  return []; // haiku can't deploy
+/** Tier hierarchy: which tiers can this agent deploy, capped by subscription? */
+function getDeployableTiers(tier: AgentTier, maxDeployTier: AgentTier): AgentTier[] {
+  const all: AgentTier[] =
+    tier === 'opus' ? ['sonnet', 'haiku']
+    : tier === 'sonnet' ? ['haiku']
+    : []; // haiku can't deploy
+  // Filter by subscription cap: only tiers at or below maxDeployTier
+  return all.filter(t => TIER_RANK[t] <= TIER_RANK[maxDeployTier]);
 }
 
 export default function AgentCreator({
@@ -52,10 +59,11 @@ export default function AgentCreator({
   onClaimNode,
   onClose,
 }: AgentCreatorProps) {
+  const maxDeployTier = useGameStore((s) => s.maxDeployTier);
   const [step, setStep] = useState<'pick-node' | 'pick-tier'>('pick-node');
   const [selectedNode, setSelectedNode] = useState<{ id: string; x: number; y: number; dist: number } | null>(null);
 
-  const deployableTiers = getDeployableTiers(currentAgentTier);
+  const deployableTiers = getDeployableTiers(currentAgentTier, maxDeployTier);
 
   // Step 1: Pick an unclaimed neural node
   if (step === 'pick-node') {

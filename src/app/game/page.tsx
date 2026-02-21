@@ -16,6 +16,8 @@ import AgentCreator from '@/components/AgentCreator';
 import TimeRewind from '@/components/TimeRewind';
 import AgentChat from '@/components/AgentChat';
 import AgentProfilePopup from '@/components/AgentProfilePopup';
+import TimechainStats from '@/components/TimechainStats';
+import { startDebugListener } from '@/lib/debugListener';
 import { useGameStore } from '@/store';
 import { MockChainService } from '@/services/chainService';
 import type { ChainService } from '@/services/chainService';
@@ -25,7 +27,16 @@ import { useChainWebSocket } from '@/hooks/useChainWebSocket';
 import { getDistance } from '@/lib/proximity';
 import { getFogLevel } from '@/lib/fog';
 import { getClarityLevel } from '@/lib/diplomacy';
-import type { AgentTier } from '@/types';
+import type { AgentTier, SubscriptionTier } from '@/types';
+import { pickBestStartingNode } from '@/lib/placement';
+import { visualToChain } from '@/services/testnetChainService';
+
+/** Map subscription tier to empire border color */
+const SUBSCRIPTION_EMPIRE_COLOR: Record<SubscriptionTier, number> = {
+  COMMUNITY: 0xf59e0b,   // yellow-amber
+  PROFESSIONAL: 0x00d4ff, // cyan
+  MAX: 0x8b5cf6,          // purple
+};
 
 /** Block time on chain — refresh grid every 60 seconds to sync with ledger */
 const CHAIN_SYNC_INTERVAL_MS = 60_000;
@@ -61,6 +72,8 @@ export default function GamePage() {
   const [openTerminals, setOpenTerminals] = useState<Set<string>>(new Set());
   /** Which terminal is focused (rendered on top) */
   const [focusedTerminal, setFocusedTerminal] = useState<string | null>(null);
+  /** When deploying via sidebar, pass the target node ID to the terminal */
+  const [deployTargetForTerminal, setDeployTargetForTerminal] = useState<string | null>(null);
   const [serverStartTime] = useState(() => Date.now() - 24 * 60 * 60 * 1000);
 
   /** Unclaimed neural nodes sorted by proximity to current agent */
@@ -129,6 +142,9 @@ export default function GamePage() {
   }, []);
 
   useEffect(() => {
+    // Activate debug listener — logs all store mutations to /api/debug-log
+    startDebugListener();
+
     async function init() {
       setInitializing(true);
 
@@ -151,11 +167,22 @@ export default function GamePage() {
         setCurrentUser(firstOwned.userId, firstOwned.id);
         // Auto-open terminal for the primary agent
         const primary = agentList.find(a => a.isPrimary && a.userId === firstOwned.userId);
-        openTerminal(primary?.id ?? firstOwned.id);
+        const homenode = primary ?? firstOwned;
+        openTerminal(homenode.id);
+        // Center camera on homenode
+        useGameStore.getState().setCamera(homenode.position, 2);
       } else {
-        // New user — generate an ID so they can claim their first neural node
+        // New user — generate an ID and auto-select the best starting node
         const newUserId = `user-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
         useGameStore.setState({ currentUserId: newUserId });
+
+        // Smart placement: find the best starting node and focus camera on it
+        const store = useGameStore.getState();
+        const bestNode = pickBestStartingNode(store.agents);
+        if (bestNode) {
+          setSelectedAgent(bestNode.id);
+          store.setCamera(bestNode.position, 2); // zoom in on recommended node
+        }
       }
 
       setInitializing(false);
@@ -191,18 +218,42 @@ export default function GamePage() {
         // Galaxy chat is always visible — no action needed
         break;
       case 'deploy-via-terminal':
-        // Open the current agent's terminal — the deploy flow starts there
-        if (currentAgentId) openTerminal(currentAgentId);
+        // Open the current agent's terminal with the selected node as deploy target
+        if (currentAgentId) {
+          setDeployTargetForTerminal(selectedAgent);
+          openTerminal(currentAgentId);
+        }
         break;
       case 'claim-homenode': {
         // First-time user: claim an unclaimed node as their Homenode (primary agent)
         if (!selectedAgent) break;
         const store = useGameStore.getState();
-        const success = store.claimNode(selectedAgent, 'sonnet');
+        const slot = store.agents[selectedAgent];
+        if (!slot) break;
+
+        // Register on-chain first, then update local state
+        const svc = chainRef.current;
+        if (svc) {
+          try {
+            const chainCoord = visualToChain(slot.position.x, slot.position.y);
+            await svc.claimNode(chainCoord.x, chainCoord.y, 200);
+          } catch (err) {
+            console.error('Failed to claim node on-chain:', err);
+            break;
+          }
+        }
+
+        const success = store.claimNode(selectedAgent, 'opus');
         if (success) {
           store.setPrimary(selectedAgent);
+          // Set empire color based on homenode tier (subscription-aware once auth wired)
+          store.setEmpireColor(SUBSCRIPTION_EMPIRE_COLOR.MAX); // Default: opus homenode = Max tier
           openTerminal(selectedAgent);
           setSelectedAgent(null);
+          // Center camera on claimed homenode
+          store.setCamera(slot.position, 2);
+          // Sync from chain to get updated state
+          syncFromChain();
         }
         break;
       }
@@ -283,27 +334,38 @@ export default function GamePage() {
               <AgentDropdown onSelectAgent={setSelectedAgent} />
             </div>
 
+            {/* Timechain Stats — top-right */}
+            <TimechainStats />
+
             {/* Agent Chat terminals — stacked horizontally from bottom-right */}
             {Array.from(openTerminals).map((id, idx) => agents[id] && (
               <div
                 key={id}
                 className="absolute bottom-4 z-30 transition-all"
-                style={{ right: `${16 + idx * 336}px` }}
+                style={{ right: `${16 + idx * 396}px` }}
                 onMouseDown={() => setFocusedTerminal(id)}
               >
                 <div style={{ zIndex: focusedTerminal === id ? 40 : 30 }}>
                   <AgentChat
                     agent={agents[id]}
-                    onClose={() => closeTerminal(id)}
-                    onDeploy={(newId) => openTerminal(newId)}
+                    onClose={() => { closeTerminal(id); setDeployTargetForTerminal(null); }}
+                    onDeploy={(newId) => { setDeployTargetForTerminal(null); openTerminal(newId); }}
+                    onFocusNode={(nodeId) => {
+                      const node = agents[nodeId];
+                      if (node) {
+                        setSelectedAgent(nodeId);
+                        useGameStore.getState().setCamera(node.position, 2);
+                      }
+                    }}
                     chainService={chainRef.current}
+                    initialDeployTarget={id === currentAgentId ? deployTargetForTerminal ?? undefined : undefined}
                   />
                 </div>
               </div>
             ))}
 
             {/* Galaxy Chat Room — shifts left to make room for terminals */}
-            <div className={`absolute bottom-4 z-10 transition-all`} style={{ right: `${16 + openTerminals.size * 336}px` }}>
+            <div className={`absolute bottom-4 z-10 transition-all`} style={{ right: `${16 + openTerminals.size * 396}px` }}>
               <GalaxyChatRoom onSend={handleHaikuSubmit} />
             </div>
 
@@ -317,12 +379,28 @@ export default function GamePage() {
                     energy={energy}
                     minerals={minerals}
                     unclaimedNodes={nearbyUnclaimedNodes}
-                    onClaimNode={(slotId, tier) => {
+                    onClaimNode={async (slotId, tier) => {
                       const parentId = currentAgentId || undefined;
-                      const success = useGameStore.getState().claimNode(slotId, tier, parentId);
+                      const store = useGameStore.getState();
+                      const slot = store.agents[slotId];
+
+                      // Register on-chain first
+                      const svc = chainRef.current;
+                      if (svc && slot) {
+                        try {
+                          const chainCoord = visualToChain(slot.position.x, slot.position.y);
+                          await svc.claimNode(chainCoord.x, chainCoord.y, 200);
+                        } catch (err) {
+                          console.error('Failed to claim node on-chain:', err);
+                          return;
+                        }
+                      }
+
+                      const success = store.claimNode(slotId, tier, parentId);
                       if (success) {
                         setShowAgentCreator(false);
                         setSelectedAgent(slotId);
+                        syncFromChain();
                       }
                     }}
                     onClose={() => setShowAgentCreator(false)}
@@ -369,7 +447,8 @@ export default function GamePage() {
               const fogLevel = viewer ? getFogLevel(distance, viewer.tier) : 'clear' as const;
               const dipKey = viewer ? [viewer.id, selected.id].sort().join('-') : '';
               const dipState = useGameStore.getState().diplomacy[dipKey];
-              const clarity = dipState ? getClarityLevel(dipState.exchangeCount) : (isOwn ? 4 : 0);
+              // Own agents: full clarity (4). Unclaimed nodes: public info (1). Foreign: hidden until diplomacy.
+              const clarity = dipState ? getClarityLevel(dipState.exchangeCount) : (isOwn ? 4 : (!selected.userId ? 1 : 0));
               return (
                 <div className="absolute top-0 left-0 bottom-0 z-20 w-72 bg-background-light/95 border-r border-card-border overflow-y-auto flex flex-col gap-0">
                   <QuickActionMenu
