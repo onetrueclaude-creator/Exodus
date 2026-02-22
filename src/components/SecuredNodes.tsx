@@ -49,7 +49,7 @@ export default function SecuredNodes({ onFocusNode }: SecuredNodesProps) {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="px-3 py-2.5 border-b border-white/[0.04]">
-        <div className="text-[9px] text-text-muted/60 tracking-[0.15em] uppercase" style={{ fontFamily: "'Fira Code', monospace" }}>
+        <div className="text-[9px] text-text-muted/60 tracking-[0.15em] uppercase font-mono">
           Secured Nodes ({ownedAgents.length})
         </div>
       </div>
@@ -80,14 +80,14 @@ export default function SecuredNodes({ onFocusNode }: SecuredNodesProps) {
 
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] text-text-primary" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    <span className="text-[11px] text-text-primary font-mono">
                       {agent.username || `Node-${agent.id.slice(0, 6)}`}
                     </span>
-                    <span className={`text-[8px] ${colors.text} tracking-wider uppercase`} style={{ fontFamily: "'Fira Code', monospace" }}>
+                    <span className={`text-[8px] ${colors.text} tracking-wider uppercase font-mono`}>
                       {agent.tier}
                     </span>
                   </div>
-                  <div className="text-[9px] text-text-muted/40" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <div className="text-[9px] text-text-muted/40 font-mono">
                     ({agent.position.x.toFixed(0)}, {agent.position.y.toFixed(0)})
                   </div>
                 </div>
@@ -95,12 +95,12 @@ export default function SecuredNodes({ onFocusNode }: SecuredNodesProps) {
 
               {/* Right: stats */}
               <div className="text-right">
-                <div className="text-[9px] text-text-muted/50" style={{ fontFamily: "'Fira Code', monospace" }}>
+                <div className="text-[9px] text-text-muted/50 font-mono">
                   <span className="text-yellow-400/60">{agent.cpuPerTurn}</span>
                   <span className="text-text-muted/30"> cpu</span>
                 </div>
                 {isActive && (
-                  <div className={`text-[8px] ${colors.text}/60 tracking-wider`} style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <div className={`text-[8px] ${colors.text}/60 tracking-wider font-mono`}>
                     ACTIVE
                   </div>
                 )}
