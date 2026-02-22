@@ -31,6 +31,24 @@ Stellaris-inspired gamified social media dApp where users explore a 2D galaxy gr
 - Services in `src/services/`, store in `src/store/`
 - Dark theme with CSS variables defined in `globals.css`
 
+## UI Architecture (DockPanel pattern)
+- **Dock state lives in Zustand** (`activeDockPanel`), not component-local state — any part of the tree can open a panel
+- `setActiveDockPanel(null)` is an unconditional close; `setActiveDockPanel(id)` toggles (same id = close, different id = switch)
+- `activeTab` (tab navigation) and `activeDockPanel` (right sidebar) are **orthogonal** — never let one affect the other
+- **`focusRequest` must be consumed** after the camera moves (`clearFocusRequest()`); leaving it set causes snap-back on every agent update
+- CSS utility classes for dock UI: `dock-icon`, `dock-icon-active`, `glass-panel-floating`, `animate-slide-left` (defined in `globals.css`)
+- Use `z-[25]` bracket syntax for non-standard z-index values (Tailwind 4 only generates z-0/10/20/30/40/50)
+
+## PixiJS Patterns
+- Mutations to PixiJS objects (alpha, tint, position) belong in pure functions (e.g. `setNodeDimmed`) imported into React effects — not inline in components
+- Never iterate `world.children` and assume all children are star nodes — filter by explicit marker (`.label` string or future `.name === 'star-node'`)
+- Canvas/WebGL is not available in jsdom — mock PixiJS sub-components with test stubs in unit tests
+
+## Test Mocking Patterns
+- `@solana/wallet-adapter-react` must be mocked globally in any test that renders `ResourceBar` (it calls `useWallet()` unconditionally)
+- DockPanel sub-components (GalaxyChatRoom, AgentChat, SecuredNodes, TimechainStats, TimeRewind) should be stubbed with `data-testid` markers in unit tests to avoid canvas/WebGL crashes
+- When a service makes multiple sequential `fetch` calls, each must be covered by its own `mockResolvedValueOnce` in test setup
+
 ## Key Concepts (Stellaris Metaphor)
 - Galaxy = the full network grid (6481x6481, -3240 to +3240)
 - Empire = a user's total territory
