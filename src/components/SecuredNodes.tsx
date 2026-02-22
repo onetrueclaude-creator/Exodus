@@ -22,7 +22,7 @@ export default function SecuredNodes({ onFocusNode }: SecuredNodesProps) {
 
   const ownedAgents = useMemo(() => {
     return Object.values(agents)
-      .filter((a: Agent) => a.userId === currentUserId)
+      .filter((a: Agent) => a.userId !== null && a.userId === currentUserId)
       .sort((a, b) => {
         // Primary agent first, then by tier rank, then by name
         if (a.isPrimary) return -1;
