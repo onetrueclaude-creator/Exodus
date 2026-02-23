@@ -23,7 +23,7 @@ import { MockChainService } from '@/services/chainService';
 import type { ChainService } from '@/services/chainService';
 import { TestnetChainService } from '@/services/testnetChainService';
 import { isTestnetOnline } from '@/services/testnetApi';
-import { useChainWebSocket } from '@/hooks/useChainWebSocket';
+import { useGameRealtime } from '@/hooks/useGameRealtime';
 import { getDistance } from '@/lib/proximity';
 import { getFogLevel } from '@/lib/fog';
 import { getClarityLevel } from '@/lib/diplomacy';
@@ -61,8 +61,7 @@ export default function GamePage() {
   const setInitializing = useGameStore((s) => s.setInitializing);
   const chainMode = useGameStore((s) => s.chainMode);
 
-  // Connect WebSocket when in testnet mode
-  useChainWebSocket(chainMode === 'testnet');
+  useGameRealtime();
 
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [profileAgent, setProfileAgent] = useState<string | null>(null);
@@ -192,14 +191,8 @@ export default function GamePage() {
     // Start the turn timer (ticks every 10 seconds)
     startTurnTimer();
 
-    // Chain sync — refresh grid from ledger every block time (60s)
-    const syncInterval = setInterval(() => {
-      syncFromChain();
-    }, CHAIN_SYNC_INTERVAL_MS);
-
     return () => {
       stopTurnTimer();
-      clearInterval(syncInterval);
     };
   }, []);
 
