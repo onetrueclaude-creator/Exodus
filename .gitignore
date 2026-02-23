@@ -45,3 +45,8 @@ next-env.d.ts
 # local dev artifacts
 debug.log
 dev.db
+
+# Compaction memory (local only — never commit)
+compacted.md
+compacted-summary.md
+prompts.md
