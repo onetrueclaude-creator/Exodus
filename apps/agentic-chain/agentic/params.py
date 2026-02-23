@@ -1,0 +1,77 @@
+"""Protocol parameters for the Agentic Chain."""
+
+# Consensus
+BLOCK_TIME_MS = 60_000
+VERIFIERS_PER_BLOCK = 13
+VERIFICATION_THRESHOLD = 9
+ZK_FINALITY_TARGET_S = 20
+SLOTS_PER_EPOCH = 100
+
+# Staking — CPU-weighted dual staking (ZK-CPU model)
+ALPHA = 0.40  # token weight in effective stake
+BETA = 0.60   # CPU weight — rewards computational contribution over capital
+
+# Rewards
+REWARD_SPLIT_ORDERER = 0.00
+REWARD_SPLIT_VERIFIER = 0.60
+REWARD_SPLIT_STAKER = 0.40
+
+# Tokenomics
+TOTAL_SUPPLY = 42_000_000         # Genesis supply — inflationary, no fixed cap
+INITIAL_CIRCULATING = 42_000_000  # 42M AGNTC at genesis (genesis liquidity only)
+INITIAL_INFLATION_RATE = 0.10     # 10% — bootstrap incentive for ZK prover network
+DISINFLATION_RATE = 0.10          # 10%/yr — gradual decay rewards early adopters
+INFLATION_FLOOR = 0.01            # 1% — permanent minimal staking incentive at maturity
+FEE_BURN_RATE = 0.50              # 50% of fees burned, 50% to verifiers/treasury
+
+# Initial distribution (total allocation, vested over time — not all circulating at genesis)
+DIST_COMMUNITY = 0.40     # Community staking pool — emitted to free stakers based on compute delegation
+DIST_TREASURY = 0.30      # Foundation reserve (6mo cliff, 48mo vest)
+DIST_TEAM = 0.20          # Team & advisors (4yr vest, 12mo cliff)
+DIST_AGENTS = 0.10        # Governing agents — total cost of AI verification agents
+
+# Ledger
+MERKLE_TREE_DEPTH = 26
+MAX_TXS_PER_BLOCK = 50
+MINT_PROGRAM_ID = b"agentic_mint"
+TRANSFER_PROGRAM_ID = b"agentic_transfer"
+STAKE_PROGRAM_ID = b"agentic_stake"
+GENESIS_BALANCE = 1000
+
+# Simulation
+SIM_NUM_WALLETS = 50
+SIM_NUM_EPOCHS = 20
+SIM_ADVERSARIAL_RATE = 0.10
+SIM_TXS_PER_USER_MIN = 0
+SIM_TXS_PER_USER_MAX = 3
+
+# Verification Pipeline
+VERIFICATION_COMMIT_WINDOW_S = 10.0    # commit phase duration (simulated seconds)
+VERIFICATION_REVEAL_WINDOW_S = 20.0    # reveal phase duration
+VERIFICATION_HARD_DEADLINE_S = 60.0    # maximum finalization deadline
+
+# Agent Lifecycle
+AGENT_WARMUP_EPOCHS = 1               # epochs before agent becomes ACTIVE
+AGENT_PROBATION_EPOCHS = 3            # epochs on probation before re-activation
+
+# Safe Mode
+SAFE_MODE_THRESHOLD = 0.20            # 20% offline triggers safe mode
+SAFE_MODE_RECOVERY = 0.80             # 80% online exits safe mode
+
+# Dispute Resolution
+DISPUTE_REVERIFY_MULTIPLIER = 2       # 2x verifiers for re-verification
+
+# Galaxy Grid — 42M coordinates matching TOTAL_SUPPLY (6481 × 6481 = 42,003,361)
+GRID_MIN = -3240
+GRID_MAX = 3240
+MAX_PLANETS_PER_SYSTEM = 10
+CLAIM_PROGRAM_ID = b"agentic_claim"
+STORAGE_PROGRAM_ID = b"agentic_storage"
+
+# Birth (star system creation via minting)
+BIRTH_PROGRAM_ID = b"agentic_birth"
+BASE_BIRTH_COST = 100  # AGNTC cost for ring-1 star system
+
+# Mining (per-block = per-turn = ~1 minute)
+BASE_MINING_RATE_PER_BLOCK = 1.0     # AGNTC per block per fully-dense system at launch
+ENERGY_PER_CLAIM = 1.0               # VPU cost per active claim

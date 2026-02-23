@@ -1,0 +1,885 @@
+[2026-02-20 01:52:51] ═══════════════════════════════════════════════════════
+[2026-02-20 01:52:51] ZK Agentic Chain Site Monitor Started
+[2026-02-20 01:52:51] Domain: zkagentic.ai
+[2026-02-20 01:52:51] Duration: 7h (25200s)
+[2026-02-20 01:52:51] Interval: 300s
+[2026-02-20 01:52:51] Log file: /Users/toyg/Documents/projects/web/zkagentic-site/monitor/logs/monitor-20260220.log
+[2026-02-20 01:52:51] ═══════════════════════════════════════════════════════
+[2026-02-20 01:52:51] Saving initial site snapshot...
+[2026-02-20 01:52:51] SNAPSHOT: Saved to /Users/toyg/Documents/projects/web/zkagentic-site/monitor/logs/snapshots/snapshot-20260220-015251.html (   56607 bytes)
+[2026-02-20 01:52:51] ─── Check #1 (420min remaining) ───
+[2026-02-20 01:52:51]   DNS: CNAME → zkagentic-site.pages.dev.
+[2026-02-20 01:52:51]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 01:52:52]   OK  / → 200 (218ms)
+[2026-02-20 01:52:52]   OK  /tokenomics → 200 (252ms)
+[2026-02-20 01:52:52]   OK  /technology → 200 (268ms)
+[2026-02-20 01:52:53]   OK  /roadmap → 200 (289ms)
+[2026-02-20 01:52:53]   OK  /staking → 200 (270ms)
+[2026-02-20 01:52:53]   SECURITY HEADERS: 7/7 present
+[2026-02-20 01:52:53]   STATUS: SOME PAGES DOWN — CHECK ABOVE
+[2026-02-20 01:52:53]   WARN: Failed to update stats JSON
+[2026-02-20 01:52:53] 
+[2026-02-20 07:59:50] ═══════════════════════════════════════════════════════
+[2026-02-20 07:59:50] ZK Agentic Chain Site Monitor Started
+[2026-02-20 07:59:50] Domain: zkagentic.ai
+[2026-02-20 07:59:50] Duration: 7h (25200s)
+[2026-02-20 07:59:50] Interval: 300s
+[2026-02-20 07:59:50] Log file: /Users/toyg/Documents/projects/web/zkagentic-site/monitor/logs/monitor-20260220.log
+[2026-02-20 07:59:50] ═══════════════════════════════════════════════════════
+[2026-02-20 07:59:50] Saving initial site snapshot...
+[2026-02-20 07:59:51] SNAPSHOT: Saved to /Users/toyg/Documents/projects/web/zkagentic-site/monitor/logs/snapshots/snapshot-20260220-075950.html (   56607 bytes)
+[2026-02-20 07:59:51] --- Check #1 (419min remaining) ---
+[2026-02-20 07:59:51]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 07:59:51]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 07:59:52]   OK  / -> 200 (288ms)
+[2026-02-20 07:59:52]   OK  /tokenomics -> 200 (225ms)
+[2026-02-20 07:59:52]   OK  /technology -> 200 (227ms)
+[2026-02-20 07:59:52]   OK  /roadmap -> 200 (219ms)
+[2026-02-20 07:59:53]   OK  /staking -> 200 (269ms)
+[2026-02-20 07:59:53]   SECURITY HEADERS: 7/7 present
+[2026-02-20 07:59:53]   STATUS: ALL PAGES UP
+[2026-02-20 07:59:53] 
+[2026-02-20 08:14:09] --- Check #2 (405min remaining) ---
+[2026-02-20 08:14:09]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 08:14:10]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 08:14:10]   OK  / -> 200 (304ms)
+[2026-02-20 08:14:10]   OK  /tokenomics -> 200 (312ms)
+[2026-02-20 08:14:11]   OK  /technology -> 200 (264ms)
+[2026-02-20 08:14:11]   OK  /roadmap -> 200 (275ms)
+[2026-02-20 08:14:11]   OK  /staking -> 200 (274ms)
+[2026-02-20 08:14:12]   SECURITY HEADERS: 7/7 present
+[2026-02-20 08:14:12]   STATUS: ALL PAGES UP
+[2026-02-20 08:14:12] 
+[2026-02-20 08:35:39] --- Check #3 (384min remaining) ---
+[2026-02-20 08:35:39]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 08:35:40]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 08:35:40]   OK  / -> 200 (277ms)
+[2026-02-20 08:35:40]   OK  /tokenomics -> 200 (268ms)
+[2026-02-20 08:35:41]   OK  /technology -> 200 (284ms)
+[2026-02-20 08:35:41]   OK  /roadmap -> 200 (265ms)
+[2026-02-20 08:35:41]   OK  /staking -> 200 (287ms)
+[2026-02-20 08:35:41]   SECURITY HEADERS: 7/7 present
+[2026-02-20 08:35:41]   STATUS: ALL PAGES UP
+[2026-02-20 08:35:41] 
+[2026-02-20 08:55:51] --- Check #4 (363min remaining) ---
+[2026-02-20 08:55:51]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 08:55:52]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 08:55:52]   OK  / -> 200 (261ms)
+[2026-02-20 08:55:52]   OK  /tokenomics -> 200 (253ms)
+[2026-02-20 08:55:53]   OK  /technology -> 200 (261ms)
+[2026-02-20 08:55:53]   OK  /roadmap -> 200 (243ms)
+[2026-02-20 08:55:53]   OK  /staking -> 200 (249ms)
+[2026-02-20 08:55:54]   SECURITY HEADERS: 7/7 present
+[2026-02-20 08:55:54]   STATUS: ALL PAGES UP
+[2026-02-20 08:55:54] 
+[2026-02-20 09:00:54] --- Check #5 (358min remaining) ---
+[2026-02-20 09:00:54]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 09:00:54]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 09:00:54]   OK  / -> 200 (236ms)
+[2026-02-20 09:00:54]   OK  /tokenomics -> 200 (253ms)
+[2026-02-20 09:00:55]   OK  /technology -> 200 (244ms)
+[2026-02-20 09:00:55]   OK  /roadmap -> 200 (277ms)
+[2026-02-20 09:00:55]   OK  /staking -> 200 (274ms)
+[2026-02-20 09:00:56]   SECURITY HEADERS: 7/7 present
+[2026-02-20 09:00:56]   STATUS: ALL PAGES UP
+[2026-02-20 09:00:56] 
+[2026-02-20 09:05:56] --- Check #6 (353min remaining) ---
+[2026-02-20 09:05:56]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 09:05:56]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 09:05:57]   OK  / -> 200 (294ms)
+[2026-02-20 09:05:57]   OK  /tokenomics -> 200 (266ms)
+[2026-02-20 09:05:57]   OK  /technology -> 200 (287ms)
+[2026-02-20 09:05:58]   OK  /roadmap -> 200 (234ms)
+[2026-02-20 09:05:58]   OK  /staking -> 200 (246ms)
+[2026-02-20 09:05:58]   SECURITY HEADERS: 7/7 present
+[2026-02-20 09:05:58]   STATUS: ALL PAGES UP
+[2026-02-20 09:05:58] 
+[2026-02-20 09:10:58] --- Check #7 (348min remaining) ---
+[2026-02-20 09:10:58]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 09:10:58]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 09:10:59]   OK  / -> 200 (235ms)
+[2026-02-20 09:10:59]   OK  /tokenomics -> 200 (241ms)
+[2026-02-20 09:10:59]   OK  /technology -> 200 (236ms)
+[2026-02-20 09:10:59]   OK  /roadmap -> 200 (254ms)
+[2026-02-20 09:11:00]   OK  /staking -> 200 (243ms)
+[2026-02-20 09:11:00]   SECURITY HEADERS: 7/7 present
+[2026-02-20 09:11:00]   STATUS: ALL PAGES UP
+[2026-02-20 09:11:00] 
+[2026-02-20 09:16:00] --- Check #8 (343min remaining) ---
+[2026-02-20 09:16:00]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 09:16:00]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 09:16:01]   OK  / -> 200 (251ms)
+[2026-02-20 09:16:01]   OK  /tokenomics -> 200 (272ms)
+[2026-02-20 09:16:01]   OK  /technology -> 200 (256ms)
+[2026-02-20 09:16:02]   OK  /roadmap -> 200 (235ms)
+[2026-02-20 09:16:02]   OK  /staking -> 200 (247ms)
+[2026-02-20 09:16:02]   SECURITY HEADERS: 7/7 present
+[2026-02-20 09:16:02]   STATUS: ALL PAGES UP
+[2026-02-20 09:16:02] 
+[2026-02-20 09:21:15] --- Check #9 (338min remaining) ---
+[2026-02-20 09:21:15]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 09:21:15]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 09:21:16]   OK  / -> 200 (283ms)
+[2026-02-20 09:21:16]   OK  /tokenomics -> 200 (238ms)
+[2026-02-20 09:21:16]   OK  /technology -> 200 (256ms)
+[2026-02-20 09:21:16]   OK  /roadmap -> 200 (234ms)
+[2026-02-20 09:21:17]   OK  /staking -> 200 (240ms)
+[2026-02-20 09:21:17]   SECURITY HEADERS: 7/7 present
+[2026-02-20 09:21:17]   STATUS: ALL PAGES UP
+[2026-02-20 09:21:17] 
+[2026-02-20 09:26:17] --- Check #10 (333min remaining) ---
+[2026-02-20 09:26:17]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 09:26:17]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 09:26:17]   OK  / -> 200 (286ms)
+[2026-02-20 09:26:18]   OK  /tokenomics -> 200 (226ms)
+[2026-02-20 09:26:18]   OK  /technology -> 200 (236ms)
+[2026-02-20 09:26:18]   OK  /roadmap -> 200 (232ms)
+[2026-02-20 09:26:18]   OK  /staking -> 200 (235ms)
+[2026-02-20 09:26:19]   SECURITY HEADERS: 7/7 present
+[2026-02-20 09:26:19]   STATUS: ALL PAGES UP
+[2026-02-20 09:26:19] 
+[2026-02-20 09:31:19] --- Check #11 (328min remaining) ---
+[2026-02-20 09:31:19]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 09:31:19]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 09:31:19]   OK  / -> 200 (280ms)
+[2026-02-20 09:31:20]   OK  /tokenomics -> 200 (309ms)
+[2026-02-20 09:31:20]   OK  /technology -> 200 (237ms)
+[2026-02-20 09:31:20]   OK  /roadmap -> 200 (246ms)
+[2026-02-20 09:31:20]   OK  /staking -> 200 (230ms)
+[2026-02-20 09:31:21]   SECURITY HEADERS: 7/7 present
+[2026-02-20 09:31:21]   STATUS: ALL PAGES UP
+[2026-02-20 09:31:21] 
+[2026-02-20 09:36:21] --- Check #12 (323min remaining) ---
+[2026-02-20 09:36:21]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 09:36:21]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 09:36:22]   OK  / -> 200 (306ms)
+[2026-02-20 09:36:22]   OK  /tokenomics -> 200 (211ms)
+[2026-02-20 09:36:22]   OK  /technology -> 200 (239ms)
+[2026-02-20 09:36:22]   OK  /roadmap -> 200 (210ms)
+[2026-02-20 09:36:23]   OK  /staking -> 200 (244ms)
+[2026-02-20 09:36:23]   SECURITY HEADERS: 7/7 present
+[2026-02-20 09:36:23]   STATUS: ALL PAGES UP
+[2026-02-20 09:36:23] Hourly snapshot...
+[2026-02-20 09:36:23] SNAPSHOT: Saved to /Users/toyg/Documents/projects/web/zkagentic-site/monitor/logs/snapshots/snapshot-20260220-093623.html (   56607 bytes)
+[2026-02-20 09:36:23] 
+[2026-02-20 09:41:23] --- Check #13 (318min remaining) ---
+[2026-02-20 09:41:23]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 09:41:23]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 09:41:24]   OK  / -> 200 (278ms)
+[2026-02-20 09:41:24]   OK  /tokenomics -> 200 (315ms)
+[2026-02-20 09:41:24]   OK  /technology -> 200 (238ms)
+[2026-02-20 09:41:25]   OK  /roadmap -> 200 (247ms)
+[2026-02-20 09:41:25]   OK  /staking -> 200 (219ms)
+[2026-02-20 09:41:25]   SECURITY HEADERS: 7/7 present
+[2026-02-20 09:41:25]   STATUS: ALL PAGES UP
+[2026-02-20 09:41:25] 
+[2026-02-20 09:46:25] --- Check #14 (313min remaining) ---
+[2026-02-20 09:46:25]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 09:46:25]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 09:46:26]   OK  / -> 200 (243ms)
+[2026-02-20 09:46:26]   OK  /tokenomics -> 200 (262ms)
+[2026-02-20 09:46:26]   OK  /technology -> 200 (238ms)
+[2026-02-20 09:46:27]   OK  /roadmap -> 200 (236ms)
+[2026-02-20 09:46:27]   OK  /staking -> 200 (228ms)
+[2026-02-20 09:46:27]   SECURITY HEADERS: 7/7 present
+[2026-02-20 09:46:27]   STATUS: ALL PAGES UP
+[2026-02-20 09:46:27] 
+[2026-02-20 09:51:27] --- Check #15 (308min remaining) ---
+[2026-02-20 09:51:27]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 09:51:27]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 09:51:28]   OK  / -> 200 (229ms)
+[2026-02-20 09:51:28]   OK  /tokenomics -> 200 (262ms)
+[2026-02-20 09:51:28]   OK  /technology -> 200 (266ms)
+[2026-02-20 09:51:29]   OK  /roadmap -> 200 (253ms)
+[2026-02-20 09:51:29]   OK  /staking -> 200 (242ms)
+[2026-02-20 09:51:29]   SECURITY HEADERS: 7/7 present
+[2026-02-20 09:51:29]   STATUS: ALL PAGES UP
+[2026-02-20 09:51:29] 
+[2026-02-20 09:56:29] --- Check #16 (303min remaining) ---
+[2026-02-20 09:56:29]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 09:56:29]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 09:56:30]   OK  / -> 200 (246ms)
+[2026-02-20 09:56:30]   OK  /tokenomics -> 200 (300ms)
+[2026-02-20 09:56:30]   OK  /technology -> 200 (250ms)
+[2026-02-20 09:56:30]   OK  /roadmap -> 200 (229ms)
+[2026-02-20 09:56:31]   OK  /staking -> 200 (233ms)
+[2026-02-20 09:56:31]   SECURITY HEADERS: 7/7 present
+[2026-02-20 09:56:31]   STATUS: ALL PAGES UP
+[2026-02-20 09:56:31] 
+[2026-02-20 10:01:31] --- Check #17 (298min remaining) ---
+[2026-02-20 10:01:31]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 10:01:31]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 10:01:32]   OK  / -> 200 (294ms)
+[2026-02-20 10:01:32]   OK  /tokenomics -> 200 (249ms)
+[2026-02-20 10:01:32]   OK  /technology -> 200 (244ms)
+[2026-02-20 10:01:33]   OK  /roadmap -> 200 (268ms)
+[2026-02-20 10:01:33]   OK  /staking -> 200 (275ms)
+[2026-02-20 10:01:33]   SECURITY HEADERS: 7/7 present
+[2026-02-20 10:01:33]   STATUS: ALL PAGES UP
+[2026-02-20 10:01:33] 
+[2026-02-20 10:06:33] --- Check #18 (293min remaining) ---
+[2026-02-20 10:06:34]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 10:06:34]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 10:06:34]   OK  / -> 200 (292ms)
+[2026-02-20 10:06:34]   OK  /tokenomics -> 200 (286ms)
+[2026-02-20 10:06:35]   OK  /technology -> 200 (249ms)
+[2026-02-20 10:06:35]   OK  /roadmap -> 200 (255ms)
+[2026-02-20 10:06:35]   OK  /staking -> 200 (241ms)
+[2026-02-20 10:06:35]   SECURITY HEADERS: 7/7 present
+[2026-02-20 10:06:35]   STATUS: ALL PAGES UP
+[2026-02-20 10:06:35] 
+[2026-02-20 10:11:35] --- Check #19 (288min remaining) ---
+[2026-02-20 10:11:36]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 10:11:36]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 10:11:36]   OK  / -> 200 (301ms)
+[2026-02-20 10:11:36]   OK  /tokenomics -> 200 (261ms)
+[2026-02-20 10:11:37]   OK  /technology -> 200 (281ms)
+[2026-02-20 10:11:37]   OK  /roadmap -> 200 (238ms)
+[2026-02-20 10:11:37]   OK  /staking -> 200 (247ms)
+[2026-02-20 10:11:38]   SECURITY HEADERS: 7/7 present
+[2026-02-20 10:11:38]   STATUS: ALL PAGES UP
+[2026-02-20 10:11:38] 
+[2026-02-20 10:16:38] --- Check #20 (283min remaining) ---
+[2026-02-20 10:16:38]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 10:16:38]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 10:16:38]   OK  / -> 200 (241ms)
+[2026-02-20 10:16:39]   OK  /tokenomics -> 200 (298ms)
+[2026-02-20 10:16:39]   OK  /technology -> 200 (255ms)
+[2026-02-20 10:16:39]   OK  /roadmap -> 200 (243ms)
+[2026-02-20 10:16:39]   OK  /staking -> 200 (245ms)
+[2026-02-20 10:16:40]   SECURITY HEADERS: 7/7 present
+[2026-02-20 10:16:40]   STATUS: ALL PAGES UP
+[2026-02-20 10:16:40] 
+[2026-02-20 10:21:40] --- Check #21 (278min remaining) ---
+[2026-02-20 10:21:40]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 10:21:40]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 10:21:40]   OK  / -> 200 (237ms)
+[2026-02-20 10:21:41]   OK  /tokenomics -> 200 (252ms)
+[2026-02-20 10:21:41]   OK  /technology -> 200 (235ms)
+[2026-02-20 10:21:41]   OK  /roadmap -> 200 (247ms)
+[2026-02-20 10:21:41]   OK  /staking -> 200 (250ms)
+[2026-02-20 10:21:42]   SECURITY HEADERS: 7/7 present
+[2026-02-20 10:21:42]   STATUS: ALL PAGES UP
+[2026-02-20 10:21:42] 
+[2026-02-20 10:26:42] --- Check #22 (273min remaining) ---
+[2026-02-20 10:26:42]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 10:26:42]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 10:26:42]   OK  / -> 200 (251ms)
+[2026-02-20 10:26:43]   OK  /tokenomics -> 200 (314ms)
+[2026-02-20 10:26:43]   OK  /technology -> 200 (269ms)
+[2026-02-20 10:26:43]   OK  /roadmap -> 200 (245ms)
+[2026-02-20 10:26:43]   OK  /staking -> 200 (253ms)
+[2026-02-20 10:26:44]   SECURITY HEADERS: 7/7 present
+[2026-02-20 10:26:44]   STATUS: ALL PAGES UP
+[2026-02-20 10:26:44] 
+[2026-02-20 10:31:44] --- Check #23 (268min remaining) ---
+[2026-02-20 10:31:44]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 10:31:44]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 10:31:44]   OK  / -> 200 (255ms)
+[2026-02-20 10:31:45]   OK  /tokenomics -> 200 (226ms)
+[2026-02-20 10:31:45]   OK  /technology -> 200 (238ms)
+[2026-02-20 10:31:45]   OK  /roadmap -> 200 (266ms)
+[2026-02-20 10:31:45]   OK  /staking -> 200 (223ms)
+[2026-02-20 10:31:46]   SECURITY HEADERS: 7/7 present
+[2026-02-20 10:31:46]   STATUS: ALL PAGES UP
+[2026-02-20 10:31:46] 
+[2026-02-20 10:36:46] --- Check #24 (263min remaining) ---
+[2026-02-20 10:36:46]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 10:36:46]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 10:36:46]   OK  / -> 200 (222ms)
+[2026-02-20 10:36:47]   OK  /tokenomics -> 200 (220ms)
+[2026-02-20 10:36:47]   OK  /technology -> 200 (242ms)
+[2026-02-20 10:36:47]   OK  /roadmap -> 200 (251ms)
+[2026-02-20 10:36:48]   OK  /staking -> 200 (226ms)
+[2026-02-20 10:36:48]   SECURITY HEADERS: 7/7 present
+[2026-02-20 10:36:48]   STATUS: ALL PAGES UP
+[2026-02-20 10:36:48] Hourly snapshot...
+[2026-02-20 10:36:48] SNAPSHOT: Saved to /Users/toyg/Documents/projects/web/zkagentic-site/monitor/logs/snapshots/snapshot-20260220-103648.html (   56715 bytes)
+[2026-02-20 10:36:48] 
+[2026-02-20 10:41:48] --- Check #25 (258min remaining) ---
+[2026-02-20 10:41:48]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 10:41:48]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 10:41:49]   OK  / -> 200 (242ms)
+[2026-02-20 10:41:49]   OK  /tokenomics -> 200 (236ms)
+[2026-02-20 10:41:49]   OK  /technology -> 200 (239ms)
+[2026-02-20 10:41:50]   OK  /roadmap -> 200 (419ms)
+[2026-02-20 10:41:50]   OK  /staking -> 200 (236ms)
+[2026-02-20 10:41:50]   SECURITY HEADERS: 7/7 present
+[2026-02-20 10:41:50]   STATUS: ALL PAGES UP
+[2026-02-20 10:41:50] 
+[2026-02-20 10:46:50] --- Check #26 (253min remaining) ---
+[2026-02-20 10:46:50]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 10:46:50]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 10:46:51]   OK  / -> 200 (238ms)
+[2026-02-20 10:46:51]   OK  /tokenomics -> 200 (236ms)
+[2026-02-20 10:46:51]   OK  /technology -> 200 (239ms)
+[2026-02-20 10:46:52]   OK  /roadmap -> 200 (236ms)
+[2026-02-20 10:46:52]   OK  /staking -> 200 (269ms)
+[2026-02-20 10:46:52]   SECURITY HEADERS: 7/7 present
+[2026-02-20 10:46:52]   STATUS: ALL PAGES UP
+[2026-02-20 10:46:52] 
+[2026-02-20 10:51:52] --- Check #27 (247min remaining) ---
+[2026-02-20 10:51:52]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 10:51:52]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 10:51:53]   OK  / -> 200 (254ms)
+[2026-02-20 10:51:53]   OK  /tokenomics -> 200 (293ms)
+[2026-02-20 10:51:53]   OK  /technology -> 200 (229ms)
+[2026-02-20 10:51:54]   OK  /roadmap -> 200 (253ms)
+[2026-02-20 10:51:54]   OK  /staking -> 200 (256ms)
+[2026-02-20 10:51:54]   SECURITY HEADERS: 7/7 present
+[2026-02-20 10:51:54]   STATUS: ALL PAGES UP
+[2026-02-20 10:51:54] 
+[2026-02-20 10:56:54] --- Check #28 (242min remaining) ---
+[2026-02-20 10:56:54]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 10:56:55]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 10:56:55]   OK  / -> 200 (283ms)
+[2026-02-20 10:56:55]   OK  /tokenomics -> 200 (258ms)
+[2026-02-20 10:56:55]   OK  /technology -> 200 (238ms)
+[2026-02-20 10:56:56]   OK  /roadmap -> 200 (219ms)
+[2026-02-20 10:56:56]   OK  /staking -> 200 (245ms)
+[2026-02-20 10:56:56]   SECURITY HEADERS: 7/7 present
+[2026-02-20 10:56:56]   STATUS: ALL PAGES UP
+[2026-02-20 10:56:56] 
+[2026-02-20 11:01:56] --- Check #29 (237min remaining) ---
+[2026-02-20 11:01:56]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 11:01:57]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 11:01:57]   OK  / -> 200 (255ms)
+[2026-02-20 11:01:57]   OK  /tokenomics -> 200 (295ms)
+[2026-02-20 11:01:57]   OK  /technology -> 200 (254ms)
+[2026-02-20 11:01:58]   OK  /roadmap -> 200 (249ms)
+[2026-02-20 11:01:58]   OK  /staking -> 200 (241ms)
+[2026-02-20 11:01:58]   SECURITY HEADERS: 7/7 present
+[2026-02-20 11:01:58]   STATUS: ALL PAGES UP
+[2026-02-20 11:01:58] 
+[2026-02-20 11:06:58] --- Check #30 (232min remaining) ---
+[2026-02-20 11:06:59]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 11:06:59]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 11:06:59]   OK  / -> 200 (276ms)
+[2026-02-20 11:07:00]   OK  /tokenomics -> 200 (320ms)
+[2026-02-20 11:07:00]   OK  /technology -> 200 (248ms)
+[2026-02-20 11:07:00]   OK  /roadmap -> 200 (242ms)
+[2026-02-20 11:07:00]   OK  /staking -> 200 (233ms)
+[2026-02-20 11:07:01]   SECURITY HEADERS: 7/7 present
+[2026-02-20 11:07:01]   STATUS: ALL PAGES UP
+[2026-02-20 11:07:01] 
+[2026-02-20 11:12:01] --- Check #31 (227min remaining) ---
+[2026-02-20 11:12:01]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 11:12:01]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 11:12:01]   OK  / -> 200 (257ms)
+[2026-02-20 11:12:02]   OK  /tokenomics -> 200 (327ms)
+[2026-02-20 11:12:02]   OK  /technology -> 200 (229ms)
+[2026-02-20 11:12:02]   OK  /roadmap -> 200 (225ms)
+[2026-02-20 11:12:02]   OK  /staking -> 200 (301ms)
+[2026-02-20 11:12:03]   SECURITY HEADERS: 7/7 present
+[2026-02-20 11:12:03]   STATUS: ALL PAGES UP
+[2026-02-20 11:12:03] 
+[2026-02-20 11:17:03] --- Check #32 (222min remaining) ---
+[2026-02-20 11:17:03]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 11:17:03]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 11:17:03]   OK  / -> 200 (258ms)
+[2026-02-20 11:17:04]   OK  /tokenomics -> 200 (283ms)
+[2026-02-20 11:17:04]   OK  /technology -> 200 (213ms)
+[2026-02-20 11:17:04]   OK  /roadmap -> 200 (233ms)
+[2026-02-20 11:17:04]   OK  /staking -> 200 (243ms)
+[2026-02-20 11:17:05]   SECURITY HEADERS: 7/7 present
+[2026-02-20 11:17:05]   STATUS: ALL PAGES UP
+[2026-02-20 11:17:05] 
+[2026-02-20 11:22:05] --- Check #33 (217min remaining) ---
+[2026-02-20 11:22:05]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 11:22:05]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 11:22:05]   OK  / -> 200 (234ms)
+[2026-02-20 11:22:06]   OK  /tokenomics -> 200 (303ms)
+[2026-02-20 11:22:06]   OK  /technology -> 200 (236ms)
+[2026-02-20 11:22:06]   OK  /roadmap -> 200 (251ms)
+[2026-02-20 11:22:06]   OK  /staking -> 200 (207ms)
+[2026-02-20 11:22:06]   SECURITY HEADERS: 7/7 present
+[2026-02-20 11:22:06]   STATUS: ALL PAGES UP
+[2026-02-20 11:22:07] 
+[2026-02-20 11:27:07] --- Check #34 (212min remaining) ---
+[2026-02-20 11:27:07]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 11:27:07]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 11:27:07]   OK  / -> 200 (221ms)
+[2026-02-20 11:27:07]   OK  /tokenomics -> 200 (243ms)
+[2026-02-20 11:27:08]   OK  /technology -> 200 (246ms)
+[2026-02-20 11:27:08]   OK  /roadmap -> 200 (267ms)
+[2026-02-20 11:27:08]   OK  /staking -> 200 (255ms)
+[2026-02-20 11:27:08]   SECURITY HEADERS: 7/7 present
+[2026-02-20 11:27:08]   STATUS: ALL PAGES UP
+[2026-02-20 11:27:09] 
+[2026-02-20 11:32:09] --- Check #35 (207min remaining) ---
+[2026-02-20 11:32:09]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 11:32:09]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 11:32:09]   OK  / -> 200 (254ms)
+[2026-02-20 11:32:09]   OK  /tokenomics -> 200 (355ms)
+[2026-02-20 11:32:10]   OK  /technology -> 200 (241ms)
+[2026-02-20 11:32:10]   OK  /roadmap -> 200 (249ms)
+[2026-02-20 11:32:10]   OK  /staking -> 200 (232ms)
+[2026-02-20 11:32:10]   SECURITY HEADERS: 7/7 present
+[2026-02-20 11:32:11]   STATUS: ALL PAGES UP
+[2026-02-20 11:32:11] 
+[2026-02-20 11:37:11] --- Check #36 (202min remaining) ---
+[2026-02-20 11:37:11]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 11:37:11]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 11:37:12]   OK  / -> 200 (279ms)
+[2026-02-20 11:37:12]   OK  /tokenomics -> 200 (238ms)
+[2026-02-20 11:37:12]   OK  /technology -> 200 (265ms)
+[2026-02-20 11:37:12]   OK  /roadmap -> 200 (254ms)
+[2026-02-20 11:37:13]   OK  /staking -> 200 (278ms)
+[2026-02-20 11:37:13]   SECURITY HEADERS: 7/7 present
+[2026-02-20 11:37:13]   STATUS: ALL PAGES UP
+[2026-02-20 11:37:13] Hourly snapshot...
+[2026-02-20 11:37:13] SNAPSHOT: Saved to /Users/toyg/Documents/projects/web/zkagentic-site/monitor/logs/snapshots/snapshot-20260220-113713.html (   56715 bytes)
+[2026-02-20 11:37:13] 
+[2026-02-20 11:42:13] --- Check #37 (197min remaining) ---
+[2026-02-20 11:42:13]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 11:42:14]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 11:42:14]   OK  / -> 200 (250ms)
+[2026-02-20 11:42:14]   OK  /tokenomics -> 200 (240ms)
+[2026-02-20 11:42:14]   OK  /technology -> 200 (245ms)
+[2026-02-20 11:42:15]   OK  /roadmap -> 200 (245ms)
+[2026-02-20 11:42:15]   OK  /staking -> 200 (234ms)
+[2026-02-20 11:42:15]   SECURITY HEADERS: 7/7 present
+[2026-02-20 11:42:15]   STATUS: ALL PAGES UP
+[2026-02-20 11:42:15] 
+[2026-02-20 11:47:15] --- Check #38 (192min remaining) ---
+[2026-02-20 11:47:15]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 11:47:15]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 11:47:16]   OK  / -> 200 (237ms)
+[2026-02-20 11:47:16]   OK  /tokenomics -> 200 (285ms)
+[2026-02-20 11:47:16]   OK  /technology -> 200 (230ms)
+[2026-02-20 11:47:17]   OK  /roadmap -> 200 (248ms)
+[2026-02-20 11:47:17]   OK  /staking -> 200 (233ms)
+[2026-02-20 11:47:17]   SECURITY HEADERS: 7/7 present
+[2026-02-20 11:47:17]   STATUS: ALL PAGES UP
+[2026-02-20 11:47:17] 
+[2026-02-20 11:52:17] --- Check #39 (187min remaining) ---
+[2026-02-20 11:52:17]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 11:52:17]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 11:52:18]   OK  / -> 200 (272ms)
+[2026-02-20 11:52:18]   OK  /tokenomics -> 200 (257ms)
+[2026-02-20 11:52:18]   OK  /technology -> 200 (220ms)
+[2026-02-20 11:52:18]   OK  /roadmap -> 200 (220ms)
+[2026-02-20 11:52:19]   OK  /staking -> 200 (230ms)
+[2026-02-20 11:52:19]   SECURITY HEADERS: 7/7 present
+[2026-02-20 11:52:19]   STATUS: ALL PAGES UP
+[2026-02-20 11:52:19] 
+[2026-02-20 11:57:19] --- Check #40 (182min remaining) ---
+[2026-02-20 11:57:19]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 11:57:19]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 11:57:20]   OK  / -> 200 (275ms)
+[2026-02-20 11:57:20]   OK  /tokenomics -> 200 (302ms)
+[2026-02-20 11:57:20]   OK  /technology -> 200 (223ms)
+[2026-02-20 11:57:20]   OK  /roadmap -> 200 (234ms)
+[2026-02-20 11:57:21]   OK  /staking -> 200 (238ms)
+[2026-02-20 11:57:21]   SECURITY HEADERS: 7/7 present
+[2026-02-20 11:57:21]   STATUS: ALL PAGES UP
+[2026-02-20 11:57:21] 
+[2026-02-20 12:02:21] --- Check #41 (177min remaining) ---
+[2026-02-20 12:02:21]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 12:02:21]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 12:02:21]   OK  / -> 200 (236ms)
+[2026-02-20 12:02:22]   OK  /tokenomics -> 200 (235ms)
+[2026-02-20 12:02:22]   OK  /technology -> 200 (237ms)
+[2026-02-20 12:02:22]   OK  /roadmap -> 200 (246ms)
+[2026-02-20 12:02:23]   OK  /staking -> 200 (238ms)
+[2026-02-20 12:02:23]   SECURITY HEADERS: 7/7 present
+[2026-02-20 12:02:23]   STATUS: ALL PAGES UP
+[2026-02-20 12:02:23] 
+[2026-02-20 12:07:23] --- Check #42 (172min remaining) ---
+[2026-02-20 12:07:23]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 12:07:23]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 12:07:24]   OK  / -> 200 (241ms)
+[2026-02-20 12:07:24]   OK  /tokenomics -> 200 (240ms)
+[2026-02-20 12:07:24]   OK  /technology -> 200 (234ms)
+[2026-02-20 12:07:24]   OK  /roadmap -> 200 (281ms)
+[2026-02-20 12:07:25]   OK  /staking -> 200 (249ms)
+[2026-02-20 12:07:25]   SECURITY HEADERS: 7/7 present
+[2026-02-20 12:07:25]   STATUS: ALL PAGES UP
+[2026-02-20 12:07:25] 
+[2026-02-20 12:12:25] --- Check #43 (167min remaining) ---
+[2026-02-20 12:12:25]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 12:12:25]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 12:12:26]   OK  / -> 200 (242ms)
+[2026-02-20 12:12:26]   OK  /tokenomics -> 200 (236ms)
+[2026-02-20 12:12:26]   OK  /technology -> 200 (248ms)
+[2026-02-20 12:12:26]   OK  /roadmap -> 200 (232ms)
+[2026-02-20 12:12:27]   OK  /staking -> 200 (244ms)
+[2026-02-20 12:12:27]   SECURITY HEADERS: 7/7 present
+[2026-02-20 12:12:27]   STATUS: ALL PAGES UP
+[2026-02-20 12:12:27] 
+[2026-02-20 12:17:27] --- Check #44 (162min remaining) ---
+[2026-02-20 12:17:27]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 12:17:27]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 12:17:28]   OK  / -> 200 (239ms)
+[2026-02-20 12:17:28]   OK  /tokenomics -> 200 (234ms)
+[2026-02-20 12:17:28]   OK  /technology -> 200 (216ms)
+[2026-02-20 12:17:28]   OK  /roadmap -> 200 (235ms)
+[2026-02-20 12:17:29]   OK  /staking -> 200 (244ms)
+[2026-02-20 12:17:29]   SECURITY HEADERS: 7/7 present
+[2026-02-20 12:17:29]   STATUS: ALL PAGES UP
+[2026-02-20 12:17:29] 
+[2026-02-20 12:22:29] --- Check #45 (157min remaining) ---
+[2026-02-20 12:22:29]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 12:22:29]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 12:22:29]   OK  / -> 200 (242ms)
+[2026-02-20 12:22:30]   OK  /tokenomics -> 200 (281ms)
+[2026-02-20 12:22:30]   OK  /technology -> 200 (275ms)
+[2026-02-20 12:22:30]   OK  /roadmap -> 200 (225ms)
+[2026-02-20 12:22:31]   OK  /staking -> 200 (265ms)
+[2026-02-20 12:22:31]   SECURITY HEADERS: 7/7 present
+[2026-02-20 12:22:31]   STATUS: ALL PAGES UP
+[2026-02-20 12:22:31] 
+[2026-02-20 12:27:31] --- Check #46 (152min remaining) ---
+[2026-02-20 12:27:31]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 12:27:31]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 12:27:31]   OK  / -> 200 (247ms)
+[2026-02-20 12:27:32]   OK  /tokenomics -> 200 (224ms)
+[2026-02-20 12:27:32]   OK  /technology -> 200 (255ms)
+[2026-02-20 12:27:32]   OK  /roadmap -> 200 (222ms)
+[2026-02-20 12:27:32]   OK  /staking -> 200 (253ms)
+[2026-02-20 12:27:33]   SECURITY HEADERS: 7/7 present
+[2026-02-20 12:27:33]   STATUS: ALL PAGES UP
+[2026-02-20 12:27:33] 
+[2026-02-20 12:32:33] --- Check #47 (147min remaining) ---
+[2026-02-20 12:32:33]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 12:32:33]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 12:32:33]   OK  / -> 200 (222ms)
+[2026-02-20 12:32:34]   OK  /tokenomics -> 200 (237ms)
+[2026-02-20 12:32:34]   OK  /technology -> 200 (250ms)
+[2026-02-20 12:32:34]   OK  /roadmap -> 200 (233ms)
+[2026-02-20 12:32:34]   OK  /staking -> 200 (270ms)
+[2026-02-20 12:32:35]   SECURITY HEADERS: 7/7 present
+[2026-02-20 12:32:35]   STATUS: ALL PAGES UP
+[2026-02-20 12:32:35] 
+[2026-02-20 12:37:35] --- Check #48 (142min remaining) ---
+[2026-02-20 12:37:35]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 12:37:35]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 12:37:36]   OK  / -> 200 (237ms)
+[2026-02-20 12:37:36]   OK  /tokenomics -> 200 (244ms)
+[2026-02-20 12:37:36]   OK  /technology -> 200 (267ms)
+[2026-02-20 12:37:36]   OK  /roadmap -> 200 (230ms)
+[2026-02-20 12:37:37]   OK  /staking -> 200 (239ms)
+[2026-02-20 12:37:37]   SECURITY HEADERS: 7/7 present
+[2026-02-20 12:37:37]   STATUS: ALL PAGES UP
+[2026-02-20 12:37:37] Hourly snapshot...
+[2026-02-20 12:37:37] SNAPSHOT: Saved to /Users/toyg/Documents/projects/web/zkagentic-site/monitor/logs/snapshots/snapshot-20260220-123737.html (   56715 bytes)
+[2026-02-20 12:37:37] 
+[2026-02-20 12:42:37] --- Check #49 (137min remaining) ---
+[2026-02-20 12:42:37]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 12:42:38]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 12:42:38]   OK  / -> 200 (281ms)
+[2026-02-20 12:42:38]   OK  /tokenomics -> 200 (286ms)
+[2026-02-20 12:42:38]   OK  /technology -> 200 (239ms)
+[2026-02-20 12:42:39]   OK  /roadmap -> 200 (237ms)
+[2026-02-20 12:42:39]   OK  /staking -> 200 (225ms)
+[2026-02-20 12:42:39]   SECURITY HEADERS: 7/7 present
+[2026-02-20 12:42:39]   STATUS: ALL PAGES UP
+[2026-02-20 12:42:39] 
+[2026-02-20 12:47:39] --- Check #50 (132min remaining) ---
+[2026-02-20 12:47:39]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 12:47:39]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 12:47:40]   OK  / -> 200 (246ms)
+[2026-02-20 12:47:40]   OK  /tokenomics -> 200 (246ms)
+[2026-02-20 12:47:40]   OK  /technology -> 200 (243ms)
+[2026-02-20 12:47:41]   OK  /roadmap -> 200 (243ms)
+[2026-02-20 12:47:41]   OK  /staking -> 200 (236ms)
+[2026-02-20 12:47:41]   SECURITY HEADERS: 7/7 present
+[2026-02-20 12:47:41]   STATUS: ALL PAGES UP
+[2026-02-20 12:47:41] 
+[2026-02-20 12:52:41] --- Check #51 (127min remaining) ---
+[2026-02-20 12:52:41]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 12:52:41]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 12:52:42]   OK  / -> 200 (228ms)
+[2026-02-20 12:52:42]   OK  /tokenomics -> 200 (257ms)
+[2026-02-20 12:52:42]   OK  /technology -> 200 (249ms)
+[2026-02-20 12:52:42]   OK  /roadmap -> 200 (225ms)
+[2026-02-20 12:52:43]   OK  /staking -> 200 (230ms)
+[2026-02-20 12:52:43]   SECURITY HEADERS: 7/7 present
+[2026-02-20 12:52:43]   STATUS: ALL PAGES UP
+[2026-02-20 12:52:43] 
+[2026-02-20 12:57:43] --- Check #52 (122min remaining) ---
+[2026-02-20 12:57:43]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 12:57:43]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 12:57:44]   OK  / -> 200 (248ms)
+[2026-02-20 12:57:44]   OK  /tokenomics -> 200 (233ms)
+[2026-02-20 12:57:44]   OK  /technology -> 200 (240ms)
+[2026-02-20 12:57:44]   OK  /roadmap -> 200 (238ms)
+[2026-02-20 12:57:45]   OK  /staking -> 200 (272ms)
+[2026-02-20 12:57:45]   SECURITY HEADERS: 7/7 present
+[2026-02-20 12:57:45]   STATUS: ALL PAGES UP
+[2026-02-20 12:57:45] 
+[2026-02-20 13:02:45] --- Check #53 (117min remaining) ---
+[2026-02-20 13:02:45]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 13:02:45]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 13:02:46]   OK  / -> 200 (253ms)
+[2026-02-20 13:02:46]   OK  /tokenomics -> 200 (237ms)
+[2026-02-20 13:02:46]   OK  /technology -> 200 (241ms)
+[2026-02-20 13:02:46]   OK  /roadmap -> 200 (234ms)
+[2026-02-20 13:02:47]   OK  /staking -> 200 (248ms)
+[2026-02-20 13:02:47]   SECURITY HEADERS: 7/7 present
+[2026-02-20 13:02:47]   STATUS: ALL PAGES UP
+[2026-02-20 13:02:47] 
+[2026-02-20 13:07:47] --- Check #54 (112min remaining) ---
+[2026-02-20 13:07:47]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 13:07:48]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 13:07:48]   OK  / -> 200 (234ms)
+[2026-02-20 13:07:48]   OK  /tokenomics -> 200 (302ms)
+[2026-02-20 13:07:48]   OK  /technology -> 200 (235ms)
+[2026-02-20 13:07:49]   OK  /roadmap -> 200 (248ms)
+[2026-02-20 13:07:49]   OK  /staking -> 200 (244ms)
+[2026-02-20 13:07:49]   SECURITY HEADERS: 7/7 present
+[2026-02-20 13:07:49]   STATUS: ALL PAGES UP
+[2026-02-20 13:07:49] 
+[2026-02-20 13:12:49] --- Check #55 (107min remaining) ---
+[2026-02-20 13:12:49]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 13:12:50]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 13:12:50]   OK  / -> 200 (235ms)
+[2026-02-20 13:12:50]   OK  /tokenomics -> 200 (246ms)
+[2026-02-20 13:12:50]   OK  /technology -> 200 (221ms)
+[2026-02-20 13:12:51]   OK  /roadmap -> 200 (240ms)
+[2026-02-20 13:12:51]   OK  /staking -> 200 (298ms)
+[2026-02-20 13:12:51]   SECURITY HEADERS: 7/7 present
+[2026-02-20 13:12:51]   STATUS: ALL PAGES UP
+[2026-02-20 13:12:51] 
+[2026-02-20 13:17:51] --- Check #56 (101min remaining) ---
+[2026-02-20 13:17:51]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 13:17:52]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 13:17:52]   OK  / -> 200 (292ms)
+[2026-02-20 13:17:52]   OK  /tokenomics -> 200 (257ms)
+[2026-02-20 13:17:52]   OK  /technology -> 200 (248ms)
+[2026-02-20 13:17:53]   OK  /roadmap -> 200 (218ms)
+[2026-02-20 13:17:53]   OK  /staking -> 200 (247ms)
+[2026-02-20 13:17:53]   SECURITY HEADERS: 7/7 present
+[2026-02-20 13:17:53]   STATUS: ALL PAGES UP
+[2026-02-20 13:17:53] 
+[2026-02-20 13:22:53] --- Check #57 (96min remaining) ---
+[2026-02-20 13:22:53]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 13:22:54]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 13:22:54]   OK  / -> 200 (226ms)
+[2026-02-20 13:22:54]   OK  /tokenomics -> 200 (229ms)
+[2026-02-20 13:22:54]   OK  /technology -> 200 (218ms)
+[2026-02-20 13:22:55]   OK  /roadmap -> 200 (231ms)
+[2026-02-20 13:22:55]   OK  /staking -> 200 (238ms)
+[2026-02-20 13:22:55]   SECURITY HEADERS: 7/7 present
+[2026-02-20 13:22:55]   STATUS: ALL PAGES UP
+[2026-02-20 13:22:55] 
+[2026-02-20 13:27:55] --- Check #58 (91min remaining) ---
+[2026-02-20 13:27:55]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 13:27:56]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 13:27:56]   OK  / -> 200 (283ms)
+[2026-02-20 13:27:56]   OK  /tokenomics -> 200 (237ms)
+[2026-02-20 13:27:56]   OK  /technology -> 200 (249ms)
+[2026-02-20 13:27:57]   OK  /roadmap -> 200 (227ms)
+[2026-02-20 13:27:57]   OK  /staking -> 200 (240ms)
+[2026-02-20 13:27:57]   SECURITY HEADERS: 7/7 present
+[2026-02-20 13:27:57]   STATUS: ALL PAGES UP
+[2026-02-20 13:27:57] 
+[2026-02-20 13:32:57] --- Check #59 (86min remaining) ---
+[2026-02-20 13:32:57]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 13:32:57]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 13:32:58]   OK  / -> 200 (297ms)
+[2026-02-20 13:32:58]   OK  /tokenomics -> 200 (287ms)
+[2026-02-20 13:32:58]   OK  /technology -> 200 (255ms)
+[2026-02-20 13:32:59]   OK  /roadmap -> 200 (574ms)
+[2026-02-20 13:32:59]   OK  /staking -> 200 (236ms)
+[2026-02-20 13:32:59]   SECURITY HEADERS: 7/7 present
+[2026-02-20 13:32:59]   STATUS: ALL PAGES UP
+[2026-02-20 13:33:00] 
+[2026-02-20 13:38:00] --- Check #60 (81min remaining) ---
+[2026-02-20 13:38:00]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 13:38:00]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 13:38:00]   OK  / -> 200 (233ms)
+[2026-02-20 13:38:01]   OK  /tokenomics -> 200 (286ms)
+[2026-02-20 13:38:01]   OK  /technology -> 200 (264ms)
+[2026-02-20 13:38:01]   OK  /roadmap -> 200 (250ms)
+[2026-02-20 13:38:02]   OK  /staking -> 200 (293ms)
+[2026-02-20 13:38:02]   SECURITY HEADERS: 7/7 present
+[2026-02-20 13:38:02]   STATUS: ALL PAGES UP
+[2026-02-20 13:38:02] Hourly snapshot...
+[2026-02-20 13:38:02] SNAPSHOT: Saved to /Users/toyg/Documents/projects/web/zkagentic-site/monitor/logs/snapshots/snapshot-20260220-133802.html (   56715 bytes)
+[2026-02-20 13:38:02] 
+[2026-02-20 13:43:02] --- Check #61 (76min remaining) ---
+[2026-02-20 13:43:02]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 13:43:03]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 13:43:03]   OK  / -> 200 (272ms)
+[2026-02-20 13:43:03]   OK  /tokenomics -> 200 (242ms)
+[2026-02-20 13:43:03]   OK  /technology -> 200 (217ms)
+[2026-02-20 13:43:04]   OK  /roadmap -> 200 (241ms)
+[2026-02-20 13:43:04]   OK  /staking -> 200 (228ms)
+[2026-02-20 13:43:04]   SECURITY HEADERS: 7/7 present
+[2026-02-20 13:43:04]   STATUS: ALL PAGES UP
+[2026-02-20 13:43:04] 
+[2026-02-20 13:48:04] --- Check #62 (71min remaining) ---
+[2026-02-20 13:48:04]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 13:48:04]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 13:48:05]   OK  / -> 200 (274ms)
+[2026-02-20 13:48:05]   OK  /tokenomics -> 200 (253ms)
+[2026-02-20 13:48:05]   OK  /technology -> 200 (276ms)
+[2026-02-20 13:48:06]   OK  /roadmap -> 200 (234ms)
+[2026-02-20 13:48:06]   OK  /staking -> 200 (246ms)
+[2026-02-20 13:48:06]   SECURITY HEADERS: 7/7 present
+[2026-02-20 13:48:06]   STATUS: ALL PAGES UP
+[2026-02-20 13:48:06] 
+[2026-02-20 13:53:06] --- Check #63 (66min remaining) ---
+[2026-02-20 13:53:06]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 13:53:06]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 13:53:07]   OK  / -> 200 (262ms)
+[2026-02-20 13:53:07]   OK  /tokenomics -> 200 (297ms)
+[2026-02-20 13:53:07]   OK  /technology -> 200 (261ms)
+[2026-02-20 13:53:08]   OK  /roadmap -> 200 (288ms)
+[2026-02-20 13:53:08]   OK  /staking -> 200 (259ms)
+[2026-02-20 13:53:08]   SECURITY HEADERS: 7/7 present
+[2026-02-20 13:53:08]   STATUS: ALL PAGES UP
+[2026-02-20 13:53:08] 
+[2026-02-20 13:58:08] --- Check #64 (61min remaining) ---
+[2026-02-20 13:58:08]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 13:58:09]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 13:58:09]   OK  / -> 200 (283ms)
+[2026-02-20 13:58:09]   OK  /tokenomics -> 200 (265ms)
+[2026-02-20 13:58:09]   OK  /technology -> 200 (237ms)
+[2026-02-20 13:58:10]   OK  /roadmap -> 200 (251ms)
+[2026-02-20 13:58:10]   OK  /staking -> 200 (246ms)
+[2026-02-20 13:58:10]   SECURITY HEADERS: 7/7 present
+[2026-02-20 13:58:10]   STATUS: ALL PAGES UP
+[2026-02-20 13:58:10] 
+[2026-02-20 14:03:10] --- Check #65 (56min remaining) ---
+[2026-02-20 14:03:10]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 14:03:11]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 14:03:11]   OK  / -> 200 (348ms)
+[2026-02-20 14:03:11]   OK  /tokenomics -> 200 (305ms)
+[2026-02-20 14:03:12]   OK  /technology -> 200 (257ms)
+[2026-02-20 14:03:12]   OK  /roadmap -> 200 (256ms)
+[2026-02-20 14:03:12]   OK  /staking -> 200 (283ms)
+[2026-02-20 14:03:12]   SECURITY HEADERS: 7/7 present
+[2026-02-20 14:03:12]   STATUS: ALL PAGES UP
+[2026-02-20 14:03:12] 
+[2026-02-20 14:08:12] --- Check #66 (51min remaining) ---
+[2026-02-20 14:08:13]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 14:08:13]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 14:08:13]   OK  / -> 200 (306ms)
+[2026-02-20 14:08:14]   OK  /tokenomics -> 200 (262ms)
+[2026-02-20 14:08:14]   OK  /technology -> 200 (257ms)
+[2026-02-20 14:08:14]   OK  /roadmap -> 200 (290ms)
+[2026-02-20 14:08:15]   OK  /staking -> 200 (245ms)
+[2026-02-20 14:08:15]   SECURITY HEADERS: 7/7 present
+[2026-02-20 14:08:15]   STATUS: ALL PAGES UP
+[2026-02-20 14:08:15] 
+[2026-02-20 14:13:15] --- Check #67 (46min remaining) ---
+[2026-02-20 14:13:15]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 14:13:15]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 14:13:16]   OK  / -> 200 (295ms)
+[2026-02-20 14:13:16]   OK  /tokenomics -> 200 (349ms)
+[2026-02-20 14:13:16]   OK  /technology -> 200 (274ms)
+[2026-02-20 14:13:17]   OK  /roadmap -> 200 (256ms)
+[2026-02-20 14:13:17]   OK  /staking -> 200 (249ms)
+[2026-02-20 14:13:17]   SECURITY HEADERS: 7/7 present
+[2026-02-20 14:13:17]   STATUS: ALL PAGES UP
+[2026-02-20 14:13:17] 
+[2026-02-20 14:18:17] --- Check #68 (41min remaining) ---
+[2026-02-20 14:18:17]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 14:18:18]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 14:18:18]   OK  / -> 200 (267ms)
+[2026-02-20 14:18:18]   OK  /tokenomics -> 200 (272ms)
+[2026-02-20 14:18:19]   OK  /technology -> 200 (261ms)
+[2026-02-20 14:18:19]   OK  /roadmap -> 200 (272ms)
+[2026-02-20 14:18:19]   OK  /staking -> 200 (250ms)
+[2026-02-20 14:18:19]   SECURITY HEADERS: 7/7 present
+[2026-02-20 14:18:19]   STATUS: ALL PAGES UP
+[2026-02-20 14:18:19] 
+[2026-02-20 14:23:19] --- Check #69 (36min remaining) ---
+[2026-02-20 14:23:19]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 14:23:20]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 14:23:20]   OK  / -> 200 (266ms)
+[2026-02-20 14:23:20]   OK  /tokenomics -> 200 (266ms)
+[2026-02-20 14:23:20]   OK  /technology -> 200 (241ms)
+[2026-02-20 14:23:21]   OK  /roadmap -> 200 (240ms)
+[2026-02-20 14:23:21]   OK  /staking -> 200 (221ms)
+[2026-02-20 14:23:21]   SECURITY HEADERS: 7/7 present
+[2026-02-20 14:23:21]   STATUS: ALL PAGES UP
+[2026-02-20 14:23:21] 
+[2026-02-20 14:28:21] --- Check #70 (31min remaining) ---
+[2026-02-20 14:28:21]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 14:28:22]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 14:28:22]   OK  / -> 200 (220ms)
+[2026-02-20 14:28:22]   OK  /tokenomics -> 200 (242ms)
+[2026-02-20 14:28:22]   OK  /technology -> 200 (254ms)
+[2026-02-20 14:28:23]   OK  /roadmap -> 200 (208ms)
+[2026-02-20 14:28:23]   OK  /staking -> 200 (217ms)
+[2026-02-20 14:28:23]   SECURITY HEADERS: 7/7 present
+[2026-02-20 14:28:23]   STATUS: ALL PAGES UP
+[2026-02-20 14:28:23] 
+[2026-02-20 14:33:23] --- Check #71 (26min remaining) ---
+[2026-02-20 14:33:23]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 14:33:23]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 14:33:24]   OK  / -> 200 (296ms)
+[2026-02-20 14:33:24]   OK  /tokenomics -> 200 (280ms)
+[2026-02-20 14:33:24]   OK  /technology -> 200 (238ms)
+[2026-02-20 14:33:24]   OK  /roadmap -> 200 (248ms)
+[2026-02-20 14:33:25]   OK  /staking -> 200 (212ms)
+[2026-02-20 14:33:25]   SECURITY HEADERS: 7/7 present
+[2026-02-20 14:33:25]   STATUS: ALL PAGES UP
+[2026-02-20 14:33:25] 
+[2026-02-20 14:38:25] --- Check #72 (21min remaining) ---
+[2026-02-20 14:38:25]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 14:38:25]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 14:38:26]   OK  / -> 200 (278ms)
+[2026-02-20 14:38:26]   OK  /tokenomics -> 200 (233ms)
+[2026-02-20 14:38:26]   OK  /technology -> 200 (220ms)
+[2026-02-20 14:38:26]   OK  /roadmap -> 200 (201ms)
+[2026-02-20 14:38:27]   OK  /staking -> 200 (225ms)
+[2026-02-20 14:38:27]   SECURITY HEADERS: 7/7 present
+[2026-02-20 14:38:27]   STATUS: ALL PAGES UP
+[2026-02-20 14:38:27] Hourly snapshot...
+[2026-02-20 14:38:27] SNAPSHOT: Saved to /Users/toyg/Documents/projects/web/zkagentic-site/monitor/logs/snapshots/snapshot-20260220-143827.html (   56715 bytes)
+[2026-02-20 14:38:27] 
+[2026-02-20 14:43:27] --- Check #73 (16min remaining) ---
+[2026-02-20 14:43:27]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 14:43:27]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 14:43:28]   OK  / -> 200 (224ms)
+[2026-02-20 14:43:28]   OK  /tokenomics -> 200 (293ms)
+[2026-02-20 14:43:28]   OK  /technology -> 200 (233ms)
+[2026-02-20 14:43:28]   OK  /roadmap -> 200 (223ms)
+[2026-02-20 14:43:29]   OK  /staking -> 200 (219ms)
+[2026-02-20 14:43:29]   SECURITY HEADERS: 7/7 present
+[2026-02-20 14:43:29]   STATUS: ALL PAGES UP
+[2026-02-20 14:43:29] 
+[2026-02-20 14:48:29] --- Check #74 (11min remaining) ---
+[2026-02-20 14:48:29]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 14:48:29]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 14:48:29]   OK  / -> 200 (221ms)
+[2026-02-20 14:48:30]   OK  /tokenomics -> 200 (284ms)
+[2026-02-20 14:48:30]   OK  /technology -> 200 (236ms)
+[2026-02-20 14:48:30]   OK  /roadmap -> 200 (212ms)
+[2026-02-20 14:48:30]   OK  /staking -> 200 (247ms)
+[2026-02-20 14:48:31]   SECURITY HEADERS: 7/7 present
+[2026-02-20 14:48:31]   STATUS: ALL PAGES UP
+[2026-02-20 14:48:31] 
+[2026-02-20 14:53:31] --- Check #75 (6min remaining) ---
+[2026-02-20 14:53:31]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 14:53:31]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 14:53:31]   OK  / -> 200 (215ms)
+[2026-02-20 14:53:32]   OK  /tokenomics -> 200 (512ms)
+[2026-02-20 14:53:32]   OK  /technology -> 200 (223ms)
+[2026-02-20 14:53:32]   OK  /roadmap -> 200 (218ms)
+[2026-02-20 14:53:33]   OK  /staking -> 200 (229ms)
+[2026-02-20 14:53:33]   SECURITY HEADERS: 7/7 present
+[2026-02-20 14:53:33]   STATUS: ALL PAGES UP
+[2026-02-20 14:53:33] 
+[2026-02-20 14:58:33] --- Check #76 (1min remaining) ---
+[2026-02-20 14:58:33]   DNS: CNAME -> zkagentic-site.pages.dev.
+[2026-02-20 14:58:33]   SSL: TLSv1.3 — expires May 20 21:14:21 2026 GMT
+[2026-02-20 14:58:33]   OK  / -> 200 (308ms)
+[2026-02-20 14:58:34]   OK  /tokenomics -> 200 (260ms)
+[2026-02-20 14:58:34]   OK  /technology -> 200 (249ms)
+[2026-02-20 14:58:34]   OK  /roadmap -> 200 (242ms)
+[2026-02-20 14:58:35]   OK  /staking -> 200 (234ms)
+[2026-02-20 14:58:35]   SECURITY HEADERS: 7/7 present
+[2026-02-20 14:58:35]   STATUS: ALL PAGES UP
+[2026-02-20 14:58:35] 
+[2026-02-20 15:03:35] ═══════════════════════════════════════════════════════
+[2026-02-20 15:03:35] Monitoring Complete — 76 checks over 7h
+[2026-02-20 15:03:35] Saving final site snapshot...
+[2026-02-20 15:03:35] SNAPSHOT: Saved to /Users/toyg/Documents/projects/web/zkagentic-site/monitor/logs/snapshots/snapshot-20260220-150335.html (   56715 bytes)
+[2026-02-20 15:03:35] Stats saved to: /Users/toyg/Documents/projects/web/zkagentic-site/monitor/logs/stats-20260220.json
+[2026-02-20 15:03:35] Snapshots in: /Users/toyg/Documents/projects/web/zkagentic-site/monitor/logs/snapshots
+[2026-02-20 15:03:35] ═══════════════════════════════════════════════════════
