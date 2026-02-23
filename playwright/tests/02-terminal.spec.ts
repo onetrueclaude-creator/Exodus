@@ -40,7 +40,7 @@ test.describe('02 · Agent Terminal Menu', () => {
 
   test('Chain Stats shows blockchain data', async ({ page }) => {
     await page.getByText('Blockchain Protocols').first().click()
-    await page.getByText('Chain Stats').or(page.getByText('Stats')).first().click()
+    await page.getByText('Chain Stats').first().click()
     // Should display some chain output
     const output = page.getByText(/block/i).or(page.getByText(/pool/i)).or(page.getByText(/mined/i))
     await expect(output.first()).toBeVisible({ timeout: 5_000 })
