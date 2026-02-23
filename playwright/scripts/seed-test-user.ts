@@ -22,8 +22,8 @@ async function seed() {
   })
 
   // Create or re-use test user
-  const { data: existing } = await admin.auth.admin.listUsers()
-  const existingUser = existing?.users.find((u) => u.email === TEST_EMAIL)
+  const { data: lookupData } = await admin.auth.admin.getUserByEmail(TEST_EMAIL)
+  const existingUser = lookupData?.user
 
   let userId: string
   if (existingUser) {
