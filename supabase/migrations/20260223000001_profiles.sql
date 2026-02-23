@@ -2,7 +2,7 @@
 create table public.profiles (
   user_id      uuid primary key references auth.users(id) on delete cascade,
   username     text unique,
-  subscription_tier text check (subscription_tier in ('COMMUNITY','PROFESSIONAL','MAX')),
+  subscription_tier text not null default 'COMMUNITY' check (subscription_tier in ('COMMUNITY','PROFESSIONAL','MAX')),
   phantom_wallet_hash text unique,
   blockchain_token_x integer,
   blockchain_token_y integer,
@@ -26,6 +26,8 @@ create or replace function public.handle_new_user()
 returns trigger as $$
 begin
   insert into public.profiles (user_id)
+  values (new.id);
+  insert into public.user_resources (user_id)
   values (new.id);
   return new;
 end;
