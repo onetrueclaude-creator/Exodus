@@ -1,0 +1,22 @@
+{
+  "name": "exodus",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "test:run": "turbo test:run",
+    "format": "turbo format",
+    "clean": "find . \\( -name 'dist' -o -name '.turbo' -o -name '.next' \\) -not -path '*/node_modules/*' -type d -exec rm -rf {} + 2>/dev/null || true"
+  },
+  "devDependencies": {
+    "turbo": "^2.8.10"
+  },
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20"
+  }
+}
