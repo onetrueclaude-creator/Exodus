@@ -14,7 +14,7 @@ test.describe('01 · Full User Journey', () => {
 })
 
 test.describe('01 · Authenticated Journey', () => {
-  // Uses default storageState from playwright.config.ts (seeded user)
+  test.use({ storageState: 'playwright/.auth/user.json' })
 
   test('authenticated user reaches /game', async ({ page }) => {
     await page.goto('/game')

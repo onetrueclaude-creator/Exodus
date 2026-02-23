@@ -40,7 +40,10 @@ test.describe('04 · Grid Interaction', () => {
       return store ? Object.keys(store.getState().agents).length : -1
     })
 
-    expect(agentCount).toBeGreaterThan(-1) // -1 means bridge missing
+    if (agentCount === -1) {
+      test.fail(true, 'window.__gameStore not available — Zustand bridge missing')
+      return
+    }
     // Agent count >= 1 means homenode loaded from Supabase
     expect(agentCount).toBeGreaterThanOrEqual(1)
   })
@@ -53,6 +56,10 @@ test.describe('04 · Grid Interaction', () => {
       return store ? store.getState().currentUserId : null
     })
 
-    expect(userId).not.toBeNull()
+    if (userId === null) {
+      test.fail(true, 'window.__gameStore not available or currentUserId not set — check Zustand bridge')
+      return
+    }
+    expect(userId).toBeTruthy()
   })
 })
