@@ -96,7 +96,6 @@ def sync_to_supabase(g: GenesisState, next_block_in: float = 60.0) -> None:
         pass  # never crash the miner
 
 
-
 def sync_message(
     msg_id: str,
     sx: int,

@@ -830,6 +830,9 @@ def send_message(req: MessageRequest) -> MessageResult:
         g.message_history[key] = g.message_history[key][-50:]
 
     # Sync message to Supabase immediately so the frontend receives it in real-time.
+    # Local import (not top-level) is intentional: if supabase-py is absent the
+    # entire try/except collapses silently, keeping the API functional offline.
+    # This matches the existing pattern used for sync_to_supabase elsewhere in this file.
     try:
         from agentic.testnet.supabase_sync import sync_message
         sync_message(
