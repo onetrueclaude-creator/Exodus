@@ -18,12 +18,15 @@ import AgentChat from '@/components/AgentChat';
 import AgentProfilePopup from '@/components/AgentProfilePopup';
 import TimechainStats from '@/components/TimechainStats';
 import { startDebugListener } from '@/lib/debugListener';
+import { persistResources } from '@/lib/persistResources';
+import { createBrowserClient } from '@/lib/supabase/client';
+import type { Planet } from '@/types/agent';
 import { useGameStore } from '@/store';
 import { MockChainService } from '@/services/chainService';
 import type { ChainService } from '@/services/chainService';
 import { TestnetChainService } from '@/services/testnetChainService';
 import { isTestnetOnline } from '@/services/testnetApi';
-import { useChainWebSocket } from '@/hooks/useChainWebSocket';
+import { useGameRealtime } from '@/hooks/useGameRealtime';
 import { getDistance } from '@/lib/proximity';
 import { getFogLevel } from '@/lib/fog';
 import { getClarityLevel } from '@/lib/diplomacy';
@@ -61,8 +64,7 @@ export default function GamePage() {
   const setInitializing = useGameStore((s) => s.setInitializing);
   const chainMode = useGameStore((s) => s.chainMode);
 
-  // Connect WebSocket when in testnet mode
-  useChainWebSocket(chainMode === 'testnet');
+  useGameRealtime();
 
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [profileAgent, setProfileAgent] = useState<string | null>(null);
@@ -165,6 +167,54 @@ export default function GamePage() {
       const firstOwned = agentList.find(a => a.userId !== '');
       if (firstOwned) {
         setCurrentUser(firstOwned.userId, firstOwned.id);
+
+        // Hydrate planets and haiku from Supabase
+        const supabase = createBrowserClient();
+        const { data: planets } = await supabase
+          .from('planets')
+          .select('*')
+          .eq('user_id', firstOwned.userId);
+
+        // Use direct setState to bypass persistPlanet/persistHaiku side-effects —
+        // rows were just fetched from Supabase, re-inserting them would cause duplicate-key errors.
+        planets?.forEach(p => {
+          useGameStore.setState(s => ({
+            planets: {
+              ...s.planets,
+              [p.id]: {
+                id: p.id,
+                agentId: p.agent_id ?? '',
+                content: p.content,
+                contentType: p.content_type as Planet['contentType'],
+                isZeroKnowledge: p.is_zero_knowledge,
+                createdAt: new Date(p.created_at).getTime(),
+              }
+            }
+          }))
+        });
+
+        const { data: haikus } = await supabase
+          .from('haiku_messages')
+          .select('*')
+          .order('timestamp', { ascending: false })
+          .limit(50);
+
+        haikus?.forEach(h => {
+          useGameStore.setState(s => ({
+            haiku: [
+              ...s.haiku,
+              {
+                id: h.id,
+                senderAgentId: h.sender_agent_id ?? '',
+                text: h.text,
+                syllables: h.syllables as [number, number, number],
+                position: { x: h.position_x, y: h.position_y },
+                timestamp: h.timestamp,
+              }
+            ]
+          }))
+        });
+
         // Auto-open terminal for the primary agent
         const primary = agentList.find(a => a.isPrimary && a.userId === firstOwned.userId);
         const homenode = primary ?? firstOwned;
@@ -192,14 +242,8 @@ export default function GamePage() {
     // Start the turn timer (ticks every 10 seconds)
     startTurnTimer();
 
-    // Chain sync — refresh grid from ledger every block time (60s)
-    const syncInterval = setInterval(() => {
-      syncFromChain();
-    }, CHAIN_SYNC_INTERVAL_MS);
-
     return () => {
       stopTurnTimer();
-      clearInterval(syncInterval);
     };
   }, []);
 
@@ -254,6 +298,17 @@ export default function GamePage() {
           store.setCamera(slot.position, 2);
           // Sync from chain to get updated state
           syncFromChain();
+          // Persist updated resources to Supabase after claim action
+          const afterClaim = useGameStore.getState();
+          if (afterClaim.currentUserId) {
+            persistResources(afterClaim.currentUserId, {
+              energy: afterClaim.energy,
+              minerals: afterClaim.minerals,
+              agntc_balance: afterClaim.agntcBalance,
+              secured_chains: afterClaim.securedChains,
+              turn: afterClaim.turn,
+            })
+          }
         }
         break;
       }
@@ -279,6 +334,16 @@ export default function GamePage() {
           store.setChainMode(store.chainMode, result.blockNumber);
           // Trigger full sync to get updated agents/status
           syncFromChain();
+          // Persist updated resources to Supabase after mine action
+          if (store.currentUserId) {
+            persistResources(store.currentUserId, {
+              energy: store.energy,
+              minerals: store.minerals,
+              agntc_balance: store.agntcBalance,
+              secured_chains: store.securedChains,
+              turn: store.turn,
+            })
+          }
         } catch {
           // Rate-limited (429) or other error — display will be handled by ResourceBar countdown
         }
@@ -401,6 +466,17 @@ export default function GamePage() {
                         setShowAgentCreator(false);
                         setSelectedAgent(slotId);
                         syncFromChain();
+                        // Persist updated resources to Supabase after deploy action
+                        const afterDeploy = useGameStore.getState();
+                        if (afterDeploy.currentUserId) {
+                          persistResources(afterDeploy.currentUserId, {
+                            energy: afterDeploy.energy,
+                            minerals: afterDeploy.minerals,
+                            agntc_balance: afterDeploy.agntcBalance,
+                            secured_chains: afterDeploy.securedChains,
+                            turn: afterDeploy.turn,
+                          })
+                        }
                       }
                     }}
                     onClose={() => setShowAgentCreator(false)}

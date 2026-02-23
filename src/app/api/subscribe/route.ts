@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { getAuthUser } from '@/lib/auth';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { SUBSCRIPTION_PLANS } from '@/types/subscription';
 import type { SubscriptionTier } from '@/types/subscription';
 import { CHAIN_GRID_MIN, CHAIN_GRID_MAX } from '@/types/testnet';
@@ -19,8 +19,8 @@ const TESTNET_API = process.env.NEXT_PUBLIC_TESTNET_API ?? 'http://localhost:808
  * Phantom wallet is NOT involved here — it's an optional upgrade later.
  */
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getAuthUser();
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -32,22 +32,26 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid subscription tier' }, { status: 400 });
   }
 
+  const supabase = await createSupabaseServerClient();
+
   // Check if already subscribed
-  const existing = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { subscription: true },
-  });
-  if (existing?.subscription) {
+  const { data: existing } = await supabase
+    .from('profiles')
+    .select('subscription_tier')
+    .eq('user_id', user.id)
+    .single();
+
+  if (existing?.subscription_tier) {
     return NextResponse.json({ error: 'Already subscribed' }, { status: 409 });
   }
 
   // Assign deterministic grid coordinate (blockchain token)
-  const hash = simpleHash(session.user.id);
+  const hash = simpleHash(user.id);
   const gridRange = CHAIN_GRID_MAX - CHAIN_GRID_MIN + 1;
   const coordX = CHAIN_GRID_MIN + (hash % gridRange);
   const coordY = CHAIN_GRID_MIN + ((hash * 2654435761) % gridRange);
 
-  const startAgentId = `agent-${session.user.id.slice(0, 8)}-${Date.now().toString(36)}`;
+  const startAgentId = `agent-${user.id.slice(0, 8)}-${Date.now().toString(36)}`;
 
   // Register claim on testnet blockchain (non-fatal if testnet is down)
   try {
@@ -64,17 +68,20 @@ export async function POST(req: Request) {
     console.error('Testnet unreachable:', err);
   }
 
-  // Update user record
-  const user = await prisma.user.update({
-    where: { id: session.user.id },
-    data: {
-      subscription: tier,
-      blockchainTokenX: coordX,
-      blockchainTokenY: coordY,
-      startAgentId,
-      startEnergy: plan.startEnergy,
-    },
-  });
+  // Update user profile
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      subscription_tier: tier,
+      blockchain_token_x: coordX,
+      blockchain_token_y: coordY,
+      start_agent_id: startAgentId,
+    })
+    .eq('user_id', user.id);
+
+  if (error) {
+    return NextResponse.json({ error: 'Failed to update subscription' }, { status: 500 });
+  }
 
   return NextResponse.json({
     subscription: tier,
