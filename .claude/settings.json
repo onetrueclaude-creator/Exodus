@@ -10,13 +10,22 @@
       "Bash(pnpm typecheck:*)",
       "Bash(git:*)",
       "Bash(npx prisma:*)",
-      "Bash(docker compose:*)"
+      "Bash(docker compose:*)",
+      "Bash(python3:*)",
+      "Bash(python3 -m pytest:*)",
+      "Bash(uvicorn:*)",
+      "Bash(pip3 install:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr view:*)"
     ],
     "additionalDirectories": [
       "./ vault",
       "./ .claude/skills",
       "./ .claude/commands",
       "./ docs",
+      "./ docs/plans",
+      "./ apps/zkagenticnetwork",
+      "./ apps/agentic-chain",
       ". "
     ]
   },
@@ -29,6 +38,10 @@
     "code-review@claude-plugins-official": true,
     "turborepo@pleaseai": true,
     "playwright@claude-plugins-official": true,
-    "context7@claude-plugins-official": true
+    "context7@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "greptile@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true
   }
 }
