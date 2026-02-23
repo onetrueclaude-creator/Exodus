@@ -82,12 +82,12 @@ export interface Database {
       }
       haiku_messages: {
         Row: { id: string; sender_agent_id: string | null; text: string; syllables: number[]; position_x: number; position_y: number; timestamp: number }
-        Insert: Database['public']['Tables']['haiku_messages']['Row']
+        Insert: Omit<Database['public']['Tables']['haiku_messages']['Row'], 'id'> & { id?: string }
         Update: Partial<Database['public']['Tables']['haiku_messages']['Row']>
       }
       chain_messages: {
         Row: { id: string; sender_chain_x: number; sender_chain_y: number; target_chain_x: number; target_chain_y: number; text: string; timestamp: number }
-        Insert: Database['public']['Tables']['chain_messages']['Row']
+        Insert: Omit<Database['public']['Tables']['chain_messages']['Row'], 'id'> & { id?: string }
         Update: Partial<Database['public']['Tables']['chain_messages']['Row']>
       }
       diplomatic_states: {
@@ -97,7 +97,7 @@ export interface Database {
       }
       research_progress: {
         Row: { user_id: string; research_id: string; energy_invested: number; completed: boolean }
-        Insert: Database['public']['Tables']['research_progress']['Row']
+        Insert: { user_id: string; research_id: string; energy_invested?: number; completed?: boolean }
         Update: Partial<Database['public']['Tables']['research_progress']['Row']>
       }
     }
