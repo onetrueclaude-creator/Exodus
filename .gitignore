@@ -50,3 +50,6 @@ dev.db
 compacted.md
 compacted-summary.md
 prompts.md
+
+# Git worktrees
+.worktrees/
