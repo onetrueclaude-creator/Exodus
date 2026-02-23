@@ -1,6 +1,5 @@
 "use client";
 
-import { SessionProvider } from 'next-auth/react';
 import { useMemo } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
@@ -11,12 +10,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
 
   return (
-    <SessionProvider>
-      <ConnectionProvider endpoint={endpoint}>
-        <WalletProvider wallets={wallets} autoConnect>
-          {children}
-        </WalletProvider>
-      </ConnectionProvider>
-    </SessionProvider>
+    <ConnectionProvider endpoint={endpoint}>
+      <WalletProvider wallets={wallets} autoConnect>
+        {children}
+      </WalletProvider>
+    </ConnectionProvider>
   );
 }
