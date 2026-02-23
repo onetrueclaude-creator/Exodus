@@ -103,6 +103,43 @@ Resume in-progress feature: `/exodus:feature` (checks `.claude/dispatch-state.js
 
 See `docs/WORKFLOW.md` for the phase checklist and emergency exits.
 
+
+## Compaction Memory
+
+Three files at the project root capture conversation history across compactions (all gitignored):
+
+| File | Contents |
+|------|----------|
+| `compacted.md` | Full conversation transcript (auto-written by PreCompact hook) |
+| `compacted-summary.md` | LLM summary you write before compacting |
+| `prompts.md` | User prompts only (auto-written by PreCompact hook) |
+
+### Before running `/compact`
+
+**You MUST write a session summary first:**
+
+1. Append a summary block to `compacted-summary.md`:
+   ```
+   <!-- summary-block: [ISO timestamp] -->
+   ## Summary — [human timestamp]
+
+   [What was accomplished, key decisions made, open work remaining, current branch/feature context]
+
+   <!-- /summary-block -->
+   ```
+2. Then proceed with `/compact`
+
+### After compaction resumes
+
+The SessionStart hook automatically injects `compacted-summary.md` into your context. You MUST:
+
+1. Confirm to the user: "I've read the session summary from `compacted-summary.md`."
+2. Briefly state what the summary says (1-2 sentences)
+3. Note: "Full transcript in `compacted.md`, all prompts in `prompts.md`"
+
+If `compacted-summary.md` was NOT written before compaction (e.g. context limit was hit suddenly), read `compacted.md` manually and reconstruct context from the most recent `<!-- compaction-block -->`.
+
+
 ## Skills
 
 All 10 expert personas are castable in a new Claude Code session:
