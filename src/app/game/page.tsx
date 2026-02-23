@@ -45,7 +45,6 @@ const SUBSCRIPTION_EMPIRE_COLOR: Record<SubscriptionTier, number> = {
 const CHAIN_SYNC_INTERVAL_MS = 60_000;
 
 export default function GamePage() {
-  const addAgent = useGameStore((s) => s.addAgent);
   const addHaiku = useGameStore((s) => s.addHaiku);
   const setCurrentUser = useGameStore((s) => s.setCurrentUser);
   const currentAgentId = useGameStore((s) => s.currentAgentId);
@@ -161,7 +160,10 @@ export default function GamePage() {
       const feed = await service.getHaikuFeed();
       feed.forEach(addHaiku);
 
-      // Agents are already populated by useGameRealtime (Supabase hydration)
+      // Read agents from the Zustand store snapshot. Note: useGameRealtime's
+      // hydrate() runs concurrently and may not have completed yet — agentList
+      // could be empty on fast networks. If so, Realtime patches will fill it
+      // in shortly after, and a re-render will pick up the owned agent.
       const agentList = Object.values(useGameStore.getState().agents);
 
       const firstOwned = agentList.find(a => a.userId !== '');
