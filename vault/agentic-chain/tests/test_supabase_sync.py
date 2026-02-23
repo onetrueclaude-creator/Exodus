@@ -21,7 +21,8 @@ def test_max_corner_maps_to_positive_half():
     assert vy == pytest.approx(4000.0, abs=0.1)
 
 
-def test_result_is_rounded_to_two_decimals():
-    vx, vy = chain_to_visual(100, 200)
-    assert vx == round(vx, 2)
-    assert vy == round(vy, 2)
+def test_known_midpoint_value():
+    """chain_to_visual(1620, -1620) should give (2000.0, -2000.0)."""
+    vx, vy = chain_to_visual(1620, -1620)
+    assert vx == pytest.approx(2000.0, abs=0.01)
+    assert vy == pytest.approx(-2000.0, abs=0.01)
