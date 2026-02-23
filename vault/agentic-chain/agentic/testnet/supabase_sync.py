@@ -21,12 +21,13 @@ from typing import Optional
 from supabase import create_client, Client
 
 from agentic.galaxy.coordinate import resource_density, storage_slots
-from agentic.params import GENESIS_FACTION_MASTERS, GENESIS_ORIGIN
+from agentic.params import GENESIS_FACTION_MASTERS, GENESIS_HOMENODES, GENESIS_ORIGIN
 from agentic.testnet.genesis import GenesisState
 
 # Sets for fast O(1) lookup during sync
 _ORIGIN_COORD: frozenset[tuple[int, int]] = frozenset([GENESIS_ORIGIN])
 _FACTION_MASTER_COORDS: frozenset[tuple[int, int]] = frozenset(GENESIS_FACTION_MASTERS)
+_GENESIS_HOMENODE_COORDS: frozenset[tuple[int, int]] = frozenset(GENESIS_HOMENODES)
 
 # ---------------------------------------------------------------------------
 # Coordinate mapping — chain grid → visual grid
@@ -163,9 +164,12 @@ def _sync_agents(g: GenesisState) -> None:
         elif coord_key in _ORIGIN_COORD:
             tier = "sonnet"
             border_radius = 90
-        else:
+        elif coord_key in _GENESIS_HOMENODE_COORDS:
             tier = "sonnet"
             border_radius = 60
+        else:
+            tier = "haiku"
+            border_radius = 30
 
         agent_id = f"agent-{i:03d}" if tier in ("opus", "sonnet") else f"slot-{i:04d}"
         is_primary = coord_key in _ORIGIN_COORD
