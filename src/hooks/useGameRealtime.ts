@@ -85,6 +85,7 @@ export function useGameRealtime() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'agents' },
         (payload) => {
+          if (payload.eventType === 'DELETE') return
           const row = payload.new as AgentRow
           syncAgentFromChain(rowToStoreAgent(row))
         }
