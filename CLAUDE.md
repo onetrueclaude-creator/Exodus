@@ -114,9 +114,9 @@ Three files at the project root capture conversation history across compactions 
 | `compacted-summary.md` | LLM summary you write before compacting |
 | `prompts.md` | User prompts only (auto-written by PreCompact hook) |
 
-### Before running `/compact`
+### Manual `/compact`
 
-**You MUST write a session summary first:**
+**Write a session summary first:**
 
 1. Append a summary block to `compacted-summary.md`:
    ```
@@ -129,15 +129,22 @@ Three files at the project root capture conversation history across compactions 
    ```
 2. Then proceed with `/compact`
 
-### After compaction resumes
+### Auto-compaction (triggered automatically at ~10% context remaining)
 
-The SessionStart hook automatically injects `compacted-summary.md` into your context. You MUST:
+Auto-compaction fires without warning — you cannot write a summary beforehand. The PreCompact hook still captures `compacted.md` and `prompts.md` automatically.
 
-1. Confirm to the user: "I've read the session summary from `compacted-summary.md`."
-2. Briefly state what the summary says (1-2 sentences)
-3. Note: "Full transcript in `compacted.md`, all prompts in `prompts.md`"
+**After auto-compaction resumes**, the SessionStart hook injects the most recent raw transcript block with an explicit instruction. You MUST:
 
-If `compacted-summary.md` was NOT written before compaction (e.g. context limit was hit suddenly), read `compacted.md` manually and reconstruct context from the most recent `<!-- compaction-block -->`.
+1. Write a summary block to `compacted-summary.md` immediately (this is your first action)
+2. Confirm to the user: "Auto-compaction occurred. I've written a summary to `compacted-summary.md`."
+3. Briefly state what was compacted (1-2 sentences)
+
+### After any compaction resumes
+
+The SessionStart hook injects either `compacted-summary.md` (if it exists) or the most recent `compacted.md` block (auto-compaction fallback). You MUST:
+
+1. Confirm to the user what was restored
+2. Note: "Full transcript in `compacted.md`, all prompts in `prompts.md`"
 
 
 ## Skills
