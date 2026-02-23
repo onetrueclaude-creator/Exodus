@@ -1,101 +1,185 @@
-# ZK Agentic Network
+# CLAUDE.md
 
-## Project Overview
-Stellaris-inspired gamified social media dApp where users explore a 2D galaxy grid, communicate via haiku through AI agents, develop star systems with planets (content storage), research technologies, and build diplomatic relationships. All state is backed by the Agentic Chain testnet blockchain ledger.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Tech Stack
-- **Framework:** Next.js 16 (App Router, server mode with `output: 'standalone'`)
-- **Language:** TypeScript 5, React 19
-- **Rendering:** PixiJS 8 (2D galaxy grid canvas)
-- **State:** Zustand 5
-- **Auth:** NextAuth v5 (Google OAuth, JWT strategy, Prisma adapter)
-- **Database:** PostgreSQL 16 via Prisma 7 (Docker Compose for local dev)
-- **Styling:** Tailwind CSS 4 (dark crypto aesthetic, cyan/purple accents)
-- **Testing:** Vitest 4 + React Testing Library
-- **Deployment:** Server mode (standalone), Cloudflare or Docker
+## Workspace Structure
 
-## Architecture
-- Frontend reads from/writes to the Agentic Chain testnet via `ChainService` interface
-- `TestnetChainService` calls FastAPI at `localhost:8080`; `MockChainService` is offline fallback
-- PostgreSQL stores user identity (email, username, wallet hash, subscription, blockchain coordinates)
-- Blockchain is source of truth for game state; DB is auth cache
-- **Two-tier user state:** "Hollow DB" (no Phantom wallet, DB only) vs "On-chain" (Phantom connected, real chain actions)
-- **Tabbed layout**: ResourceBar (top) → TabNavigation → tab content (Network/Account/Researches/Skills)
-- **Timechain Stats panel** in upper-right corner shows live blockchain status
+**Exodus** is a Turborepo + pnpm monorepo — the canonical development environment for the ZkAgentic ecosystem.
 
-## Conventions
-- Path alias: `@/*` maps to `./src/*`
-- Tests co-located in `__tests__/` directories or `*.test.ts(x)` files
-- TDD approach: write failing test → implement → verify
-- Components in `src/components/`, utilities in `src/lib/`, types in `src/types/`
-- Services in `src/services/`, store in `src/store/`
-- Dark theme with CSS variables defined in `globals.css`
-
-## Key Concepts (Stellaris Metaphor)
-- Galaxy = the full network grid (6481x6481, -3240 to +3240)
-- Empire = a user's total territory
-- Star system = an individual agent (Opus/Sonnet/Haiku tier), base 10x10 coordinate blocks
-- CPU Energy = CPU deployed to maintaining the grid (yellow resource)
-- Secured Chains = blocks secured by the user (green resource with +/- deltas)
-- AGNTC = tradeable coins, each mapped to a grid coordinate
-- Data Frags = compute production from mining
-- Planets = content storage (posts, chats, prompts) orbiting star systems
-- Jump points = nodes where new agents can be spawned
-- Coordinates = (x, y, timestamp) — third value is time, not z-axis
-- Node density = resource richness (0-100%), multiplies CPU cost for Secure actions
-
-## Subscription Tiers
-- **Community (free)**: Sonnet Homenode, 1000 CPU Energy, yellowish-orange theme, deploys Haiku only
-- **Professional ($50/mo)**: Opus Homenode, 500 CPU Energy, cyan blue theme, deploys up to Opus
-- **Max ($200/mo)**: Opus Homenode, 2000 CPU Energy, purple theme, unlimited Opus deployment
-
-## Onboarding Flow
-Landing (/) → Google OAuth → /onboard (choose unique username, real-time check) → /subscribe (choose tier) → /game
-
-## Agent Terminal Menu Structure
-Top-level commands:
-1. **Deploy Agent** → multi-step: pick node → pick model → set intro → deploy on-chain
-2. **Blockchain Protocols** → sub-menu:
-   - **Secure** → choose block cycles + AGNTC, costs CPU Energy (density multiplier)
-   - **Write Data On Chain** → send NCP (neural communication packet)
-   - **Read Data On Chain** → scan/report
-   - **Transact** → AGNTC transfer (coming soon)
-   - **Stats** → full status report
-3. **Adjust Securing Operations Rate** → staking CPU sub-choices
-4. **Adjust Network Parameters** → mining rate + border pressure
-5. **Settings** → network color (Opus only), status report
+```
+Exodus/
+├── apps/
+│   ├── zkagenticnetwork/   ← Stellaris-inspired blockchain dApp (Next.js 16, PixiJS 8)
+│   └── agentic-chain/      ← Agentic Chain ledger + FastAPI testnet server (Python)
+├── packages/               ← Shared libs (types, utils, ui — grow here as needed)
+├── vault/                  ← Obsidian knowledge base (authoritative — open in Obsidian)
+├── docs/
+│   ├── WORKFLOW.md         ← Quick-start checklist
+│   └── plans/              ← AI-generated implementation plans (auto-populated)
+├── ZkAgentic/              ← Legacy project tree (research stubs, deploy artifacts)
+├── turbo.json
+├── pnpm-workspace.yaml
+└── package.json
+```
 
 ## Commands
-- `npm run dev` — development server (localhost:3000)
-- `npm run build` — production build (standalone)
-- `npm test` — run tests in watch mode
-- `npm run test:run` — run tests once
-- `docker compose up -d` — start PostgreSQL
-- `npx prisma migrate dev` — apply database migrations
-- `npx prisma generate` — regenerate Prisma client
 
----
+**Monorepo (from Exodus root):**
+```bash
+pnpm install                              # install all workspace deps
+pnpm turbo build                          # build all JS/TS apps
+pnpm turbo dev                            # start all dev servers
+pnpm turbo test:run                       # run all tests once
+pnpm turbo typecheck                      # TypeScript check across workspace
+pnpm turbo lint                           # lint all packages
 
-## UX Design Spec (Authoritative Reference)
+# Filter to a single app
+pnpm turbo build     --filter=zkagenticnetwork
+pnpm turbo test:run  --filter=zkagenticnetwork
+pnpm turbo typecheck --filter=zkagenticnetwork
+```
 
-**Every feature implementation MUST align with this user story. Check this section before building any UI component.**
+**zkagenticnetwork (`apps/zkagenticnetwork/`):**
+```bash
+docker compose up -d          # start PostgreSQL 16
+npx prisma migrate dev        # apply DB migrations
+npx prisma generate           # regenerate Prisma client
+```
 
-> I go to zkagenticnetwork.com, I see a landing page asking for Google Login. I am already logged in to Google from my Chrome. I click the Google auth that the website is asking me, Google automatically connects, only providing my email address. Then I see another window asking me for a unique username. I am asked to enter a unique username. I try entering "God" as username, but the entry box flashes red and says that username cannot be taken. It seems to check and compare against its datasets and checks and denies duplicate username attempts. That's good. I find a unique username and enter it.
->
-> I am asked to choose between three subscription methods. First one is Free for Community, a yellowish orange themed tier card. Second one is for Professional method, a cyan blue tier card. And a Max access tier, able to start with Opus 4.6 agent model. I see that the Free for Community access can only create Sonnet agent at max and it says on the card "Sonnet Homenode". Max says "Opus Homenode", Pro says "Opus Homenode". I choose free tier for now.
->
-> I am now presented with a 2D grid map of the entire visualized blockchain environment. I see nodes with coordinates written on them. I see on the right upper corner the Timechain stats — it gives the genesis block timestamp, and it has a live blockchain, it shows how many epochs and blocks mined values, it shows critical live blockchain stats. For now it shows it is on testnet.
->
-> I seem to have a CPU Energy ticker on the resources tab on the top, and Secured Chains. When the 2D grid map first rendered, it was focused on my Sonnet Homenode. I see a Stellaris-like networked nodes, and my Homenode has a border around it, it is yellow, like the subscription tier I've chosen.
->
-> I see a window opened to give my Sonnet prewritten commands. There are: Deploy Agent, Blockchain Protocols, Adjust Securing Operations Rate, Adjust Network Parameters, and Settings. I click Blockchain Protocols. This choice is most likely the only choice to perform operations on chain, it looks like. The Sonnet now asks me for additional prewritten choices: Secure, Write Data On Chain, Read Data On Chain, Transact, Stats.
->
-> For now I choose Secure. Other choices are self-explanatory and they can do what they say. Sonnet now asks me to choose again, for how many block generation cycles and for how much AGNTC Coin. It says I will have to pay CPU Energy on this action, and it says the AGNTC Coin I will receive is calculated from how much actual CPU that I will use by spending Claude usage.
->
-> When I click execute action for 10 generations, and spend 500 of my CPU Energy (which is the yellow resource value shown above the 2D grid map), I click execute and it shows -500 CPU Energy in red right next to the yellow display, but the Secured Chains has +1 in green right next to it. The initial values were 1000 CPU Energy and 0 Secured Chains. Now it says 1000-500 CPU Energy and 0+1 Secured Chains. It looks like it will update in the next block creation cycle.
->
-> The right-hand side stats window seems to be showing how many block creation cycles it has been since the genesis block creation, and est. time for next block creation. It seems to be creating a block every minute or so and has been creating for many minutes now since the genesis.
->
-> I now look at the 2D map. I can click on the unclaimed nodes. I see that I can also deploy clones in the left-hand side bar — it changed when I clicked on the unclaimed node. I close the chat with my Sonnet. I click "create agent" on the left bar while an unclaimed node is selected. Also I notice the Node density values. I see that this is a rich density node, which will give multipliers on the cost of the CPU Energy per blockchain Secure actions.
->
-> I create a Haiku because it only allows me to create Haiku because I am a free user, but I'm sure the Max subscription tier allows full Opus model agent creation for Securing nodes.
+**agentic-chain (`apps/agentic-chain/`):**
+```bash
+pip3 install -r requirements.txt
+uvicorn agentic.testnet.api:app --port 8080 --reload   # start blockchain API
+python3 -m pytest tests/ -v                            # run all 387 tests
+python3 -m pytest tests/test_api.py -v                 # single test file
+```
+
+## Apps
+
+### apps/zkagenticnetwork
+Next.js 16 + React 19 + PixiJS 8 dApp. See `apps/zkagenticnetwork/CLAUDE.md` for full reference (architecture, PixiJS patterns, Zustand conventions, test-mocking rules, subscription tiers, UX spec).
+
+Key facts:
+- **ChainService**: `TestnetChainService` → FastAPI `localhost:8080`; `MockChainService` offline fallback
+- **DB**: PostgreSQL (auth cache only) — blockchain is source of truth
+- **Path alias**: `@/*` → `./src/*`
+- **Blockchain domain**: `zkagentic.ai`
+
+### apps/agentic-chain
+Python implementation of the Agentic Chain whitepaper. FastAPI server at `localhost:8080`.
+
+Key facts:
+- **Source of truth** for all game state — coordinate grid, claims, mining, AGNTC
+- `agentic/params.py` — single source of truth for all protocol parameters
+- `agentic/ledger/` — Merkle tree, nullifiers, block processor, transactions
+- `agentic/galaxy/` — 6481×6481 coordinate grid, claims, mining engine
+- `agentic/testnet/api.py` — FastAPI server; `agentic/testnet/frontend_contract.ts` — TypeScript interfaces
+- Swagger docs at `http://localhost:8080/docs`
+- Genesis is deterministic: `create_genesis(seed=42)` always produces same state
+
+## Package Boundary Rules
+
+**Rule:** Shared logic lives in `packages/`. App-specific wiring lives in `apps/`.
+
+| Location | Owns |
+|----------|------|
+| `packages/types` | Zod schemas + TypeScript types _(future)_ |
+| `packages/utils` | Pure utility functions, zero framework deps _(future)_ |
+| `packages/ui` | React component library _(future)_ |
+| `apps/zkagenticnetwork` | Frontend game — depends on packages when created |
+| `apps/agentic-chain` | Blockchain ledger + FastAPI API |
+
+**Hard rules:**
+- Apps never import from each other
+- New shared logic → `packages/` first
+- `apps/agentic-chain` and `apps/zkagenticnetwork` communicate over HTTP only (no shared code)
+- Run `pnpm turbo typecheck` before claiming any JS/TS task done
+
+## Workflow
+
+Start a new feature: `/exodus:feature "describe what to build"`
+
+Resume in-progress feature: `/exodus:feature` (checks `.claude/dispatch-state.json`)
+
+See `docs/WORKFLOW.md` for the phase checklist and emergency exits.
+
+
+## Compaction Memory
+
+Three files at the project root capture conversation history across compactions (all gitignored):
+
+| File | Contents |
+|------|----------|
+| `compacted.md` | Full conversation transcript (auto-written by PreCompact hook) |
+| `compacted-summary.md` | LLM summary you write before compacting |
+| `prompts.md` | User prompts only (auto-written by PreCompact hook) |
+
+### Manual `/compact`
+
+**Write a session summary first:**
+
+1. Append a summary block to `compacted-summary.md`:
+   ```
+   <!-- summary-block: [ISO timestamp] -->
+   ## Summary — [human timestamp]
+
+   [What was accomplished, key decisions made, open work remaining, current branch/feature context]
+
+   <!-- /summary-block -->
+   ```
+2. Then proceed with `/compact`
+
+### Auto-compaction (triggered automatically at ~10% context remaining)
+
+Auto-compaction fires without warning — you cannot write a summary beforehand. The PreCompact hook still captures `compacted.md` and `prompts.md` automatically.
+
+**After auto-compaction resumes**, the SessionStart hook injects the most recent raw transcript block with an explicit instruction. You MUST:
+
+1. Write a summary block to `compacted-summary.md` immediately (this is your first action)
+2. Confirm to the user: "Auto-compaction occurred. I've written a summary to `compacted-summary.md`."
+3. Briefly state what was compacted (1-2 sentences)
+
+### After any compaction resumes
+
+The SessionStart hook injects either `compacted-summary.md` (if it exists) or the most recent `compacted.md` block (auto-compaction fallback). You MUST:
+
+1. Confirm to the user what was restored
+2. Note: "Full transcript in `compacted.md`, all prompts in `prompts.md`"
+
+
+## Skills
+
+All 10 expert personas are castable in a new Claude Code session:
+
+| `/skills:` command | Domain |
+|--------------------|--------|
+| `frontend-expert` | React 19, Next.js 16, Tailwind CSS 4 |
+| `backend-expert` | Prisma 7, NextAuth v5, Hono, PostgreSQL |
+| `state-expert` | Zustand 5, DockPanel/focusRequest conventions |
+| `pixijs-expert` | PixiJS 8, WebGL, galaxy grid rendering |
+| `testing-expert` | Vitest, React Testing Library, strict TDD |
+| `web3-expert` | Solana wallet-adapter, two-tier user model |
+| `game-design-expert` | Agent mechanics, ZkAgentic network design |
+| `ai-integration-expert` | Claude API, MCP, ChainService, haiku NCPs |
+| `ui-design-expert` | Dark crypto aesthetic, Tailwind 4, shadcn/ui |
+| `monorepo-expert` | Turborepo, pnpm workspaces, package boundaries |
+
+Deep reference docs: `vault/skills/<name>/skill-description.md`
+
+> Note: `/skills:` commands require a new Claude Code session to be indexed.
+
+## Vault Workflow
+
+```
+1. Capture idea       → vault/ideas/
+2. Refine into spec   → vault/product/features/<name>/feature.md
+3. Write prompt       → vault/prompts/YYYY-MM-DD-<task>.md
+4. Implement          → /exodus:feature "description"
+5. Review             → vault/reviews/YYYY-MM-DD-<task>-retro.md
+```
+
+Implementation plans (AI-generated) → `docs/plans/` — never inside vault.
+
+## Dispatch State
+
+`.claude/dispatch-state.json` tracks multi-session feature work (phase, step, branch, completed steps, artifact paths). Check it when resuming interrupted work.
