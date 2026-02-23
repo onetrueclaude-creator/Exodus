@@ -1,0 +1,29 @@
+{
+  "collapse-filter": false,
+  "search": "",
+  "showTags": false,
+  "showAttachments": false,
+  "hideUnresolved": false,
+  "showOrphans": true,
+  "collapse-color-groups": false,
+  "colorGroups": [
+    { "query": "path:ideas", "color": { "a": 1, "rgb": 16728832 } },
+    { "query": "path:prompts", "color": { "a": 1, "rgb": 4680959 } },
+    { "query": "path:product", "color": { "a": 1, "rgb": 4378234 } },
+    { "query": "path:research", "color": { "a": 1, "rgb": 16740419 } },
+    { "query": "path:engineering", "color": { "a": 1, "rgb": 10181119 } },
+    { "query": "path:reviews", "color": { "a": 1, "rgb": 16729948 } }
+  ],
+  "collapse-display": false,
+  "showArrow": false,
+  "textFadeMultiplier": 0,
+  "nodeSizeMultiplier": 1,
+  "lineSizeMultiplier": 1,
+  "collapse-forces": false,
+  "centerStrength": 0.518713248970312,
+  "repelStrength": 10,
+  "linkStrength": 1,
+  "linkDistance": 250,
+  "scale": 1,
+  "close": false
+}

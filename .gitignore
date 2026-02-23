@@ -18,6 +18,11 @@ pnpm-lock.yaml
 # TypeScript
 *.tsbuildinfo
 
+# Build artifacts / deploy dirs
+ZkAgentic/projects/web/zkagentic-deploy/_next/
+ZkAgentic/projects/web/company-site/node_modules/
+ZkAgentic/projects/web/company-site/.next/
+
 # Obsidian
 vault/.obsidian/workspace.json
 vault/.obsidian/workspace-mobile.json
