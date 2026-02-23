@@ -29,6 +29,30 @@
     "security-guidance@claude-plugins-official": true
   },
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /Users/toyg/Exodus/.claude/hooks/user-prompt-log.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /Users/toyg/Exodus/.claude/hooks/stop-log.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "PreCompact": [
       {
         "matcher": "*",
