@@ -29,18 +29,6 @@
     "security-guidance@claude-plugins-official": true
   },
   "hooks": {
-    "UserPromptSubmit": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ./ .claude/hooks/user-prompt-log.sh",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "matcher": "*",

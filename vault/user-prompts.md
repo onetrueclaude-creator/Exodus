@@ -40,3 +40,33 @@ All prompts, numbered consecutively across sessions.
 27. [2026-02-23 13:33:41 UTC] test prompt debug
 [A] [2026-02-23 13:41:48 UTC] Task 3 code quality review running in background.
 28. [2026-02-23 13:41:48 UTC] debug why the user-prompts.md is not updating
+[A] [2026-02-23 14:00:07 UTC] Implementation complete.
+[A] [2026-02-23 14:06:27 UTC] `. ` is the main checkout (not a separate worktree), so no worktree cleanup needed.
+29. [2026-02-23 14:09:31 UTC] continue with the next tasks
+30. [2026-02-23 14:13:57 UTC] 2
+[A] [2026-02-23 14:22:36 UTC] Task 39 done. The hooks are committed (`75a07cc`).
+31. [2026-02-23 14:32:44 UTC] push
+[A] [2026-02-23 14:32:53 UTC] Pushed. `75a07cc` is now on remote — both hook fixes live.
+32. [2026-02-23 14:33:09 UTC] create
+[A] [2026-02-23 14:33:32 UTC] PR #3 updated: https://github.com/onetrueclaude-creator/Exodus/pull/3
+33. [2026-02-23 14:40:24 UTC] check
+[A] [2026-02-23 14:40:38 UTC] The stop hook is working correctly now.
+34. [2026-02-23 14:44:47 UTC] continue
+[A] [2026-02-23 14:47:01 UTC] The main challenge: PixiJS renders to a `<canvas>` — Playwright can't inspect individual nodes inside it.
+35. [2026-02-23 15:01:03 UTC] 3
+[A] [2026-02-23 15:01:23 UTC] Both — journey + game interactions.
+36. [2026-02-23 15:15:24 UTC] A  [re: Does Option A sound right, or would you like a different direction?]
+[A] [2026-02-23 15:15:40 UTC] **Design — Section 1: Architecture**
+37. [2026-02-23 15:15:51 UTC] yes  [re: Does this structure look right?]
+[A] [2026-02-23 15:16:06 UTC] **Design — Section 2: Test Coverage & Gap Detection**
+38. [2026-02-23 15:16:17 UTC] yes  [re: Does this coverage look right?]
+[A] [2026-02-23 15:16:29 UTC] **Design — Section 3: Continuous Operation & Gap Reporting**
+39. [2026-02-23 15:16:33 UTC] yes  [re: Does this round out the design, or anything to adjust?]
+[A] [2026-02-23 15:19:46 UTC] Plan complete and saved to `docs/plans/2026-02-23-playwright-beta-testers-impl.md` (`d84939b`).
+40. [2026-02-23 15:20:23 UTC] 1  [re: Which approach?]
+41. [2026-02-23 18:30:00 UTC] the user-prompts.md stopped updating again
+42. [2026-02-23 18:31:00 UTC] let's find a way to make it continuous
+43. [2026-02-23 18:44:00 UTC] save everything
+44. [2026-02-23 18:44:10 UTC] stage and commit locally
+45. [2026-02-23 18:44:20 UTC] make sure the user-prompts are up to date
+46. [2026-02-23 18:44:30 UTC] push to remote after
