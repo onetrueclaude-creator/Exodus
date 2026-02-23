@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # UserPromptSubmit hook — appends each user prompt to user-prompts.md in real-time.
 # Runs before Claude processes the prompt, capturing it immediately on submit.
+# Short choice answers (≤10 chars) are annotated with the preceding question.
 
 set -uo pipefail
 
@@ -13,12 +14,13 @@ HOOK_INPUT=$(cat)
 LOG_FILE="./ vault/user-prompts.md"
 LOCK_FILE="/tmp/user-prompts.lock"
 
-PROMPT=$(echo "$HOOK_INPUT" | python3 -c "
+# Extract prompt and transcript path from hook input
+read -r PROMPT TRANSCRIPT_PATH < <(echo "$HOOK_INPUT" | python3 -c "
 import json, sys
 d = json.load(sys.stdin)
-# 'prompt' is standard; slash commands sometimes arrive as different fields
 p = d.get('prompt', '') or d.get('message', '') or d.get('user_message', '')
 p = p.strip()
+tp = d.get('transcript_path', '')
 # Skip system/XML content — task-notifications and other synthetic messages
 # arrive through UserPromptSubmit but are not real user input
 SYSTEM_PREFIXES = ('<task-notification>', '<system-reminder>', '<task-id>')
@@ -29,20 +31,72 @@ if not p:
     import os
     with open('/tmp/userprompt-debug.log', 'a') as f:
         f.write('EMPTY_PROMPT keys=' + str(list(d.keys())) + ' val=' + repr(str(d)[:300]) + '\n')
-print(p)
-" 2>/dev/null || true)
+# Output prompt and transcript_path on one line, tab-separated
+print(p.replace('\t', ' ').replace('\n', ' ') + '\t' + tp)
+" 2>/dev/null || echo -e "\t") || true
 
 # Silently exit if no prompt
-if [ -z "$PROMPT" ]; then
+if [ -z "${PROMPT:-}" ]; then
     python3 -c "import json; print(json.dumps({'continue': True, 'suppressOutput': True}))"
     exit 0
 fi
 TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
 
-python3 - "$LOG_FILE" "$LOCK_FILE" "$PROMPT" "$TIMESTAMP" <<'PYEOF'
-import sys, os, re, fcntl
+python3 - "$LOG_FILE" "$LOCK_FILE" "$PROMPT" "$TIMESTAMP" "${TRANSCRIPT_PATH:-}" <<'PYEOF'
+import sys, os, re, fcntl, json
 
 log_file, lock_file, prompt, timestamp = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+transcript_path = sys.argv[5] if len(sys.argv) > 5 else ''
+
+def extract_last_question(transcript_path):
+    """Read transcript and return the last question Claude asked, or ''."""
+    if not transcript_path or not os.path.isfile(transcript_path):
+        return ''
+    def get_text(content):
+        if isinstance(content, str):
+            return content.strip()
+        if isinstance(content, list):
+            parts = [b.get('text', '') for b in content
+                     if isinstance(b, dict) and b.get('type') == 'text']
+            return '\n'.join(p.strip() for p in parts if p.strip())
+        return ''
+    last_text = ''
+    try:
+        with open(transcript_path) as f:
+            for line in f:
+                try:
+                    msg = json.loads(line.strip())
+                    if msg.get('type') == 'assistant':
+                        text = get_text(msg.get('message', {}).get('content', []))
+                        if text:
+                            last_text = text
+                except (json.JSONDecodeError, KeyError):
+                    pass
+    except OSError:
+        return ''
+    if not last_text:
+        return ''
+    # Find the last line ending with '?' in the assistant text
+    for line in reversed(last_text.split('\n')):
+        line = line.strip()
+        if line.endswith('?') and len(line) >= 5:
+            # Trim to ≤80 chars, strip leading markdown (bullets, numbers)
+            line = re.sub(r'^[\*\-\d\.\s]+', '', line).strip()
+            return line[:80]
+    return ''
+
+# Determine if this is a short choice answer that needs context
+prompt_stripped = prompt.strip()
+is_short_choice = (
+    len(prompt_stripped) <= 10
+    and bool(re.match(r'^[a-zA-Z0-9][a-zA-Z0-9\s\.\,\!\?]*$', prompt_stripped))
+)
+
+display_prompt = prompt_stripped
+if is_short_choice and transcript_path:
+    question = extract_last_question(transcript_path)
+    if question:
+        display_prompt = f"{prompt_stripped}  [re: {question}]"
 
 os.makedirs(os.path.dirname(log_file), exist_ok=True)
 
@@ -62,9 +116,9 @@ with open(lock_file, 'w') as lf:
     nums = re.findall(r'^(\d+)\. ', content, re.MULTILINE)
     next_num = int(nums[-1]) + 1 if nums else 1
 
-    lines = prompt.strip().splitlines()
+    lines = display_prompt.strip().splitlines()
     if len(lines) == 1:
-        entry = f"{next_num}. [{timestamp}] {prompt.strip()}\n"
+        entry = f"{next_num}. [{timestamp}] {display_prompt.strip()}\n"
     else:
         entry = f"{next_num}. [{timestamp}] {lines[0]}\n"
         for line in lines[1:]:
