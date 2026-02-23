@@ -12,7 +12,9 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
-    "e2e:seed": "tsx playwright/scripts/seed-test-user.ts"
+    "e2e:seed": "tsx playwright/scripts/seed-test-user.ts",
+    "e2e:gaps": "tsx playwright/scripts/report-gaps.ts",
+    "test:e2e:watch": "while true; do npm run test:e2e; sleep 300; done"
   },
   "dependencies": {
     "@solana/wallet-adapter-base": "^0.9.27",
