@@ -6,6 +6,9 @@ set -uo pipefail
 
 HOOK_INPUT=$(cat)
 
+# Debug: log every invocation so we can confirm the hook fires
+echo "[$(date -u +%H:%M:%S)] stop-log invoked" >> /tmp/stop-hook-debug.log 2>/dev/null || true
+
 LOG_FILE="/Users/toyg/Exodus/vault/user-prompts.md"
 LOCK_FILE="/tmp/user-prompts-stop.lock"
 
@@ -50,8 +53,9 @@ try:
                 continue
             try:
                 msg = json.loads(line)
-                if msg.get('role') == 'assistant':
-                    text = extract_text(msg.get('content', ''))
+                if msg.get('type') == 'assistant':
+                    content = msg.get('message', {}).get('content', [])
+                    text = extract_text(content)
                     if text:
                         last_text = text
             except (json.JSONDecodeError, KeyError):
