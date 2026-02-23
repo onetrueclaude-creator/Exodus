@@ -99,3 +99,49 @@ Top-level commands:
 > I now look at the 2D map. I can click on the unclaimed nodes. I see that I can also deploy clones in the left-hand side bar — it changed when I clicked on the unclaimed node. I close the chat with my Sonnet. I click "create agent" on the left bar while an unclaimed node is selected. Also I notice the Node density values. I see that this is a rich density node, which will give multipliers on the cost of the CPU Energy per blockchain Secure actions.
 >
 > I create a Haiku because it only allows me to create Haiku because I am a free user, but I'm sure the Max subscription tier allows full Opus model agent creation for Securing nodes.
+
+## Compaction Memory
+
+Three files at the project root capture conversation history across compactions (all gitignored):
+
+| File | Contents |
+|------|----------|
+| `compacted.md` | Full conversation transcript (auto-written by PreCompact hook) |
+| `compacted-summary.md` | LLM summary you write before compacting |
+| `prompts.md` | User prompts only (auto-written by PreCompact hook) |
+
+### Manual `/compact`
+
+**Write a session summary first:**
+
+1. Append a summary block to `compacted-summary.md`:
+   ```
+   <!-- summary-block: [ISO timestamp] -->
+   ## Summary — [human timestamp]
+
+   [What was accomplished, key decisions made, open work remaining, current branch/feature context]
+
+   <!-- /summary-block -->
+   ```
+2. Then proceed with `/compact`
+
+### Auto-compaction (triggered automatically at ~10% context remaining)
+
+Auto-compaction fires without warning — you cannot write a summary beforehand. The PreCompact hook still captures `compacted.md` and `prompts.md` automatically.
+
+**After auto-compaction resumes**, the SessionStart hook injects the most recent raw transcript block with an explicit instruction. You MUST:
+
+1. Write a summary block to `compacted-summary.md` immediately (this is your first action)
+2. Confirm to the user: "Auto-compaction occurred. I've written a summary to `compacted-summary.md`."
+3. Briefly state what was compacted (1-2 sentences)
+
+### After any compaction resumes
+
+The SessionStart hook injects either `compacted-summary.md` (if it exists) or the most recent `compacted.md` block (auto-compaction fallback). You MUST:
+
+1. Confirm to the user what was restored
+2. Note: "Full transcript in `compacted.md`, all prompts in `prompts.md`"
+
+## Dispatch State
+
+`.claude/dispatch-state.json` tracks multi-session feature work (phase, step, branch, completed steps, artifact paths). Check it when resuming interrupted work.
