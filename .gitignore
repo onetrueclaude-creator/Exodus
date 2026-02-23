@@ -53,3 +53,7 @@ prompts.md
 
 # Git worktrees
 .worktrees/
+
+# Playwright
+playwright-report/
+test-results/

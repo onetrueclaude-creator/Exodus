@@ -20,8 +20,12 @@ test.describe('03 · Blockchain Actions', () => {
 
     // Find and click the execute/confirm button
     const executeBtn = page.getByRole('button', { name: /execute|confirm|secure/i })
-    if (await executeBtn.isVisible({ timeout: 2_000 })) {
+    const btnVisible = await executeBtn.isVisible({ timeout: 2_000 }).catch(() => false)
+    if (btnVisible) {
       await executeBtn.click()
+    } else {
+      test.fail(true, 'Execute button not found after Secure → 1 Generation — UI flow broken')
+      return
     }
 
     // Wait for store update
