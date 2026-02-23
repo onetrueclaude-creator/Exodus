@@ -1,8 +1,16 @@
 "use client";
 
-import { signIn } from 'next-auth/react';
+import { createBrowserClient } from '@/lib/supabase/client';
 
 export default function Home() {
+  const handleSignIn = async () => {
+    const supabase = createBrowserClient();
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/onboard` },
+    });
+  };
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-background relative">
       {/* Content */}
@@ -23,7 +31,7 @@ export default function Home() {
 
         {/* Sign-in button */}
         <button
-          onClick={() => signIn('google', { callbackUrl: '/onboard' })}
+          onClick={handleSignIn}
           className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg
             bg-white text-gray-800 text-[14px] font-medium
             hover:bg-gray-50 active:bg-gray-100 transition-colors duration-150
