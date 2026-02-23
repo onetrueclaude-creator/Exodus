@@ -27,3 +27,8 @@ ZkAgentic/projects/web/company-site/.next/
 vault/.obsidian/workspace.json
 vault/.obsidian/workspace-mobile.json
 vault/.trash/
+
+# Compaction memory (local only — never commit)
+compacted.md
+compacted-summary.md
+prompts.md
