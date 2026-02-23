@@ -96,6 +96,37 @@ def sync_to_supabase(g: GenesisState, next_block_in: float = 60.0) -> None:
         pass  # never crash the miner
 
 
+
+def sync_message(
+    msg_id: str,
+    sx: int,
+    sy: int,
+    tx: int,
+    ty: int,
+    text: str,
+    timestamp: float,
+) -> None:
+    """Upsert a single chain_message row to Supabase.
+
+    Called immediately after a message is stored in-memory so it appears
+    in the frontend without waiting for the next block mine.
+    All exceptions are swallowed — messaging never crashes due to Supabase errors.
+    """
+    try:
+        client = _get_client()
+        client.table("chain_messages").upsert({
+            "id": msg_id,
+            "sender_chain_x": sx,
+            "sender_chain_y": sy,
+            "target_chain_x": tx,
+            "target_chain_y": ty,
+            "text": text,
+            "timestamp": int(round(timestamp * 1000)),
+        }).execute()
+    except Exception:
+        pass  # never crash the API
+
+
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
