@@ -249,6 +249,14 @@ export default function GamePage() {
     };
   }, []);
 
+  // Expose store to Playwright in dev mode
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(window as any).__gameStore = useGameStore
+    }
+  }, [])
+
   const handleHaikuSubmit = async (text: string) => {
     if (!currentAgentId || !chainRef.current) return;
     const haiku = await chainRef.current.postHaiku(currentAgentId, text);
