@@ -57,3 +57,17 @@ prompts.md
 # Playwright
 playwright-report/
 test-results/
+
+# External project trees (legacy codebases, not part of this repo)
+ZkAgentic/
+apps/
+vault/agentic-chain/
+
+# pnpm workspace lock (managed at monorepo root)
+pnpm-lock.yaml
+
+# Claude dispatch state (session-local, not committed)
+.claude/dispatch-state.json
+
+# Node modules anywhere in tree
+**/node_modules/

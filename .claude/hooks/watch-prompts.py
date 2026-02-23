@@ -26,6 +26,8 @@ SKIP_PREFIXES = (
     '<task-id>',
     'This session is being continued',
     'Please continue the conversation',
+    'Base directory for this skill:',
+    'The following skills were invoked',
 )
 
 
@@ -134,7 +136,8 @@ def main() -> None:
                                 break
                             try:
                                 msg = json.loads(line)
-                                if msg.get('type') == 'human':
+                                # Real user prompts: type='user', no toolUseResult
+                                if msg.get('type') == 'user' and not msg.get('toolUseResult'):
                                     content = msg.get('message', {}).get('content', '')
                                     text = extract_text(content)
                                     if text:
