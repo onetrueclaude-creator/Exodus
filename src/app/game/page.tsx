@@ -18,6 +18,7 @@ import AgentChat from '@/components/AgentChat';
 import AgentProfilePopup from '@/components/AgentProfilePopup';
 import TimechainStats from '@/components/TimechainStats';
 import { startDebugListener } from '@/lib/debugListener';
+import { persistResources } from '@/lib/persistResources';
 import { useGameStore } from '@/store';
 import { MockChainService } from '@/services/chainService';
 import type { ChainService } from '@/services/chainService';
@@ -247,6 +248,17 @@ export default function GamePage() {
           store.setCamera(slot.position, 2);
           // Sync from chain to get updated state
           syncFromChain();
+          // Persist updated resources to Supabase after claim action
+          const afterClaim = useGameStore.getState();
+          if (afterClaim.currentUserId) {
+            persistResources(afterClaim.currentUserId, {
+              energy: afterClaim.energy,
+              minerals: afterClaim.minerals,
+              agntc_balance: afterClaim.agntcBalance,
+              secured_chains: afterClaim.securedChains,
+              turn: afterClaim.turn,
+            })
+          }
         }
         break;
       }
@@ -272,6 +284,16 @@ export default function GamePage() {
           store.setChainMode(store.chainMode, result.blockNumber);
           // Trigger full sync to get updated agents/status
           syncFromChain();
+          // Persist updated resources to Supabase after mine action
+          if (store.currentUserId) {
+            persistResources(store.currentUserId, {
+              energy: store.energy,
+              minerals: store.minerals,
+              agntc_balance: store.agntcBalance,
+              secured_chains: store.securedChains,
+              turn: store.turn,
+            })
+          }
         } catch {
           // Rate-limited (429) or other error — display will be handled by ResourceBar countdown
         }
@@ -394,6 +416,17 @@ export default function GamePage() {
                         setShowAgentCreator(false);
                         setSelectedAgent(slotId);
                         syncFromChain();
+                        // Persist updated resources to Supabase after deploy action
+                        const afterDeploy = useGameStore.getState();
+                        if (afterDeploy.currentUserId) {
+                          persistResources(afterDeploy.currentUserId, {
+                            energy: afterDeploy.energy,
+                            minerals: afterDeploy.minerals,
+                            agntc_balance: afterDeploy.agntcBalance,
+                            secured_chains: afterDeploy.securedChains,
+                            turn: afterDeploy.turn,
+                          })
+                        }
                       }
                     }}
                     onClose={() => setShowAgentCreator(false)}
