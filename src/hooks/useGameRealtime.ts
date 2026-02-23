@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { createBrowserClient } from '@/lib/supabase/client'
 import { useGameStore } from '@/store/gameStore'
 import type { Database } from '@/lib/supabase/types'
@@ -36,29 +36,34 @@ function rowToStoreAgent(row: AgentRow) {
 export function useGameRealtime() {
   const setChainStatus = useGameStore(s => s.setChainStatus)
   const syncAgentFromChain = useGameStore(s => s.syncAgentFromChain)
+  const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
     const supabase = createBrowserClient()
 
     // Initial hydration from Supabase (single source of truth)
     async function hydrate() {
-      const [{ data: chainStatus }, { data: agents }] = await Promise.all([
-        supabase.from('chain_status').select('*').single(),
-        supabase.from('agents').select('*'),
-      ])
+      try {
+        const [{ data: chainStatus }, { data: agents }] = await Promise.all([
+          supabase.from('chain_status').select('*').single(),
+          supabase.from('agents').select('*'),
+        ])
 
-      if (chainStatus) {
-        setChainStatus({
-          poolRemaining: chainStatus.community_pool_remaining,
-          totalMined: chainStatus.total_mined,
-          stateRoot: chainStatus.state_root,
-          nextBlockIn: chainStatus.next_block_in,
-          blocks: chainStatus.blocks_processed,
-        })
-      }
+        if (chainStatus) {
+          setChainStatus({
+            poolRemaining: chainStatus.community_pool_remaining,
+            totalMined: chainStatus.total_mined,
+            stateRoot: chainStatus.state_root,
+            nextBlockIn: chainStatus.next_block_in,
+            blocks: chainStatus.blocks_processed,
+          })
+        }
 
-      if (agents) {
-        agents.forEach(row => syncAgentFromChain(rowToStoreAgent(row)))
+        if (agents) {
+          agents.forEach(row => syncAgentFromChain(rowToStoreAgent(row)))
+        }
+      } finally {
+        setIsReady(true)
       }
     }
 
@@ -96,4 +101,6 @@ export function useGameRealtime() {
       supabase.removeChannel(channel)
     }
   }, [setChainStatus, syncAgentFromChain])
+
+  return { isReady }
 }
