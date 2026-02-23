@@ -64,7 +64,7 @@ export default function GamePage() {
   const setInitializing = useGameStore((s) => s.setInitializing);
   const chainMode = useGameStore((s) => s.chainMode);
 
-  useGameRealtime();
+  const { isReady } = useGameRealtime();
 
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [profileAgent, setProfileAgent] = useState<string | null>(null);
@@ -158,11 +158,11 @@ export default function GamePage() {
       chainRef.current = service;
       setChainMode(online ? 'testnet' : 'mock', 0);
 
-      const agentList = await service.getAgents();
-      agentList.forEach(addAgent);
-
       const feed = await service.getHaikuFeed();
       feed.forEach(addHaiku);
+
+      // Agents are already populated by useGameRealtime (Supabase hydration)
+      const agentList = Object.values(useGameStore.getState().agents);
 
       const firstOwned = agentList.find(a => a.userId !== '');
       if (firstOwned) {
@@ -363,7 +363,7 @@ export default function GamePage() {
   return (
     <div className="flex flex-col w-screen h-screen overflow-hidden bg-background">
       {/* Loading overlay */}
-      {isInitializing && (
+      {(isInitializing || !isReady) && (
         <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background">
           <div className="w-4 h-4 rounded-full bg-accent-cyan animate-ping mb-6" />
           <div className="text-lg font-heading text-text-primary mb-2">
