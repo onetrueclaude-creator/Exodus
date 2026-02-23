@@ -6,6 +6,7 @@ import { TIER_CPU_COST, TIER_MINING_RATE, TIER_CLAIM_COST } from '@/types/agent'
 import { useGameStore } from '@/store';
 import { getDistance } from '@/lib/proximity';
 import { visualToChain } from '@/services/testnetChainService';
+import { persistResources } from '@/lib/persistResources';
 
 /* ── Agent Action Definitions ─────────────────────────────── */
 
@@ -1535,6 +1536,17 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                         const success = useGameStore.getState().spendEnergy(totalCost, 'secure');
                         if (success) {
                           useGameStore.getState().addSecuredChain();
+                          const s = useGameStore.getState();
+                          const uid = s.currentUserId;
+                          if (uid) {
+                            persistResources(uid, {
+                              energy: s.energy,
+                              minerals: s.minerals,
+                              agntc_balance: s.agntcBalance,
+                              secured_chains: s.securedChains,
+                              turn: s.turn,
+                            });
+                          }
                           addMsg('agent', `Securing operation complete.\n${cycleCount} block cycles processed.\n-${totalCost} CPU Energy\n+1 Secured Chain`);
                         } else {
                           addMsg('system', `Insufficient CPU Energy. Need ${totalCost}, have ${energy.toFixed(0)}.`);
