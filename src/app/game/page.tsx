@@ -19,6 +19,8 @@ import AgentProfilePopup from '@/components/AgentProfilePopup';
 import TimechainStats from '@/components/TimechainStats';
 import { startDebugListener } from '@/lib/debugListener';
 import { persistResources } from '@/lib/persistResources';
+import { createBrowserClient } from '@/lib/supabase/client';
+import type { Planet } from '@/types/agent';
 import { useGameStore } from '@/store';
 import { MockChainService } from '@/services/chainService';
 import type { ChainService } from '@/services/chainService';
@@ -165,6 +167,54 @@ export default function GamePage() {
       const firstOwned = agentList.find(a => a.userId !== '');
       if (firstOwned) {
         setCurrentUser(firstOwned.userId, firstOwned.id);
+
+        // Hydrate planets and haiku from Supabase
+        const supabase = createBrowserClient();
+        const { data: planets } = await supabase
+          .from('planets')
+          .select('*')
+          .eq('user_id', firstOwned.userId);
+
+        // Use direct setState to bypass persistPlanet/persistHaiku side-effects —
+        // rows were just fetched from Supabase, re-inserting them would cause duplicate-key errors.
+        planets?.forEach(p => {
+          useGameStore.setState(s => ({
+            planets: {
+              ...s.planets,
+              [p.id]: {
+                id: p.id,
+                agentId: p.agent_id ?? '',
+                content: p.content,
+                contentType: p.content_type as Planet['contentType'],
+                isZeroKnowledge: p.is_zero_knowledge,
+                createdAt: new Date(p.created_at).getTime(),
+              }
+            }
+          }))
+        });
+
+        const { data: haikus } = await supabase
+          .from('haiku_messages')
+          .select('*')
+          .order('timestamp', { ascending: false })
+          .limit(50);
+
+        haikus?.forEach(h => {
+          useGameStore.setState(s => ({
+            haiku: [
+              ...s.haiku,
+              {
+                id: h.id,
+                senderAgentId: h.sender_agent_id ?? '',
+                text: h.text,
+                syllables: h.syllables as [number, number, number],
+                position: { x: h.position_x, y: h.position_y },
+                timestamp: h.timestamp,
+              }
+            ]
+          }))
+        });
+
         // Auto-open terminal for the primary agent
         const primary = agentList.find(a => a.isPrimary && a.userId === firstOwned.userId);
         const homenode = primary ?? firstOwned;
