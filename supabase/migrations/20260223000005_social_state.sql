@@ -10,7 +10,7 @@ create table public.planets (
 
 alter table public.planets enable row level security;
 create policy "users can manage own planets" on public.planets for all using (auth.uid() = user_id);
-create policy "public can read non-zk planets" on public.planets for select using (not is_zero_knowledge);
+create policy "authenticated can read non-zk planets" on public.planets for select to authenticated using (not is_zero_knowledge);
 
 create table public.haiku_messages (
   id              text primary key,
@@ -24,7 +24,7 @@ create table public.haiku_messages (
 
 alter table public.haiku_messages enable row level security;
 create policy "authenticated can read haiku" on public.haiku_messages for select to authenticated using (true);
-create policy "authenticated can insert haiku" on public.haiku_messages for insert to authenticated with check (true);
+create policy "authenticated can insert own haiku" on public.haiku_messages for insert to authenticated with check (sender_agent_id is null or exists (select 1 from public.agents where id = sender_agent_id and user_id = auth.uid()));
 
 alter publication supabase_realtime add table public.haiku_messages;
 
@@ -54,7 +54,7 @@ create table public.diplomatic_states (
 
 alter table public.diplomatic_states enable row level security;
 create policy "authenticated can read diplomacy" on public.diplomatic_states for select to authenticated using (true);
-create policy "authenticated can upsert diplomacy" on public.diplomatic_states for all to authenticated with check (true);
+create policy "service role can write diplomacy" on public.diplomatic_states for all to service_role using (true);
 
 create table public.research_progress (
   user_id          uuid references public.profiles(user_id) on delete cascade,
