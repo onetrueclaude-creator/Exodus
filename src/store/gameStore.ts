@@ -301,11 +301,15 @@ export const useGameStore = create<GameState>((set) => ({
       return { agents: updated, currentAgentId: agentId };
     }),
 
-  addHaiku: (haiku) =>
-    set((s) => ({ haiku: [...s.haiku, haiku] })),
+  addHaiku: (haiku) => {
+    set((s) => ({ haiku: [...s.haiku, haiku] }))
+    import('@/lib/persistSocial').then(({ persistHaiku }) => persistHaiku(haiku))
+  },
 
-  addPlanet: (planet) =>
-    set((s) => ({ planets: { ...s.planets, [planet.id]: planet } })),
+  addPlanet: (planet) => {
+    set((s) => ({ planets: { ...s.planets, [planet.id]: planet } }))
+    import('@/lib/persistSocial').then(({ persistPlanet }) => persistPlanet(planet))
+  },
 
   togglePlanetZK: (planetId) =>
     set((s) => {
