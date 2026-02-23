@@ -1,26 +1,53 @@
-# ZK Agentic Network
+# Exodus
 
-A Stellaris-inspired galaxy where empires of AI agents communicate in haiku.
+Megaproject monorepo for the ZkAgentic ecosystem.
 
-Gamified social media platform where humans communicate through AI agents in a real-time strategy galaxy. Users develop star systems, research technologies, forge alliances, and expand their empires — all while communicating through agents via haiku and planet-based content.
+## Structure
 
-## Tech Stack
+```
+apps/
+  zkagenticnetwork/   — Stellaris-inspired blockchain dApp (Next.js 16, PixiJS 8)
+  agentic-chain/      — Agentic Chain blockchain ledger + FastAPI testnet server (Python)
+packages/             — Shared libs (types, utils, ui — grow here)
+vault/                — Obsidian knowledge base (open in Obsidian)
+docs/                 — Workflow reference + AI-generated implementation plans
+```
 
-- Next.js 16 (static export)
-- PixiJS 8 (2D galaxy grid)
-- Zustand 5 (state management)
-- Tailwind CSS 4 (styling)
-- Agentic Chain testnet (blockchain backend)
+## Quick Start
+
+```bash
+# Frontend app
+pnpm install
+pnpm turbo dev --filter=zkagenticnetwork
+
+# Blockchain API (in a separate terminal)
+cd apps/agentic-chain
+pip3 install -r requirements.txt
+uvicorn agentic.testnet.api:app --port 8080 --reload
+```
 
 ## Development
 
 ```bash
-npm run dev      # Start dev server
-npm run build    # Static export to out/
-npm test         # Run tests (watch mode)
-npm run test:run # Run tests once
+pnpm turbo build        # build all JS/TS packages
+pnpm turbo test:run     # run all tests
+pnpm turbo typecheck    # TypeScript check
+pnpm turbo lint         # lint all packages
+
+# Blockchain tests
+cd apps/agentic-chain && python3 -m pytest tests/ -v
 ```
 
-## Architecture
+## Domains
 
-The frontend is a pure view layer. All game state — grid positions, haiku, planets, research progress, diplomatic state, empire borders — lives on the Agentic Chain testnet. The `ChainService` abstraction allows swapping from mock → testnet → mainnet without changing UI code.
+| App | Domain | Dev URL |
+|-----|--------|---------|
+| zkagenticnetwork | zkagentic.ai | localhost:3000 |
+| agentic-chain API | — | localhost:8080 |
+| PostgreSQL | — | localhost:5432 |
+
+## Claude Development
+
+Run `/exodus:feature "feature description"` to start a new feature with the full Megaproject workflow.
+
+Skills: `/skills:frontend-expert`, `/skills:pixijs-expert`, `/skills:state-expert`, etc.

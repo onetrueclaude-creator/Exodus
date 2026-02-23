@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 160" width="720" height="160">
+  <defs>
+    <filter id="brush-f" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="turbulence" baseFrequency="0.012" numOctaves="4" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.8" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="glow-f">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="blur" in2="SourceGraphic" operator="over"/>
+    </filter>
+    <filter id="text-glow-f">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <linearGradient id="grad-rf" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.5"/>
+    </linearGradient>
+    <linearGradient id="grad-pf" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.25"/>
+    </linearGradient>
+    <radialGradient id="nc-f" cx="40%" cy="35%">
+      <stop offset="0%" stop-color="#67FFFF"/>
+      <stop offset="100%" stop-color="#00D4FF"/>
+    </radialGradient>
+    <radialGradient id="np-f" cx="40%" cy="35%">
+      <stop offset="0%" stop-color="#A78BFA"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </radialGradient>
+    <linearGradient id="title-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E0F7FF"/>
+    </linearGradient>
+    <linearGradient id="sub-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00D4FF"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Network mark on the left (scaled to fit 140x140 area, centered at 80,80) -->
+  <g transform="translate(8, 5) scale(0.75)" filter="url(#brush-f)">
+    <!-- Perimeter -->
+    <path d="M95,24 Q140,18 168,56" stroke="url(#grad-pf)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M168,56 Q178,110 153,152" stroke="url(#grad-pf)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <path d="M153,152 Q100,175 44,146" stroke="url(#grad-pf)" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    <path d="M44,146 Q18,108 30,68" stroke="url(#grad-pf)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <path d="M30,68 Q48,32 95,24" stroke="url(#grad-pf)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+    <!-- Radial (double-stroke brush) -->
+    <path d="M100,100 Q96,58 95,24" stroke="#00D4FF" stroke-width="4.5" fill="none" stroke-linecap="round" opacity="0.12"/>
+    <path d="M100,100 Q96,58 95,24" stroke="url(#grad-rf)" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    <path d="M100,100 Q140,72 168,56" stroke="#8B5CF6" stroke-width="4.5" fill="none" stroke-linecap="round" opacity="0.12"/>
+    <path d="M100,100 Q140,72 168,56" stroke="url(#grad-rf)" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    <path d="M100,100 Q132,132 153,152" stroke="#00D4FF" stroke-width="4.5" fill="none" stroke-linecap="round" opacity="0.12"/>
+    <path d="M100,100 Q132,132 153,152" stroke="url(#grad-rf)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M100,100 Q66,128 44,146" stroke="#8B5CF6" stroke-width="4.5" fill="none" stroke-linecap="round" opacity="0.12"/>
+    <path d="M100,100 Q66,128 44,146" stroke="url(#grad-rf)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M100,100 Q58,82 30,68" stroke="#00D4FF" stroke-width="4.5" fill="none" stroke-linecap="round" opacity="0.12"/>
+    <path d="M100,100 Q58,82 30,68" stroke="url(#grad-rf)" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+
+    <!-- ZK hidden cross -->
+    <path d="M95,24 Q105,140 44,146" stroke="#8B5CF6" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-dasharray="6 8" opacity="0.25"/>
+  </g>
+
+  <!-- Nodes -->
+  <g transform="translate(8, 5) scale(0.75)" filter="url(#glow-f)">
+    <circle cx="100" cy="100" r="12" fill="url(#nc-f)" opacity="0.95"/>
+    <circle cx="100" cy="100" r="7" fill="#fff" opacity="0.2"/>
+    <circle cx="95" cy="24" r="8" fill="url(#nc-f)" opacity="0.9"/>
+    <circle cx="168" cy="56" r="8.5" fill="url(#np-f)" opacity="0.9"/>
+    <circle cx="153" cy="152" r="7" fill="url(#nc-f)" opacity="0.85"/>
+    <circle cx="44" cy="146" r="8.5" fill="url(#np-f)" opacity="0.9"/>
+    <circle cx="30" cy="68" r="7.5" fill="url(#nc-f)" opacity="0.9"/>
+  </g>
+
+  <!-- Text: ZK AGENTIC CHAIN -->
+  <text x="185" y="72" font-family="'SF Mono', 'Fira Code', 'JetBrains Mono', 'Courier New', monospace" font-size="18" font-weight="600" letter-spacing="6" fill="url(#sub-grad)" filter="url(#text-glow-f)" opacity="0.7">ZK</text>
+
+  <text x="185" y="105" font-family="'Instrument Sans', 'DM Sans', 'Helvetica Neue', sans-serif" font-size="40" font-weight="700" letter-spacing="3" fill="url(#title-grad)" filter="url(#text-glow-f)">AGENTIC CHAIN</text>
+
+  <!-- Subtle separator line -->
+  <line x1="185" y1="115" x2="380" y2="115" stroke="url(#sub-grad)" stroke-width="1" opacity="0.2"/>
+
+  <text x="185" y="135" font-family="'SF Mono', 'Fira Code', 'JetBrains Mono', 'Courier New', monospace" font-size="10" font-weight="400" letter-spacing="3" fill="#00D4FF" opacity="0.45">PROOF OF AI VERIFICATION</text>
+</svg>
