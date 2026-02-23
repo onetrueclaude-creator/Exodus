@@ -1,72 +1,63 @@
-import NextAuth from 'next-auth';
-import { NextResponse } from 'next/server';
-import { authConfig } from '@/lib/auth.config';
+import { NextResponse, type NextRequest } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
 
-const { auth } = NextAuth(authConfig);
+async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  const { supabaseResponse, user } = await updateSession(request)
 
-export default auth(async (req) => {
-  const { pathname } = req.nextUrl;
-  const isLoggedIn = !!req.auth?.user;
-
-  // DEV BYPASS: skip all auth checks in development
+  // DEV BYPASS — skip auth in development
   if (process.env.NODE_ENV === 'development') {
-    return NextResponse.next();
+    return supabaseResponse
   }
 
-  // Always allow auth API, static assets, and public API routes
+  // Always allow: auth callbacks, static, public API
   if (
+    pathname.startsWith('/auth') ||
     pathname.startsWith('/api/auth') ||
     pathname.startsWith('/api/waitlist') ||
     pathname.startsWith('/_next') ||
     pathname.includes('.')
   ) {
-    return NextResponse.next();
+    return supabaseResponse
   }
 
   // Landing page: authenticated users skip to game flow
   if (pathname === '/') {
-    if (isLoggedIn) {
-      return NextResponse.redirect(new URL('/game', req.url));
-    }
-    return NextResponse.next();
+    if (user) return NextResponse.redirect(new URL('/game', request.url))
+    return supabaseResponse
   }
 
-  // All other routes require authentication
-  if (!isLoggedIn) {
-    return NextResponse.redirect(new URL('/', req.url));
+  // All other routes require auth
+  if (!user) {
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
-  // For authenticated users hitting /game, /onboard, /subscribe:
-  // Check onboarding completeness via internal API
+  // Check onboarding completeness
   if (pathname === '/game' || pathname === '/onboard' || pathname === '/subscribe') {
     try {
-      const userRes = await fetch(new URL('/api/user/status', req.url), {
-        headers: { cookie: req.headers.get('cookie') || '' },
-      });
-      if (userRes.ok) {
-        const user = await userRes.json();
-        const hasUsername = !!user.username;
-        const hasSubscription = !!user.subscription;
-
-        // Route to correct onboarding step
-        if (!hasUsername && pathname !== '/onboard') {
-          return NextResponse.redirect(new URL('/onboard', req.url));
+      const statusRes = await fetch(new URL('/api/user/status', request.url), {
+        headers: { cookie: request.headers.get('cookie') || '' },
+      })
+      if (statusRes.ok) {
+        const profile = await statusRes.json()
+        if (!profile.username && pathname !== '/onboard') {
+          return NextResponse.redirect(new URL('/onboard', request.url))
         }
-        if (hasUsername && !hasSubscription && pathname !== '/subscribe') {
-          return NextResponse.redirect(new URL('/subscribe', req.url));
+        if (profile.username && !profile.subscription_tier && pathname !== '/subscribe') {
+          return NextResponse.redirect(new URL('/subscribe', request.url))
         }
-        if (hasUsername && hasSubscription && pathname !== '/game') {
-          return NextResponse.redirect(new URL('/game', req.url));
+        if (profile.username && profile.subscription_tier && pathname !== '/game') {
+          return NextResponse.redirect(new URL('/game', request.url))
         }
       }
-    } catch {
-      // If status check fails, allow through (fail-open for dev)
-    }
+    } catch {}
   }
 
-  return NextResponse.next();
-});
+  return supabaseResponse
+}
+
+export default middleware
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
-};
+}
