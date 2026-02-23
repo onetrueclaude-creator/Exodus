@@ -4,6 +4,9 @@
 
 set -uo pipefail
 
+# Unconditional trace — confirms hook is being called by Claude Code
+echo "HOOK_CALLED $(date -u +"%H:%M:%S")" >> /tmp/hook-trace.log
+
 HOOK_INPUT=$(cat)
 
 # Vault path — always fixed, independent of cwd
@@ -13,7 +16,20 @@ LOCK_FILE="/tmp/user-prompts.lock"
 PROMPT=$(echo "$HOOK_INPUT" | python3 -c "
 import json, sys
 d = json.load(sys.stdin)
-print(d.get('prompt', ''))
+# 'prompt' is standard; slash commands sometimes arrive as different fields
+p = d.get('prompt', '') or d.get('message', '') or d.get('user_message', '')
+p = p.strip()
+# Skip system/XML content — task-notifications and other synthetic messages
+# arrive through UserPromptSubmit but are not real user input
+SYSTEM_PREFIXES = ('<task-notification>', '<system-reminder>', '<task-id>')
+if any(p.startswith(prefix) for prefix in SYSTEM_PREFIXES):
+    p = ''
+# Debug: log full input keys when prompt is empty
+if not p:
+    import os
+    with open('/tmp/userprompt-debug.log', 'a') as f:
+        f.write('EMPTY_PROMPT keys=' + str(list(d.keys())) + ' val=' + repr(str(d)[:300]) + '\n')
+print(p)
 " 2>/dev/null || true)
 
 # Silently exit if no prompt
