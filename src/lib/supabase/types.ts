@@ -5,6 +5,8 @@ export type Json = string | number | boolean | null | { [key: string]: Json } | 
 
 export interface Database {
   public: {
+    Views: Record<string, never>
+    Functions: Record<string, never>
     Tables: {
       profiles: {
         Row: {
@@ -21,6 +23,7 @@ export interface Database {
         }
         Insert: Partial<Database['public']['Tables']['profiles']['Row']> & { user_id: string }
         Update: Partial<Database['public']['Tables']['profiles']['Row']>
+        Relationships: []
       }
       agents: {
         Row: {
@@ -47,6 +50,7 @@ export interface Database {
         }
         Insert: Partial<Database['public']['Tables']['agents']['Row']> & { id: string; chain_x: number; chain_y: number; visual_x: number; visual_y: number }
         Update: Partial<Database['public']['Tables']['agents']['Row']>
+        Relationships: []
       }
       chain_status: {
         Row: {
@@ -61,6 +65,7 @@ export interface Database {
         }
         Insert: Partial<Database['public']['Tables']['chain_status']['Row']>
         Update: Partial<Database['public']['Tables']['chain_status']['Row']>
+        Relationships: []
       }
       user_resources: {
         Row: {
@@ -74,31 +79,37 @@ export interface Database {
         }
         Insert: Partial<Database['public']['Tables']['user_resources']['Row']> & { user_id: string }
         Update: Partial<Database['public']['Tables']['user_resources']['Row']>
+        Relationships: []
       }
       planets: {
         Row: { id: string; agent_id: string | null; user_id: string; content: string; content_type: string; is_zero_knowledge: boolean; created_at: string }
         Insert: Omit<Database['public']['Tables']['planets']['Row'], 'created_at'>
         Update: Partial<Database['public']['Tables']['planets']['Row']>
+        Relationships: []
       }
       haiku_messages: {
         Row: { id: string; sender_agent_id: string | null; text: string; syllables: number[]; position_x: number; position_y: number; timestamp: number }
         Insert: Omit<Database['public']['Tables']['haiku_messages']['Row'], 'id'> & { id?: string }
         Update: Partial<Database['public']['Tables']['haiku_messages']['Row']>
+        Relationships: []
       }
       chain_messages: {
         Row: { id: string; sender_chain_x: number; sender_chain_y: number; target_chain_x: number; target_chain_y: number; text: string; timestamp: number }
         Insert: Omit<Database['public']['Tables']['chain_messages']['Row'], 'id'> & { id?: string }
         Update: Partial<Database['public']['Tables']['chain_messages']['Row']>
+        Relationships: []
       }
       diplomatic_states: {
         Row: { agent_a_id: string; agent_b_id: string; exchange_count: number; opinion: number; clarity_level: number; last_exchange: number | null }
         Insert: Partial<Database['public']['Tables']['diplomatic_states']['Row']> & { agent_a_id: string; agent_b_id: string }
         Update: Partial<Database['public']['Tables']['diplomatic_states']['Row']>
+        Relationships: []
       }
       research_progress: {
         Row: { user_id: string; research_id: string; energy_invested: number; completed: boolean }
         Insert: { user_id: string; research_id: string; energy_invested?: number; completed?: boolean }
         Update: Partial<Database['public']['Tables']['research_progress']['Row']>
+        Relationships: []
       }
     }
   }
