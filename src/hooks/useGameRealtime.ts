@@ -62,6 +62,8 @@ export function useGameRealtime() {
         if (agents) {
           agents.forEach(row => syncAgentFromChain(rowToStoreAgent(row)))
         }
+      } catch {
+        // Supabase unavailable — proceed with empty grid
       } finally {
         setIsReady(true)
       }
