@@ -394,6 +394,8 @@ export const useGameStore = create<GameState>((set) => ({
       const ownAgents = Object.values(s.agents).filter(
         (a) => a.userId === s.currentUserId,
       );
+      // No homenode deployed yet — don't tick energy (no costs, no income)
+      if (ownAgents.length === 0) return s;
       const baseIncome = 1000; // simulation testnet faucet
       const totalMining = ownAgents.reduce((sum, a) => sum + (a.miningRate ?? 0), 0);
       const totalCpuCost = ownAgents.reduce((sum, a) => sum + a.cpuPerTurn, 0);

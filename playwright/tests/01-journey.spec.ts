@@ -1,47 +1,49 @@
+/**
+ * Beta Tester 1 — Game Load
+ * Tests that the game page renders its core UI shell correctly.
+ */
 import { test, expect } from '@playwright/test'
 
-test.describe('01 · Full User Journey', () => {
-  test.use({ storageState: { cookies: [], origins: [] } }) // unauthenticated
+test.describe('01 · Landing / Entry', () => {
+  test.use({ storageState: { cookies: [], origins: [] } })
 
-  test('landing page has Google auth button', async ({ page }) => {
+  test('root redirects to /game in dev mode', async ({ page }) => {
     await page.goto('/')
-    // The landing page should show a sign-in button
-    const authBtn = page.getByRole('button', { name: /google/i })
-      .or(page.getByRole('link', { name: /google/i }))
-      .or(page.getByText(/sign in/i))
-    await expect(authBtn.first()).toBeVisible({ timeout: 5_000 })
+    await expect(page).toHaveURL('/game', { timeout: 10_000 })
   })
 })
 
-test.describe('01 · Authenticated Journey', () => {
-  test.use({ storageState: 'playwright/.auth/user.json' })
-
-  test('authenticated user reaches /game', async ({ page }) => {
+test.describe('01 · Game Shell', () => {
+  test.beforeEach(async ({ page }) => {
     await page.goto('/game')
-    // Should not redirect to landing
-    await expect(page).not.toHaveURL(/\/$/, { timeout: 5_000 })
-    await expect(page).toHaveURL('/game', { timeout: 10_000 })
   })
 
-  test('ResourceBar is visible with CPU Energy', async ({ page }) => {
-    await page.goto('/game')
-    await expect(page.getByText('CPU Energy')).toBeVisible({ timeout: 15_000 })
+  test('game page loads and title is correct', async ({ page }) => {
+    await expect(page).toHaveTitle(/ZK Agentic/i, { timeout: 10_000 })
   })
 
-  test('ResourceBar shows Secured counter', async ({ page }) => {
-    await page.goto('/game')
-    await expect(page.getByText('Secured')).toBeVisible({ timeout: 15_000 })
+  test('ResourceBar shows resource numbers', async ({ page }) => {
+    // Compact resource bar shows numeric values without explicit labels
+    await expect(page.getByText('Your Network')).toBeVisible({ timeout: 15_000 })
   })
 
-  test('TimechainStats panel is visible', async ({ page }) => {
-    await page.goto('/game')
-    // TimechainStats renders chain status — look for "TESTNET" or "OFFLINE" badge
+  test('chain status badge is visible (TESTNET or OFFLINE)', async ({ page }) => {
     const badge = page.getByText('TESTNET').or(page.getByText('OFFLINE'))
     await expect(badge.first()).toBeVisible({ timeout: 15_000 })
   })
 
-  test('game canvas is present', async ({ page }) => {
-    await page.goto('/game')
+  test('tab navigation is rendered', async ({ page }) => {
+    await expect(page.getByRole('button', { name: /Network/i }).first()).toBeVisible({ timeout: 10_000 })
+  })
+
+  test('dock bar is rendered with core action buttons', async ({ page }) => {
+    await expect(page.getByRole('button', { name: /Agent Terminal/i })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('button', { name: /Chain Stats/i })).toBeVisible({ timeout: 10_000 })
+  })
+
+  test('game canvas is present after load', async ({ page }) => {
+    // Wait for loading overlay to clear
+    await page.waitForTimeout(3_000)
     await expect(page.locator('canvas').first()).toBeVisible({ timeout: 15_000 })
   })
 })

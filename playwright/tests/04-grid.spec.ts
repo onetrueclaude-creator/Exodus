@@ -1,65 +1,63 @@
-import { test, expect } from '@playwright/test'
+/**
+ * Beta Tester 4 — Grid & Map Interaction
+ * Verifies the PixiJS galaxy canvas renders and responds to interaction.
+ */
+import { test, expect, MOCK_AGENT_ID } from '../fixtures'
 
 test.describe('04 · Grid Interaction', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/game')
-    await expect(page.getByText('CPU Energy')).toBeVisible({ timeout: 15_000 })
-  })
-
   test('canvas is present and sized', async ({ page }) => {
+    await page.goto('/game')
+    await page.waitForTimeout(4_000)
     const canvas = page.locator('canvas').first()
-    await expect(canvas).toBeVisible()
+    await expect(canvas).toBeVisible({ timeout: 15_000 })
     const box = await canvas.boundingBox()
     expect(box).not.toBeNull()
     expect(box!.width).toBeGreaterThan(200)
     expect(box!.height).toBeGreaterThan(200)
   })
 
-  test('clicking canvas near center opens QuickActionMenu or AgentCreator', async ({ page }) => {
+  test('clicking canvas near center does not crash the page', async ({ page }) => {
+    await page.goto('/game')
+    await page.waitForTimeout(4_000)
     const canvas = page.locator('canvas').first()
+    await expect(canvas).toBeVisible({ timeout: 15_000 })
     const box = await canvas.boundingBox()
     if (!box) test.skip(true, 'Canvas not found')
-
-    // Click slightly offset from center (avoid clicking own homenode)
     await canvas.click({ position: { x: box!.width / 2 + 60, y: box!.height / 2 } })
     await page.waitForTimeout(500)
-
-    // Either a QuickActionMenu, AgentCreator, or some node UI should appear
-    const nodeUi = page.getByText(/deploy|create|claim|node|unclaimed/i)
-    // Not asserting — just checking something responds
-    const appeared = await nodeUi.first().isVisible({ timeout: 2_000 }).catch(() => false)
-    // Record result but don't fail — canvas interaction is fragile
-    console.log('Node UI appeared after canvas click:', appeared)
+    await expect(page).toHaveURL('/game')
   })
 
-  test('Zustand agents map is populated after load', async ({ page }) => {
-    await page.waitForTimeout(3_000) // allow hydration
-
-    const agentCount = await page.evaluate(() => {
-      const store = (window as any).__gameStore
-      return store ? Object.keys(store.getState().agents).length : -1
-    })
-
-    if (agentCount === -1) {
-      test.fail(true, 'window.__gameStore not available — Zustand bridge missing')
-      return
-    }
-    // Agent count >= 1 means homenode loaded from Supabase
-    expect(agentCount).toBeGreaterThanOrEqual(1)
+  test('Deploy Agent dock button is present', async ({ page }) => {
+    await page.goto('/game')
+    await expect(page.getByRole('button', { name: /Deploy Agent/i })).toBeVisible({ timeout: 10_000 })
   })
 
-  test('currentUserId is set after game loads', async ({ page }) => {
-    await page.waitForTimeout(3_000)
+  test('Secured Nodes dock button is present', async ({ page }) => {
+    await page.goto('/game')
+    await expect(page.getByRole('button', { name: /Secured Nodes/i })).toBeVisible({ timeout: 10_000 })
+  })
 
-    const userId = await page.evaluate(() => {
+  test('window.__gameStore is exposed in dev mode', async ({ seededPage: page }) => {
+    const hasStore = await page.evaluate(() => typeof (window as any).__gameStore === 'function')
+    if (!hasStore) console.warn('GAP: window.__gameStore not available — Zustand bridge missing')
+    expect(hasStore).toBe(true)
+  })
+
+  test('seeded homenode appears in Zustand agents map', async ({ seededPage: page }) => {
+    const agentIds = await page.evaluate(() => {
       const store = (window as any).__gameStore
-      return store ? store.getState().currentUserId : null
+      return store ? Object.keys(store.getState().agents) : []
     })
+    expect(agentIds.length).toBeGreaterThanOrEqual(1)
+    expect(agentIds).toContain(MOCK_AGENT_ID)
+  })
 
-    if (userId === null) {
-      test.fail(true, 'window.__gameStore not available or currentUserId not set — check Zustand bridge')
-      return
-    }
-    expect(userId).toBeTruthy()
+  test('selectedAgentId matches seeded homenode', async ({ seededPage: page }) => {
+    const selectedId = await page.evaluate(() => {
+      const store = (window as any).__gameStore
+      return store?.getState().selectedAgentId ?? null
+    })
+    expect(selectedId).toBe(MOCK_AGENT_ID)
   })
 })
