@@ -27,3 +27,16 @@ describe('gameStore — userFaction', () => {
     }
   })
 })
+
+describe('gameStore — CPU Energy', () => {
+  beforeEach(() => {
+    useGameStore.getState().reset()
+  })
+
+  it('addCpuEnergy increases energy balance', () => {
+    const store = useGameStore.getState()
+    const before = store.energy
+    store.addCpuEnergy(42)
+    expect(useGameStore.getState().energy).toBe(before + 42)
+  })
+})

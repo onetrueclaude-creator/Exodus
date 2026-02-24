@@ -97,6 +97,9 @@ interface GameState {
   clearFocusRequest: () => void;
   setMaxDeployTier: (tier: AgentTier) => void;
   setUserFaction: (faction: Faction) => void;
+  energyEarnedHistory: number[]; // last N CPU Energy awards, for estimating per-turn rate
+  addCpuEnergy: (amount: number) => void;
+  recordEnergyEarned: (amount: number) => void;
   reset: () => void;
 }
 
@@ -128,6 +131,7 @@ const initialState = {
   empireColor: 0x8b5cf6, // default: purple (Opus)
   activeDockPanel: null as DockPanelId | null,
   focusRequest: null as { nodeId: string; ts: number } | null,
+  energyEarnedHistory: [] as number[],
 };
 
 export const useGameStore = create<GameState>((set) => ({
@@ -491,6 +495,14 @@ export const useGameStore = create<GameState>((set) => ({
   setMaxDeployTier: (tier) => set({ maxDeployTier: tier }),
 
   setUserFaction: (faction) => set({ userFaction: faction }),
+
+  addCpuEnergy: (amount) =>
+    set((s) => ({ energy: Math.max(0, s.energy + amount) })),
+
+  recordEnergyEarned: (amount) =>
+    set((s) => ({
+      energyEarnedHistory: [...s.energyEarnedHistory.slice(-19), amount],
+    })),
 
   reset: () => {
     const state = useGameStore.getState();
