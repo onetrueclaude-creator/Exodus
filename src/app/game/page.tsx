@@ -18,6 +18,7 @@ import { AgentList } from '@/components/game/AgentList';
 import { startDebugListener } from '@/lib/debugListener';
 import { persistResources } from '@/lib/persistResources';
 import { createBrowserClient } from '@/lib/supabase/client';
+import type { Database } from '@/lib/supabase/types';
 import type { Planet } from '@/types/agent';
 import { useGameStore } from '@/store';
 import { MockChainService } from '@/services/chainService';
@@ -184,10 +185,11 @@ export default function GamePage() {
 
         // Hydrate planets and haiku from Supabase
         const supabase = createBrowserClient();
+        type PlanetRow = Database['public']['Tables']['planets']['Row']
         const { data: planets } = await supabase
           .from('planets')
           .select('*')
-          .eq('user_id', firstOwned.userId);
+          .eq('user_id', firstOwned.userId) as unknown as { data: PlanetRow[] | null }
 
         // Use direct setState to bypass persistPlanet/persistHaiku side-effects —
         // rows were just fetched from Supabase, re-inserting them would cause duplicate-key errors.
@@ -207,11 +209,12 @@ export default function GamePage() {
           }))
         });
 
+        type HaikuRow = Database['public']['Tables']['haiku_messages']['Row']
         const { data: haikus } = await supabase
           .from('haiku_messages')
           .select('*')
           .order('timestamp', { ascending: false })
-          .limit(50);
+          .limit(50) as unknown as { data: HaikuRow[] | null }
 
         haikus?.forEach(h => {
           useGameStore.setState(s => ({

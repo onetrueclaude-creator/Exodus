@@ -50,13 +50,16 @@ export function useGameRealtime() {
           setTimeout(() => reject(new Error('hydration timeout')), 5_000)
         )
 
-        const results = await Promise.race([
-          Promise.all([
-            supabase.from('chain_status').select('*').single(),
-            supabase.from('agents').select('*'),
-          ]),
-          deadline,
-        ])
+        type HydrateResult = [
+          { data: ChainStatusRow | null; error: unknown },
+          { data: AgentRow[] | null; error: unknown }
+        ]
+        const allPromise = Promise.all([
+          supabase.from('chain_status').select('*').single() as unknown as Promise<{ data: ChainStatusRow | null; error: unknown }>,
+          supabase.from('agents').select('*') as unknown as Promise<{ data: AgentRow[] | null; error: unknown }>,
+        ]) as Promise<HydrateResult>
+
+        const results = await Promise.race([allPromise, deadline]) as HydrateResult
 
         const [{ data: chainStatus }, { data: agents }] = results
 
