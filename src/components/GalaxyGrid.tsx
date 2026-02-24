@@ -221,27 +221,23 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     };
 
     if (!viewer) {
-      // No player viewer — draw all-pairs connections and show all nodes (network overview)
+      // Network overview: draw connections only between directly adjacent nodes
+      // (distance ≤ CELL_SIZE + 1). For 9 genesis nodes this gives 12 clean
+      // connections (4 radial spokes + 8 perimeter links) vs the dense 36-line mesh.
       for (let i = 0; i < agentList.length; i++) {
         for (let j = i + 1; j < agentList.length; j++) {
           const a = agentList[i];
           const b = agentList[j];
-          const distance = getDistance(a.position, b.position);
-          const strength = getConnectionStrength(distance, CONNECTION_THRESHOLD);
-          if (strength > 0) {
-            const clsA = classifyAgentCell(a);
-            const clsB = classifyAgentCell(b);
-            // Bold colored lines between same-faction nodes; grey for cross-faction/void
-            if (clsA.faction && clsA.faction === clsB.faction) {
-              world.addChild(createConnectionLine(a.position, b.position, strength, FACTION_COLORS[clsA.faction], true));
-            } else {
-              // Pick the faction color of whichever side has a faction, or neutral grey
-              const color = clsA.faction ? FACTION_COLORS[clsA.faction]
-                          : clsB.faction ? FACTION_COLORS[clsB.faction]
-                          : 0x667788;
-              world.addChild(createConnectionLine(a.position, b.position, strength, color, false));
-            }
-          }
+          if (getDistance(a.position, b.position) > CELL_SIZE + 1) continue;
+          const clsA = classifyAgentCell(a);
+          const clsB = classifyAgentCell(b);
+          const sameFaction = !!(clsA.faction && clsA.faction === clsB.faction);
+          const color = sameFaction
+            ? FACTION_COLORS[clsA.faction!]
+            : clsA.faction ? FACTION_COLORS[clsA.faction]
+            : clsB.faction ? FACTION_COLORS[clsB.faction]
+            : 0x667788;
+          world.addChild(createConnectionLine(a.position, b.position, 0.5, color, sameFaction));
         }
       }
       agentList.forEach(agent => {

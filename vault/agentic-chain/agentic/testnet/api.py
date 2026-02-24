@@ -68,7 +68,7 @@ from agentic.verification.dispute import DisputeOutcome
 
 # Block timing — dynamic difficulty: starts fast, grows each block (Proof of Energy)
 _last_block_time: float = 0.0  # epoch timestamp of last mined block; 0 = never mined
-_auto_mine: bool = False  # auto-mining OFF — users trigger blocks via Secure actions
+_auto_mine: bool = True  # auto-mining ON — blocks mine automatically at dynamic block time
 
 
 def _current_block_time_s() -> float:
@@ -479,6 +479,15 @@ def mine_block() -> MineResult:
         block_time=round(now, 3), next_block_at=round(now + current_block_time, 3),
         verification_outcome=result["outcome"],
         verifiers_assigned=result["assigned"], valid_proofs=result["valid"])
+
+
+@app.post("/api/automine")
+async def toggle_automine(enabled: bool = True) -> dict:
+    """Toggle automatic block mining. When enabled, blocks are mined at the
+    current dynamic block time (grows per block — Proof of Energy difficulty)."""
+    global _auto_mine
+    _auto_mine = enabled
+    return {"auto_mine": _auto_mine, "current_block_time": _current_block_time_s()}
 
 
 @app.post("/api/claim", response_model=ClaimNodeResult)

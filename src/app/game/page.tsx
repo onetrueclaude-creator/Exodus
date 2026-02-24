@@ -26,6 +26,7 @@ import type { ChainService } from '@/services/chainService';
 import { TestnetChainService } from '@/services/testnetChainService';
 import { isTestnetOnline } from '@/services/testnetApi';
 import { useGameRealtime } from '@/hooks/useGameRealtime';
+import { useTestnetWebSocket } from '@/hooks/useTestnetWebSocket';
 import { getDistance } from '@/lib/proximity';
 import { getFogLevel } from '@/lib/fog';
 import { getClarityLevel } from '@/lib/diplomacy';
@@ -38,6 +39,20 @@ const SUBSCRIPTION_EMPIRE_COLOR: Record<SubscriptionTier, number> = {
   COMMUNITY: 0xf59e0b,   // yellow-amber
   PROFESSIONAL: 0x00d4ff, // cyan
   MAX: 0x8b5cf6,          // purple
+};
+
+/** Map subscription tier to spiral galaxy faction arm */
+const SUBSCRIPTION_FACTION = {
+  COMMUNITY: 'free_community',    // N arm — white (free/open)
+  PROFESSIONAL: 'professional_pool', // W arm — cyan (matches professional theme)
+  MAX: 'treasury',                // E arm — gold (wealth/max tier)
+} as const;
+
+/** Map subscription tier to max deployable agent tier */
+const SUBSCRIPTION_MAX_TIER: Record<SubscriptionTier, AgentTier> = {
+  COMMUNITY: 'haiku',
+  PROFESSIONAL: 'opus',
+  MAX: 'opus',
 };
 
 /** Block time on chain — refresh grid every 60 seconds to sync with ledger */
@@ -63,6 +78,7 @@ export default function GamePage() {
   const chainMode = useGameStore((s) => s.chainMode);
 
   const { isReady } = useGameRealtime();
+  useTestnetWebSocket();
 
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [profileAgent, setProfileAgent] = useState<string | null>(null);
@@ -153,6 +169,26 @@ export default function GamePage() {
 
     async function init() {
       setInitializing(true);
+
+      // Check subscription — redirect to /subscribe if not yet chosen
+      try {
+        const statusRes = await fetch('/api/user/status');
+        if (statusRes.ok) {
+          const userStatus = await statusRes.json() as { subscription: SubscriptionTier | null };
+          if (!userStatus.subscription) {
+            window.location.href = '/subscribe';
+            return;
+          }
+          // Apply faction, empire color, and max deploy tier from subscription
+          const tier = userStatus.subscription;
+          const store = useGameStore.getState();
+          store.setUserFaction(SUBSCRIPTION_FACTION[tier]);
+          store.setEmpireColor(SUBSCRIPTION_EMPIRE_COLOR[tier]);
+          store.setMaxDeployTier(SUBSCRIPTION_MAX_TIER[tier]);
+        }
+      } catch {
+        // /api/user/status returned 401 (unauthenticated) or network error — continue with defaults
+      }
 
       // Try testnet API first, fall back to mock
       const online = await isTestnetOnline();
