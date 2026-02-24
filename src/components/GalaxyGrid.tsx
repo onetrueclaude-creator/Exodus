@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { Application, Container, Graphics } from 'pixi.js';
 import { useGameStore } from '@/store';
 import { createGridBackground } from './grid/GridBackground';
-import { createStarNode } from './grid/StarNode';
+import { createStarNode, setNodeDimmed } from './grid/StarNode';
 import { createConnectionLine } from './grid/ConnectionLine';
 import { createEmpireBorders } from './grid/EmpireBorders';
 import { getDistance, getConnectionStrength } from '@/lib/proximity';
@@ -40,6 +40,7 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
   const [zoom, setZoom] = useState(1);
   const [cursorCoords, setCursorCoords] = useState<{ x: number; y: number } | null>(null);
   const [appReady, setAppReady] = useState(false);
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
   const initApp = useCallback(async () => {
     if (!containerRef.current || appRef.current) return;
@@ -185,6 +186,12 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
         lastNodeTapMsRef.current = Date.now();
         onSelectAgent?.(agent.id);
       });
+      node.on('pointerover', () => {
+        setHoveredNodeId(agent.id);
+      });
+      node.on('pointerout', () => {
+        setHoveredNodeId(null);
+      });
       world.addChild(node);
     };
 
@@ -241,6 +248,41 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
       bordersRef.current = newBorders;
     }
   }, [appReady, turn, agents, currentUserId, empireColor]);
+
+  // Hover-dim: fade non-hovered nodes when a node is hovered
+  useEffect(() => {
+    const world = worldRef.current;
+    if (!world) return;
+    world.children.forEach((child) => {
+      if (child.label && typeof child.label === 'string') {
+        if (hoveredNodeId !== null && child.label !== hoveredNodeId) {
+          setNodeDimmed(child as Container, true);
+        } else {
+          setNodeDimmed(child as Container, false);
+        }
+      }
+    });
+  }, [hoveredNodeId]);
+
+  // Focus on a specific node when requested via store
+  const focusRequest = useGameStore((s) => s.focusRequest);
+  const clearFocusRequest = useGameStore((s) => s.clearFocusRequest);
+  useEffect(() => {
+    if (!focusRequest) return;
+    const world = worldRef.current;
+    const app = appRef.current;
+    const target = agents[focusRequest.nodeId];
+    if (!world || !app || !target) return;
+
+    const centerX = app.screen.width / 2;
+    const centerY = app.screen.height / 2;
+    world.position.set(
+      centerX - target.position.x * world.scale.x,
+      centerY - target.position.y * world.scale.x,
+    );
+    setCamera({ x: world.position.x, y: world.position.y }, world.scale.x);
+    clearFocusRequest();
+  }, [focusRequest, clearFocusRequest, setCamera]);
 
   // Center on home neural node
   const handleCenterHome = useCallback(() => {

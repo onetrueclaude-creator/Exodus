@@ -819,7 +819,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
 
   return (
     <div
-      className={`neural-terminal flex flex-col w-[380px] h-[720px] border ${tier.borderColor} rounded-xl overflow-hidden`}
+      className={`neural-terminal flex flex-col w-full h-full border ${tier.borderColor} rounded-xl overflow-hidden`}
       style={{ '--neural-glow': tier.glowColor } as React.CSSProperties}
     >
       {/* ── Header: Neural Link Identity ── */}

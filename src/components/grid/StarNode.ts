@@ -150,3 +150,9 @@ export function createStarNode(agent: Agent, fogLevel: FogLevel): Container {
 
   return container;
 }
+
+/** Modulate container alpha for hover-dim effect.
+ *  Pure function — no React, no store. */
+export function setNodeDimmed(container: Container, dimmed: boolean): void {
+  container.alpha = dimmed ? 0.4 : 1.0;
+}

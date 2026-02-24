@@ -22,14 +22,14 @@ export default function TabNavigation() {
   const setActiveTab = useGameStore((s) => s.setActiveTab);
 
   return (
-    <div className="h-10 bg-background/80 backdrop-blur-sm border-b border-card-border flex items-center px-4 gap-0.5 shrink-0">
+    <div className="h-8 bg-background/80 backdrop-blur-sm border-b border-card-border flex items-center px-4 gap-0.5 shrink-0">
       {TABS.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`relative px-4 py-2 text-xs font-semibold tracking-wide transition-all duration-200 focus-ring-cyan rounded-t ${
+            className={`relative px-3 py-1 text-xs font-semibold tracking-wide transition-all duration-200 focus-ring-cyan rounded-t ${
               isActive
                 ? 'text-accent-cyan'
                 : 'text-text-muted hover:text-text-secondary'

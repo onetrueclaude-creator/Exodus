@@ -6,9 +6,10 @@ interface TimeRewindProps {
   serverStartTime: number;
   currentTime: number;
   onTimeChange: (timestamp: number) => void;
+  alwaysExpanded?: boolean;
 }
 
-export default function TimeRewind({ serverStartTime, currentTime, onTimeChange }: TimeRewindProps) {
+export default function TimeRewind({ serverStartTime, currentTime, onTimeChange, alwaysExpanded }: TimeRewindProps) {
   const [expanded, setExpanded] = useState(false);
   const [isLive, setIsLive] = useState(true);
   const [selectedTime, setSelectedTime] = useState(currentTime);
@@ -37,7 +38,7 @@ export default function TimeRewind({ serverStartTime, currentTime, onTimeChange 
     });
   };
 
-  if (!expanded) {
+  if (!expanded && !alwaysExpanded) {
     return (
       <button
         onClick={() => setExpanded(true)}
