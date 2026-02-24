@@ -58,15 +58,28 @@ from agentic.consensus.validator import Validator
 from agentic.galaxy.allocator import CoordinateAllocator
 from agentic.galaxy.coordinate import GridCoordinate, resource_density, storage_slots
 from agentic.ledger.transaction import BirthTx, validate_birth
-from agentic.params import BASE_BIRTH_COST, BLOCK_TIME_MS, GRID_MIN, GRID_MAX, NODE_GRID_SPACING
+from agentic.params import (
+    BASE_BIRTH_COST, BLOCK_TIME_MS, GRID_MIN, GRID_MAX, NODE_GRID_SPACING,
+    INITIAL_BLOCK_TIME_S, BLOCK_TIME_GROWTH_S, MAX_BLOCK_TIME_S, HALVING_INTERVAL,
+)
 from agentic.testnet.genesis import GenesisState, create_genesis
 from agentic.verification.agent import VerificationAgent, AgentState
 from agentic.verification.dispute import DisputeOutcome
 
-# Block timing — enforces BLOCK_TIME_MS interval between blocks
-_BLOCK_TIME_S = BLOCK_TIME_MS / 1000.0  # 60s
+# Block timing — dynamic difficulty: starts fast, grows each block (Proof of Energy)
 _last_block_time: float = 0.0  # epoch timestamp of last mined block; 0 = never mined
 _auto_mine: bool = False  # auto-mining OFF — users trigger blocks via Secure actions
+
+
+def _current_block_time_s() -> float:
+    """Compute the current required interval between blocks (Proof of Energy difficulty).
+
+    Starts at INITIAL_BLOCK_TIME_S at genesis and grows by BLOCK_TIME_GROWTH_S per
+    block mined, capped at MAX_BLOCK_TIME_S — mirroring Bitcoin's increasing difficulty.
+    """
+    blocks = _genesis.mining_engine.total_blocks_processed if _genesis else 0
+    raw = INITIAL_BLOCK_TIME_S + blocks * BLOCK_TIME_GROWTH_S
+    return min(raw, MAX_BLOCK_TIME_S)
 
 
 def _snap_to_grid(v: int) -> int:
@@ -81,12 +94,13 @@ def _snap_to_grid(v: int) -> int:
 def _next_block_in() -> float:
     """Seconds until the next block can be mined.
 
-    Returns -1.0 when no block has ever been mined (chain idle, ∞ wait).
+    Returns -1.0 when no block has ever been mined (chain is idle at genesis).
+    The required interval grows with each block — Proof of Energy difficulty.
     """
     if _last_block_time == 0.0:
         return -1.0  # sentinel: chain hasn't started mining yet
     elapsed = max(0.0, time.time() - _last_block_time)
-    return round(max(0.0, _BLOCK_TIME_S - elapsed), 1)
+    return round(max(0.0, _current_block_time_s() - elapsed), 1)
 
 # ---------------------------------------------------------------------------
 # Pydantic response models
@@ -100,7 +114,8 @@ class TestnetStatus(BaseModel):
     community_pool_remaining: float
     blocks_processed: int
     total_mined: float
-    next_block_in: float  # seconds until next block can be mined
+    next_block_in: float      # seconds until next block can be mined (-1 = chain idle)
+    current_block_time: float  # current required interval between blocks (Proof of Energy)
 
 
 class CoordinateInfo(BaseModel):
@@ -276,10 +291,10 @@ async def _start_auto_miner() -> None:
 
 
 async def _auto_mine_loop() -> None:
-    """Mine a block every BLOCK_TIME_S when there are active claims."""
+    """Mine a block at the current dynamic block time when there are active claims."""
     global _last_block_time
     while True:
-        await asyncio.sleep(_BLOCK_TIME_S)
+        await asyncio.sleep(_current_block_time_s())
         if not _auto_mine or _genesis is None:
             continue
         g = _genesis
@@ -359,7 +374,8 @@ def get_status() -> TestnetStatus:
         community_pool_remaining=g.community_pool.remaining,
         blocks_processed=g.mining_engine.total_blocks_processed,
         total_mined=g.mining_engine.total_rewards_distributed,
-        next_block_in=_next_block_in(),  # -1.0 = chain idle (no block mined yet)
+        next_block_in=_next_block_in(),       # -1.0 = chain idle (no block mined yet)
+        current_block_time=_current_block_time_s(),
     )
 
 
@@ -450,16 +466,17 @@ def mine_block() -> MineResult:
     global _last_block_time
     now = time.time()
     elapsed = now - _last_block_time
-    if _last_block_time > 0 and elapsed < _BLOCK_TIME_S:
-        remaining = _BLOCK_TIME_S - elapsed
+    current_block_time = _current_block_time_s()
+    if _last_block_time > 0 and elapsed < current_block_time:
+        remaining = current_block_time - elapsed
         raise HTTPException(
             status_code=429,
-            detail=f"Block too early. {remaining:.1f}s remaining (block time: {_BLOCK_TIME_S:.0f}s)")
+            detail=f"Block too early. {remaining:.1f}s remaining (block time: {current_block_time:.0f}s)")
     g = _g()
     result = _do_mine(g)
     return MineResult(
         block_number=result["block_number"], yields=result["yields"],
-        block_time=round(now, 3), next_block_at=round(now + _BLOCK_TIME_S, 3),
+        block_time=round(now, 3), next_block_at=round(now + current_block_time, 3),
         verification_outcome=result["outcome"],
         verifiers_assigned=result["assigned"], valid_proofs=result["valid"])
 

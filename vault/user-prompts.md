@@ -72,3 +72,44 @@ All prompts, numbered consecutively across sessions.
 46. [2026-02-23 18:44:30 UTC] push to remote after
 [A] [2026-02-23 19:31:33 UTC] All pushed. Here's a summary of everything done:
 47. [2026-02-23 19:52:00 UTC] push to remote
+48. [2026-02-23 19:40:23 UTC] [Request interrupted by user for tool use]
+49. [2026-02-24 04:55:49 UTC] <command-message>ralph-loop:help</command-message>
+   <command-name>/ralph-loop:help</command-name>
+50. [2026-02-24 04:57:17 UTC] read user-prompts.md
+[A] [2026-02-24 04:57:23 UTC] Ralph Loop implements the **Ralph Wiggum technique** — an iterative development methodology where the same prompt is fed to Claude repeatedly, allowing it to see its own previous work and improve incrementally.
+51. [2026-02-24 04:57:23 UTC] continue where we left of
+[A] [2026-02-24 04:58:21 UTC] All 9 tasks from the Playwright plan are committed.
+52. [2026-02-24 05:01:36 UTC] merge the PR
+[A] [2026-02-24 05:04:04 UTC] Now commit the merge and push.
+53. [2026-02-24 05:05:12 UTC] start the dev server
+[A] [2026-02-24 05:05:25 UTC] PR #3 is merged. Here's what happened:
+54. [2026-02-24 05:05:28 UTC] let's then continue working on the supabase-expert skill
+[A] [2026-02-24 05:11:52 UTC] The game page has no server-side auth guard — the middleware bypass is sufficient.
+[A] [2026-02-24 05:11:59 UTC] 1. **`supabase-expert` skill** — committed with full schema reference + RLS patterns in `references/`
+55. [2026-02-24 05:14:23 UTC] it is looking good
+[A] [2026-02-24 05:14:24 UTC] That's the output from the **old** dev server instance (before the env vars were added) — it shows the Supabase error, then at the bottom `Reload env: .env.local` and `GET / 200` confirming it hot-reloaded the new env vars successfully before shuttin
+56. [2026-02-24 05:14:48 UTC] from now on you are allowed to invoke the supase-expert skill to verify and authentice whether the database is working or not
+[A] [2026-02-24 05:14:50 UTC] Great! The dev auth bypass is working then.
+57. [2026-02-24 05:14:54 UTC] lets continue with playwrights
+[A] [2026-02-24 05:54:39 UTC] **22/22 passing** in 14.9 seconds.
+[A] [2026-02-24 05:54:47 UTC] That's a stale background task from earlier in this session — it's the run that showed the 2 failures before we diagnosed and fixed them.
+58. [2026-02-24 05:56:43 UTC] I dont see the 2d grid rendering
+[A] [2026-02-24 06:06:12 UTC] Fonts are hanging on network load.
+59. [2026-02-24 06:07:25 UTC] fix the energy tick bug
+[A] [2026-02-24 06:10:18 UTC] 22/22. Both bugs fixed:
+60. [2026-02-24 06:14:17 UTC] still the map does not load, perhaps is it because the testnet blockchain has not been brought to live from genesis block
+[A] [2026-02-24 06:34:36 UTC] **22/22 tests pass in 26.4s.** All clean, no flakiness.
+[A] [2026-02-24 06:34:47 UTC] That's a stale notification from task `b65cfd4` — the test run that initially showed 6 failures (before the `firstOwned` + fixture timing fixes).
+[A] [2026-02-24 06:34:50 UTC] That's a stale notification from task `b65cfd4` — the test run that initially showed 6 failures (before the `firstOwned` + fixture timing fixes).
+[A] [2026-02-24 06:34:53 UTC] Also stale — `b9fe38c` was the 8/8 pass run for specs 01-03, which confirmed the fix before the final full-suite run (`bc47641`, 22/22).
+[A] [2026-02-24 06:34:56 UTC] Also stale — `bc47641` was the final 22/22 full-suite run, already read and reported in the session above.
+61. [2026-02-24 06:42:47 UTC] commit this
+[A] [2026-02-24 06:44:00 UTC] I can see the current game state.
+[A] [2026-02-24 06:56:59 UTC] Good. Now, given the volume of incoming requests, let me triage everything clearly:
+62. [2026-02-24 06:57:02 UTC] check user-prompts hooks
+63. [2026-02-24 ~06:58 UTC] [RECOVERED — was 3217 chars, exceeded old 1500-char watcher limit] After all is saved do this.
+   Major UI gameplay update, the 2d grid map is to be revitalized. A 4 legged spiraling galaxy shaped
+   grid. Grid view starts focused at (0,0,time). 4 arms: Free Community (up-left/white), Founder Pool
+   (down), Treasury (right), Professional Pool (left). Nodes at grid square centers. 1 AGNTC coin per
+   grid cell. Fog of war per faction. Free tier sees only upper-left quadrant. Origin (0,0) = highest
+   Secure Strength. New user = 1 new AGNTC minted. [Full text saved to vault/seed.md]
