@@ -51,9 +51,9 @@ describe('MinigridLayer (static logic — no PixiJS instantiation in unit tests)
 
 describe('MinigridLayer zoom threshold', () => {
   it('cellAlpha hidden returns 0 regardless of fill — models zoom < 3 no-draw behaviour', () => {
-    // When render() is called with zoom < 3 it clears and returns early.
-    // Cells with fogLevel 'hidden' also produce alpha 0 (same outcome: nothing drawn).
-    // This pair of assertions documents both paths through the zoom / fog guard.
+    // The zoom guard now lives in GalaxyGrid (not MinigridLayer.render).
+    // Cells with fogLevel 'hidden' produce alpha 0 (nothing drawn).
+    // This pair of assertions documents the fog-hidden no-draw path.
     expect(MinigridLayer.cellAlpha('hidden', 0)).toBe(0)
     expect(MinigridLayer.cellAlpha('hidden', 1)).toBe(0)
   })
