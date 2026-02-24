@@ -8,6 +8,30 @@ import { getDistance } from '@/lib/proximity';
 import { visualToChain } from '@/services/testnetChainService';
 import { persistResources } from '@/lib/persistResources';
 
+/* ── Bubble UI Constants ──────────────────────────────────── */
+
+const CIRCLE_NUMBERS = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨'];
+
+/* ── NCP Preset Messages ──────────────────────────────────── */
+
+const NCP_PRESETS = [
+  'Signal confirmed — standing by.',
+  'Transmission received and logged.',
+  'Awaiting your next directive.',
+  'Node integrity verified.',
+  'Chain state synchronized.',
+];
+
+/* ── Deploy Intro Presets ─────────────────────────────────── */
+
+const INTRO_PRESETS = [
+  'Sub-agent online. Awaiting directives.',
+  'Neural link established. Ready.',
+  'Node initialized. Network active.',
+  'Operational. Signal range nominal.',
+  '(No greeting — deploy silently)',
+];
+
 /* ── Agent Action Definitions ─────────────────────────────── */
 
 interface AgentAction {
@@ -476,6 +500,8 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+
+
   // Auto-start deploy flow when initialDeployTarget is provided
   useEffect(() => {
     if (!initialDeployTarget || deployableTiers.length === 0) return;
@@ -783,6 +809,88 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
     setProcessing(false);
   };
 
+
+  /* ── Keyboard 1-9 for bubble choices ─────────────────────────────────── */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const num = parseInt(e.key);
+      if (isNaN(num) || num < 1 || num > 9) return;
+
+      // NCP compose: select preset by number
+      if (msgStep === 'compose') {
+        const preset = NCP_PRESETS[num - 1];
+        if (preset) setMsgText(preset);
+        return;
+      }
+
+      // Deploy intro: select preset by number
+      if (deployStep === 'set-intro') {
+        const preset = INTRO_PRESETS[num - 1];
+        if (preset) setDeployIntro(preset === '(No greeting — deploy silently)' ? '' : preset);
+        return;
+      }
+
+      // Top-level menu
+      if (!msgStep && !deployStep && !pendingAction && menuLevel === null) {
+        const deployAction = actions.find(a => a.id === 'deploy');
+        const topItems: Array<() => void> = [];
+        if (deployAction && deployableTiers.length > 0) topItems.push(() => selectAction(deployAction));
+        topItems.push(() => setMenuLevel('blockchain'));
+        const stakingAction = actions.find(a => a.id === 'adjust-staked-cpu');
+        if (stakingAction) topItems.push(() => selectAction(stakingAction));
+        topItems.push(() => setMenuLevel('network-params'));
+        topItems.push(() => setMenuLevel('settings'));
+        const handler = topItems[num - 1];
+        if (handler) handler();
+        return;
+      }
+
+      // Blockchain sub-menu
+      if (menuLevel === 'blockchain' && !processing) {
+        const writeAction = actions.find(a => a.id === 'send-message' || a.id === 'diplomatic-msg');
+        const readAction = actions.find(a => a.id === 'deep-scan' || a.id === 'scan-local' || a.id === 'ping' || a.id === 'report-status');
+        const statsAction = actions.find(a => a.id === 'report-status');
+        const blockchainItems: Array<() => void> = [
+          () => { setMenuLevel('secure-flow'); setSecureConfig(null); },
+        ];
+        if (writeAction) blockchainItems.push(() => { setMenuLevel(null); selectAction(writeAction); });
+        if (readAction) blockchainItems.push(() => { setMenuLevel(null); selectAction(readAction); });
+        blockchainItems.push(() => { addMsg('system', 'Transact: Coming soon.'); setMenuLevel(null); });
+        if (statsAction) blockchainItems.push(() => { setMenuLevel(null); selectAction(statsAction); });
+        const fn = blockchainItems[num - 1];
+        if (fn) fn();
+        return;
+      }
+
+      // Sub-choices (pendingAction)
+      if (pendingAction?.subChoices) {
+        const choice = pendingAction.subChoices[num - 1];
+        if (choice) selectSubChoice(choice.id, choice.label);
+        return;
+      }
+
+      // Secure flow: pick cycles
+      if (menuLevel === 'secure-flow' && secureConfig === null) {
+        const cycleOptions = [1, 5, 10, 20];
+        const cycles = cycleOptions[num - 1];
+        if (cycles !== undefined) {
+          const baseCostPerCycle = 50;
+          const densityMultiplier = agent.density ? Math.max(0.5, 2 - agent.density) : 1;
+          const totalCost = Math.round(cycles * baseCostPerCycle * densityMultiplier);
+          if (energy >= totalCost) setSecureConfig({ cycles });
+        }
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [
+    msgStep, deployStep, pendingAction, menuLevel, secureConfig,
+    actions, deployableTiers, processing, energy, agent.density,
+    selectAction, selectSubChoice, addMsg,
+  ]);
+
   const selectMsgTarget = (target: { id: string; x: number; y: number; name: string }) => {
     if (processing) return;
     setMsgTarget({ id: target.id, x: target.x, y: target.y });
@@ -1004,35 +1112,36 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
             </button>
           </div>
         ) : msgStep === 'compose' ? (
-          <div className="p-3 space-y-2.5">
+          <div className="p-3 space-y-1.5">
             <div className="text-[9px] text-text-muted/60 tracking-[0.15em]" style={{ fontFamily: "'Fira Code', monospace" }}>
-              COMPOSE NCP
+              COMPOSE NCP — SELECT TRANSMISSION
             </div>
-            <input
-              type="text"
-              value={msgText}
-              onChange={(e) => setMsgText(e.target.value.slice(0, 140))}
-              placeholder="Encode neural packet..."
-              autoFocus
-              className="w-full bg-white/[0.02] border border-white/[0.06] rounded-lg px-3 py-2.5 text-[11px] text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-cyan/30 transition-all duration-300"
-              style={{ fontFamily: "'Fira Code', monospace" }}
-              onKeyDown={(e) => { if (e.key === 'Enter' && msgText.trim()) executeSendMessage(); }}
-            />
-            <div className="flex justify-between items-center">
-              <span className="text-[9px] text-text-muted/30" style={{ fontFamily: "'Fira Code', monospace" }}>{msgText.length}/140</span>
-              <div className="flex gap-2">
-                <button onClick={() => { setMsgStep('pick-target'); setMsgText(''); }} className="px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                  {'\u2190'} back
-                </button>
-                <button
-                  onClick={executeSendMessage}
-                  disabled={!msgText.trim()}
-                  className="px-4 py-1.5 rounded-lg text-[10px] font-semibold bg-accent-purple/10 text-accent-purple border border-accent-purple/20 hover:bg-accent-purple/20 hover:border-accent-purple/40 disabled:opacity-15 disabled:cursor-not-allowed transition-all duration-300"
-                  style={{ fontFamily: "'Outfit', sans-serif" }}
-                >
-                  Transmit
-                </button>
-              </div>
+            {NCP_PRESETS.map((preset, i) => (
+              <button
+                key={i}
+                onClick={() => { setMsgText(preset); }}
+                className={`terminal-choice-bubble w-full flex items-center gap-2 px-3 py-2 rounded-md text-left transition-all duration-200 hover:bg-white/[0.03] border ${msgText === preset ? 'border-accent-cyan/30 bg-accent-cyan/5' : 'border-transparent'}`}
+              >
+                <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  {CIRCLE_NUMBERS[i]}
+                </span>
+                <span className="text-[11px] text-text-primary/80" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  {preset}
+                </span>
+              </button>
+            ))}
+            <div className="flex gap-2 pt-1">
+              <button onClick={() => { setMsgStep('pick-target'); setMsgText(''); }} className="px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                {'\u2190'} back
+              </button>
+              <button
+                onClick={executeSendMessage}
+                disabled={!msgText.trim()}
+                className="flex-1 px-4 py-1.5 rounded-lg text-[10px] font-semibold bg-accent-purple/10 text-accent-purple border border-accent-purple/20 hover:bg-accent-purple/20 hover:border-accent-purple/40 disabled:opacity-15 disabled:cursor-not-allowed transition-all duration-300"
+                style={{ fontFamily: "'Outfit', sans-serif" }}
+              >
+                Transmit{msgText ? ` — ${msgText.slice(0, 24)}${msgText.length > 24 ? '…' : ''}` : ''}
+              </button>
             </div>
           </div>
 
@@ -1146,36 +1255,41 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
             )}
 
             {deployStep === 'set-intro' && (
-              <div className="px-3 pb-3 space-y-2.5">
-                <input
-                  type="text"
-                  value={deployIntro}
-                  onChange={(e) => setDeployIntro(e.target.value.slice(0, 140))}
-                  placeholder="Neural node greeting..."
-                  autoFocus
-                  className="w-full bg-white/[0.02] border border-white/[0.06] rounded-lg px-3 py-2.5 text-[11px] text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-cyan/30 transition-all duration-300"
-                  style={{ fontFamily: "'Fira Code', monospace" }}
-                />
-                <div className="flex justify-between items-center">
-                  <span className="text-[9px] text-text-muted/30" style={{ fontFamily: "'Fira Code', monospace" }}>{deployIntro.length}/140</span>
-                  <div className="flex gap-2">
-                    <button onClick={() => { setDeployStep('pick-model'); setDeployIntro(''); }} className="px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      {'\u2190'} back
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (deployTarget?.tier) {
-                          addMsg('user', deployIntro || '(no greeting)');
-                          executeDeploy(deployTarget.tier, deployTarget);
-                          setDeployIntro('');
-                        }
-                      }}
-                      className={`px-4 py-1.5 rounded-lg text-[10px] font-semibold ${tier.bg}/10 ${tier.accent} border ${tier.borderColor} hover:${tier.bg}/20 transition-all duration-300`}
-                      style={{ fontFamily: "'Outfit', sans-serif" }}
-                    >
-                      Deploy
-                    </button>
-                  </div>
+              <div className="px-3 pb-3 space-y-1.5">
+                <div className="text-[9px] text-text-muted/60 tracking-[0.15em] pt-1" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  SET GREETING — SELECT MESSAGE
+                </div>
+                {INTRO_PRESETS.map((preset, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setDeployIntro(preset === '(No greeting — deploy silently)' ? '' : preset)}
+                    className={`terminal-choice-bubble w-full flex items-center gap-2 px-3 py-2 rounded-md text-left transition-all duration-200 hover:bg-white/[0.03] border ${deployIntro === (preset === '(No greeting — deploy silently)' ? '' : preset) ? tier.borderColor + ' bg-white/[0.03]' : 'border-transparent'}`}
+                  >
+                    <span className={`text-[11px] ${tier.accent} opacity-60 shrink-0`} style={{ fontFamily: "'Fira Code', monospace" }}>
+                      {CIRCLE_NUMBERS[i]}
+                    </span>
+                    <span className="text-[11px] text-text-primary/80" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      {preset}
+                    </span>
+                  </button>
+                ))}
+                <div className="flex gap-2 pt-1">
+                  <button onClick={() => { setDeployStep('pick-model'); setDeployIntro(''); }} className="px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    {'\u2190'} back
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (deployTarget?.tier) {
+                        addMsg('user', deployIntro || '(no greeting)');
+                        executeDeploy(deployTarget.tier, deployTarget);
+                        setDeployIntro('');
+                      }
+                    }}
+                    className={`flex-1 px-4 py-1.5 rounded-lg text-[10px] font-semibold ${tier.bg}/10 ${tier.accent} border ${tier.borderColor} hover:${tier.bg}/20 transition-all duration-300`}
+                    style={{ fontFamily: "'Outfit', sans-serif" }}
+                  >
+                    Deploy
+                  </button>
                 </div>
               </div>
             )}
@@ -1213,60 +1327,73 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
             {(menuLevel === null || menuLevel === 'top') && (() => {
               const deployAction = actions.find(a => a.id === 'deploy');
               const canDeploy = deployAction && deployableTiers.length > 0 && energy >= deployAction.cpuCost;
+              let topIdx = 0;
               return (
                 <>
                   {/* Deploy Agent */}
-                  {deployAction && deployableTiers.length > 0 && (
-                    <button
-                      onClick={() => selectAction(deployAction)}
-                      disabled={processing || !canDeploy}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
-                        !canDeploy ? 'opacity-20 cursor-not-allowed' : 'hover:bg-white/[0.03] cursor-pointer'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-orange-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u2604'}</span>
-                        <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                          Deploy Agent
+                  {deployAction && deployableTiers.length > 0 && (() => {
+                    const n = topIdx++;
+                    return (
+                      <button
+                        onClick={() => selectAction(deployAction)}
+                        disabled={processing || !canDeploy}
+                        className={`terminal-choice-bubble w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
+                          !canDeploy ? 'opacity-20 cursor-not-allowed' : 'hover:bg-white/[0.03] cursor-pointer'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>{CIRCLE_NUMBERS[n]}</span>
+                          <span className="text-[10px] text-orange-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u2604'}</span>
+                          <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                            Deploy Agent
+                          </span>
+                        </div>
+                        <span className="text-[9px] text-yellow-400/40 group-hover:text-yellow-400/70 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                          {deployAction.cpuCost}cpu
                         </span>
-                      </div>
-                      <span className="text-[9px] text-yellow-400/40 group-hover:text-yellow-400/70 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                        {deployAction.cpuCost}cpu
-                      </span>
-                    </button>
-                  )}
+                      </button>
+                    );
+                  })()}
 
                   {/* Blockchain Protocols */}
-                  <button
-                    onClick={() => setMenuLevel('blockchain')}
-                    disabled={processing}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-emerald-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u26D3'}</span>
-                      <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                        Blockchain Protocols
-                      </span>
-                    </div>
-                    <span className="text-[9px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      {'\u203A'}
-                    </span>
-                  </button>
+                  {(() => {
+                    const n = topIdx++;
+                    return (
+                      <button
+                        onClick={() => setMenuLevel('blockchain')}
+                        disabled={processing}
+                        className="terminal-choice-bubble w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>{CIRCLE_NUMBERS[n]}</span>
+                          <span className="text-[10px] text-emerald-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u26D3'}</span>
+                          <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                            Blockchain Protocols
+                          </span>
+                        </div>
+                        <span className="text-[9px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                          {'\u203A'}
+                        </span>
+                      </button>
+                    );
+                  })()}
 
                   {/* Adjust Securing Operations Rate */}
                   {(() => {
                     const stakingAction = actions.find(a => a.id === 'adjust-staked-cpu');
                     if (!stakingAction) return null;
                     const affordable = energy >= stakingAction.cpuCost;
+                    const n = topIdx++;
                     return (
                       <button
                         onClick={() => affordable && selectAction(stakingAction)}
                         disabled={processing || !affordable}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
+                        className={`terminal-choice-bubble w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
                           !affordable ? 'opacity-20 cursor-not-allowed' : 'hover:bg-white/[0.03] cursor-pointer'
                         }`}
                       >
                         <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>{CIRCLE_NUMBERS[n]}</span>
                           <span className="text-[10px] text-yellow-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u26A1'}</span>
                           <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                             Adjust Securing Ops Rate
@@ -1282,38 +1409,50 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                   })()}
 
                   {/* Adjust Network Parameters */}
-                  <button
-                    onClick={() => setMenuLevel('network-params')}
-                    disabled={processing}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-orange-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u2699'}</span>
-                      <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                        Adjust Network Parameters
-                      </span>
-                    </div>
-                    <span className="text-[9px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      {'\u203A'}
-                    </span>
-                  </button>
+                  {(() => {
+                    const n = topIdx++;
+                    return (
+                      <button
+                        onClick={() => setMenuLevel('network-params')}
+                        disabled={processing}
+                        className="terminal-choice-bubble w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>{CIRCLE_NUMBERS[n]}</span>
+                          <span className="text-[10px] text-orange-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u2699'}</span>
+                          <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                            Adjust Network Parameters
+                          </span>
+                        </div>
+                        <span className="text-[9px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                          {'\u203A'}
+                        </span>
+                      </button>
+                    );
+                  })()}
 
                   {/* Settings */}
-                  <button
-                    onClick={() => setMenuLevel('settings')}
-                    disabled={processing}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-text-secondary opacity-50 group-hover:opacity-90 transition-opacity">{'\u2699'}</span>
-                      <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                        Settings
-                      </span>
-                    </div>
-                    <span className="text-[9px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      {'\u203A'}
-                    </span>
-                  </button>
+                  {(() => {
+                    const n = topIdx++;
+                    return (
+                      <button
+                        onClick={() => setMenuLevel('settings')}
+                        disabled={processing}
+                        className="terminal-choice-bubble w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>{CIRCLE_NUMBERS[n]}</span>
+                          <span className="text-[10px] text-text-secondary opacity-50 group-hover:opacity-90 transition-opacity">{'\u2699'}</span>
+                          <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                            Settings
+                          </span>
+                        </div>
+                        <span className="text-[9px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                          {'\u203A'}
+                        </span>
+                      </button>
+                    );
+                  })()}
                 </>
               );
             })()}
