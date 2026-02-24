@@ -43,9 +43,10 @@ export function createFactionBackground(
     for (let wy = -height; wy < height; wy += cellSize) {
       // Convert world cell origin to classifier grid coordinates (cell index)
       const gx = Math.round((wx + cellSize / 2) / cellSize);
-      const gy = Math.round((wy + cellSize / 2) / cellSize);
+      // Negate gy: PixiJS y-down → SpiralClassifier math y-up convention
+      const gyMath = -Math.round((wy + cellSize / 2) / cellSize);
 
-      const classification = classifyCell(gx, gy, userFaction);
+      const classification = classifyCell(gx, gyMath, userFaction);
 
       if (classification.fogLevel === 'hidden') {
         // Very dark, near-invisible tint for void regions
