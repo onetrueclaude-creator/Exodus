@@ -9,18 +9,23 @@ export interface CellClassification {
 }
 
 // Arm origin angles (radians). N/E/S/W at center, twist CCW outward.
+// Each arm is nudged +0.006° CCW so that cells exactly on the 45° boundary
+// between two arms resolve to the clockwise arm — matching the game's faction
+// territory assignment (NE→treasury, NW→free_community, SE→founder_pool, SW→pro).
+const _CW_BIAS = 0.0001  // radians ≈ 0.006° — visually imperceptible
 const ARM_ANGLES: Record<Faction, number> = {
-  free_community:    Math.PI / 2,   // 90°  N
-  treasury:          0,              // 0°   E
-  founder_pool:     -Math.PI / 2,   // 270° S
-  professional_pool: Math.PI,       // 180° W
+  free_community:    Math.PI / 2 + _CW_BIAS,   // 90° N
+  treasury:          0           + _CW_BIAS,   // 0°  E
+  founder_pool:     -Math.PI / 2 + _CW_BIAS,   // S
+  professional_pool: Math.PI     + _CW_BIAS,   // 180° W
 }
 
 const ARM_ENTRIES = Object.entries(ARM_ANGLES) as [Faction, number][]
 
-const ARM_HALF_WIDTH = 25 * Math.PI / 180  // ±25°
-// R_FLAT: inner flat zone radius. Below this, no spiral twist — genesis nodes stay in
-// their cardinal faction arms. Kept small so the spiral visibly starts from center.
+// ARM_HALF_WIDTH = 45°: each arm covers exactly 90°, four arms tile the full 360°
+// with no gaps. Faction borders always touch — no factionless void cells exist.
+const ARM_HALF_WIDTH = Math.PI / 4   // 45° — full-coverage spiral wedge sectors
+// R_FLAT: inner flat zone radius. Below this, no spiral twist.
 const R_FLAT = 3.0
 const R_MAX = 324.0    // grid boundary (±3240 blockchain / 10 NODE_GRID_SPACING)
 const SPIRAL_TURNS = 0.15  // loose quarter-ish turn CCW across the full grid

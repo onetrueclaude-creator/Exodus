@@ -27,11 +27,12 @@ describe('SpiralClassifier', () => {
     expect(r.fogLevel).toBe('hazy')
   })
 
-  it('classifies inter-arm void as hidden', () => {
-    // 45° = exactly between N arm (90°) and E arm (0°) at small r
+  it('classifies 45° diagonal as treasury (CW arm wins)', () => {
+    // 45° is exactly between N arm (free_community, 90°) and E arm (treasury, 0°).
+    // With ARM_HALF_WIDTH=45° and tiny CW bias, treasury (the CW arm) wins.
     const r = classifyCell(5, 5, 'free_community')
-    expect(r.faction).toBeNull()
-    expect(r.fogLevel).toBe('hidden')
+    expect(r.faction).toBe('treasury')
+    expect(r.fogLevel).toBe('hazy')
   })
 
   it('armStrength is higher on spine than near arm edge', () => {

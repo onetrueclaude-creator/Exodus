@@ -221,7 +221,7 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     };
 
     if (!viewer) {
-      // No player viewer — draw all-pairs faction connections and show all nodes
+      // No player viewer — draw all-pairs connections and show all nodes (network overview)
       for (let i = 0; i < agentList.length; i++) {
         for (let j = i + 1; j < agentList.length; j++) {
           const a = agentList[i];
@@ -231,11 +231,14 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
           if (strength > 0) {
             const clsA = classifyAgentCell(a);
             const clsB = classifyAgentCell(b);
-            // Only draw bold colored lines between same-faction nodes
+            // Bold colored lines between same-faction nodes; grey for cross-faction/void
             if (clsA.faction && clsA.faction === clsB.faction) {
               world.addChild(createConnectionLine(a.position, b.position, strength, FACTION_COLORS[clsA.faction], true));
             } else {
-              const color = clsA.faction ? FACTION_COLORS[clsA.faction] : 0x334466;
+              // Pick the faction color of whichever side has a faction, or neutral grey
+              const color = clsA.faction ? FACTION_COLORS[clsA.faction]
+                          : clsB.faction ? FACTION_COLORS[clsB.faction]
+                          : 0x667788;
               world.addChild(createConnectionLine(a.position, b.position, strength, color, false));
             }
           }
@@ -243,7 +246,9 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
       }
       agentList.forEach(agent => {
         const cls = classifyAgentCell(agent);
-        addClickableStarNode(agent, cls.fogLevel);
+        // In network-overview mode all nodes are visible — void nodes show as hazy (never hidden)
+        const fogLevel = cls.fogLevel === 'hidden' ? 'hazy' : cls.fogLevel;
+        addClickableStarNode(agent, fogLevel);
       });
       return;
     }

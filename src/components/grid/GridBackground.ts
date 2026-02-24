@@ -15,11 +15,15 @@ export function createGridBackground(width: number, height: number, cellSize: nu
 
   grid.setStrokeStyle({ width: 1, color: lineColor, alpha: lineAlpha });
 
-  for (let x = -width - half; x <= width + half; x += cellSize) {
+  // Phase-align start so lines land at ±half, ±3*half, ... (i.e. half + k*cellSize)
+  const startX = Math.ceil((-width - half) / cellSize) * cellSize + half;
+  const startY = Math.ceil((-height - half) / cellSize) * cellSize + half;
+
+  for (let x = startX; x <= width + half; x += cellSize) {
     grid.moveTo(x, -height);
     grid.lineTo(x, height);
   }
-  for (let y = -height - half; y <= height + half; y += cellSize) {
+  for (let y = startY; y <= height + half; y += cellSize) {
     grid.moveTo(-width, y);
     grid.lineTo(width, y);
   }
@@ -48,9 +52,12 @@ export function createFactionBackground(
   const g = new Graphics();
   const half = cellSize / 2;
 
-  // Cells start at -half so cell (gx=0) spans from -half to +half, centered at 0
-  for (let wx = -width - half; wx < width + half; wx += cellSize) {
-    for (let wy = -height - half; wy < height + half; wy += cellSize) {
+  // Phase-align: cell origins at gx*cellSize - half so centers land at gx*cellSize
+  const startWX = Math.ceil(-width / cellSize) * cellSize - half;
+  const startWY = Math.ceil(-height / cellSize) * cellSize - half;
+
+  for (let wx = startWX; wx < width + half; wx += cellSize) {
+    for (let wy = startWY; wy < height + half; wy += cellSize) {
       // Cell center in world space
       const centerX = wx + half;
       const centerY = wy + half;
