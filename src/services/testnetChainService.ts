@@ -2,40 +2,50 @@
  * TestnetChainService — bridges the testnet API to the frontend's ChainService interface.
  *
  * Maps blockchain claims (x,y coordinates with owners) to the frontend's Agent model.
- * Generates unclaimed star system nodes by deterministically sampling the chain grid.
  *
  * Coordinate mapping:
- *   Chain grid:    -3240 to 3240  (6481 × 6481 = ~42M coordinates)
- *   Frontend grid: -4000 to 4000  (8000-unit visual space)
- *   Scale factor:  8000 / 6480 ≈ 1.2346
+ *   Blockchain: math convention (y-up, positive y = north), integer units
+ *   PixiJS/Visual: screen convention (y-down, positive y = south), 6 units per blockchain unit
+ *   Formula: visual_x = chain_x * 6, visual_y = -chain_y * 6
+ *   One GalaxyGrid macro cell = 60 visual units = 10 blockchain units
  */
-import type { Agent, AgentTier, HaikuMessage, GridPosition, ClaimInfo, ClaimNodeResult, NodeInfo, TestnetStatus, MessageResult, MessageInfo } from '@/types';
-import { CHAIN_GRID_MIN, CHAIN_GRID_SPAN } from '@/types/testnet';
+import type { Agent, AgentTier, HaikuMessage, GridPosition, ClaimInfo, ClaimNodeResult, TestnetStatus, MessageResult, MessageInfo } from '@/types';
 import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
 import type { ChainService } from './chainService';
 import * as api from './testnetApi';
 
-/** Visual grid extent (matches GalaxyGrid GRID_EXTENT / 2) */
-const VISUAL_HALF = 4000;
-const VISUAL_SPAN = VISUAL_HALF * 2; // 8000
-
 // ---------------------------------------------------------------------------
 // Coordinate mapping
+//
+// The blockchain uses a math coordinate system (y-up, positive y = north).
+// PixiJS uses screen coordinates (y-down, positive y = south).
+// GalaxyGrid cells are CELL_SIZE = 60 world units each, and 1 macro cell = 10
+// blockchain coordinate units (CHAIN_PER_CELL). Scale = 60/10 = 6.
+//
+// To convert: visual_x = chain_x * 6
+//             visual_y = -chain_y * 6  ← flip y to match PixiJS y-down
 // ---------------------------------------------------------------------------
 
-/** Convert blockchain coordinate → frontend visual position */
+/** World-space units per macro grid cell (must match GalaxyGrid CELL_SIZE) */
+const CELL_SIZE = 60;
+/** Blockchain coordinate units per macro grid cell */
+const CHAIN_PER_CELL = 10;
+/** Scale: visual world units per one blockchain coordinate unit */
+const CHAIN_TO_VISUAL = CELL_SIZE / CHAIN_PER_CELL; // = 6
+
+/** Convert blockchain coordinate → frontend visual position (PixiJS y-down) */
 export function chainToVisual(chainX: number, chainY: number): GridPosition {
   return {
-    x: ((chainX - CHAIN_GRID_MIN) / CHAIN_GRID_SPAN) * VISUAL_SPAN - VISUAL_HALF,
-    y: ((chainY - CHAIN_GRID_MIN) / CHAIN_GRID_SPAN) * VISUAL_SPAN - VISUAL_HALF,
+    x: chainX * CHAIN_TO_VISUAL,
+    y: -chainY * CHAIN_TO_VISUAL, // flip y: blockchain y-up → PixiJS y-down
   };
 }
 
-/** Convert frontend visual position → nearest blockchain coordinate */
+/** Convert frontend visual position (PixiJS y-down) → nearest blockchain coordinate */
 export function visualToChain(vx: number, vy: number): { x: number; y: number } {
   return {
-    x: Math.round(((vx + VISUAL_HALF) / VISUAL_SPAN) * CHAIN_GRID_SPAN + CHAIN_GRID_MIN),
-    y: Math.round(((vy + VISUAL_HALF) / VISUAL_SPAN) * CHAIN_GRID_SPAN + CHAIN_GRID_MIN),
+    x: Math.round(vx / CHAIN_TO_VISUAL),
+    y: Math.round(-vy / CHAIN_TO_VISUAL), // flip y back to blockchain y-up
   };
 }
 
@@ -70,29 +80,6 @@ function claimToAgent(claim: ClaimInfo, index: number): Agent {
   };
 }
 
-/** Map a chain NodeInfo to a frontend unclaimed Agent slot. */
-function nodeToSlot(node: NodeInfo): Agent {
-  const position = chainToVisual(node.x, node.y);
-  return {
-    id: node.id,
-    userId: node.owner ?? '',
-    position,
-    tier: 'haiku' as const,
-    isPrimary: false,
-    planets: [],
-    createdAt: Date.now() - 86400000,
-    username: node.name,
-    borderRadius: 30,
-    borderPressure: 0,
-    cpuPerTurn: 0,
-    miningRate: 0,
-    energyLimit: 0,
-    stakedCpu: 0,
-    density: node.density,
-    storageSlots: node.storage_slots,
-  };
-}
-
 // ---------------------------------------------------------------------------
 // Service
 // ---------------------------------------------------------------------------
@@ -100,9 +87,8 @@ function nodeToSlot(node: NodeInfo): Agent {
 export class TestnetChainService implements ChainService {
   private cachedAgents: Agent[] | null = null;
 
-  /** Fetch all grid data from the blockchain: claims + unclaimed nodes */
+  /** Fetch all grid data from the blockchain: active claims only */
   async getAgents(): Promise<Agent[]> {
-    // 1. Fetch on-chain claims (owned agents)
     const claims = await api.getClaims();
     const ownerFirstSeen = new Set<string>();
     const ownedAgents: Agent[] = claims.map((claim, i) => {
@@ -116,13 +102,7 @@ export class TestnetChainService implements ChainService {
       return agent;
     });
 
-    // 2. Fetch unclaimed neural nodes from chain coordinate grid
-    const chainNodes = await api.getNodes(1000, 42);
-    const unclaimedSlots: Agent[] = chainNodes
-      .filter(n => !n.claimed)
-      .map(n => nodeToSlot(n));
-
-    this.cachedAgents = [...ownedAgents, ...unclaimedSlots];
+    this.cachedAgents = [...ownedAgents];
     return this.cachedAgents;
   }
 

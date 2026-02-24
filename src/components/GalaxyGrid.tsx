@@ -8,7 +8,6 @@ import { createStarNode, setNodeDimmed } from './grid/StarNode';
 import { createConnectionLine } from './grid/ConnectionLine';
 import { createEmpireBorders } from './grid/EmpireBorders';
 import { getDistance, getConnectionStrength } from '@/lib/proximity';
-import { getFogLevel } from '@/lib/fog';
 import type { Agent, FogLevel } from '@/types';
 import { MinigridLayer, type MacroCellRenderData } from '@/components/game/MinigridLayer';
 import { classifyCell, FACTION_COLORS } from '@/lib/spiral/SpiralClassifier';
@@ -42,6 +41,13 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
   const userFactionRef = useRef(userFaction);
   /** Tracks when a node was last tapped — canvas pointerup uses this to avoid deselecting on node clicks */
   const lastNodeTapMsRef = useRef(0);
+
+  /** Classify an agent's grid cell: flips y to convert PixiJS y-down → SpiralClassifier math y-up */
+  const classifyAgentCell = useCallback((agent: Agent) => {
+    const gx = Math.round(agent.position.x / CELL_SIZE);
+    const gyMath = -Math.round(agent.position.y / CELL_SIZE);
+    return classifyCell(gx, gyMath, userFactionRef.current);
+  }, []);
 
   const [zoom, setZoom] = useState(1);
   const [cursorCoords, setCursorCoords] = useState<{ x: number; y: number } | null>(null);
@@ -161,20 +167,21 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     };
   }, [initApp]);
 
-  // Center on player agent — waits for both app ready AND agents loaded
+  // Center on player agent (or origin if no player) — waits for app ready
   useEffect(() => {
     if (!appReady || hasCentered.current) return;
 
     const world = worldRef.current;
     const app = appRef.current;
-    const viewer = currentAgentId ? agents[currentAgentId] : null;
-
-    if (!world || !app || !viewer) return;
+    if (!world || !app) return;
 
     hasCentered.current = true;
     const centerX = app.screen.width / 2;
     const centerY = app.screen.height / 2;
-    world.position.set(centerX - viewer.position.x, centerY - viewer.position.y);
+    const viewer = currentAgentId ? agents[currentAgentId] : null;
+    const targetX = viewer ? viewer.position.x : 0;
+    const targetY = viewer ? viewer.position.y : 0;
+    world.position.set(centerX - targetX, centerY - targetY);
     setCamera({ x: world.position.x, y: world.position.y }, world.scale.x);
   }, [appReady, agents, currentAgentId, setCamera]);
 
@@ -222,23 +229,25 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     world.addChildAt(borders, 3); // index 3 = right after faction bg (0), grid lines (1), minigrid (2)
     bordersRef.current = borders;
 
-    // Connection lines (behind stars) — only for nearby agents
+    // Connection lines (behind stars) — faction-colored, bold for same-faction links
     others.forEach(agent => {
       const distance = getDistance(viewer.position, agent.position);
       const strength = getConnectionStrength(distance, CONNECTION_THRESHOLD);
       if (strength > 0) {
-        world.addChild(createConnectionLine(viewer.position, agent.position, strength));
+        const cls = classifyAgentCell(agent);
+        const lineColor = cls.faction ? FACTION_COLORS[cls.faction] : 0x334466;
+        const bold = cls.faction === userFactionRef.current;
+        world.addChild(createConnectionLine(viewer.position, agent.position, strength, lineColor, bold));
       }
     });
 
     // Viewer's own star
     addClickableStarNode(viewer, 'clear');
 
-    // All other stars with their fog level
+    // All other stars — fog level from SpiralClassifier (faction-based, not distance)
     others.forEach(agent => {
-      const distance = getDistance(viewer.position, agent.position);
-      const fogLevel = getFogLevel(distance, viewer.tier);
-      addClickableStarNode(agent, fogLevel);
+      const cls = classifyAgentCell(agent);
+      addClickableStarNode(agent, cls.fogLevel);
     });
 
   }, [appReady, agents, currentAgentId, currentUserId]);
@@ -327,8 +336,9 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
       for (let wy = startCellY; wy < worldBottom; wy += CELL_SIZE) {
         // Grid coordinate (cell index) — mirrors GridBackground's gx/gy formula
         const gx = Math.round((wx + CELL_SIZE / 2) / CELL_SIZE);
-        const gy = Math.round((wy + CELL_SIZE / 2) / CELL_SIZE);
-        const cls = classifyCell(gx, gy, userFactionRef.current);
+        // Negate gy: PixiJS y-down → SpiralClassifier math y-up convention
+        const gyMath = -Math.round((wy + CELL_SIZE / 2) / CELL_SIZE);
+        const cls = classifyCell(gx, gyMath, userFactionRef.current);
         cellData.push({
           macroX: wx,
           macroY: wy,

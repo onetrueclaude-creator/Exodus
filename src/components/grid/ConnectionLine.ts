@@ -5,11 +5,14 @@ export function createConnectionLine(
   from: GridPosition,
   to: GridPosition,
   strength: number,
+  color: number = 0x00d4ff,
+  bold: boolean = false,
 ): Graphics {
   const line = new Graphics();
-  const alpha = Math.max(0.05, strength * 0.4);
+  const alpha = Math.max(0.1, bold ? strength * 0.85 : strength * 0.4);
+  const width = bold ? 3 + strength * 3 : 1 + strength * 2;
 
-  line.setStrokeStyle({ width: 1 + strength * 2, color: 0x00d4ff, alpha });
+  line.setStrokeStyle({ width, color, alpha });
   line.moveTo(from.x, from.y);
   line.lineTo(to.x, to.y);
   line.stroke();
