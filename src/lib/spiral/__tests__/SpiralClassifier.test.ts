@@ -70,4 +70,11 @@ describe('SpiralClassifier', () => {
     // But still within ±25° so it stays on the arm
     expect(onAxis.faction).toBe('free_community')
   })
+
+  it('flat-zone boundary r=R_FLAT (30) has no twist offset', () => {
+    // At exactly r=30, spiralOffset returns 0 — same as inner zone
+    const r = classifyCell(0, 30, 'free_community')
+    expect(r.faction).toBe('free_community')
+    expect(r.armStrength).toBeGreaterThan(0.99)  // exactly on spine — no offset
+  })
 })
