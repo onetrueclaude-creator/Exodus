@@ -3,11 +3,10 @@ import { type FogLevel } from '@/lib/spiral/SpiralClassifier'
 
 export interface MinigridCellData {
   fillRatio: number   // 0..1 — how full this blockchain slot is
-  hasData: boolean    // true = data packet written on-chain
 }
 
 export interface SubCellRect {
-  x: number; y: number; width: number; height: number; col: number; row: number
+  x: number; y: number; width: number; height: number
 }
 
 export interface MacroCellRenderData {
@@ -47,8 +46,6 @@ export class MinigridLayer {
           y: originY + row * sub,
           width: sub,
           height: sub,
-          col,
-          row,
         })
       }
     }
@@ -71,15 +68,13 @@ export class MinigridLayer {
 
   // ─── PixiJS rendering ─────────────────────────────────────────────────────
 
-  render(cells: MacroCellRenderData[], zoom: number): void {
+  render(cells: MacroCellRenderData[]): void {
     this.graphics.clear()
-    if (zoom < 3) return
-
     for (const cell of cells) {
       const subs = MinigridLayer.computeSubCells(cell.macroX, cell.macroY, cell.macroSize)
       for (let i = 0; i < subs.length; i++) {
         const sub = subs[i]
-        const data = cell.slots[i] ?? { fillRatio: 0, hasData: false }
+        const data = cell.slots[i] ?? { fillRatio: 0 }
         const alpha = MinigridLayer.cellAlpha(cell.fogLevel, data.fillRatio)
         if (alpha <= 0) continue
 

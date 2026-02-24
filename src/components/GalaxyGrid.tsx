@@ -300,7 +300,7 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     if (!world || !app || !minigrid) return;
 
     if (zoom < 3) {
-      minigrid.render([], zoom);
+      minigrid.render([]);
       return;
     }
 
@@ -335,12 +335,12 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
           macroSize: CELL_SIZE,
           fogLevel: cls.fogLevel,
           factionColor: cls.faction ? FACTION_COLORS[cls.faction] : 0x222244,
-          slots: Array.from({ length: 64 }, () => ({ fillRatio: 0, hasData: false })),
+          slots: Array.from({ length: 64 }, () => ({ fillRatio: 0 })),
         });
       }
     }
 
-    minigrid.render(cellData, zoom);
+    minigrid.render(cellData);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appReady, zoom]);
 
