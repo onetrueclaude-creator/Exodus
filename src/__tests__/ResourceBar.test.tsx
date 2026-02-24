@@ -86,4 +86,13 @@ describe('ResourceBar — energyDelta prop', () => {
     render(<ResourceBar energyEstPerTurn={0} />);
     expect(screen.queryByText(/est\./)).toBeNull();
   });
+
+  it('re-shows delta when same value is passed again (key reset)', () => {
+    const { rerender } = render(<ResourceBar cpuEnergy={1000} energyDelta={-500} />);
+    expect(screen.getByText('-500')).toBeInTheDocument();
+    // Simulate timer clearing + same value again
+    rerender(<ResourceBar cpuEnergy={500} energyDelta={-500} />);
+    // With key-based reset, badge should still be visible
+    expect(screen.getByText('-500')).toBeInTheDocument();
+  });
 });

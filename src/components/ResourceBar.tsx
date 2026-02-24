@@ -109,6 +109,15 @@ export default function ResourceBar({ energyDelta, energyEstPerTurn }: ResourceB
   // Prop-driven est per turn (caller computes from energyEarnedHistory)
   const showEstPerTurn = energyEstPerTurn !== undefined && energyEstPerTurn > 0;
 
+  // Version counter so React remounts EnergyDeltaBadge even when the same
+  // numeric delta is passed twice in a row (e.g. two Secure actions of -500).
+  const [deltaVersion, setDeltaVersion] = useState(0);
+  useEffect(() => {
+    if (energyDelta !== undefined && energyDelta !== 0) {
+      setDeltaVersion(v => v + 1);
+    }
+  }, [energyDelta]);
+
   return (
     <div className="h-8 bg-background-light border-b border-card-border flex items-center px-3 gap-3 shrink-0">
       {/* Network badge */}
@@ -156,7 +165,7 @@ export default function ResourceBar({ energyDelta, energyEstPerTurn }: ResourceB
         {/* Prop-driven delta (2 s, for external callers / tests) */}
         {energyDelta !== undefined && energyDelta !== 0 && (
           <sup className="text-[9px] leading-none">
-            <EnergyDeltaBadge energyDelta={energyDelta} />
+            <EnergyDeltaBadge key={deltaVersion} energyDelta={energyDelta} />
           </sup>
         )}
 
