@@ -20,7 +20,7 @@ function LiveClock() {
   );
 }
 
-/** Flash delta indicator — shows +N or -N for 3 seconds after a resource change */
+/** Flash delta indicator — shows +N or -N for 3 seconds after a store resource change */
 function DeltaFlash({ resourceKey }: { resourceKey: string }) {
   const delta = useGameStore((s) => s.resourceDeltas[resourceKey]);
   const [visible, setVisible] = useState(false);
@@ -44,7 +44,46 @@ function DeltaFlash({ resourceKey }: { resourceKey: string }) {
   );
 }
 
-export default function ResourceBar() {
+/**
+ * Prop-driven energy delta — accepts an external delta value and auto-clears after 2 seconds.
+ * Used for testable, caller-controlled delta display (e.g. after a Secure action).
+ */
+function EnergyDeltaBadge({ energyDelta }: { energyDelta: number }) {
+  const [displayDelta, setDisplayDelta] = useState<number>(energyDelta);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    setDisplayDelta(energyDelta);
+    setVisible(true);
+    const timer = setTimeout(() => setVisible(false), 2000);
+    return () => clearTimeout(timer);
+  }, [energyDelta]);
+
+  if (!visible) return null;
+
+  const isPositive = displayDelta > 0;
+  return (
+    <span
+      className={
+        isPositive
+          ? 'delta-positive text-green-400 text-[10px] font-mono font-bold'
+          : 'delta-negative text-red-400 text-[10px] font-mono font-bold'
+      }
+    >
+      {isPositive ? '+' : ''}{displayDelta}
+    </span>
+  );
+}
+
+interface ResourceBarProps {
+  /** External energy delta to display next to the CPU Energy counter.
+   *  Positive shows in green (+N), negative in red (-N). Auto-clears after 2 s. */
+  energyDelta?: number;
+  /** Estimated energy earned per turn (rolling average). Shows as dim "est. +N ⚡/turn". */
+  energyEstPerTurn?: number;
+}
+
+export default function ResourceBar({ energyDelta, energyEstPerTurn }: ResourceBarProps = {}) {
   const { publicKey } = useWallet();
   const energy = useGameStore((s) => s.energy);
   const minerals = useGameStore((s) => s.minerals);
@@ -66,6 +105,9 @@ export default function ResourceBar() {
   const netEnergy = baseIncome + totalMining - totalCpuCost;
   const mineralGain = ownAgents.length;
   const totalPressureCost = ownAgents.reduce((sum, a) => sum + (a.borderPressure ?? 0) * 0.1, 0);
+
+  // Prop-driven est per turn (caller computes from energyEarnedHistory)
+  const showEstPerTurn = energyEstPerTurn !== undefined && energyEstPerTurn > 0;
 
   return (
     <div className="h-8 bg-background-light border-b border-card-border flex items-center px-3 gap-3 shrink-0">
@@ -107,7 +149,24 @@ export default function ResourceBar() {
       <div className="flex items-center gap-1 group">
         <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
         <span className="text-xs font-mono text-yellow-300 tabular-nums">{sciFormat(energy)}</span>
+
+        {/* Store-driven delta (3 s) */}
         <sup className="text-[9px] leading-none"><DeltaFlash resourceKey="energy" /></sup>
+
+        {/* Prop-driven delta (2 s, for external callers / tests) */}
+        {energyDelta !== undefined && energyDelta !== 0 && (
+          <sup className="text-[9px] leading-none">
+            <EnergyDeltaBadge energyDelta={energyDelta} />
+          </sup>
+        )}
+
+        {/* Estimated per-turn (dim, always visible when provided) */}
+        {showEstPerTurn && (
+          <span className="text-xs text-yellow-500/60">
+            est. +{energyEstPerTurn} ⚡/turn
+          </span>
+        )}
+
         <span className={`text-[9px] font-mono hidden group-hover:inline ${netEnergy >= 0 ? 'text-green-400' : 'text-red-400'}`}>
           {sciRate(netEnergy)}/t
         </span>
