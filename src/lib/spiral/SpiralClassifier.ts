@@ -16,15 +16,18 @@ const ARM_ANGLES: Record<Faction, number> = {
   professional_pool: Math.PI,       // 180° W
 }
 
+const ARM_ENTRIES = Object.entries(ARM_ANGLES) as [Faction, number][]
+
 const ARM_HALF_WIDTH = 25 * Math.PI / 180  // ±25°
-const R_FLAT = 30.0    // inner flat zone — no twist, genesis nodes stay cardinal
-const R_MIN = R_FLAT   // spiral starts at R_FLAT
+// R_FLAT: inner flat zone radius. Below this, no spiral twist — genesis nodes stay in
+// their cardinal faction arms. The spiral only applies for r > R_FLAT.
+const R_FLAT = 30.0
 const R_MAX = 324.0    // grid boundary (±3240 blockchain / 10 NODE_GRID_SPACING)
 const SPIRAL_TURNS = 0.5  // half-turn CCW from R_FLAT to R_MAX
 
 function spiralOffset(r: number): number {
   if (r <= R_FLAT) return 0
-  return SPIRAL_TURNS * 2 * Math.PI * Math.log(r / R_MIN) / Math.log(R_MAX / R_MIN)
+  return SPIRAL_TURNS * 2 * Math.PI * Math.log(r / R_FLAT) / Math.log(R_MAX / R_FLAT)
 }
 
 function minAngularDist(a: number, b: number): number {
@@ -55,7 +58,7 @@ export function classifyCell(
   let closestFaction: Faction | null = null
   let minDist = Infinity
 
-  for (const [faction, armAngle] of Object.entries(ARM_ANGLES) as [Faction, number][]) {
+  for (const [faction, armAngle] of ARM_ENTRIES) {
     const dist = minAngularDist(theta, armAngle + offset)
     if (dist < minDist) {
       minDist = dist
