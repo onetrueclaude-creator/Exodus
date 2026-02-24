@@ -14,6 +14,7 @@ import PlanetCreator from '@/components/PlanetCreator';
 import AgentCreator from '@/components/AgentCreator';
 import AgentProfilePopup from '@/components/AgentProfilePopup';
 import DockPanel from '@/components/DockPanel';
+import { AgentList } from '@/components/game/AgentList';
 import { startDebugListener } from '@/lib/debugListener';
 import { persistResources } from '@/lib/persistResources';
 import { createBrowserClient } from '@/lib/supabase/client';
@@ -71,6 +72,8 @@ export default function GamePage() {
   const activeDockPanel = useGameStore((s) => s.activeDockPanel);
   /** When deploying via sidebar, pass the target node ID to the terminal */
   const [deployTargetForTerminal, setDeployTargetForTerminal] = useState<string | null>(null);
+  /** Active agent in the AgentList panel (tracks currentAgentId for switching) */
+  const [listActiveAgentId, setListActiveAgentId] = useState<string | null>(null);
 
   // Clear deploy target when the terminal panel is closed without completing a deploy
   useEffect(() => {
@@ -95,6 +98,18 @@ export default function GamePage() {
       .sort((a, b) => a.dist - b.dist)
       .slice(0, 8);
   }, [agents, currentAgentId]);
+  /** Owned agents mapped to AgentList shape — drives the multi-agent switcher panel */
+  const ownedAgentsList = useMemo(() => {
+    if (!currentUserId) return [];
+    return Object.values(agents)
+      .filter(a => a.userId === currentUserId && !a.id.startsWith('chain-'))
+      .map(a => ({
+        id: a.id,
+        name: a.username ?? a.id.slice(-6),
+        coordinate: { x: a.position.x, y: a.position.y },
+        status: (a.id === currentAgentId ? 'active' : 'idle') as 'active' | 'idle',
+      }));
+  }, [agents, currentUserId, currentAgentId]);
   const chainRef = useRef<ChainService | null>(null);
 
   /** Sync grid state from the chain service */
@@ -398,6 +413,24 @@ export default function GamePage() {
             <div className="absolute top-4 left-4 z-10 flex items-start gap-2">
               <AgentDropdown onSelectAgent={setSelectedAgent} />
             </div>
+
+            {/* Agent switcher panel — top-right, above dock, only when user has agents */}
+            {ownedAgentsList.length > 0 && (
+              <div className="absolute top-4 right-12 z-20 w-56 bg-background-light/90 border border-card-border rounded backdrop-blur-sm max-h-64 overflow-y-auto">
+                <div className="px-2 pt-1.5 pb-0.5 text-[10px] font-bold text-text-muted uppercase tracking-widest border-b border-card-border">
+                  Your Agents
+                </div>
+                <AgentList
+                  agents={ownedAgentsList}
+                  activeAgentId={listActiveAgentId ?? currentAgentId}
+                  onSelect={(id) => {
+                    setListActiveAgentId(id);
+                    switchAgent(id);
+                    setActiveDockPanel('terminal');
+                  }}
+                />
+              </div>
+            )}
 
             {/* Dock Panel — right edge */}
             <DockPanel
