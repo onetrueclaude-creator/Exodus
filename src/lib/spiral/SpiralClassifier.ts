@@ -17,12 +17,13 @@ const ARM_ANGLES: Record<Faction, number> = {
 }
 
 const ARM_HALF_WIDTH = 25 * Math.PI / 180  // ±25°
-const R_MIN = 1.0
-const R_MAX = 324.0  // ±3240 blockchain / 10 NODE_GRID_SPACING
-const SPIRAL_TURNS = 0.017  // gentle CCW twist from center to edge
+const R_FLAT = 30.0    // inner flat zone — no twist, genesis nodes stay cardinal
+const R_MIN = R_FLAT   // spiral starts at R_FLAT
+const R_MAX = 324.0    // grid boundary (±3240 blockchain / 10 NODE_GRID_SPACING)
+const SPIRAL_TURNS = 0.5  // half-turn CCW from R_FLAT to R_MAX
 
 function spiralOffset(r: number): number {
-  if (r <= R_MIN) return 0
+  if (r <= R_FLAT) return 0
   return SPIRAL_TURNS * 2 * Math.PI * Math.log(r / R_MIN) / Math.log(R_MAX / R_MIN)
 }
 

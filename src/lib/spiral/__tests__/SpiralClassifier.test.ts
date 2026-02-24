@@ -47,4 +47,27 @@ describe('SpiralClassifier', () => {
     const sameCell = classifyCell(10, 0, 'free_community')
     expect(sameCell.fogLevel).toBe('hazy')
   })
+
+  it('classifies west cell (-5,0) as professional_pool clear for professional_pool user', () => {
+    const r = classifyCell(-5, 0, 'professional_pool')
+    expect(r.faction).toBe('professional_pool')
+    expect(r.fogLevel).toBe('clear')
+  })
+
+  it('classifies origin as hazy for non-free_community user', () => {
+    const r = classifyCell(0, 0, 'treasury')
+    expect(r.fogLevel).toBe('hazy')
+    expect(r.faction).toBe('free_community')
+  })
+
+  it('shows spiral offset at large radius — N arm shifts CCW by >10°', () => {
+    // At r=35 (just past R_FLAT=30), the N arm has rotated CCW ~11.7°.
+    // A cell at exactly (0,35) [theta=90°] is no longer on the arm spine,
+    // so armStrength should be noticeably less than 1 (not exactly on spine).
+    const onAxis = classifyCell(0, 35, 'free_community')
+    // The N arm spine has shifted CCW from 90°, so armStrength < 0.99
+    expect(onAxis.armStrength).toBeLessThan(0.99)
+    // But still within ±25° so it stays on the arm
+    expect(onAxis.faction).toBe('free_community')
+  })
 })
