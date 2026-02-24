@@ -49,13 +49,23 @@ export function getClaims(): Promise<ClaimInfo[]> {
 }
 
 /** GET /api/grid/region — bulk region data (max 10,000 cells) */
-export function getGridRegion(
+export async function getGridRegion(
   xMin: number, xMax: number,
   yMin: number, yMax: number,
 ): Promise<GridRegion> {
-  return get<GridRegion>(
+  const region = await get<GridRegion>(
     `/api/grid/region?x_min=${xMin}&x_max=${xMax}&y_min=${yMin}&y_max=${yMax}`,
   );
+  // Map snake_case API fields to camelCase aliases for React/Zustand consumers
+  return {
+    ...region,
+    cells: region.cells.map(cell => ({
+      ...cell,
+      slotFill: cell.slot_fill,
+      hasData: cell.has_data,
+      maxCapacity: cell.max_capacity,
+    })),
+  };
 }
 
 /** GET /api/agents — frontend-ready agent list (user agents + unclaimed slots) */
