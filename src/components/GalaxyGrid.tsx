@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { Application, Container, Graphics } from 'pixi.js';
 import { useGameStore } from '@/store';
-import { createGridBackground } from './grid/GridBackground';
+import { createGridBackground, createFactionBackground } from './grid/GridBackground';
 import { createStarNode, setNodeDimmed } from './grid/StarNode';
 import { createConnectionLine } from './grid/ConnectionLine';
 import { createEmpireBorders } from './grid/EmpireBorders';
@@ -22,20 +22,22 @@ interface GalaxyGridProps {
 }
 
 export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const appRef = useRef<Application | null>(null);
-  const worldRef = useRef<Container | null>(null);
-  const hasCentered = useRef(false);
-  const bordersRef = useRef<Graphics | null>(null);
-  /** Tracks when a node was last tapped — canvas pointerup uses this to avoid deselecting on node clicks */
-  const lastNodeTapMsRef = useRef(0);
-
   const agents = useGameStore((s) => s.agents);
   const currentAgentId = useGameStore((s) => s.currentAgentId);
   const currentUserId = useGameStore((s) => s.currentUserId);
   const turn = useGameStore((s) => s.turn);
   const setCamera = useGameStore((s) => s.setCamera);
   const empireColor = useGameStore((s) => s.empireColor);
+  const userFaction = useGameStore((s) => s.userFaction);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const appRef = useRef<Application | null>(null);
+  const worldRef = useRef<Container | null>(null);
+  const hasCentered = useRef(false);
+  const bordersRef = useRef<Graphics | null>(null);
+  const userFactionRef = useRef(userFaction);
+  /** Tracks when a node was last tapped — canvas pointerup uses this to avoid deselecting on node clicks */
+  const lastNodeTapMsRef = useRef(0);
 
   const [zoom, setZoom] = useState(1);
   const [cursorCoords, setCursorCoords] = useState<{ x: number; y: number } | null>(null);
@@ -61,7 +63,9 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     app.stage.addChild(world);
     worldRef.current = world;
 
-    // Grid background
+    // Grid background: faction-tinted cell fills (index 0) + grid lines (index 1)
+    // Faction background is recreated when userFaction changes (handled in separate effect)
+    world.addChild(createFactionBackground(GRID_EXTENT, GRID_EXTENT, userFactionRef.current));
     world.addChild(createGridBackground(GRID_EXTENT, GRID_EXTENT));
 
     // Pan & zoom
@@ -172,9 +176,9 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     const world = worldRef.current;
     if (!world) return;
 
-    // Clear previous star nodes (keep grid background at index 0)
-    while (world.children.length > 1) {
-      world.removeChildAt(1);
+    // Clear previous star nodes (keep faction background at index 0, grid lines at index 1)
+    while (world.children.length > 2) {
+      world.removeChildAt(2);
     }
 
     const agentList = Object.values(agents);
@@ -206,7 +210,7 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
 
     // Empire borders placeholder — actual borders drawn in separate turn-based effect
     const borders = createEmpireBorders(agentList, { viewerUserId: currentUserId, viewerEmpireColor: empireColor });
-    world.addChildAt(borders, 1); // index 1 = right after grid background
+    world.addChildAt(borders, 2); // index 2 = right after faction background (0) and grid lines (1)
     bordersRef.current = borders;
 
     // Connection lines (behind stars) — only for nearby agents
@@ -248,6 +252,19 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
       bordersRef.current = newBorders;
     }
   }, [appReady, turn, agents, currentUserId, empireColor]);
+
+  // Keep userFactionRef current and re-draw faction background when faction changes
+  useEffect(() => {
+    userFactionRef.current = userFaction;
+    if (!appReady) return;
+    const world = worldRef.current;
+    if (!world) return;
+    // Replace index 0 (faction background layer)
+    if (world.children.length > 0) {
+      world.removeChildAt(0);
+      world.addChildAt(createFactionBackground(GRID_EXTENT, GRID_EXTENT, userFaction), 0);
+    }
+  }, [appReady, userFaction]);
 
   // Hover-dim: fade non-hovered nodes when a node is hovered
   useEffect(() => {
