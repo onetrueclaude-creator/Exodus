@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Agent, HaikuMessage, GridPosition, DiplomaticState, Planet } from '@/types';
 import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE, TIER_CLAIM_COST } from '@/types/agent';
 import type { AgentTier } from '@/types';
+import type { Faction } from '@/lib/spiral/SpiralClassifier';
 
 interface Camera {
   position: GridPosition;
@@ -52,6 +53,9 @@ interface GameState {
   // Subscription restriction
   maxDeployTier: AgentTier; // highest tier this user can deploy (from subscription)
 
+  // Spiral faction (determines fog/color in galaxy grid)
+  userFaction: Faction;
+
   // UI
   activeTab: GameTab;
   empireColor: number;
@@ -92,6 +96,7 @@ interface GameState {
   requestFocus: (nodeId: string) => void;
   clearFocusRequest: () => void;
   setMaxDeployTier: (tier: AgentTier) => void;
+  setUserFaction: (faction: Faction) => void;
   reset: () => void;
 }
 
@@ -118,6 +123,7 @@ const initialState = {
   stateRoot: '',
   nextBlockIn: 60,
   maxDeployTier: 'haiku' as AgentTier, // default: Community tier (haiku only)
+  userFaction: 'free_community' as Faction,
   activeTab: 'network' as GameTab,
   empireColor: 0x8b5cf6, // default: purple (Opus)
   activeDockPanel: null as DockPanelId | null,
@@ -483,6 +489,8 @@ export const useGameStore = create<GameState>((set) => ({
   clearFocusRequest: () => set({ focusRequest: null }),
 
   setMaxDeployTier: (tier) => set({ maxDeployTier: tier }),
+
+  setUserFaction: (faction) => set({ userFaction: faction }),
 
   reset: () => {
     const state = useGameStore.getState();
