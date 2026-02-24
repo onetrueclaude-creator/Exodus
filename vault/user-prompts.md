@@ -113,3 +113,15 @@ All prompts, numbered consecutively across sessions.
    (down), Treasury (right), Professional Pool (left). Nodes at grid square centers. 1 AGNTC coin per
    grid cell. Fog of war per faction. Free tier sees only upper-left quadrant. Origin (0,0) = highest
    Secure Strength. New user = 1 new AGNTC minted. [Full text saved to vault/seed.md]
+[A] [2026-02-24 12:05:19 UTC] Base branch is `main`.
+64. [2026-02-24 12:08:41 UTC] 3
+[A] [2026-02-24 12:08:59 UTC] Keeping branch `exodus-dev` as-is.
+65. [2026-02-24 12:08:59 UTC] let's see the development on local port
+[A] [2026-02-24 12:34:24 UTC] Here's what was fixed and what you can now see at `localhost:3000/game`:
+66. [2026-02-24 12:36:40 UTC] the grids are not aligned, the nodes are not within the grid squares
+[A] [2026-02-24 12:58:24 UTC] All fixes are working correctly.
+67. [2026-02-24 13:01:01 UTC] let's start the testnet from genesis and see the real time growth of the blockchain as 2d grid
+[A] [2026-02-24 13:21:48 UTC] All done. Here's a summary of what was implemented:
+68. [2026-02-24 13:27:04 UTC] restart the testnet server and show me it mining live
+[A] [2026-02-24 13:29:05 UTC] The blockchain is mining live.
+69. [2026-02-24 13:32:26 UTC] commit this
