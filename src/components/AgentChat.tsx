@@ -862,6 +862,30 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
         return;
       }
 
+      // Network Parameters sub-menu
+      if (menuLevel === 'network-params' && !processing) {
+        const miningAction = actions.find(a => a.id === 'set-mining');
+        const borderAction = actions.find(a => a.id === 'expand-border' || a.id === 'fortify');
+        const networkParamsItems: Array<() => void> = [];
+        if (miningAction) networkParamsItems.push(() => { setMenuLevel(null); selectAction(miningAction); });
+        if (borderAction) networkParamsItems.push(() => { setMenuLevel(null); selectAction(borderAction); });
+        const fn = networkParamsItems[num - 1];
+        if (fn) fn();
+        return;
+      }
+
+      // Settings sub-menu
+      if (menuLevel === 'settings' && !processing) {
+        const colorAction = actions.find(a => a.id === 'empire-color');
+        const statusAction = actions.find(a => a.id === 'report-status');
+        const settingsItems: Array<() => void> = [];
+        if (colorAction) settingsItems.push(() => { setMenuLevel(null); selectAction(colorAction); });
+        if (statusAction) settingsItems.push(() => { setMenuLevel(null); selectAction(statusAction); });
+        const fn = settingsItems[num - 1];
+        if (fn) fn();
+        return;
+      }
+
       // Sub-choices (pendingAction)
       if (pendingAction?.subChoices) {
         const choice = pendingAction.subChoices[num - 1];
@@ -1301,16 +1325,19 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
             <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
               CONFIGURE
             </div>
-            {pendingAction.subChoices.map(choice => (
+            {pendingAction.subChoices.map((choice, i) => (
               <button
                 key={choice.id}
                 onClick={() => selectSubChoice(choice.id, choice.label)}
                 disabled={processing}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left transition-all duration-200 hover:bg-white/[0.03] border border-transparent hover:border-white/[0.06] disabled:opacity-30"
+                className="terminal-choice-bubble w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left transition-all duration-200 hover:bg-white/[0.03] border border-transparent hover:border-white/[0.06] disabled:opacity-30"
               >
-                <div>
-                  <div className="text-[11px] text-text-primary" style={{ fontFamily: "'Fira Code', monospace" }}>{choice.label}</div>
-                  <div className="text-[9px] text-text-muted/40">{choice.description}</div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>{CIRCLE_NUMBERS[i]}</span>
+                  <div>
+                    <div className="text-[11px] text-text-primary" style={{ fontFamily: "'Fira Code', monospace" }}>{choice.label}</div>
+                    <div className="text-[9px] text-text-muted/40">{choice.description}</div>
+                  </div>
                 </div>
               </button>
             ))}
@@ -1458,19 +1485,23 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
             })()}
 
             {/* ── Blockchain Protocols sub-menu ── */}
-            {menuLevel === 'blockchain' && (
+            {menuLevel === 'blockchain' && (() => {
+              let bcIdx = 0;
+              return (
               <>
                 <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
                   BLOCKCHAIN PROTOCOLS
                 </div>
 
                 {/* Secure */}
+                {(() => { const n = bcIdx++; return (
                 <button
                   onClick={() => { setMenuLevel('secure-flow'); setSecureConfig(null); }}
                   disabled={processing}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
+                  className="terminal-choice-bubble w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
                 >
                   <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>{CIRCLE_NUMBERS[n]}</span>
                     <span className="text-[10px] text-green-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u26E8'}</span>
                     <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                       Secure
@@ -1480,21 +1511,24 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                     {'\u203A'}
                   </span>
                 </button>
+                ); })()}
 
                 {/* Write Data On Chain (NCP / send-message) */}
                 {(() => {
                   const writeAction = actions.find(a => a.id === 'send-message' || a.id === 'diplomatic-msg');
                   if (!writeAction) return null;
                   const affordable = energy >= writeAction.cpuCost;
+                  const n = bcIdx++;
                   return (
                     <button
                       onClick={() => { setMenuLevel(null); selectAction(writeAction); }}
                       disabled={processing || !affordable}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
+                      className={`terminal-choice-bubble w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
                         !affordable ? 'opacity-20 cursor-not-allowed' : 'hover:bg-white/[0.03] cursor-pointer'
                       }`}
                     >
                       <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>{CIRCLE_NUMBERS[n]}</span>
                         <span className="text-[10px] text-accent-purple opacity-50 group-hover:opacity-90 transition-opacity">{'\u25A3'}</span>
                         <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                           Write Data On Chain
@@ -1515,13 +1549,15 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                   if (!readAction) {
                     const fallback = actions.find(a => a.id === 'report-status');
                     if (!fallback) return null;
+                    const n = bcIdx++;
                     return (
                       <button
                         onClick={() => { setMenuLevel(null); selectAction(fallback); }}
                         disabled={processing}
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
+                        className="terminal-choice-bubble w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
                       >
                         <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>{CIRCLE_NUMBERS[n]}</span>
                           <span className="text-[10px] text-accent-cyan opacity-50 group-hover:opacity-90 transition-opacity">{'\u25CE'}</span>
                           <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                             Read Data On Chain
@@ -1531,15 +1567,17 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                     );
                   }
                   const affordable = energy >= readAction.cpuCost;
+                  const n = bcIdx++;
                   return (
                     <button
                       onClick={() => { setMenuLevel(null); selectAction(readAction); }}
                       disabled={processing || !affordable}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
+                      className={`terminal-choice-bubble w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
                         !affordable ? 'opacity-20 cursor-not-allowed' : 'hover:bg-white/[0.03] cursor-pointer'
                       }`}
                     >
                       <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>{CIRCLE_NUMBERS[n]}</span>
                         <span className="text-[10px] text-accent-cyan opacity-50 group-hover:opacity-90 transition-opacity">{'\u25CE'}</span>
                         <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                           Read Data On Chain
@@ -1555,12 +1593,14 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                 })()}
 
                 {/* Transact -- placeholder */}
+                {(() => { const n = bcIdx++; return (
                 <button
                   onClick={() => { addMsg('system', 'Transact: Coming soon.'); setMenuLevel(null); }}
                   disabled={processing}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
+                  className="terminal-choice-bubble w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
                 >
                   <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>{CIRCLE_NUMBERS[n]}</span>
                     <span className="text-[10px] text-yellow-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u25C6'}</span>
                     <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                       Transact
@@ -1570,18 +1610,21 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                     soon
                   </span>
                 </button>
+                ); })()}
 
                 {/* Stats */}
                 {(() => {
                   const statsAction = actions.find(a => a.id === 'report-status');
                   if (!statsAction) return null;
+                  const n = bcIdx++;
                   return (
                     <button
                       onClick={() => { setMenuLevel(null); selectAction(statsAction); }}
                       disabled={processing}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
+                      className="terminal-choice-bubble w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
                     >
                       <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>{CIRCLE_NUMBERS[n]}</span>
                         <span className="text-[10px] text-accent-cyan opacity-50 group-hover:opacity-90 transition-opacity">{'\u2588'}</span>
                         <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                           Stats
@@ -1595,7 +1638,8 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                   {'\u2190'} back
                 </button>
               </>
-            )}
+              );
+            })()}
 
             {/* ── Secure flow: pick cycles ── */}
             {menuLevel === 'secure-flow' && secureConfig === null && (
@@ -1704,7 +1748,9 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
             })()}
 
             {/* ── Network Parameters sub-menu ── */}
-            {menuLevel === 'network-params' && (
+            {menuLevel === 'network-params' && (() => {
+              let npIdx = 0;
+              return (
               <>
                 <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
                   NETWORK PARAMETERS
@@ -1715,15 +1761,17 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                   const miningAction = actions.find(a => a.id === 'set-mining');
                   if (!miningAction) return null;
                   const affordable = energy >= miningAction.cpuCost;
+                  const n = npIdx++;
                   return (
                     <button
                       onClick={() => { setMenuLevel(null); selectAction(miningAction); }}
                       disabled={processing || !affordable}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
+                      className={`terminal-choice-bubble w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
                         !affordable ? 'opacity-20 cursor-not-allowed' : 'hover:bg-white/[0.03] cursor-pointer'
                       }`}
                     >
                       <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>{CIRCLE_NUMBERS[n]}</span>
                         <span className="text-[10px] text-yellow-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u26CF'}</span>
                         <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                           Mining Rate
@@ -1743,15 +1791,17 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                   const borderAction = actions.find(a => a.id === 'expand-border' || a.id === 'fortify');
                   if (!borderAction) return null;
                   const affordable = energy >= borderAction.cpuCost;
+                  const n = npIdx++;
                   return (
                     <button
                       onClick={() => { setMenuLevel(null); selectAction(borderAction); }}
                       disabled={processing || !affordable}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
+                      className={`terminal-choice-bubble w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
                         !affordable ? 'opacity-20 cursor-not-allowed' : 'hover:bg-white/[0.03] cursor-pointer'
                       }`}
                     >
                       <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>{CIRCLE_NUMBERS[n]}</span>
                         <span className="text-[10px] text-orange-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u2B22'}</span>
                         <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                           Border Pressure
@@ -1770,10 +1820,13 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                   {'\u2190'} back
                 </button>
               </>
-            )}
+              );
+            })()}
 
             {/* ── Settings sub-menu ── */}
-            {menuLevel === 'settings' && (
+            {menuLevel === 'settings' && (() => {
+              let stIdx = 0;
+              return (
               <>
                 <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
                   SETTINGS
@@ -1783,13 +1836,15 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                 {(() => {
                   const colorAction = actions.find(a => a.id === 'empire-color');
                   if (!colorAction) return null;
+                  const n = stIdx++;
                   return (
                     <button
                       onClick={() => { setMenuLevel(null); selectAction(colorAction); }}
                       disabled={processing}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
+                      className="terminal-choice-bubble w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
                     >
                       <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>{CIRCLE_NUMBERS[n]}</span>
                         <span className="text-[10px] text-accent-purple opacity-50 group-hover:opacity-90 transition-opacity">{'\u25CF'}</span>
                         <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                           Network Color
@@ -1803,13 +1858,15 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                 {(() => {
                   const statusAction = actions.find(a => a.id === 'report-status');
                   if (!statusAction) return null;
+                  const n = stIdx++;
                   return (
                     <button
                       onClick={() => { setMenuLevel(null); selectAction(statusAction); }}
                       disabled={processing}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
+                      className="terminal-choice-bubble w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
                     >
                       <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>{CIRCLE_NUMBERS[n]}</span>
                         <span className="text-[10px] text-accent-cyan opacity-50 group-hover:opacity-90 transition-opacity">{'\u2588'}</span>
                         <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                           Status Report
@@ -1823,7 +1880,9 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                   {'\u2190'} back
                 </button>
               </>
-            )}
+              );
+            })()}
+
 
           </div>
         )}

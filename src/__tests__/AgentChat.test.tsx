@@ -129,17 +129,21 @@ describe('AgentChat — bubble-click-only UI', () => {
 
     render(<AgentChat agent={agent} onClose={() => {}} />);
 
-    // Navigate to Send NCP — it's under the top-level menu for sonnet
-    const sendNcpBtn = screen.queryByText(/Send NCP/i);
-    if (sendNcpBtn) {
-      fireEvent.click(sendNcpBtn);
-      // After selecting NCP, no free-text input should appear
-      expect(screen.queryByRole('textbox')).toBeNull();
-      expect(screen.queryByPlaceholderText(/encode neural packet/i)).toBeNull();
-    }
-    // If Send NCP button wasn't visible at top level, that's also fine —
-    // the key assertion is no textbox anywhere at the initial render
+    // Step 1: click "Blockchain Protocols" at the top-level menu
+    const blockchainBtn = screen.getByText(/Blockchain Protocols/i);
+    await act(async () => { fireEvent.click(blockchainBtn); });
+
+    // Step 2: click "Write Data On Chain" in the blockchain sub-menu
+    const writeDataBtn = screen.getByText(/Write Data On Chain/i);
+    await act(async () => { fireEvent.click(writeDataBtn); });
+
+    // Step 3: click the NCP target (OtherAgent) — navigates to compose step
+    const targetBtn = screen.getByText(/OtherAgent/i);
+    await act(async () => { fireEvent.click(targetBtn); });
+
+    // After all navigation steps, no free-text input should ever appear
     expect(screen.queryByRole('textbox')).toBeNull();
+    expect(screen.queryByPlaceholderText(/encode neural packet/i)).toBeNull();
   });
 
   it('deploy intro step does not show a free-text input', async () => {
