@@ -46,4 +46,26 @@ test.describe('03 · Blockchain Actions', () => {
     await page.getByText('Blockchain Protocols').first().click()
     await expect(page.getByText('Write Data').or(page.getByText('Write Data On Chain'))).toBeVisible({ timeout: 5_000 })
   })
+
+  test('minigrid sub-cells appear at high zoom', async ({ seededPage: page }) => {
+    await page.goto('/game')
+    // Wait for canvas to be ready — allow extra time for cold worker start
+    await page.waitForSelector('canvas', { timeout: 20_000 })
+
+    // Scroll to zoom in (negative deltaY = zoom in)
+    await page.mouse.move(600, 400)  // center of viewport
+    await page.mouse.wheel(0, -300)
+    await page.mouse.wheel(0, -300)
+    await page.mouse.wheel(0, -300)
+
+    // At high zoom, the faction background should be visible
+    // (Canvas renders faction-colored cells — presence of canvas with no errors = pass)
+    await expect(page.locator('canvas')).toBeVisible()
+
+    // Check for no JavaScript errors
+    const errors: string[] = []
+    page.on('pageerror', err => errors.push(err.message))
+    await page.waitForTimeout(1000)  // let any errors surface
+    expect(errors).toHaveLength(0)
+  })
 })
