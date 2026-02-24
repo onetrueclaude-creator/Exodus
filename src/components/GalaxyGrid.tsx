@@ -17,7 +17,7 @@ const GRID_EXTENT = 10000;
 const CELL_SIZE = 60;  // world-unit size of each macro grid cell (matches GridBackground default)
 const CONNECTION_THRESHOLD = 400;
 const MIN_ZOOM = 0.1;
-const MAX_ZOOM = 3;
+const MAX_ZOOM = 8;
 
 interface GalaxyGridProps {
   onSelectAgent?: (agentId: string) => void;
@@ -335,7 +335,7 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
           macroSize: CELL_SIZE,
           fogLevel: cls.fogLevel,
           factionColor: cls.faction ? FACTION_COLORS[cls.faction] : 0x222244,
-          slots: Array(64).fill({ fillRatio: 0, hasData: false }),
+          slots: Array.from({ length: 64 }, () => ({ fillRatio: 0, hasData: false })),
         });
       }
     }
