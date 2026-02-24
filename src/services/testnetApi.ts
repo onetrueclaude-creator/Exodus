@@ -6,7 +6,7 @@
  */
 import type {
   TestnetStatus, CoordinateInfo, ClaimInfo,
-  GridRegion, MineResult, BirthResult, ClaimNodeResult, NodeInfo,
+  GridRegion, MappedGridCell, MineResult, BirthResult, ClaimNodeResult, NodeInfo,
   IntroResult, MessageResult, MessageInfo,
 } from '@/types';
 
@@ -52,20 +52,21 @@ export function getClaims(): Promise<ClaimInfo[]> {
 export async function getGridRegion(
   xMin: number, xMax: number,
   yMin: number, yMax: number,
-): Promise<GridRegion> {
+): Promise<MappedGridCell[]> {
   const region = await get<GridRegion>(
     `/api/grid/region?x_min=${xMin}&x_max=${xMax}&y_min=${yMin}&y_max=${yMax}`,
   );
-  // Map snake_case API fields to camelCase aliases for React/Zustand consumers
-  return {
-    ...region,
-    cells: region.cells.map(cell => ({
-      ...cell,
-      slotFill: cell.slot_fill,
-      hasData: cell.has_data,
-      maxCapacity: cell.max_capacity,
-    })),
-  };
+  // Map snake_case wire fields to camelCase for React/Zustand consumers
+  return region.cells.map(cell => ({
+    x: cell.x,
+    y: cell.y,
+    density: cell.density,
+    claimed: cell.claimed,
+    owner: cell.owner,
+    slotFill: cell.slot_fill,
+    hasData: cell.has_data,
+    maxCapacity: cell.max_capacity,
+  }));
 }
 
 /** GET /api/agents — frontend-ready agent list (user agents + unclaimed slots) */

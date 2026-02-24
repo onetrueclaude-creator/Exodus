@@ -51,22 +51,28 @@ export interface GridRegion {
   cells: GridCell[];
 }
 
+// Wire format from Python API
 export interface GridCell {
   x: number;
   y: number;
   density: number;
   claimed: boolean;
   owner: string | null;
-  /** Fraction of storage slots currently filled (0..1). Placeholder until ledger integration. */
   slot_fill: number;
-  /** Whether this coordinate has any on-chain data. Placeholder until ledger integration. */
   has_data: boolean;
-  /** Max storage capacity derived from distance-to-origin density (0..1). */
   max_capacity: number;
-  // Camelcase aliases for convenience in React/Zustand consumers
-  slotFill?: number;
-  hasData?: boolean;
-  maxCapacity?: number;
+}
+
+// Camelcase-converted version used by React/Zustand consumers (output of getGridRegion mapping)
+export interface MappedGridCell {
+  x: number;
+  y: number;
+  density: number;
+  claimed: boolean;
+  owner: string | null;
+  slotFill: number;
+  hasData: boolean;
+  maxCapacity: number;
 }
 
 // POST /api/mine

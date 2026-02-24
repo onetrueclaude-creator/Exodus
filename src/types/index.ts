@@ -10,7 +10,7 @@ export { validateChainOperation } from './blockchain';
 
 export type {
   TestnetStatus, CoordinateInfo, ClaimInfo,
-  GridRegion, GridCell, MineResult, BirthResult,
+  GridRegion, GridCell, MappedGridCell, MineResult, BirthResult,
   ClaimNodeResult, NodeInfo,
   IntroRequest, IntroResult, MessageRequest, MessageResult, MessageInfo,
 } from './testnet';
