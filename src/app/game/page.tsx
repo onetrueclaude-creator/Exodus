@@ -149,13 +149,21 @@ export default function GamePage() {
       const feed = await service.getHaikuFeed();
       feed.forEach(addHaiku);
 
+      // Populate grid with all agents from the chain service (genesis + claimed nodes).
+      // This runs before the owned-agent check below so pickBestStartingNode has
+      // nodes to work with even when Supabase is unreachable.
+      await syncFromChain();
+
       // Read agents from the Zustand store snapshot. Note: useGameRealtime's
       // hydrate() runs concurrently and may not have completed yet — agentList
       // could be empty on fast networks. If so, Realtime patches will fill it
       // in shortly after, and a re-render will pick up the owned agent.
       const agentList = Object.values(useGameStore.getState().agents);
 
-      const firstOwned = agentList.find(a => a.userId !== '');
+      // Blockchain agents from syncFromChain() use 'chain-*' IDs and have
+      // their blockchain owner address as userId. Exclude them here — only
+      // Supabase-hydrated session agents represent the authenticated user.
+      const firstOwned = agentList.find(a => a.userId !== '' && !a.id.startsWith('chain-'));
       if (firstOwned) {
         setCurrentUser(firstOwned.userId, firstOwned.id);
 

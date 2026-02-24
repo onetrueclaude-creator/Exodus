@@ -44,10 +44,21 @@ export function useGameRealtime() {
     // Initial hydration from Supabase (single source of truth)
     async function hydrate() {
       try {
-        const [{ data: chainStatus }, { data: agents }] = await Promise.all([
-          supabase.from('chain_status').select('*').single(),
-          supabase.from('agents').select('*'),
+        // Race against a 5-second timeout so cert errors or slow connections
+        // never block the game from rendering
+        const deadline = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('hydration timeout')), 5_000)
+        )
+
+        const results = await Promise.race([
+          Promise.all([
+            supabase.from('chain_status').select('*').single(),
+            supabase.from('agents').select('*'),
+          ]),
+          deadline,
         ])
+
+        const [{ data: chainStatus }, { data: agents }] = results
 
         if (chainStatus) {
           setChainStatus({
