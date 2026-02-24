@@ -181,8 +181,13 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     const viewer = currentAgentId ? agents[currentAgentId] : null;
     const targetX = viewer ? viewer.position.x : 0;
     const targetY = viewer ? viewer.position.y : 0;
-    world.position.set(centerX - targetX, centerY - targetY);
-    setCamera({ x: world.position.x, y: world.position.y }, world.scale.x);
+
+    // Start zoomed in so genesis nodes are clearly visible
+    const initialZoom = 4;
+    world.scale.set(initialZoom, initialZoom);
+    world.position.set(centerX - targetX * initialZoom, centerY - targetY * initialZoom);
+    setCamera({ x: world.position.x, y: world.position.y }, initialZoom);
+    setZoom(initialZoom);
   }, [appReady, agents, currentAgentId, setCamera]);
 
   // Re-render stars when agents change — also waits for app ready
@@ -216,8 +221,29 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     };
 
     if (!viewer) {
+      // No player viewer — draw all-pairs faction connections and show all nodes
+      for (let i = 0; i < agentList.length; i++) {
+        for (let j = i + 1; j < agentList.length; j++) {
+          const a = agentList[i];
+          const b = agentList[j];
+          const distance = getDistance(a.position, b.position);
+          const strength = getConnectionStrength(distance, CONNECTION_THRESHOLD);
+          if (strength > 0) {
+            const clsA = classifyAgentCell(a);
+            const clsB = classifyAgentCell(b);
+            // Only draw bold colored lines between same-faction nodes
+            if (clsA.faction && clsA.faction === clsB.faction) {
+              world.addChild(createConnectionLine(a.position, b.position, strength, FACTION_COLORS[clsA.faction], true));
+            } else {
+              const color = clsA.faction ? FACTION_COLORS[clsA.faction] : 0x334466;
+              world.addChild(createConnectionLine(a.position, b.position, strength, color, false));
+            }
+          }
+        }
+      }
       agentList.forEach(agent => {
-        addClickableStarNode(agent, 'clear');
+        const cls = classifyAgentCell(agent);
+        addClickableStarNode(agent, cls.fogLevel);
       });
       return;
     }
