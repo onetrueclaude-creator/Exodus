@@ -5,8 +5,9 @@ async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const { supabaseResponse, user } = await updateSession(request)
 
-  // DEV BYPASS — skip auth in development
+  // DEV BYPASS — skip auth in development, go straight to /game from landing
   if (process.env.NODE_ENV === 'development') {
+    if (pathname === '/') return NextResponse.redirect(new URL('/game', request.url))
     return supabaseResponse
   }
 
