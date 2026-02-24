@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import GalaxyGrid from '@/components/GalaxyGrid';
-import GalaxyChatRoom from '@/components/GalaxyChatRoom';
 import AgentPanel from '@/components/AgentPanel';
 import AgentDropdown from '@/components/AgentDropdown';
 import QuickActionMenu from '@/components/QuickActionMenu';
@@ -13,10 +12,8 @@ import ResearchPanel from '@/components/ResearchPanel';
 import SkillsPanel from '@/components/SkillsPanel';
 import PlanetCreator from '@/components/PlanetCreator';
 import AgentCreator from '@/components/AgentCreator';
-import TimeRewind from '@/components/TimeRewind';
-import AgentChat from '@/components/AgentChat';
 import AgentProfilePopup from '@/components/AgentProfilePopup';
-import TimechainStats from '@/components/TimechainStats';
+import DockPanel from '@/components/DockPanel';
 import { startDebugListener } from '@/lib/debugListener';
 import { persistResources } from '@/lib/persistResources';
 import { createBrowserClient } from '@/lib/supabase/client';
@@ -69,12 +66,18 @@ export default function GamePage() {
   const [profileAgent, setProfileAgent] = useState<string | null>(null);
   const [showPlanetCreator, setShowPlanetCreator] = useState(false);
   const [showAgentCreator, setShowAgentCreator] = useState(false);
-  /** Set of agent IDs with open terminal windows */
-  const [openTerminals, setOpenTerminals] = useState<Set<string>>(new Set());
-  /** Which terminal is focused (rendered on top) */
-  const [focusedTerminal, setFocusedTerminal] = useState<string | null>(null);
+  const setActiveDockPanel = useGameStore((s) => s.setActiveDockPanel);
+  const switchAgent = useGameStore((s) => s.switchAgent);
+  const activeDockPanel = useGameStore((s) => s.activeDockPanel);
   /** When deploying via sidebar, pass the target node ID to the terminal */
   const [deployTargetForTerminal, setDeployTargetForTerminal] = useState<string | null>(null);
+
+  // Clear deploy target when the terminal panel is closed without completing a deploy
+  useEffect(() => {
+    if (activeDockPanel !== 'terminal') {
+      setDeployTargetForTerminal(null);
+    }
+  }, [activeDockPanel]);
   const [serverStartTime] = useState(() => Date.now() - 24 * 60 * 60 * 1000);
 
   /** Unclaimed neural nodes sorted by proximity to current agent */
@@ -93,20 +96,6 @@ export default function GamePage() {
       .slice(0, 8);
   }, [agents, currentAgentId]);
   const chainRef = useRef<ChainService | null>(null);
-
-  const openTerminal = useCallback((agentId: string) => {
-    setOpenTerminals(prev => new Set(prev).add(agentId));
-    setFocusedTerminal(agentId);
-  }, []);
-
-  const closeTerminal = useCallback((agentId: string) => {
-    setOpenTerminals(prev => {
-      const next = new Set(prev);
-      next.delete(agentId);
-      return next;
-    });
-    setFocusedTerminal(prev => prev === agentId ? null : prev);
-  }, []);
 
   /** Sync grid state from the chain service */
   const syncFromChain = useCallback(async () => {
@@ -220,7 +209,7 @@ export default function GamePage() {
         // Auto-open terminal for the primary agent
         const primary = agentList.find(a => a.isPrimary && a.userId === firstOwned.userId);
         const homenode = primary ?? firstOwned;
-        openTerminal(homenode.id);
+        setActiveDockPanel('terminal');
         // Center camera on homenode
         useGameStore.getState().setCamera(homenode.position, 2);
       } else {
@@ -275,7 +264,7 @@ export default function GamePage() {
         // Open the current agent's terminal with the selected node as deploy target
         if (currentAgentId) {
           setDeployTargetForTerminal(selectedAgent);
-          openTerminal(currentAgentId);
+          setActiveDockPanel('terminal');
         }
         break;
       case 'claim-homenode': {
@@ -302,7 +291,7 @@ export default function GamePage() {
           store.setPrimary(selectedAgent);
           // Set empire color based on homenode tier (subscription-aware once auth wired)
           store.setEmpireColor(SUBSCRIPTION_EMPIRE_COLOR.MAX); // Default: opus homenode = Max tier
-          openTerminal(selectedAgent);
+          setActiveDockPanel('terminal');
           setSelectedAgent(null);
           // Center camera on claimed homenode
           store.setCamera(slot.position, 2);
@@ -329,7 +318,7 @@ export default function GamePage() {
         setActiveTab('account');
         break;
       case 'terminal':
-        if (selectedAgent) openTerminal(selectedAgent);
+        if (selectedAgent) setActiveDockPanel('terminal');
         break;
       case 'profile':
         if (selectedAgent) setProfileAgent(selectedAgent);
@@ -361,7 +350,7 @@ export default function GamePage() {
       }
       case 'secure':
         // CPU staking is the security mechanism — open terminal for staking controls
-        if (selectedAgent) openTerminal(selectedAgent);
+        if (selectedAgent) setActiveDockPanel('terminal');
         break;
       case 'vote':
         // Governance voting — open profile for now (full voting with mainnet)
@@ -397,56 +386,31 @@ export default function GamePage() {
         <div className={`absolute inset-0 ${activeTab !== 'network' ? 'hidden' : ''}`}>
             <GalaxyGrid onSelectAgent={setSelectedAgent} onDeselect={() => setSelectedAgent(null)} />
 
-            {/* Top bar: Time rewind + Agents dropdown */}
+            {/* Top bar: Agents dropdown only (TimeRewind moved to dock) */}
             <div className="absolute top-4 left-4 z-10 flex items-start gap-2">
-              <TimeRewind
-                serverStartTime={serverStartTime}
-                currentTime={Date.now()}
-                onTimeChange={(ts) => {
-                  // TODO: Load historical state for this timestamp
-                }}
-              />
               <AgentDropdown onSelectAgent={setSelectedAgent} />
             </div>
 
-            {/* Timechain Stats — top-right */}
-            <TimechainStats />
+            {/* Dock Panel — right edge */}
+            <DockPanel
+              onHaikuSubmit={handleHaikuSubmit}
+              currentAgent={currentAgentId ? agents[currentAgentId] ?? null : null}
+              chainService={chainRef.current}
+              onAgentDeploy={(newId) => { switchAgent(newId); setDeployTargetForTerminal(null); setActiveDockPanel('terminal'); }}
+              onFocusNode={(nodeId) => {
+                const node = agents[nodeId];
+                if (node) {
+                  setSelectedAgent(nodeId);
+                  useGameStore.getState().requestFocus(nodeId);
+                }
+              }}
+              deployTargetForTerminal={deployTargetForTerminal}
+              serverStartTime={serverStartTime}
+              onTimeChange={() => {/* TODO: Load historical state */}}
+            />
 
-            {/* Agent Chat terminals — stacked horizontally from bottom-right */}
-            {Array.from(openTerminals).map((id, idx) => agents[id] && (
-              <div
-                key={id}
-                className="absolute bottom-4 z-30 transition-all"
-                style={{ right: `${16 + idx * 396}px` }}
-                onMouseDown={() => setFocusedTerminal(id)}
-              >
-                <div style={{ zIndex: focusedTerminal === id ? 40 : 30 }}>
-                  <AgentChat
-                    agent={agents[id]}
-                    onClose={() => { closeTerminal(id); setDeployTargetForTerminal(null); }}
-                    onDeploy={(newId) => { setDeployTargetForTerminal(null); openTerminal(newId); }}
-                    onFocusNode={(nodeId) => {
-                      const node = agents[nodeId];
-                      if (node) {
-                        setSelectedAgent(nodeId);
-                        useGameStore.getState().setCamera(node.position, 2);
-                      }
-                    }}
-                    chainService={chainRef.current}
-                    initialDeployTarget={id === currentAgentId ? deployTargetForTerminal ?? undefined : undefined}
-                  />
-                </div>
-              </div>
-            ))}
-
-            {/* Galaxy Chat Room — shifts left to make room for terminals */}
-            <div className={`absolute bottom-4 z-10 transition-all`} style={{ right: `${16 + openTerminals.size * 396}px` }}>
-              <GalaxyChatRoom onSend={handleHaikuSubmit} />
-            </div>
-
-            {/* Bottom left controls: Agent creator + Planet creator */}
-            <div className="absolute bottom-14 left-4 z-10 flex flex-col gap-2">
-              {/* Agent Creator — only show if current agent can deploy (not haiku) */}
+            {/* Bottom bar — compact action strip */}
+            <div className="absolute bottom-0 left-0 right-10 h-8 z-10 flex items-center px-3 gap-3 bg-background/40 backdrop-blur-sm border-t border-card-border">
               {currentAgentId && agents[currentAgentId]?.tier !== 'haiku' && (
                 showAgentCreator ? (
                   <AgentCreator
@@ -458,8 +422,6 @@ export default function GamePage() {
                       const parentId = currentAgentId || undefined;
                       const store = useGameStore.getState();
                       const slot = store.agents[slotId];
-
-                      // Register on-chain first
                       const svc = chainRef.current;
                       if (svc && slot) {
                         try {
@@ -470,7 +432,6 @@ export default function GamePage() {
                           return;
                         }
                       }
-
                       const success = store.claimNode(slotId, tier, parentId);
                       if (success) {
                         setShowAgentCreator(false);
@@ -494,14 +455,12 @@ export default function GamePage() {
                 ) : (
                   <button
                     onClick={() => setShowAgentCreator(true)}
-                    className="glass-card px-4 py-2 text-xs font-semibold text-accent-cyan hover:text-text-primary transition-all"
+                    className="text-[10px] font-semibold text-accent-cyan hover:text-text-primary transition-all"
                   >
                     + Agent
                   </button>
                 )
               )}
-
-              {/* Planet Creator */}
               {showPlanetCreator && currentAgentId ? (
                 <PlanetCreator
                   agentId={currentAgentId}
@@ -517,7 +476,7 @@ export default function GamePage() {
               ) : (
                 <button
                   onClick={() => setShowPlanetCreator(true)}
-                  className="glass-card px-4 py-2 text-xs font-semibold text-accent-purple hover:text-text-primary transition-all"
+                  className="text-[10px] font-semibold text-accent-purple hover:text-text-primary transition-all"
                 >
                   + Data Packet
                 </button>
@@ -593,7 +552,7 @@ export default function GamePage() {
             setProfileAgent(null);
           }}
           onOpenTerminal={() => {
-            openTerminal(profileAgent);
+            setActiveDockPanel('terminal');
             setProfileAgent(null);
           }}
         />

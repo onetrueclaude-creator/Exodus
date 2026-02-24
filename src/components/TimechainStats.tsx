@@ -38,7 +38,7 @@ export default function TimechainStats() {
   if (chainMode !== 'testnet') return null;
 
   return (
-    <div className="absolute top-12 right-3 w-48 bg-background-light/90 backdrop-blur-sm border border-card-border rounded-lg p-3 z-20">
+    <div className="w-full bg-background-light/90 border border-card-border rounded-lg p-3">
       <div className="text-[10px] font-bold tracking-wider text-text-muted mb-2">
         TIMECHAIN STATS
       </div>
