@@ -352,18 +352,19 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     const worldRight  = (screenW - offsetX) / scale;
     const worldBottom = (screenH - offsetY) / scale;
 
-    // Snap to CELL_SIZE grid
-    const startCellX = Math.floor(worldLeft / CELL_SIZE) * CELL_SIZE;
-    const startCellY = Math.floor(worldTop / CELL_SIZE) * CELL_SIZE;
+    // Snap to shifted grid (cells centered at multiples of CELL_SIZE, offset by -HALF)
+    const HALF = CELL_SIZE / 2;
+    const startCellX = Math.floor((worldLeft + HALF) / CELL_SIZE) * CELL_SIZE - HALF;
+    const startCellY = Math.floor((worldTop + HALF) / CELL_SIZE) * CELL_SIZE - HALF;
 
     const cellData: MacroCellRenderData[] = [];
 
     for (let wx = startCellX; wx < worldRight; wx += CELL_SIZE) {
       for (let wy = startCellY; wy < worldBottom; wy += CELL_SIZE) {
-        // Grid coordinate (cell index) — mirrors GridBackground's gx/gy formula
-        const gx = Math.round((wx + CELL_SIZE / 2) / CELL_SIZE);
+        // Cell center = wx + HALF; grid index = center / CELL_SIZE
+        const gx = Math.round((wx + HALF) / CELL_SIZE);
         // Negate gy: PixiJS y-down → SpiralClassifier math y-up convention
-        const gyMath = -Math.round((wy + CELL_SIZE / 2) / CELL_SIZE);
+        const gyMath = -Math.round((wy + HALF) / CELL_SIZE);
         const cls = classifyCell(gx, gyMath, userFactionRef.current);
         cellData.push({
           macroX: wx,

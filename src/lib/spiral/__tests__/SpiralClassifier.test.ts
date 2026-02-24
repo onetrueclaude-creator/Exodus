@@ -35,8 +35,10 @@ describe('SpiralClassifier', () => {
   })
 
   it('armStrength is higher on spine than near arm edge', () => {
-    const spine = classifyCell(0, 10, 'free_community')
-    const nearEdge = classifyCell(3, 10, 'free_community')
+    // At r=3 (exactly R_FLAT), no spiral offset — cell (0,3) is exactly on spine
+    const spine = classifyCell(0, 3, 'free_community')
+    // Cell (1,3): theta~71.6°, arm at 90°, angular dist ~19° → armStrength ~0.24
+    const nearEdge = classifyCell(1, 3, 'free_community')
     expect(spine.armStrength).toBeGreaterThan(nearEdge.armStrength)
     expect(spine.armStrength).toBeGreaterThan(0.9)
   })
@@ -60,20 +62,20 @@ describe('SpiralClassifier', () => {
     expect(r.faction).toBe('free_community')
   })
 
-  it('shows spiral offset at large radius — N arm shifts CCW by >10°', () => {
-    // At r=35 (just past R_FLAT=30), the N arm has rotated CCW ~11.7°.
-    // A cell at exactly (0,35) [theta=90°] is no longer on the arm spine,
-    // so armStrength should be noticeably less than 1 (not exactly on spine).
-    const onAxis = classifyCell(0, 35, 'free_community')
+  it('shows spiral offset at medium radius — N arm shifts CCW by ~18°', () => {
+    // At r=15 (well past R_FLAT=3), the N arm has rotated CCW ~18.6°.
+    // A cell at (0,15) [theta=90°] is no longer on the arm spine,
+    // so armStrength should be noticeably less than 1.
+    const onAxis = classifyCell(0, 15, 'free_community')
     // The N arm spine has shifted CCW from 90°, so armStrength < 0.99
     expect(onAxis.armStrength).toBeLessThan(0.99)
-    // But still within ±25° so it stays on the arm
+    // Still within ±25° so it stays on the arm
     expect(onAxis.faction).toBe('free_community')
   })
 
-  it('flat-zone boundary r=R_FLAT (30) has no twist offset', () => {
-    // At exactly r=30, spiralOffset returns 0 — same as inner zone
-    const r = classifyCell(0, 30, 'free_community')
+  it('flat-zone boundary r=R_FLAT (3) has no twist offset', () => {
+    // At exactly r=3 (=R_FLAT), spiralOffset returns 0 — same as inner zone
+    const r = classifyCell(0, 3, 'free_community')
     expect(r.faction).toBe('free_community')
     expect(r.armStrength).toBeGreaterThan(0.99)  // exactly on spine — no offset
   })

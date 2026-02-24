@@ -20,10 +20,10 @@ const ARM_ENTRIES = Object.entries(ARM_ANGLES) as [Faction, number][]
 
 const ARM_HALF_WIDTH = 25 * Math.PI / 180  // ±25°
 // R_FLAT: inner flat zone radius. Below this, no spiral twist — genesis nodes stay in
-// their cardinal faction arms. The spiral only applies for r > R_FLAT.
-const R_FLAT = 30.0
+// their cardinal faction arms. Kept small so the spiral visibly starts from center.
+const R_FLAT = 3.0
 const R_MAX = 324.0    // grid boundary (±3240 blockchain / 10 NODE_GRID_SPACING)
-const SPIRAL_TURNS = 0.5  // half-turn CCW from R_FLAT to R_MAX
+const SPIRAL_TURNS = 0.15  // loose quarter-ish turn CCW across the full grid
 
 function spiralOffset(r: number): number {
   if (r <= R_FLAT) return 0
