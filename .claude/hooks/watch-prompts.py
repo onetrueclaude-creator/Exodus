@@ -46,7 +46,8 @@ def append_entry(text: str) -> None:
     if any(text.startswith(p) for p in SKIP_PREFIXES):
         return
     # Skip extremely long messages — these are continuation summaries, not real prompts
-    if len(text) > 1500:
+    # Real user prompts can be several thousand chars (e.g. design specs); summaries are >10k
+    if len(text) > 10000:
         return
 
     timestamp = time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())
