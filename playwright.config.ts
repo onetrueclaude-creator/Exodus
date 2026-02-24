@@ -2,7 +2,9 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './playwright/tests',
+  globalSetup: './playwright/globalSetup.ts',
   fullyParallel: false,
+  workers: 4,
   retries: 1,
   reporter: [
     ['html', { outputFolder: 'playwright-report' }],

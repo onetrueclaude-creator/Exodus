@@ -14,7 +14,8 @@
     "test:e2e:report": "playwright show-report",
     "e2e:seed": "NODE_TLS_REJECT_UNAUTHORIZED=0 tsx playwright/scripts/seed-test-user.ts",
     "e2e:gaps": "tsx playwright/scripts/report-gaps.ts",
-    "test:e2e:watch": "playwright test --watch"
+    "test:e2e:watch": "playwright test --watch",
+    "test:e2e:beta": "playwright test 05-beta-testers --workers=4"
   },
   "dependencies": {
     "@solana/wallet-adapter-base": "^0.9.27",
