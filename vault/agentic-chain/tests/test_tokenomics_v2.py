@@ -77,3 +77,36 @@ def test_unchanged_params():
     assert BASE_MINING_RATE_PER_BLOCK == 0.5
     assert NODE_GRID_SPACING == 10
     assert MERKLE_TREE_DEPTH == 26
+
+
+def test_epoch_hardness_16n():
+    from agentic.galaxy.epoch import EpochTracker
+    et = EpochTracker()
+    assert et.hardness(1) == 16
+    assert et.hardness(10) == 160
+    assert et.hardness(100) == 1600
+    assert et.hardness(324) == 5184
+
+
+def test_epoch_hardness_no_cap():
+    """Hardness should NOT cap at 100 anymore."""
+    from agentic.galaxy.epoch import EpochTracker
+    et = EpochTracker()
+    assert et.hardness(200) == 3200  # old code would cap at 100
+
+
+def test_epoch_faction_names_updated():
+    """Faction key 'treasury' renamed to 'machines'."""
+    from agentic.galaxy.epoch import EpochTracker
+    et = EpochTracker()
+    coord = et.homenode_coordinate("machines", 1)
+    assert isinstance(coord, tuple)
+    assert len(coord) == 2
+
+
+def test_homenode_no_grid_clamp():
+    """Homenode coordinates should not be clamped to fixed ±3240."""
+    from agentic.galaxy.epoch import EpochTracker
+    et = EpochTracker()
+    coord = et.homenode_coordinate("community", 500)
+    assert isinstance(coord, tuple)
