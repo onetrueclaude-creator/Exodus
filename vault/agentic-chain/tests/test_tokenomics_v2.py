@@ -110,3 +110,35 @@ def test_homenode_no_grid_clamp():
     et = EpochTracker()
     coord = et.homenode_coordinate("community", 500)
     assert isinstance(coord, tuple)
+
+
+def test_mining_no_pool_exhaustion():
+    """Mining should never exhaust — no finite pool in v2."""
+    from agentic.galaxy.mining import MiningEngine
+    from agentic.galaxy.epoch import EpochTracker
+    engine = MiningEngine()
+    et = EpochTracker()
+    from agentic.galaxy.coordinate import GridCoordinate
+    claims = [{"owner": b"\x01" * 32, "coordinate": GridCoordinate(x=0, y=0), "stake": 100}]
+    for _ in range(1000):
+        yields = engine.compute_block_yields(claims, epoch_tracker=et)
+        assert len(yields) > 0
+    assert engine.total_blocks_processed == 1000
+
+
+def test_mining_yield_formula_v2():
+    """yield = BASE_RATE * density * stake_weight / hardness (no pool fraction)."""
+    from agentic.galaxy.mining import MiningEngine
+    from agentic.galaxy.epoch import EpochTracker
+    from agentic.galaxy.coordinate import GridCoordinate, resource_density
+    from agentic.params import BASE_MINING_RATE_PER_BLOCK
+    engine = MiningEngine()
+    et = EpochTracker()
+    coord = GridCoordinate(x=0, y=0)
+    density = resource_density(0, 0)
+    claims = [{"owner": b"\x01" * 32, "coordinate": coord, "stake": 100}]
+    yields = engine.compute_block_yields(claims, epoch_tracker=et)
+    owner_yield = yields[b"\x01" * 32]
+    hardness = et.hardness(et.current_ring)
+    expected = BASE_MINING_RATE_PER_BLOCK * density * 1.0 / hardness
+    assert owner_yield == pytest.approx(expected, rel=1e-6)
