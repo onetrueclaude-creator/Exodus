@@ -13,6 +13,15 @@
 
 ---
 
+## 2026-02-25 — competitor-expert skill created
+
+**Added:** `competitor-expert/skill-description.md` — deep reference file with hierarchical research tree pointing to all 4 competitor research files in `vault/research/competitors/`.
+**Added:** `.claude/commands/skills/competitor-expert.md` — slash command that activates the Competitor Expert persona.
+
+**Why:** Reusable persona skill for competitive analysis against ZkAgentic's design.
+
+---
+
 ## 2026-02-24 — Skill library established
 
 **Added:** 10 expert persona skills (ai-integration, backend, frontend, game-design, monorepo, pixijs, state, testing, ui-design, web3).
