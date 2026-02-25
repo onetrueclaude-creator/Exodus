@@ -54,11 +54,17 @@ class MiningEngine:
     total_blocks_processed: int = 0
     total_rewards_distributed: float = 0.0
 
-    def compute_block_yields(self, claims: list[dict]) -> dict[bytes, float]:
+    _last_newly_opened: list[int] = field(default_factory=list, repr=False)
+
+    def compute_block_yields(
+        self, claims: list[dict], *, epoch_tracker=None,
+    ) -> dict[bytes, float]:
         """Compute mining rewards for one block.
 
         Args:
             claims: list of dicts with keys: owner (bytes), coordinate (GridCoordinate), stake (int)
+            epoch_tracker: optional EpochTracker — if provided, applies ring hardness
+                           as a yield divisor and records mined amount.
 
         Returns:
             dict mapping owner -> reward amount (float AGNTC)
@@ -74,12 +80,20 @@ class MiningEngine:
 
         pool_frac = self.pool.fraction_remaining
 
+        # Epoch hardness: divides yield by ring number (min 1), making later
+        # rings progressively harder to mine — the galaxy expands slowly.
+        # Halving is intentionally removed: epoch hardness replaces the old
+        # HALVING_INTERVAL mechanism to avoid a double penalty.
+        hardness = 1
+        if epoch_tracker is not None:
+            hardness = epoch_tracker.hardness(epoch_tracker.current_ring)
+
         # Compute raw yields
         raw_yields: dict[bytes, float] = {}
         for claim in claims:
             density = resource_density(claim["coordinate"].x, claim["coordinate"].y)
             stake_weight = claim["stake"] / total_stake
-            raw = BASE_MINING_RATE_PER_BLOCK * density * stake_weight * pool_frac
+            raw = BASE_MINING_RATE_PER_BLOCK * density * stake_weight * pool_frac / hardness
             owner = claim["owner"]
             raw_yields[owner] = raw_yields.get(owner, 0.0) + raw
 
@@ -91,6 +105,12 @@ class MiningEngine:
         if total_raw > 0 and actual_total < total_raw:
             scale = actual_total / total_raw
             raw_yields = {k: v * scale for k, v in raw_yields.items()}
+
+        # Notify epoch tracker of mined amount — may trigger ring expansion
+        if epoch_tracker is not None:
+            self._last_newly_opened = epoch_tracker.record_mined(actual_total)
+        else:
+            self._last_newly_opened = []
 
         self.total_blocks_processed += 1
         self.total_rewards_distributed += actual_total

@@ -17,7 +17,12 @@ from agentic.ledger.state import LedgerState
 from agentic.ledger.wallet import Wallet
 from agentic.verification.agent import VerificationAgent, AgentState
 from agentic.verification.pipeline import VerificationPipeline
-from agentic.params import GENESIS_BALANCE, GRID_MIN, GRID_MAX, BIRTH_PROGRAM_ID
+from agentic.galaxy.epoch import EpochTracker
+from agentic.galaxy.subgrid import SubgridAllocator
+from agentic.params import (
+    GENESIS_BALANCE, GRID_MIN, GRID_MAX, BIRTH_PROGRAM_ID,
+    GENESIS_ORIGIN, GENESIS_FACTION_MASTERS, GENESIS_HOMENODES,
+)
 
 
 @dataclass
@@ -31,6 +36,9 @@ class GenesisState:
     verification_pipeline: VerificationPipeline = None
     validators: list[Validator] = field(default_factory=list)
     agents: list[VerificationAgent] = field(default_factory=list)
+    epoch_tracker: EpochTracker = field(default_factory=EpochTracker)
+    subgrid_allocators: dict = field(default_factory=dict)
+    resource_totals: dict = field(default_factory=dict)
     viewing_keys: dict = None
     # Agent intro messages: (x, y) -> str
     intro_messages: dict = field(default_factory=dict)
@@ -51,57 +59,55 @@ def _deterministic_urandom(rng: random.Random):
 
 
 def create_genesis(
-    num_wallets: int = 10,
-    num_claims: int = 5,
+    num_wallets: int = 50,
+    num_claims: int = 0,
     seed: int = 0,
 ) -> GenesisState:
     """Bootstrap a fresh testnet state.
 
-    1. Create fresh LedgerState.
-    2. Create N wallets using deterministic seeds.
-    3. Mint GENESIS_BALANCE tokens into each wallet.
-    4. Register num_claims claims at random-but-deterministic coordinates.
-    5. Initialize CommunityPool and MiningEngine.
-    6. Wire up ActionPipeline with LedgerState and ClaimRegistry.
-    7. Return GenesisState with all components.
+    Genesis topology (fixed, centre-out):
+      - 1 origin node at (0, 0)
+      - 4 Faction Master homenodes at cardinal positions  (N E S W)
+      - 4 regular homenodes at diagonal positions         (NE SE SW NW)
+      Total: 9 predetermined nodes.
 
-    The entire process is deterministic for a given (num_wallets, num_claims, seed)
-    triple, so repeated calls produce identical state roots.
+    Wallets start with GENESIS_BALANCE = 0 — all value is earned through mining.
+    ``num_claims`` is ignored; genesis nodes are always placed at the 9 fixed positions.
     """
     rng = random.Random(seed)
-
-    # Patch os.urandom so that record nonces (used inside validate_mint)
-    # are deterministic, making the whole genesis reproducible.
     det_urandom = _deterministic_urandom(random.Random(seed))
+
+    # All 9 genesis positions in placement order:
+    #   index 0  → origin (system node)
+    #   index 1–4 → Faction Masters (cardinal, 'opus' tier)
+    #   index 5–8 → regular homenodes (diagonal, 'sonnet' tier)
+    genesis_coords: list[tuple[int, int]] = (
+        [GENESIS_ORIGIN]
+        + GENESIS_FACTION_MASTERS
+        + GENESIS_HOMENODES
+    )
 
     with patch.object(os, "urandom", det_urandom):
         state = LedgerState()
 
-        # -- Wallets & minting ------------------------------------------------
+        # -- Wallets (no minting — GENESIS_BALANCE = 0) -----------------------
         wallets: list[Wallet] = []
-        for i in range(num_wallets):
+        for i in range(max(num_wallets, len(genesis_coords))):
             w = Wallet(name=f"genesis-{i}", seed=seed * 1000 + i)
             wallets.append(w)
-            w.receive_mint(state, amount=GENESIS_BALANCE, slot=0)
+            if GENESIS_BALANCE > 0:
+                w.receive_mint(state, amount=GENESIS_BALANCE, slot=0)
 
-        # -- Claims -----------------------------------------------------------
+        # -- Fixed genesis nodes ----------------------------------------------
         claim_registry = ClaimRegistry()
-        coords_used: set[tuple[int, int]] = set()
-        claims_created = 0
-        while claims_created < min(num_claims, num_wallets):
-            x = rng.randint(GRID_MIN, GRID_MAX)
-            y = rng.randint(GRID_MIN, GRID_MAX)
-            if (x, y) in coords_used:
-                continue
-            coords_used.add((x, y))
-            wallet = wallets[claims_created % num_wallets]
+        for i, (x, y) in enumerate(genesis_coords):
+            wallet = wallets[i]
             coord = GridCoordinate(x=x, y=y)
-            stake = rng.randint(100, 500)
+            stake = 500 if i == 0 else (400 if i <= 4 else 200)
             claim_registry.register(
                 owner=wallet.public_key, coordinate=coord,
                 stake=stake, slot=0,
             )
-            # Create home star Record (free at genesis)
             density = resource_density(x, y)
             slots = storage_slots(x, y)
             density_scaled = int(density * 1_000_000)
@@ -115,7 +121,6 @@ def create_genesis(
                 birth_slot=0,
             )
             state.insert_record(star_record)
-            claims_created += 1
 
     # -- Viewing keys ---------------------------------------------------------
     viewing_keys = {w.public_key: w.viewing_key for w in wallets}
@@ -149,6 +154,24 @@ def create_genesis(
 
     verification_pipeline = VerificationPipeline(seed=seed, adversarial_rate=0.0)
 
+    epoch_tracker = EpochTracker()
+
+    # -- Subgrid allocators (one per unique claim owner) ----------------------
+    subgrid_allocators = {}
+    for claim in claim_registry.all_active_claims():
+        if claim.owner not in subgrid_allocators:
+            subgrid_allocators[claim.owner] = SubgridAllocator(owner=claim.owner)
+
+    # -- Resource totals (one per wallet, all zeroed at genesis) --------------
+    resource_totals = {
+        w.public_key: {
+            "dev_points": 0.0,
+            "research_points": 0.0,
+            "storage_units": 0.0,
+        }
+        for w in wallets
+    }
+
     return GenesisState(
         ledger_state=state,
         wallets=wallets,
@@ -160,4 +183,7 @@ def create_genesis(
         validators=validators,
         agents=agents,
         viewing_keys=viewing_keys,
+        epoch_tracker=epoch_tracker,
+        subgrid_allocators=subgrid_allocators,
+        resource_totals=resource_totals,
     )

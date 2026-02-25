@@ -11,7 +11,12 @@ vi.mock('@solana/wallet-adapter-react', () => ({
 vi.mock('@/store', () => ({
   useGameStore: vi.fn((selector: (s: Record<string, unknown>) => unknown) =>
     selector({
-      energy: 1000,
+      cpuTokens: 1000,
+      cpuStakedActive: 0,
+      cpuStakedTotal: 0,
+      devPoints: 0,
+      researchPoints: 0,
+      storageSize: 0,
       minerals: 0,
       agntcBalance: 0,
       securedChains: 0,
@@ -22,13 +27,13 @@ vi.mock('@/store', () => ({
       chainMode: 'offline',
       testnetBlocks: 0,
       resourceDeltas: {},
-      energyEarnedHistory: [],
+      cpuTokensEarnedHistory: [],
     })
   ),
 }));
 
-describe('ResourceBar — energyDelta prop', () => {
-  let ResourceBar: React.ComponentType<{ energyDelta?: number; energyEstPerTurn?: number }>;
+describe('ResourceBar — cpuTokensDelta prop', () => {
+  let ResourceBar: React.ComponentType<{ cpuTokensDelta?: number; cpuTokensEstPerTurn?: number }>;
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -40,15 +45,15 @@ describe('ResourceBar — energyDelta prop', () => {
     vi.useRealTimers();
   });
 
-  it('shows +N energy delta in green after token spend', () => {
-    render(<ResourceBar energyDelta={+42} />);
+  it('shows +N cpu token delta in green after token spend', () => {
+    render(<ResourceBar cpuTokensDelta={+42} />);
     const delta = screen.getByText('+42');
     expect(delta).toBeInTheDocument();
     expect(delta).toHaveClass('delta-positive');
   });
 
-  it('shows -N energy delta in red after spending', () => {
-    render(<ResourceBar energyDelta={-100} />);
+  it('shows -N cpu token delta in red after spending', () => {
+    render(<ResourceBar cpuTokensDelta={-100} />);
     const delta = screen.getByText('-100');
     expect(delta).toBeInTheDocument();
     expect(delta).toHaveClass('delta-negative');
@@ -56,7 +61,7 @@ describe('ResourceBar — energyDelta prop', () => {
 
   it('clears delta after 2 seconds', async () => {
     vi.useFakeTimers();
-    render(<ResourceBar energyDelta={+10} />);
+    render(<ResourceBar cpuTokensDelta={+10} />);
     expect(screen.getByText('+10')).toBeInTheDocument();
     // Advance timers inside act so React flushes state updates
     await act(async () => {
@@ -65,33 +70,33 @@ describe('ResourceBar — energyDelta prop', () => {
     expect(screen.queryByText('+10')).toBeNull();
   });
 
-  it('shows nothing when energyDelta is 0', () => {
-    render(<ResourceBar energyDelta={0} />);
+  it('shows nothing when cpuTokensDelta is 0', () => {
+    render(<ResourceBar cpuTokensDelta={0} />);
     expect(screen.queryByText('+0')).toBeNull();
     expect(screen.queryByText('-0')).toBeNull();
   });
 
-  it('shows nothing when energyDelta is omitted', () => {
+  it('shows nothing when cpuTokensDelta is omitted', () => {
     render(<ResourceBar />);
-    // energy value is shown but no delta span
+    // cpuTokens value is shown but no delta span
     expect(screen.queryByText('+0')).toBeNull();
   });
 
-  it('shows est per turn when energyEstPerTurn provided', () => {
-    render(<ResourceBar energyEstPerTurn={25} />);
+  it('shows est per turn when cpuTokensEstPerTurn provided', () => {
+    render(<ResourceBar cpuTokensEstPerTurn={25} />);
     expect(screen.getByText(/est\. \+25/)).toBeInTheDocument();
   });
 
-  it('does not show est per turn when energyEstPerTurn is 0', () => {
-    render(<ResourceBar energyEstPerTurn={0} />);
+  it('does not show est per turn when cpuTokensEstPerTurn is 0', () => {
+    render(<ResourceBar cpuTokensEstPerTurn={0} />);
     expect(screen.queryByText(/est\./)).toBeNull();
   });
 
   it('re-shows delta when same value is passed again (key reset)', () => {
-    const { rerender } = render(<ResourceBar cpuEnergy={1000} energyDelta={-500} />);
+    const { rerender } = render(<ResourceBar cpuTokensDelta={-500} />);
     expect(screen.getByText('-500')).toBeInTheDocument();
     // Simulate timer clearing + same value again
-    rerender(<ResourceBar cpuEnergy={500} energyDelta={-500} />);
+    rerender(<ResourceBar cpuTokensDelta={-500} />);
     // With key-based reset, badge should still be visible
     expect(screen.getByText('-500')).toBeInTheDocument();
   });

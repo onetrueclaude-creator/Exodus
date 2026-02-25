@@ -49,13 +49,13 @@ class TestMiningEngine:
     def test_compute_yields_single_claim(self):
         from agentic.galaxy.mining import MiningEngine, CommunityPool
         from agentic.galaxy.coordinate import GridCoordinate, resource_density
-        from agentic.params import BASE_MINING_RATE_PER_BLOCK
         pool = CommunityPool()
         engine = MiningEngine(pool)
         coord = GridCoordinate(x=0, y=0)
         claims = [{"owner": b"alice", "coordinate": coord, "stake": 100}]
         rewards = engine.compute_block_yields(claims)
         assert b"alice" in rewards
+        from agentic.params import BASE_MINING_RATE_PER_BLOCK
         expected = BASE_MINING_RATE_PER_BLOCK * resource_density(0, 0) * 1.0 * 1.0
         assert abs(rewards[b"alice"] - expected) < 0.001
 
@@ -127,3 +127,48 @@ class TestMiningEngine:
         engine.compute_block_yields(claims)
         assert engine.total_blocks_processed == 2
         assert engine.total_rewards_distributed > 0
+
+    def test_epoch_hardness_halves_yield_at_ring_2(self):
+        """Ring-2 epoch hardness (2) should halve yield compared to ring-1 (1)."""
+        from agentic.galaxy.mining import MiningEngine, CommunityPool
+        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.galaxy.epoch import EpochTracker
+
+        coord = GridCoordinate(x=0, y=0)
+        claims = [{"owner": b"alice", "coordinate": coord, "stake": 100}]
+
+        # Ring 1: hardness = 1 (no divisor effect)
+        pool1 = CommunityPool()
+        engine1 = MiningEngine(pool1)
+        tracker1 = EpochTracker(genesis_ring=1)
+        rewards1 = engine1.compute_block_yields(claims, epoch_tracker=tracker1)
+        yield_ring1 = rewards1[b"alice"]
+
+        # Ring 2: hardness = 2 (yield should be halved)
+        pool2 = CommunityPool()
+        engine2 = MiningEngine(pool2)
+        tracker2 = EpochTracker(genesis_ring=2)
+        rewards2 = engine2.compute_block_yields(claims, epoch_tracker=tracker2)
+        yield_ring2 = rewards2[b"alice"]
+
+        assert yield_ring1 > 0
+        assert yield_ring2 > 0
+        ratio = yield_ring1 / yield_ring2
+        assert abs(ratio - 2.0) < 0.01, f"Expected ratio ~2.0, got {ratio}"
+
+    def test_epoch_tracker_updated_after_block(self):
+        """compute_block_yields should call epoch_tracker.record_mined() with actual total."""
+        from agentic.galaxy.mining import MiningEngine, CommunityPool
+        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.galaxy.epoch import EpochTracker
+
+        pool = CommunityPool()
+        engine = MiningEngine(pool)
+        tracker = EpochTracker(genesis_ring=1)
+        assert tracker.total_mined == 0.0
+
+        coord = GridCoordinate(x=0, y=0)
+        claims = [{"owner": b"alice", "coordinate": coord, "stake": 100}]
+        engine.compute_block_yields(claims, epoch_tracker=tracker)
+
+        assert tracker.total_mined > 0, "EpochTracker.total_mined should be > 0 after mining"

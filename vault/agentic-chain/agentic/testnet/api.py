@@ -60,26 +60,15 @@ from agentic.galaxy.coordinate import GridCoordinate, resource_density, storage_
 from agentic.ledger.transaction import BirthTx, validate_birth
 from agentic.params import (
     BASE_BIRTH_COST, BLOCK_TIME_MS, GRID_MIN, GRID_MAX, NODE_GRID_SPACING,
-    INITIAL_BLOCK_TIME_S, BLOCK_TIME_GROWTH_S, MAX_BLOCK_TIME_S, HALVING_INTERVAL,
 )
 from agentic.testnet.genesis import GenesisState, create_genesis
 from agentic.verification.agent import VerificationAgent, AgentState
 from agentic.verification.dispute import DisputeOutcome
 
-# Block timing — dynamic difficulty: starts fast, grows each block (Proof of Energy)
+# Block timing — fixed interval (epoch hardness replaces old dynamic difficulty)
+_BLOCK_TIME_S: float = BLOCK_TIME_MS / 1000.0  # 60s fixed block time
 _last_block_time: float = 0.0  # epoch timestamp of last mined block; 0 = never mined
-_auto_mine: bool = True  # auto-mining ON — blocks mine automatically at dynamic block time
-
-
-def _current_block_time_s() -> float:
-    """Compute the current required interval between blocks (Proof of Energy difficulty).
-
-    Starts at INITIAL_BLOCK_TIME_S at genesis and grows by BLOCK_TIME_GROWTH_S per
-    block mined, capped at MAX_BLOCK_TIME_S — mirroring Bitcoin's increasing difficulty.
-    """
-    blocks = _genesis.mining_engine.total_blocks_processed if _genesis else 0
-    raw = INITIAL_BLOCK_TIME_S + blocks * BLOCK_TIME_GROWTH_S
-    return min(raw, MAX_BLOCK_TIME_S)
+_auto_mine: bool = True  # auto-mining ON — blocks mine automatically at fixed block time
 
 
 def _snap_to_grid(v: int) -> int:
@@ -95,12 +84,12 @@ def _next_block_in() -> float:
     """Seconds until the next block can be mined.
 
     Returns -1.0 when no block has ever been mined (chain is idle at genesis).
-    The required interval grows with each block — Proof of Energy difficulty.
+    Block time is a fixed constant; epoch hardness handles difficulty scaling.
     """
     if _last_block_time == 0.0:
-        return -1.0  # sentinel: chain hasn't started mining yet
+        return 0.0  # no block mined yet — first block can be mined immediately
     elapsed = max(0.0, time.time() - _last_block_time)
-    return round(max(0.0, _current_block_time_s() - elapsed), 1)
+    return round(max(0.0, _BLOCK_TIME_S - elapsed), 1)
 
 # ---------------------------------------------------------------------------
 # Pydantic response models
@@ -116,6 +105,21 @@ class TestnetStatus(BaseModel):
     total_mined: float
     next_block_in: float      # seconds until next block can be mined (-1 = chain idle)
     current_block_time: float  # current required interval between blocks (Proof of Energy)
+    # Epoch system fields
+    epoch_ring: int = 1
+    epoch_total_mined: float = 0.0
+    epoch_next_threshold: float = 24.0
+    epoch_progress: float = 0.0
+    epoch_agntc_remaining: float = 24.0
+
+
+class EpochStatus(BaseModel):
+    current_ring: int
+    total_mined: float
+    next_threshold: float
+    progress: float
+    agntc_remaining: float
+    homenode_coordinates: dict
 
 
 class CoordinateInfo(BaseModel):
@@ -258,6 +262,37 @@ class NodeInfo(BaseModel):
     stake: Optional[int] = None
 
 
+class SubgridAllocationInfo(BaseModel):
+    secure_count: int = 0
+    develop_count: int = 0
+    research_count: int = 0
+    storage_count: int = 0
+    secure_level: int = 1
+    develop_level: int = 1
+    research_level: int = 1
+    storage_level: int = 1
+    free_cells: int = 64
+
+
+class SubgridAssignRequest(BaseModel):
+    wallet_index: int
+    secure: int = 0
+    develop: int = 0
+    research: int = 0
+    storage: int = 0
+
+
+class ResourceState(BaseModel):
+    agntc_per_block: float
+    dev_points_per_block: float
+    research_points_per_block: float
+    storage_per_block: float
+    total_dev_points: float
+    total_research_points: float
+    total_storage_units: float
+    subgrid: SubgridAllocationInfo
+
+
 # ---------------------------------------------------------------------------
 # Application
 # ---------------------------------------------------------------------------
@@ -291,10 +326,10 @@ async def _start_auto_miner() -> None:
 
 
 async def _auto_mine_loop() -> None:
-    """Mine a block at the current dynamic block time when there are active claims."""
+    """Mine a block at the fixed block time when there are active claims."""
     global _last_block_time
     while True:
-        await asyncio.sleep(_current_block_time_s())
+        await asyncio.sleep(_BLOCK_TIME_S)
         if not _auto_mine or _genesis is None:
             continue
         g = _genesis
@@ -320,10 +355,35 @@ def _do_mine(g: GenesisState) -> dict:
     hex_yields: Dict[str, float] = {}
     if vresult.outcome == DisputeOutcome.FINALIZED:
         claims_input = g.claim_registry.as_mining_claims()
-        yields = g.mining_engine.compute_block_yields(claims_input)
+        yields = g.mining_engine.compute_block_yields(
+            claims_input, epoch_tracker=g.epoch_tracker)
         if yields:
             g.mining_engine.mint_block_rewards(yields, g.ledger_state, g.viewing_keys)
         hex_yields = {k.hex(): round(v, 6) for k, v in yields.items()}
+
+        # Distribute subgrid outputs for all allocators
+        for owner, alloc in g.subgrid_allocators.items():
+            claims_for_owner = [c for c in claims_input if c["owner"] == owner]
+            if not claims_for_owner:
+                continue
+            density = resource_density(
+                claims_for_owner[0]["coordinate"].x,
+                claims_for_owner[0]["coordinate"].y,
+            )
+            epoch_h = g.epoch_tracker.hardness(g.epoch_tracker.current_ring)
+            out = alloc.compute_output(density=density, epoch_hardness=epoch_h)
+            if owner not in g.resource_totals:
+                g.resource_totals[owner] = {
+                    "dev_points": 0.0,
+                    "research_points": 0.0,
+                    "storage_units": 0.0,
+                }
+            g.resource_totals[owner]["dev_points"] += out.dev_points
+            g.resource_totals[owner]["research_points"] += out.research_points
+            g.resource_totals[owner]["storage_units"] += out.storage_units
+
+    # Check for newly opened rings after mining
+    newly_opened = getattr(g.mining_engine, '_last_newly_opened', [])
 
     _last_block_time = time.time()
 
@@ -336,6 +396,13 @@ def _do_mine(g: GenesisState) -> dict:
                 "verifiers_assigned": vresult.assigned_count,
                 "valid_proofs": vresult.valid_proof_count,
             }))
+            # Broadcast epoch_advance event when new rings open
+            if newly_opened:
+                loop.create_task(_ws_manager.broadcast("epoch_advance", {
+                    "newly_opened_rings": newly_opened,
+                    "current_ring": g.epoch_tracker.current_ring,
+                    "total_mined": g.epoch_tracker.total_mined,
+                }))
     except RuntimeError:
         pass
 
@@ -374,9 +441,117 @@ def get_status() -> TestnetStatus:
         community_pool_remaining=g.community_pool.remaining,
         blocks_processed=g.mining_engine.total_blocks_processed,
         total_mined=g.mining_engine.total_rewards_distributed,
-        next_block_in=_next_block_in(),       # -1.0 = chain idle (no block mined yet)
-        current_block_time=_current_block_time_s(),
+        next_block_in=_next_block_in(),
+        current_block_time=_BLOCK_TIME_S,
+        epoch_ring=g.epoch_tracker.current_ring,
+        epoch_total_mined=g.epoch_tracker.total_mined,
+        epoch_next_threshold=g.epoch_tracker.next_epoch_threshold(),
+        epoch_progress=g.epoch_tracker.progress_to_next(),
+        epoch_agntc_remaining=g.epoch_tracker.agntc_to_next_epoch(),
     )
+
+
+@app.get("/api/epoch", response_model=EpochStatus)
+def get_epoch_status() -> EpochStatus:
+    """Return detailed epoch/ring expansion state."""
+    g = _g()
+    et = g.epoch_tracker
+    factions = ["community", "treasury", "founder", "professional"]
+    homenodes = {
+        f: [et.homenode_coordinate(f, r) for r in range(1, et.current_ring + 1)]
+        for f in factions
+    }
+    return EpochStatus(
+        current_ring=et.current_ring,
+        total_mined=et.total_mined,
+        next_threshold=et.next_epoch_threshold(),
+        progress=et.progress_to_next(),
+        agntc_remaining=et.agntc_to_next_epoch(),
+        homenode_coordinates=homenodes,
+    )
+
+
+@app.get("/api/resources/{wallet_index}", response_model=ResourceState)
+def get_resources(wallet_index: int) -> ResourceState:
+    """Return per-block resource output and subgrid allocation for a wallet."""
+    g = _g()
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    wallet = g.wallets[wallet_index]
+    owner = wallet.public_key
+    alloc = g.subgrid_allocators.get(owner)
+    if alloc is None:
+        return ResourceState(
+            agntc_per_block=0, dev_points_per_block=0,
+            research_points_per_block=0, storage_per_block=0,
+            total_dev_points=0, total_research_points=0,
+            total_storage_units=0, subgrid=SubgridAllocationInfo(),
+        )
+
+    claims = g.claim_registry.all_active_claims()
+    density = 0.5
+    for c in claims:
+        if c.owner == owner:
+            density = resource_density(c.coordinate.x, c.coordinate.y)
+            break
+
+    epoch_hardness = g.epoch_tracker.hardness(g.epoch_tracker.current_ring)
+    from agentic.galaxy.subgrid import SubcellType
+    out = alloc.compute_output(density=density, epoch_hardness=epoch_hardness)
+
+    totals = g.resource_totals.get(owner, {
+        "dev_points": 0.0, "research_points": 0.0, "storage_units": 0.0,
+    })
+    return ResourceState(
+        agntc_per_block=round(out.agntc, 6),
+        dev_points_per_block=round(out.dev_points, 4),
+        research_points_per_block=round(out.research_points, 4),
+        storage_per_block=round(out.storage_units, 4),
+        total_dev_points=totals.get("dev_points", 0.0),
+        total_research_points=totals.get("research_points", 0.0),
+        total_storage_units=totals.get("storage_units", 0.0),
+        subgrid=SubgridAllocationInfo(
+            secure_count=alloc.count(SubcellType.SECURE),
+            develop_count=alloc.count(SubcellType.DEVELOP),
+            research_count=alloc.count(SubcellType.RESEARCH),
+            storage_count=alloc.count(SubcellType.STORAGE),
+            secure_level=alloc.get_level(SubcellType.SECURE),
+            develop_level=alloc.get_level(SubcellType.DEVELOP),
+            research_level=alloc.get_level(SubcellType.RESEARCH),
+            storage_level=alloc.get_level(SubcellType.STORAGE),
+            free_cells=alloc.free_cells,
+        ),
+    )
+
+
+@app.post("/api/resources/{wallet_index}/assign")
+def assign_subgrid(wallet_index: int, req: SubgridAssignRequest) -> dict:
+    """Reassign subgrid cells across the 4 resource types."""
+    g = _g()
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    wallet = g.wallets[wallet_index]
+    owner = wallet.public_key
+    alloc = g.subgrid_allocators.get(owner)
+    if alloc is None:
+        raise HTTPException(status_code=404, detail="No subgrid for this wallet")
+    from agentic.galaxy.subgrid import SubcellType
+    total_requested = req.secure + req.develop + req.research + req.storage
+    if total_requested > 64:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Total cells {total_requested} exceeds 64",
+        )
+    # Reset all allocations, then assign new counts
+    alloc.assign(SubcellType.SECURE, 0)
+    alloc.assign(SubcellType.DEVELOP, 0)
+    alloc.assign(SubcellType.RESEARCH, 0)
+    alloc.assign(SubcellType.STORAGE, 0)
+    alloc.assign(SubcellType.SECURE, req.secure)
+    alloc.assign(SubcellType.DEVELOP, req.develop)
+    alloc.assign(SubcellType.RESEARCH, req.research)
+    alloc.assign(SubcellType.STORAGE, req.storage)
+    return {"status": "ok", "free_cells": alloc.free_cells}
 
 
 @app.get("/api/coordinate/{x}/{y}", response_model=CoordinateInfo)
@@ -466,17 +641,16 @@ def mine_block() -> MineResult:
     global _last_block_time
     now = time.time()
     elapsed = now - _last_block_time
-    current_block_time = _current_block_time_s()
-    if _last_block_time > 0 and elapsed < current_block_time:
-        remaining = current_block_time - elapsed
+    if _last_block_time > 0 and elapsed < _BLOCK_TIME_S:
+        remaining = _BLOCK_TIME_S - elapsed
         raise HTTPException(
             status_code=429,
-            detail=f"Block too early. {remaining:.1f}s remaining (block time: {current_block_time:.0f}s)")
+            detail=f"Block too early. {remaining:.1f}s remaining (block time: {_BLOCK_TIME_S:.0f}s)")
     g = _g()
     result = _do_mine(g)
     return MineResult(
         block_number=result["block_number"], yields=result["yields"],
-        block_time=round(now, 3), next_block_at=round(now + current_block_time, 3),
+        block_time=round(now, 3), next_block_at=round(now + _BLOCK_TIME_S, 3),
         verification_outcome=result["outcome"],
         verifiers_assigned=result["assigned"], valid_proofs=result["valid"])
 
@@ -484,10 +658,10 @@ def mine_block() -> MineResult:
 @app.post("/api/automine")
 async def toggle_automine(enabled: bool = True) -> dict:
     """Toggle automatic block mining. When enabled, blocks are mined at the
-    current dynamic block time (grows per block — Proof of Energy difficulty)."""
+    fixed block time interval. Epoch hardness handles difficulty scaling."""
     global _auto_mine
     _auto_mine = enabled
-    return {"auto_mine": _auto_mine, "current_block_time": _current_block_time_s()}
+    return {"auto_mine": _auto_mine, "current_block_time": _BLOCK_TIME_S}
 
 
 @app.post("/api/claim", response_model=ClaimNodeResult)

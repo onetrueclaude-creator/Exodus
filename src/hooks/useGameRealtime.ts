@@ -78,6 +78,26 @@ export function useGameRealtime() {
         }
       } catch {
         // Supabase unavailable — proceed with empty grid
+      }
+
+      // After Supabase hydrate, also fetch resource/epoch state from chain API
+      try {
+        const resResp = await fetch('http://localhost:8080/api/resources/0')
+        if (resResp.ok) {
+          const res = await resResp.json()
+          const store = useGameStore.getState()
+          store.setSubgridProjection(
+            res.agntc_per_block ?? 0,
+            res.dev_points_per_block ?? 0,
+            res.research_points_per_block ?? 0,
+            res.storage_per_block ?? 0,
+          )
+          store.setDevPoints(res.total_dev_points ?? 0)
+          store.setResearchPoints(res.total_research_points ?? 0)
+          store.setStorageSize(res.total_storage_units ?? 0)
+        }
+      } catch {
+        // chain API unavailable — degrade gracefully
       } finally {
         setIsReady(true)
       }

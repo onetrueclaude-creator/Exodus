@@ -53,7 +53,7 @@ describe('gameStore', () => {
     expect(state.diplomacy).toEqual({});
     expect(state.currentUserId).toBeNull();
     expect(state.currentAgentId).toBeNull();
-    expect(state.energy).toBe(1000);
+    expect(state.cpuTokens).toBe(1000);
     expect(state.minerals).toBe(50);
     expect(state.agntcBalance).toBe(50);
     expect(state.turn).toBe(0);
@@ -94,20 +94,20 @@ describe('gameStore', () => {
       useGameStore.getState().setCurrentUser('u1', 'a1');
     });
 
-    it('creates an agent and deducts energy', () => {
+    it('creates an agent and deducts cpuTokens', () => {
       const state = useGameStore.getState();
-      const energyBefore = state.energy;
+      const cpuBefore = state.cpuTokens;
       const id = state.createAgent('sonnet', { x: 10, y: 20 });
       expect(id).toBeTruthy();
       const after = useGameStore.getState();
       expect(after.agents[id!]).toBeDefined();
       expect(after.agents[id!].tier).toBe('sonnet');
       expect(after.agents[id!].position).toEqual({ x: 10, y: 20 });
-      expect(after.energy).toBe(energyBefore - TIER_CPU_COST.sonnet * 5);
+      expect(after.cpuTokens).toBe(cpuBefore - TIER_CPU_COST.sonnet * 5);
     });
 
-    it('returns null if not enough energy', () => {
-      useGameStore.setState({ energy: 0 });
+    it('returns null if not enough cpuTokens', () => {
+      useGameStore.setState({ cpuTokens: 0 });
       const id = useGameStore.getState().createAgent('opus', { x: 0, y: 0 });
       expect(id).toBeNull();
     });
@@ -144,13 +144,13 @@ describe('gameStore', () => {
       expect(claimed.borderRadius).toBe(TIER_BASE_BORDER.sonnet);
     });
 
-    it('deducts energy and minerals on claim', () => {
+    it('deducts cpuTokens and minerals on claim', () => {
       const before = useGameStore.getState();
-      const eBefore = before.energy;
+      const cpuBefore = before.cpuTokens;
       const mBefore = before.minerals;
       useGameStore.getState().claimNode('unclaimed-1', 'haiku');
       const after = useGameStore.getState();
-      expect(after.energy).toBe(eBefore - TIER_CLAIM_COST.haiku);
+      expect(after.cpuTokens).toBe(cpuBefore - TIER_CLAIM_COST.haiku);
       expect(after.minerals).toBe(mBefore - Math.ceil(TIER_CLAIM_COST.haiku * 0.3));
     });
 
@@ -160,8 +160,8 @@ describe('gameStore', () => {
       expect(result).toBe(false);
     });
 
-    it('fails if not enough energy', () => {
-      useGameStore.setState({ energy: 0 });
+    it('fails if not enough cpuTokens', () => {
+      useGameStore.setState({ cpuTokens: 0 });
       const result = useGameStore.getState().claimNode('unclaimed-1', 'opus');
       expect(result).toBe(false);
     });
@@ -384,7 +384,7 @@ describe('gameStore', () => {
   it('updates resources', () => {
     useGameStore.getState().updateResources(500, 100, 25);
     const s = useGameStore.getState();
-    expect(s.energy).toBe(500);
+    expect(s.cpuTokens).toBe(500);
     expect(s.minerals).toBe(100);
     expect(s.agntcBalance).toBe(25);
   });
@@ -415,10 +415,10 @@ describe('gameStore', () => {
       expect(useGameStore.getState().turn).toBe(1);
     });
 
-    it('increases energy by baseIncome + mining - cpuCost', () => {
-      const before = useGameStore.getState().energy;
+    it('increases cpuTokens by baseIncome + mining - cpuCost', () => {
+      const before = useGameStore.getState().cpuTokens;
       useGameStore.getState().tick();
-      const after = useGameStore.getState().energy;
+      const after = useGameStore.getState().cpuTokens;
       const agent = useGameStore.getState().agents['a1'];
       const expectedNet = 1000 + agent.miningRate - agent.cpuPerTurn;
       expect(after).toBe(before + expectedNet);

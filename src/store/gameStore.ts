@@ -27,10 +27,19 @@ interface GameState {
   camera: Camera;
 
   // Resources
-  energy: number;
+  cpuTokens: number;
   minerals: number;
   agntcBalance: number;
   securedChains: number;
+  cpuStakedActive: number;  // tokens spent by Secure sub-agents this block
+  cpuStakedTotal: number;   // all-time cumulative Secure token spend
+  devPoints: number;
+  researchPoints: number;
+  storageSize: number;
+  subgridAgntcPerBlock: number;
+  subgridDevPerBlock: number;
+  subgridResearchPerBlock: number;
+  subgridStoragePerBlock: number;
 
   // Resource deltas (flash indicators)
   resourceDeltas: Record<string, { value: number; ts: number }>;
@@ -86,6 +95,12 @@ interface GameState {
   spendEnergy: (amount: number, reason: string) => boolean;
   addSecuredChain: () => void;
   flashDelta: (key: string, value: number) => void;
+  setCpuTokens: (value: number) => void;
+  setCpuStaked: (active: number, total: number) => void;
+  setDevPoints: (value: number) => void;
+  setResearchPoints: (value: number) => void;
+  setStorageSize: (value: number) => void;
+  setSubgridProjection: (agntc: number, dev: number, research: number, storage: number) => void;
   syncAgentFromChain: (agent: Agent) => void;
   setChainMode: (mode: 'testnet' | 'mock', blocks?: number) => void;
   setChainStatus: (status: { poolRemaining: number; totalMined: number; stateRoot: string; nextBlockIn: number; blocks: number }) => void;
@@ -97,7 +112,7 @@ interface GameState {
   clearFocusRequest: () => void;
   setMaxDeployTier: (tier: AgentTier) => void;
   setUserFaction: (faction: Faction) => void;
-  energyEarnedHistory: number[]; // last N CPU Energy awards, for estimating per-turn rate
+  cpuTokensEarnedHistory: number[]; // last N CPU Token awards, for estimating per-turn rate
   addCpuEnergy: (amount: number) => void;
   recordEnergyEarned: (amount: number) => void;
   reset: () => void;
@@ -111,10 +126,19 @@ const initialState = {
   currentUserId: null as string | null,
   currentAgentId: null as string | null,
   camera: { position: { x: 0, y: 0 }, zoom: 1 } as Camera,
-  energy: 1000,
+  cpuTokens: 1000,
   minerals: 50,
   agntcBalance: 50,
   securedChains: 0,
+  cpuStakedActive: 0,
+  cpuStakedTotal: 0,
+  devPoints: 0,
+  researchPoints: 0,
+  storageSize: 0,
+  subgridAgntcPerBlock: 0,
+  subgridDevPerBlock: 0,
+  subgridResearchPerBlock: 0,
+  subgridStoragePerBlock: 0,
   resourceDeltas: {} as Record<string, { value: number; ts: number }>,
   turn: 0,
   turnInterval: null as number | null,
@@ -131,7 +155,7 @@ const initialState = {
   empireColor: 0x8b5cf6, // default: purple (Opus)
   activeDockPanel: null as DockPanelId | null,
   focusRequest: null as { nodeId: string; ts: number } | null,
-  energyEarnedHistory: [] as number[],
+  cpuTokensEarnedHistory: [] as number[],
 };
 
 export const useGameStore = create<GameState>((set) => ({
@@ -143,7 +167,7 @@ export const useGameStore = create<GameState>((set) => ({
   createAgent: (tier, position, name, parentAgentId) => {
     const cost = TIER_CPU_COST[tier] * 5;
     const state = useGameStore.getState();
-    if (state.energy < cost) return null;
+    if (state.cpuTokens < cost) return null;
 
     const id = `agent-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const agent: Agent = {
@@ -166,7 +190,7 @@ export const useGameStore = create<GameState>((set) => ({
 
     set((s) => ({
       agents: { ...s.agents, [id]: agent },
-      energy: s.energy - cost,
+      cpuTokens: s.cpuTokens - cost,
     }));
 
     return id;
@@ -179,7 +203,7 @@ export const useGameStore = create<GameState>((set) => ({
 
     const energyCost = TIER_CLAIM_COST[tier];
     const mineralCost = Math.ceil(TIER_CLAIM_COST[tier] * 0.3);
-    if (state.energy < energyCost || state.minerals < mineralCost) return false;
+    if (state.cpuTokens < energyCost || state.minerals < mineralCost) return false;
 
     const claimed: Agent = {
       ...slot,
@@ -197,7 +221,7 @@ export const useGameStore = create<GameState>((set) => ({
 
     set((s) => ({
       agents: { ...s.agents, [slotId]: claimed },
-      energy: s.energy - energyCost,
+      cpuTokens: s.cpuTokens - energyCost,
       minerals: s.minerals - mineralCost,
     }));
 
@@ -358,16 +382,16 @@ export const useGameStore = create<GameState>((set) => ({
   setActiveTab: (tab) => set({ activeTab: tab }),
 
   updateResources: (energy, minerals, agntc) =>
-    set({ energy, minerals, agntcBalance: agntc }),
+    set({ cpuTokens: energy, minerals, agntcBalance: agntc }),
 
   spendEnergy: (amount, _reason) => {
     const s = useGameStore.getState();
-    if (s.energy < amount) return false;
+    if (s.cpuTokens < amount) return false;
     set({
-      energy: s.energy - amount,
+      cpuTokens: s.cpuTokens - amount,
       resourceDeltas: {
         ...s.resourceDeltas,
-        energy: { value: -amount, ts: Date.now() },
+        cpuTokens: { value: -amount, ts: Date.now() },
       },
     });
     return true;
@@ -389,6 +413,18 @@ export const useGameStore = create<GameState>((set) => ({
         [key]: { value, ts: Date.now() },
       },
     })),
+
+  setCpuTokens: (value) => set({ cpuTokens: value }),
+  setCpuStaked: (active, total) => set({ cpuStakedActive: active, cpuStakedTotal: total }),
+  setDevPoints: (value) => set({ devPoints: value }),
+  setResearchPoints: (value) => set({ researchPoints: value }),
+  setStorageSize: (value) => set({ storageSize: value }),
+  setSubgridProjection: (agntc, dev, research, storage) => set({
+    subgridAgntcPerBlock: agntc,
+    subgridDevPerBlock: dev,
+    subgridResearchPerBlock: research,
+    subgridStoragePerBlock: storage,
+  }),
 
   /**
    * Advance one turn. Calculate net resource production:
@@ -432,7 +468,7 @@ export const useGameStore = create<GameState>((set) => ({
 
       return {
         turn: s.turn + 1,
-        energy: Math.max(0, s.energy + netEnergy),
+        cpuTokens: Math.max(0, s.cpuTokens + netEnergy),
         minerals: s.minerals + mineralGain,
         agntcBalance: Math.round((s.agntcBalance - totalPressureCost) * 100) / 100,
         agents: updatedAgents,
@@ -497,11 +533,11 @@ export const useGameStore = create<GameState>((set) => ({
   setUserFaction: (faction) => set({ userFaction: faction }),
 
   addCpuEnergy: (amount) =>
-    set((s) => ({ energy: Math.max(0, s.energy + amount) })),
+    set((s) => ({ cpuTokens: Math.max(0, s.cpuTokens + amount) })),
 
   recordEnergyEarned: (amount) =>
     set((s) => ({
-      energyEarnedHistory: [...s.energyEarnedHistory.slice(-19), amount],
+      cpuTokensEarnedHistory: [...s.cpuTokensEarnedHistory.slice(-19), amount],
     })),
 
   reset: () => {

@@ -96,3 +96,40 @@ class TestGenesisState:
         g = create_genesis(num_wallets=5, num_claims=3, seed=42)
         assert hasattr(g, 'viewing_keys')
         assert len(g.viewing_keys) == 5  # one per wallet
+
+
+def test_genesis_has_epoch_tracker():
+    from agentic.testnet.genesis import create_genesis
+    from agentic.galaxy.epoch import EpochTracker
+    g = create_genesis(num_wallets=2, num_claims=1, seed=42)
+    assert hasattr(g, "epoch_tracker")
+    assert isinstance(g.epoch_tracker, EpochTracker)
+    assert g.epoch_tracker.current_ring == 1
+    assert g.epoch_tracker.total_mined == 0.0
+
+
+def test_genesis_has_subgrid_allocators():
+    from agentic.testnet.genesis import create_genesis
+    from agentic.galaxy.subgrid import SubgridAllocator
+    g = create_genesis(num_wallets=2, num_claims=2, seed=42)
+    assert hasattr(g, "subgrid_allocators")
+    # Genesis creates 9 fixed nodes with 9 unique owners
+    assert len(g.subgrid_allocators) == 9
+    for alloc in g.subgrid_allocators.values():
+        assert isinstance(alloc, SubgridAllocator)
+        assert alloc.free_cells == 64
+
+
+def test_genesis_has_resource_totals():
+    from agentic.testnet.genesis import create_genesis
+    g = create_genesis(num_wallets=2, num_claims=2, seed=42)
+    assert hasattr(g, "resource_totals")
+    # One entry per wallet
+    assert len(g.resource_totals) == len(g.wallets)
+    for pubkey, totals in g.resource_totals.items():
+        assert "dev_points" in totals
+        assert "research_points" in totals
+        assert "storage_units" in totals
+        assert totals["dev_points"] == 0.0
+        assert totals["research_points"] == 0.0
+        assert totals["storage_units"] == 0.0
