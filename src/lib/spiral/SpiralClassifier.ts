@@ -27,7 +27,7 @@ const ARM_ENTRIES = Object.entries(ARM_ANGLES) as [Faction, number][]
 const ARM_HALF_WIDTH = Math.PI / 4   // 45° — full-coverage spiral wedge sectors
 // R_FLAT: inner flat zone radius. Below this, no spiral twist.
 const R_FLAT = 3.0
-const R_MAX = 324.0    // grid boundary (±3240 blockchain / 10 NODE_GRID_SPACING)
+const R_MAX = 324.0    // visual spiral extent — derived from epoch ring (dynamic in v2)
 const SPIRAL_TURNS = 0.15  // loose quarter-ish turn CCW across the full grid
 
 function spiralOffset(r: number): number {

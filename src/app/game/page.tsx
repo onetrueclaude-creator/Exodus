@@ -151,7 +151,6 @@ export default function GamePage() {
       try {
         const status = await (svc as { getStatus(): Promise<import('@/types').TestnetStatus> }).getStatus();
         store.setChainStatus({
-          poolRemaining: status.community_pool_remaining,
           totalMined: status.total_mined,
           stateRoot: status.state_root,
           nextBlockIn: status.next_block_in,

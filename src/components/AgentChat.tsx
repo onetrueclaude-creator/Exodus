@@ -657,7 +657,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
         `Network: ${store.chainMode === 'testnet' ? 'TESTNET' : 'OFFLINE'}`,
         `Blocks: ${store.testnetBlocks.toLocaleString()}`,
         `Total Mined: ${store.totalMined.toLocaleString()}`,
-        `Pool Remaining: ${store.poolRemaining.toLocaleString()}`,
+        `Epoch Ring: ${store.testnetBlocks > 0 ? Math.floor(store.testnetBlocks / 10) : 0}`,
         `Secured Chains: ${store.securedChains}`,
         store.stateRoot ? `State Root: ${store.stateRoot.slice(0, 16)}...` : '',
         `Next Block: ~${Math.ceil(store.nextBlockIn)}s`,

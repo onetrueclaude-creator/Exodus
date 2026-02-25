@@ -10,7 +10,6 @@ export default function TimechainStats() {
   const stateRoot = useGameStore((s) => s.stateRoot);
   const nextBlockIn = useGameStore((s) => s.nextBlockIn);
   const totalMined = useGameStore((s) => s.totalMined);
-  const poolRemaining = useGameStore((s) => s.poolRemaining);
 
   // Genesis timestamp — fixed for testnet
   const [genesis] = useState(() => {
@@ -52,7 +51,6 @@ export default function TimechainStats() {
         <StatRow label="Epochs" value={epochs.toLocaleString()} />
         <StatRow label="Blocks" value={testnetBlocks.toLocaleString()} />
         <StatRow label="Mined" value={totalMined.toLocaleString()} />
-        <StatRow label="Pool" value={poolRemaining.toLocaleString()} />
         <StatRow
           label="Next Block"
           value={`~${countdown}s`}

@@ -54,7 +54,6 @@ interface GameState {
   isInitializing: boolean;
 
   // Chain status (from testnet API)
-  poolRemaining: number;
   totalMined: number;
   stateRoot: string;
   nextBlockIn: number;
@@ -103,7 +102,7 @@ interface GameState {
   setSubgridProjection: (agntc: number, dev: number, research: number, storage: number) => void;
   syncAgentFromChain: (agent: Agent) => void;
   setChainMode: (mode: 'testnet' | 'mock', blocks?: number) => void;
-  setChainStatus: (status: { poolRemaining: number; totalMined: number; stateRoot: string; nextBlockIn: number; blocks: number }) => void;
+  setChainStatus: (status: { totalMined: number; stateRoot: string; nextBlockIn: number; blocks: number }) => void;
   setInitializing: (v: boolean) => void;
   setEmpireColor: (color: number) => void;
   setActiveDockPanel: (panel: DockPanelId | null) => void;
@@ -145,7 +144,6 @@ const initialState = {
   chainMode: 'mock' as 'testnet' | 'mock',
   testnetBlocks: 0,
   isInitializing: true,
-  poolRemaining: 0,
   totalMined: 0,
   stateRoot: '',
   nextBlockIn: 60,
@@ -500,7 +498,6 @@ export const useGameStore = create<GameState>((set) => ({
 
   setChainStatus: (status) =>
     set({
-      poolRemaining: status.poolRemaining,
       totalMined: status.totalMined,
       stateRoot: status.stateRoot,
       nextBlockIn: status.nextBlockIn,

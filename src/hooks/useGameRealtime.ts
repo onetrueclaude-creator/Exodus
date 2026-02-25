@@ -65,7 +65,6 @@ export function useGameRealtime() {
 
         if (chainStatus) {
           setChainStatus({
-            poolRemaining: chainStatus.community_pool_remaining,
             totalMined: chainStatus.total_mined,
             stateRoot: chainStatus.state_root,
             nextBlockIn: chainStatus.next_block_in,
@@ -114,7 +113,6 @@ export function useGameRealtime() {
         (payload) => {
           const row = payload.new as ChainStatusRow
           setChainStatus({
-            poolRemaining: row.community_pool_remaining,
             totalMined: row.total_mined,
             stateRoot: row.state_root,
             nextBlockIn: row.next_block_in,
