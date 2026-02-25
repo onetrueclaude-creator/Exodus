@@ -33,8 +33,27 @@
 
 ---
 
+## 2026-02-25 — Resource system redesign approved
+
+**Added:** `docs/plans/2026-02-25-resource-system-design.md` — full resource model revision.
+
+**Key decisions:**
+- CPU Energy renamed to **CPU Tokens** (read-only cumulative proof-of-work counter)
+- **CPU Staked** introduced (active + all-time, driven by Secure sub-agent token spend)
+- **Subgrid allocation panel** — private 8×8 inner grid assigns sub-cells to 4 autonomous agent types
+- 4 types: Secure (AGNTC), Develop (dev points), Research (research points), Storage (ZK data on-chain)
+- Level scaling: `output = base × level^0.8`
+- Canonical design captured in `vault/seed.md` under "Resource System Redesign"
+
+**Also updated:** `vault/seed.md` with approved design summary.
+
+---
+
 ## Pending
 
 - [ ] Write Proof of Energy (PoE) whitepaper section in `engineering/`
 - [ ] Fill `research/competitors/` with competitor landscape analysis
 - [ ] Write `product/roadmap/` milestones for Q1 2026
+- [ ] Define base rates: BASE_SECURE_RATE, BASE_DEVELOP_RATE, BASE_RESEARCH_RATE, BASE_STORAGE_RATE
+- [ ] Define max subsquare level and dev point cost formula for leveling
+- [ ] Define Storage unit (bytes vs abstract data blocks)

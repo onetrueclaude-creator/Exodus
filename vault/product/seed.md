@@ -25,4 +25,9 @@ ZK Agentic Network is a gamified blockchain social dApp where users manage AI ag
 - Subscription tiers: Community (free/Sonnet), Professional ($50/Opus), Max ($200/Opus unlimited)
 - 4-faction galaxy grid with spiral arms (designed 2026-02-24)
 - Agent terminal = constrained Claude API (no free text, only valid game choices)
-- CPU Energy = real Claude API token spend (verifiable Proof of Energy)
+- **CPU Tokens** (was CPU Energy) = cumulative proof-of-work counter, read-only, tracks all Claude API token spend
+- **CPU Staked** = live measure of compute committed to Secure (mining) sub-agents
+- **Subgrid allocation** = private 8×8 inner panel — 4 types (Secure, Develop, Research, Storage)
+- Mining = securing the chain via agentic action; Secure sub-agents measure their token spend as CPU Staked
+- Storage sub-agent = ZK tunnel for private on-chain data (Filecoin PoST architecture reference)
+- Level scaling: `output = base × level^0.8`, levels purchased with Development Points
