@@ -37,8 +37,8 @@ describe('Onboarding API contracts', () => {
       return Math.abs(hash);
     }
 
-    const GRID_MIN = -3240;
-    const GRID_MAX = 3240;
+    const GRID_MIN = -20;
+    const GRID_MAX = 20;
     const range = GRID_MAX - GRID_MIN + 1;
 
     const hash1 = simpleHash('user-abc-123');

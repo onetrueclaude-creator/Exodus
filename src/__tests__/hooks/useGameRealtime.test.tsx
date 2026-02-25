@@ -7,7 +7,7 @@ const mockChannel = {
   unsubscribe: vi.fn(),
 }
 
-const mockChainStatusRow = { blocks_processed: 5, state_root: 'abc', community_pool_remaining: 100, total_mined: 50, next_block_in: 45 }
+const mockChainStatusRow = { blocks_processed: 5, state_root: 'abc', total_mined: 50, next_block_in: 45 }
 const mockAgentRow = { id: 'agent-1', user_id: null, chain_x: 0, chain_y: 0, visual_x: 0, visual_y: 0, tier: 'haiku', is_primary: false, username: null, bio: null, intro_message: null, density: 0.5, storage_slots: 1, stake: 0, border_radius: 30, mining_rate: 1, cpu_per_turn: 1, staked_cpu: 0, parent_agent_id: null, synced_at: new Date().toISOString() }
 
 const mockSupabase = {

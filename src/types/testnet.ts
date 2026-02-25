@@ -5,20 +5,25 @@
  * These types match the FastAPI Pydantic models exactly.
  */
 
-/** Grid bounds on the blockchain (6481 × 6481 = ~42M coordinates) */
-export const CHAIN_GRID_MIN = -3240;
-export const CHAIN_GRID_MAX = 3240;
-export const CHAIN_GRID_SPAN = CHAIN_GRID_MAX - CHAIN_GRID_MIN; // 6480
+/**
+ * Grid bounds — dynamic in v2.
+ * These defaults cover the genesis ring. Actual bounds come from
+ * the epoch state in /api/status or /api/epoch.
+ */
+export const CHAIN_GRID_DEFAULT_RADIUS = 20; // genesis ring + fog
+export const CHAIN_GRID_MIN = -CHAIN_GRID_DEFAULT_RADIUS;
+export const CHAIN_GRID_MAX = CHAIN_GRID_DEFAULT_RADIUS;
+export const CHAIN_GRID_SPAN = CHAIN_GRID_MAX - CHAIN_GRID_MIN;
 
 // GET /api/status
 export interface TestnetStatus {
   state_root: string;
   record_count: number;
   total_claims: number;
-  community_pool_remaining: number;
   blocks_processed: number;
   total_mined: number;
   next_block_in: number;
+  epoch_ring: number;
 }
 
 // GET /api/coordinate/{x}/{y}

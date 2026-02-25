@@ -58,9 +58,9 @@ export interface Database {
           state_root: string
           blocks_processed: number
           total_claims: number
-          community_pool_remaining: number
           total_mined: number
           next_block_in: number
+          epoch_ring: number
           synced_at: string
         }
         Insert: Partial<Database['public']['Tables']['chain_status']['Row']>

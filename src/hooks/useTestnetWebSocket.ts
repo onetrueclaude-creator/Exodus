@@ -41,7 +41,6 @@ export function useTestnetWebSocket() {
               fetch(`${TESTNET_API}/api/status`)
                 .then(r => r.json())
                 .then(s => setChainStatus({
-                  poolRemaining: s.community_pool_remaining,
                   totalMined: s.total_mined,
                   stateRoot: s.state_root,
                   nextBlockIn: s.next_block_in,
