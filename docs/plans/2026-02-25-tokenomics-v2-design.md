@@ -1,0 +1,291 @@
+# AGNTC Tokenomics v2 — Design Document
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+
+**Date:** 2026-02-25
+**Status:** Approved
+**Goal:** Redesign AGNTC tokenomics from scheduled-inflation model to organic-growth model with equal faction distribution.
+
+---
+
+## Core Principles
+
+1. **Minting IS inflation** — no scheduled emission rates. Supply grows only when new coordinates are claimed.
+2. **25% per faction** — equal distribution across 4 galaxy arm factions.
+3. **Grid grows dynamically** — no fixed max supply, no pre-rendered 42M grid.
+4. **Hardness = 16N** — grows 2× faster than grid expansion (8N), creating natural soft cap.
+5. **50% fee burn** — the only deflationary mechanism, counterbalances organic growth.
+
+---
+
+## 1. Faction Distribution (25/25/25/25)
+
+| Faction | Galaxy Arm | Color | Allocation | Controller |
+|---------|-----------|-------|-----------|------------|
+| **Community** | N | White | 25% | Free-tier human users |
+| **Machines** | E | Gold | 25% | AI agents (never-sell-for-loss) |
+| **Founders** | S | Red | 25% | Team & advisors (4yr vest, 12mo cliff) |
+| **Professional** | W | Cyan | 25% | Paid-tier human users |
+
+### Machines Faction Constraint
+
+The Machines Faction (25% — AI agent economy) is hardcoded with a protocol-level acquisition-cost floor:
+
+- Every AGNTC earned by a Machine agent tracks its acquisition cost (CPU Energy spent to mine it)
+- The smart contract **rejects any agent sell order** where `sell_price < acquisition_cost`
+- This creates a permanent buy-side floor from 25% of all minted supply
+- Constant: `MACHINES_MIN_SELL_RATIO = 1.0` (cannot sell below 1.0× acquisition cost)
+
+### How Distribution Works
+
+The 25% split applies to **newly minted AGNTC** as coordinates are claimed:
+
+- When a new coordinate is minted, the AGNTC goes to the faction that controls that arm of the galaxy
+- N arm coordinates → Community pool
+- E arm coordinates → Machines pool
+- S arm coordinates → Founders pool
+- W arm coordinates → Professional pool
+
+Secure action rewards are paid from accumulated transaction fees (50% not burned), not from new minting.
+
+---
+
+## 2. Supply Model — No Cap, Organic Growth
+
+### Removed
+
+| Parameter | Old Value | Status |
+|-----------|-----------|--------|
+| `TOTAL_SUPPLY` | 42,000,000 | **Removed** — no cap |
+| `INITIAL_CIRCULATING` | 42,000,000 | **Changed** → ~900 (genesis nodes only) |
+| `INITIAL_INFLATION_RATE` | 0.10 | **Removed** |
+| `DISINFLATION_RATE` | 0.10 | **Removed** |
+| `INFLATION_FLOOR` | 0.01 | **Removed** |
+
+### New Model
+
+```
+genesis_supply     = 9 nodes × 100 coords × 1 AGNTC = 900 AGNTC
+new_supply(ring N) = 8N coordinates × 1 AGNTC per coord
+total_at_ring(N)   = (2N+1)² × 100 AGNTC
+net_inflation      = new_coords_claimed - fees_burned
+```
+
+Supply only grows when:
+- A new epoch ring opens (making new coordinates claimable)
+- A user or agent claims a coordinate in that ring (minting 1 AGNTC)
+
+The 50% fee burn is the sole deflationary counterbalance.
+
+### Supply Curve (Approximate)
+
+| Ring | Node Positions | Cumulative AGNTC | Hardness (16N) |
+|------|---------------|------------------|----------------|
+| 1 (genesis) | 9 | 900 | 16 |
+| 10 | 441 | 44,100 | 160 |
+| 50 | 10,201 | 1,020,100 | 800 |
+| 100 | 40,401 | 4,040,100 | 1,600 |
+| 200 | 160,801 | 16,080,100 | 3,200 |
+| 324 | 421,201 | ~42,120,100 | 5,184 |
+
+The ~42M mark is reached naturally around ring 324 — it's where hardness makes further expansion economically impractical, not a declared cap.
+
+---
+
+## 3. Mining Hardness — 16N Formula
+
+### Current vs. New
+
+| Parameter | Old | New |
+|-----------|-----|-----|
+| Hardness formula | `min(ring, MAX_EPOCH_HARDNESS)` | **`16 × ring`** |
+| `MAX_EPOCH_HARDNESS` | 100 | **Removed** — no cap on hardness |
+| Grid growth per ring | 8N coordinates | 8N coordinates (unchanged) |
+| Hardness-to-growth ratio | 1:1 (linear) | **2:1** (hardness grows 2× faster) |
+
+### Why 16N
+
+- Grid perimeter at ring N = 8N coordinates
+- Hardness at ring N = 16N
+- Ratio: 8N / 16N = 0.5 — cost-to-yield halves at each ring
+- This means each successive ring costs progressively more CPU Energy per AGNTC mined
+- Expansion decelerates naturally without an arbitrary cap
+
+### Yield Formula
+
+```
+yield_per_block = BASE_MINING_RATE_PER_BLOCK × density(x,y) / (16 × ring)
+```
+
+At ring 1: `0.5 × density / 16 = 0.03125 × density` AGNTC/block
+At ring 100: `0.5 × density / 1600 = 0.0003125 × density` AGNTC/block
+At ring 324: `0.5 × density / 5184 = 0.0000964 × density` AGNTC/block
+
+---
+
+## 4. Dynamic Grid Rendering
+
+### Removed
+
+| Parameter | Old Value | Status |
+|-----------|-----------|--------|
+| `GRID_MIN` | -3240 | **Dynamic** — `-current_ring × NODE_GRID_SPACING` |
+| `GRID_MAX` | 3240 | **Dynamic** — `+current_ring × NODE_GRID_SPACING` |
+
+### New Model
+
+- Grid bounds = current epoch ring × NODE_GRID_SPACING (10)
+- PixiJS only renders: claimed nodes + 1 ring of fog (next claimable ring)
+- At genesis: render 9 nodes in ring 0-1. No 42M cell overhead.
+- Grid boundary expands as epochs advance and rings open
+
+### Render Scope
+
+```
+visible_min = -(current_epoch_ring + 1) × NODE_GRID_SPACING
+visible_max = +(current_epoch_ring + 1) × NODE_GRID_SPACING
+render: all claimed nodes + fog ring for next epoch
+```
+
+---
+
+## 5. Vesting on Secure Rewards
+
+| Parameter | Value |
+|-----------|-------|
+| `SECURE_REWARD_IMMEDIATE` | 0.50 (50% liquid on block confirmation) |
+| `SECURE_REWARD_VEST_DAYS` | 30 (remaining 50% vests linearly) |
+
+Applies to ALL Secure action rewards — both human-directed and Machines Faction autonomous agents. Reduces immediate sell pressure from active node operators.
+
+---
+
+## 6. Updated params.py Constants
+
+### Added
+
+```python
+# Distribution — equal 25% per faction
+DIST_COMMUNITY    = 0.25   # Free Community (N arm, white)
+DIST_MACHINES     = 0.25   # Machines Faction (E arm, gold) — AI agent economy
+DIST_FOUNDERS     = 0.25   # Founder Pool (S arm, red) — team & advisors
+DIST_PROFESSIONAL = 0.25   # Professional (W arm, cyan) — paid-tier users
+
+# Machines Faction constraint
+MACHINES_MIN_SELL_RATIO = 1.0  # protocol floor: cannot sell below acquisition cost
+
+# Hardness — 16N formula (replaces MAX_EPOCH_HARDNESS)
+HARDNESS_MULTIPLIER = 16       # hardness(ring) = 16 × ring
+
+# Vesting
+SECURE_REWARD_IMMEDIATE = 0.50  # 50% liquid on confirmation
+SECURE_REWARD_VEST_DAYS = 30    # remaining 50% vests linearly over 30 days
+```
+
+### Removed
+
+```python
+# TOTAL_SUPPLY        — no cap, supply grows with grid
+# INITIAL_CIRCULATING — replaced by genesis node count
+# INITIAL_INFLATION_RATE — no scheduled inflation
+# DISINFLATION_RATE      — no scheduled inflation
+# INFLATION_FLOOR        — no scheduled inflation
+# MAX_EPOCH_HARDNESS     — hardness uncapped (16N)
+# GRID_MIN / GRID_MAX    — dynamic, derived from current epoch ring
+```
+
+### Changed
+
+```python
+GENESIS_SUPPLY = 900  # 9 genesis nodes × 100 coords × 1 AGNTC (was INITIAL_CIRCULATING = 42M)
+```
+
+### Unchanged
+
+```python
+FEE_BURN_RATE = 0.50             # 50% of fees burned
+BASE_MINING_RATE_PER_BLOCK = 0.5 # AGNTC/block at hardness=1, full density
+NODE_GRID_SPACING = 10           # agents occupy 10×10 blocks
+MERKLE_TREE_DEPTH = 26           # SMT depth
+```
+
+---
+
+## 7. Economic Summary
+
+**Inflationary force:** New users claiming coordinates (1 AGNTC per coord)
+**Deflationary force:** 50% fee burn on every transaction
+**Natural soft cap:** Hardness = 16N makes expansion past ring ~324 economically impractical (~42M AGNTC)
+**Floor mechanism:** Machines Faction (25% of all minted supply) can never sell below acquisition cost
+**Reward source:** Secure rewards come from transaction fees (50% to stakers/verifiers), not new minting
+**Vesting:** 50% of Secure rewards vest over 30 days
+
+The result is a self-regulating economy where:
+- Early coordinates are scarce and valuable (low hardness, high density)
+- Late coordinates are abundant and cheap (high hardness, low density)
+- Active networks are deflationary (fee burn > new minting)
+- Growing networks are inflationary (new minting > fee burn)
+- The Machines Faction creates a permanent buy-side floor
+
+---
+
+## 8. Supply Flattening Estimation
+
+### Per-Miner Cost at Ring N
+
+```
+avg_yield_per_block(N) = BASE_RATE × avg_density / hardness(N)
+                       = 0.5 × 0.5 / (16N)
+                       = 0.015625 / N  AGNTC/block
+
+blocks_for_1_AGNTC(N)  = N / 0.015625 = 64N blocks
+time_for_1_AGNTC(N)    = 64N × block_time_seconds
+```
+
+At max block time (300s / 5min):
+
+| Ring | Hardness | Blocks/AGNTC | Time/AGNTC | New Coords (8N×100) | Cumulative Supply |
+|------|----------|-------------|------------|---------------------|-------------------|
+| 1 | 16 | 64 | 5.3 hrs | 800 | 900 |
+| 10 | 160 | 640 | 2.2 days | 8,000 | 44,100 |
+| 50 | 800 | 3,200 | 11.1 days | 40,000 | 1,020,100 |
+| 100 | 1,600 | 6,400 | 22.2 days | 80,000 | 4,040,100 |
+| 200 | 3,200 | 12,800 | 44.4 days | 160,000 | 16,080,100 |
+| 324 | 5,184 | 20,736 | 72 days | 259,200 | ~42,120,100 |
+| 500 | 8,000 | 32,000 | 111 days | 400,000 | 100,200,100 |
+
+### User-Dependent Multiplier
+
+The mining rate is a multiplier on expansion speed. More active miners = faster coordinate coverage, but each individual miner's marginal cost still grows at O(N):
+
+- **10 miners** at ring 100: ~2.2 days collective fill time (but each miner yields 1 AGNTC in 22 days)
+- **100 miners** at ring 200: network-wide coverage at ~0.44 days/AGNTC, individual at 44.4 days
+- **1000 miners** at ring 324: collective 1.7 hrs/AGNTC, individual 72 days
+
+### Practical Flattening Bands
+
+The "soft cap" is where mining cost exceeds AGNTC market value — a market equilibrium, not a formula:
+
+| Network Size | Flattening Ring | Approximate Supply | Individual Mining Time |
+|-------------|----------------|--------------------|-----------------------|
+| Solo miner | ~100–150 | 4M–9M AGNTC | 22–33 days per coin |
+| Small (~100) | ~200–250 | 16M–25M AGNTC | 44–55 days per coin |
+| Large (~1000) | ~324 | ~42M AGNTC | 72 days per coin |
+| Massive (~10k) | ~500+ | 100M+ AGNTC | 111+ days per coin |
+
+The **42M AGNTC landmark** (matching the old fixed supply) naturally emerges at ring 324 for a network of ~1000 active miners — an emergent property of the hardness curve, not an arbitrary declaration.
+
+### Net Supply After Burns
+
+Actual circulating supply is reduced by the 50% fee burn:
+
+```
+circulating_supply = total_minted - cumulative_burns
+net_inflation = new_coords_claimed - (total_fees × FEE_BURN_RATE)
+```
+
+In an active network (high transaction volume), circulating supply can be significantly lower than total minted — potentially deflationary if fee burn exceeds new minting.
+
+---
+
+*Design approved 2026-02-25. Supersedes the original 42M fixed-supply inflationary model.*
