@@ -517,7 +517,7 @@ describe('ResourceBar', () => {
     act(() => {
       useGameStore.getState().updateResources(9999, 100, 200);
     });
-    expect(useGameStore.getState().energy).toBe(9999);
+    expect(useGameStore.getState().cpuTokens).toBe(9999);
   });
 
   it('agntcBalance updates when updateResources is called', () => {

@@ -435,7 +435,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
   const [secureConfig, setSecureConfig] = useState<{ cycles: number } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const energy = useGameStore((s) => s.energy);
+  const energy = useGameStore((s) => s.cpuTokens);
   const minerals = useGameStore((s) => s.minerals);
   const allAgents = useGameStore((s) => s.agents);
   const maxDeployTier = useGameStore((s) => s.maxDeployTier);
@@ -588,7 +588,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
           const spent = store.spendEnergy(cost, `secure-${gens}-gens`);
           if (spent) {
             for (let i = 0; i < gens; i++) store.addSecuredChain();
-            store.flashDelta('energy', -cost);
+            store.flashDelta('cpuTokens', -cost);
           }
         }
         break;
@@ -793,8 +793,8 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
     if (action.id === 'secure') {
       const genCost: Record<string, number> = { 'secure-1': 50, 'secure-5': 250, 'secure-10': 500, 'secure-20': 1000 };
       const cost = genCost[choiceId] ?? 0;
-      if (cost > 0 && useGameStore.getState().energy < cost) {
-        addMsg('system', `Insufficient energy. Need ${cost} CPU, have ${Math.floor(useGameStore.getState().energy)}.`);
+      if (cost > 0 && useGameStore.getState().cpuTokens < cost) {
+        addMsg('system', `Insufficient energy. Need ${cost} CPU, have ${Math.floor(useGameStore.getState().cpuTokens)}.`);
         return;
       }
     }
@@ -1723,7 +1723,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                           const uid = s.currentUserId;
                           if (uid) {
                             persistResources(uid, {
-                              energy: s.energy,
+                              energy: s.cpuTokens,
                               minerals: s.minerals,
                               agntc_balance: s.agntcBalance,
                               secured_chains: s.securedChains,

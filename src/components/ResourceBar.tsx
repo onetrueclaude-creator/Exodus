@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useGameStore } from '@/store';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { sciFormat, sciRate } from '@/lib/format';
+import { sciFormat } from '@/lib/format';
 
 function LiveClock() {
   const [time, setTime] = useState(new Date());
@@ -76,47 +76,42 @@ function EnergyDeltaBadge({ energyDelta }: { energyDelta: number }) {
 }
 
 interface ResourceBarProps {
-  /** External energy delta to display next to the CPU Energy counter.
+  /** External CPU token delta to display next to the CPU counter.
    *  Positive shows in green (+N), negative in red (-N). Auto-clears after 2 s. */
-  energyDelta?: number;
-  /** Estimated energy earned per turn (rolling average). Shows as dim "est. +N ⚡/turn". */
-  energyEstPerTurn?: number;
+  cpuTokensDelta?: number;
+  /** Estimated CPU tokens earned per turn (rolling average). Shows as dim "est. +N /turn". */
+  cpuTokensEstPerTurn?: number;
 }
 
-export default function ResourceBar({ energyDelta, energyEstPerTurn }: ResourceBarProps = {}) {
+export default function ResourceBar({ cpuTokensDelta, cpuTokensEstPerTurn }: ResourceBarProps = {}) {
   const { publicKey } = useWallet();
-  const energy = useGameStore((s) => s.energy);
+  const cpuTokens = useGameStore((s) => s.cpuTokens);
+  const cpuStakedActive = useGameStore((s) => s.cpuStakedActive);
+  const cpuStakedTotal = useGameStore((s) => s.cpuStakedTotal);
+  const devPoints = useGameStore((s) => s.devPoints);
+  const researchPoints = useGameStore((s) => s.researchPoints);
+  const storageSize = useGameStore((s) => s.storageSize);
   const minerals = useGameStore((s) => s.minerals);
   const agntcBalance = useGameStore((s) => s.agntcBalance);
   const securedChains = useGameStore((s) => s.securedChains);
   const turn = useGameStore((s) => s.turn);
-  const currentUserId = useGameStore((s) => s.currentUserId);
   const currentAgentId = useGameStore((s) => s.currentAgentId);
   const agents = useGameStore((s) => s.agents);
   const chainMode = useGameStore((s) => s.chainMode);
   const testnetBlocks = useGameStore((s) => s.testnetBlocks);
   const agent = currentAgentId ? agents[currentAgentId] : null;
 
-  // Calculate net production for display
-  const ownAgents = Object.values(agents).filter((a) => a.userId === currentUserId);
-  const totalMining = ownAgents.reduce((sum, a) => sum + (a.miningRate ?? 0), 0);
-  const totalCpuCost = ownAgents.reduce((sum, a) => sum + a.cpuPerTurn, 0);
-  const baseIncome = 1000; // simulation testnet faucet
-  const netEnergy = baseIncome + totalMining - totalCpuCost;
-  const mineralGain = ownAgents.length;
-  const totalPressureCost = ownAgents.reduce((sum, a) => sum + (a.borderPressure ?? 0) * 0.1, 0);
-
-  // Prop-driven est per turn (caller computes from energyEarnedHistory)
-  const showEstPerTurn = energyEstPerTurn !== undefined && energyEstPerTurn > 0;
+  // Prop-driven est per turn (caller computes from cpuTokensEarnedHistory)
+  const showEstPerTurn = cpuTokensEstPerTurn !== undefined && cpuTokensEstPerTurn > 0;
 
   // Version counter so React remounts EnergyDeltaBadge even when the same
   // numeric delta is passed twice in a row (e.g. two Secure actions of -500).
   const [deltaVersion, setDeltaVersion] = useState(0);
   useEffect(() => {
-    if (energyDelta !== undefined && energyDelta !== 0) {
+    if (cpuTokensDelta !== undefined && cpuTokensDelta !== 0) {
       setDeltaVersion(v => v + 1);
     }
-  }, [energyDelta]);
+  }, [cpuTokensDelta]);
 
   return (
     <div className="h-8 bg-background-light border-b border-card-border flex items-center px-3 gap-3 shrink-0">
@@ -154,31 +149,32 @@ export default function ResourceBar({ energyDelta, energyEstPerTurn }: ResourceB
 
       <div className="h-4 w-px bg-card-border" />
 
-      {/* CPU Energy — yellow */}
+      {/* CPU Tokens — yellow (read-only cumulative) */}
       <div className="flex items-center gap-1 group">
         <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
-        <span className="text-xs font-mono text-yellow-300 tabular-nums">{sciFormat(energy)}</span>
-
-        {/* Store-driven delta (3 s) */}
-        <sup className="text-[9px] leading-none"><DeltaFlash resourceKey="energy" /></sup>
-
-        {/* Prop-driven delta (2 s, for external callers / tests) */}
-        {energyDelta !== undefined && energyDelta !== 0 && (
+        <span className="text-[9px] font-mono text-yellow-400/60 uppercase tracking-wider">CPU</span>
+        <span className="text-xs font-mono text-yellow-300 tabular-nums">{sciFormat(cpuTokens)}</span>
+        <sup className="text-[9px] leading-none"><DeltaFlash resourceKey="cpuTokens" /></sup>
+        {cpuTokensDelta !== undefined && cpuTokensDelta !== 0 && (
           <sup className="text-[9px] leading-none">
-            <EnergyDeltaBadge key={deltaVersion} energyDelta={energyDelta} />
+            <EnergyDeltaBadge key={deltaVersion} energyDelta={cpuTokensDelta} />
           </sup>
         )}
 
         {/* Estimated per-turn (dim, always visible when provided) */}
         {showEstPerTurn && (
           <span className="text-xs text-yellow-500/60">
-            est. +{energyEstPerTurn} ⚡/turn
+            est. +{cpuTokensEstPerTurn} ⚡/turn
           </span>
         )}
+      </div>
 
-        <span className={`text-[9px] font-mono hidden group-hover:inline ${netEnergy >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-          {sciRate(netEnergy)}/t
-        </span>
+      {/* CPU Staked — orange */}
+      <div className="flex items-center gap-1">
+        <div className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0" />
+        <span className="text-[9px] font-mono text-orange-400/60 uppercase tracking-wider">STAKED</span>
+        <span className="text-xs font-mono text-orange-300 tabular-nums">{sciFormat(cpuStakedActive)}</span>
+        <span className="text-[9px] font-mono text-orange-400/40">/{sciFormat(cpuStakedTotal)}</span>
       </div>
 
       {/* Secured Chains — green */}
@@ -193,16 +189,36 @@ export default function ResourceBar({ energyDelta, energyEstPerTurn }: ResourceB
         <div className="w-1.5 h-1.5 rounded-full bg-accent-cyan shrink-0" />
         <span className="text-xs font-mono text-accent-cyan tabular-nums">{sciFormat(agntcBalance)}</span>
         <sup className="text-[9px] leading-none"><DeltaFlash resourceKey="agntc" /></sup>
-        {totalPressureCost > 0 && (
-          <span className="text-[9px] font-mono hidden group-hover:inline text-red-400">{sciRate(-totalPressureCost)}/t</span>
-        )}
+      </div>
+
+      {/* Dev Points — indigo */}
+      <div className="flex items-center gap-1">
+        <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
+        <span className="text-[9px] font-mono text-indigo-400/60 uppercase tracking-wider">DEV</span>
+        <span className="text-xs font-mono text-indigo-300 tabular-nums">{sciFormat(devPoints)}</span>
+        <sup className="text-[9px] leading-none"><DeltaFlash resourceKey="devPoints" /></sup>
+      </div>
+
+      {/* Research Points — violet */}
+      <div className="flex items-center gap-1">
+        <div className="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0" />
+        <span className="text-[9px] font-mono text-violet-400/60 uppercase tracking-wider">RES</span>
+        <span className="text-xs font-mono text-violet-300 tabular-nums">{sciFormat(researchPoints)}</span>
+        <sup className="text-[9px] leading-none"><DeltaFlash resourceKey="researchPoints" /></sup>
+      </div>
+
+      {/* Storage Size — teal */}
+      <div className="flex items-center gap-1">
+        <div className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0" />
+        <span className="text-[9px] font-mono text-teal-400/60 uppercase tracking-wider">DATA</span>
+        <span className="text-xs font-mono text-teal-300 tabular-nums">{sciFormat(storageSize)}</span>
+        <sup className="text-[9px] leading-none"><DeltaFlash resourceKey="storageSize" /></sup>
       </div>
 
       {/* Data Frags */}
       <div className="flex items-center gap-1 group">
         <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
         <span className="text-xs font-mono text-blue-300 tabular-nums">{sciFormat(minerals)}</span>
-        <span className="text-[9px] font-mono hidden group-hover:inline text-blue-400">{sciRate(mineralGain)}/t</span>
       </div>
 
       {/* Spacer */}

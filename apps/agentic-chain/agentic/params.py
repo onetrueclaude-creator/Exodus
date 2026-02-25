@@ -36,7 +36,7 @@ MAX_TXS_PER_BLOCK = 50
 MINT_PROGRAM_ID = b"agentic_mint"
 TRANSFER_PROGRAM_ID = b"agentic_transfer"
 STAKE_PROGRAM_ID = b"agentic_stake"
-GENESIS_BALANCE = 1000
+GENESIS_BALANCE = 0         # No pre-minted coins — all value earned through mining
 
 # Simulation
 SIM_NUM_WALLETS = 50
@@ -68,21 +68,40 @@ MAX_PLANETS_PER_SYSTEM = 10
 CLAIM_PROGRAM_ID = b"agentic_claim"
 STORAGE_PROGRAM_ID = b"agentic_storage"
 
+# Node placement — agents occupy 10×10 coordinate blocks; valid positions are
+# multiples of NODE_GRID_SPACING.  claim_node() snaps submitted coordinates to
+# the nearest multiple so homenodes always land on a grid square centre.
+NODE_GRID_SPACING = 10
+
+# Genesis topology — 9 nodes: origin + 8-node ring at distance NODE_GRID_SPACING.
+# Faction Masters occupy the 4 cardinal positions; regular homenodes fill the diagonals.
+GENESIS_ORIGIN = (0, 0)
+GENESIS_FACTION_MASTERS = [(0, 10), (10, 0), (0, -10), (-10, 0)]   # N E S W
+GENESIS_HOMENODES      = [(10, 10), (10, -10), (-10, -10), (-10, 10)]  # NE SE SW NW
+
 # Birth (star system creation via minting)
 BIRTH_PROGRAM_ID = b"agentic_birth"
 BASE_BIRTH_COST = 100  # AGNTC cost for ring-1 star system
 
 # Mining (per-block = per-turn = ~1 minute)
-BASE_MINING_RATE_PER_BLOCK = 0.5     # AGNTC per block per fully-dense system at hardness=1 (tuned in testing)
+BASE_MINING_RATE_PER_BLOCK = 0.5     # AGNTC/block at hardness=1, full density (tune in testing)
 ENERGY_PER_CLAIM = 1.0               # VPU cost per active claim
+
+# RETIRED: replaced by epoch-based hardness system (see EpochTracker)
+# INITIAL_BLOCK_TIME_S — superseded by epoch hardness
+# BLOCK_TIME_GROWTH_S  — superseded by epoch hardness
+# MAX_BLOCK_TIME_S     — superseded by epoch hardness
+# HALVING_INTERVAL     — superseded by epoch hardness
 
 # Epoch system — mining-driven grid expansion (replaces dynamic block time + halving)
 GENESIS_EPOCH_RING = 1            # rings pre-revealed at genesis (ring 0 + ring 1)
 MAX_EPOCH_HARDNESS = 100          # hardness caps here; yield floor = 1% of base
 HOMENODE_BASE_ANGLE = 137.5       # golden-prime twist base angle (degrees)
-# NOTE: BASE_MINING_RATE_PER_BLOCK above (0.5) is AGNTC/block at hardness=1, full density
 
-# RETIRED: INITIAL_BLOCK_TIME_S — superseded by epoch-based hardness system
-# RETIRED: BLOCK_TIME_GROWTH_S  — superseded by epoch-based hardness system
-# RETIRED: MAX_BLOCK_TIME_S     — superseded by epoch-based hardness system
-# RETIRED: HALVING_INTERVAL     — superseded by epoch-based hardness system
+# Subgrid allocation — 4 autonomous sub-cell agent types (base output at level 1, full density)
+SUBGRID_SIZE = 64                   # 8x8 sub-cells per homenode inner grid
+BASE_SECURE_RATE = 0.5              # AGNTC/block at level 1, hardness 1, full density
+BASE_DEVELOP_RATE = 1.0             # Dev Points/block at level 1
+BASE_RESEARCH_RATE = 0.5            # Research Points/block at level 1
+BASE_STORAGE_RATE = 1.0             # Storage units/block at level 1
+LEVEL_EXPONENT = 0.8                # output = base * level^LEVEL_EXPONENT

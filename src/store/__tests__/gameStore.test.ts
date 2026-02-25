@@ -33,10 +33,65 @@ describe('gameStore — CPU Energy', () => {
     useGameStore.getState().reset()
   })
 
-  it('addCpuEnergy increases energy balance', () => {
+  it('addCpuEnergy increases cpuTokens balance', () => {
     const store = useGameStore.getState()
-    const before = store.energy
+    const before = store.cpuTokens
     store.addCpuEnergy(42)
-    expect(useGameStore.getState().energy).toBe(before + 42)
+    expect(useGameStore.getState().cpuTokens).toBe(before + 42)
+  })
+})
+
+describe('gameStore — new resource setters', () => {
+  beforeEach(() => {
+    useGameStore.getState().reset()
+  })
+
+  it('setCpuTokens updates cpuTokens', () => {
+    useGameStore.getState().setCpuTokens(999)
+    expect(useGameStore.getState().cpuTokens).toBe(999)
+  })
+
+  it('setCpuStaked updates active and total', () => {
+    useGameStore.getState().setCpuStaked(10, 50)
+    const s = useGameStore.getState()
+    expect(s.cpuStakedActive).toBe(10)
+    expect(s.cpuStakedTotal).toBe(50)
+  })
+
+  it('setDevPoints updates devPoints', () => {
+    useGameStore.getState().setDevPoints(42.5)
+    expect(useGameStore.getState().devPoints).toBe(42.5)
+  })
+
+  it('setResearchPoints updates researchPoints', () => {
+    useGameStore.getState().setResearchPoints(17.3)
+    expect(useGameStore.getState().researchPoints).toBe(17.3)
+  })
+
+  it('setStorageSize updates storageSize', () => {
+    useGameStore.getState().setStorageSize(100)
+    expect(useGameStore.getState().storageSize).toBe(100)
+  })
+
+  it('setSubgridProjection updates all four projection fields', () => {
+    useGameStore.getState().setSubgridProjection(1.5, 2.0, 0.5, 3.0)
+    const s = useGameStore.getState()
+    expect(s.subgridAgntcPerBlock).toBe(1.5)
+    expect(s.subgridDevPerBlock).toBe(2.0)
+    expect(s.subgridResearchPerBlock).toBe(0.5)
+    expect(s.subgridStoragePerBlock).toBe(3.0)
+  })
+
+  it('new fields default to zero', () => {
+    const s = useGameStore.getState()
+    expect(s.cpuStakedActive).toBe(0)
+    expect(s.cpuStakedTotal).toBe(0)
+    expect(s.devPoints).toBe(0)
+    expect(s.researchPoints).toBe(0)
+    expect(s.storageSize).toBe(0)
+    expect(s.subgridAgntcPerBlock).toBe(0)
+    expect(s.subgridDevPerBlock).toBe(0)
+    expect(s.subgridResearchPerBlock).toBe(0)
+    expect(s.subgridStoragePerBlock).toBe(0)
   })
 })

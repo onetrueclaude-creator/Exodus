@@ -64,7 +64,7 @@ export default function GamePage() {
   const currentAgentId = useGameStore((s) => s.currentAgentId);
   const activeTab = useGameStore((s) => s.activeTab);
   const agents = useGameStore((s) => s.agents);
-  const energy = useGameStore((s) => s.energy);
+  const energy = useGameStore((s) => s.cpuTokens);
   const minerals = useGameStore((s) => s.minerals);
   const addPlanet = useGameStore((s) => s.addPlanet);
   const setActiveTab = useGameStore((s) => s.setActiveTab);
@@ -363,7 +363,7 @@ export default function GamePage() {
           const afterClaim = useGameStore.getState();
           if (afterClaim.currentUserId) {
             persistResources(afterClaim.currentUserId, {
-              energy: afterClaim.energy,
+              energy: afterClaim.cpuTokens,
               minerals: afterClaim.minerals,
               agntc_balance: afterClaim.agntcBalance,
               secured_chains: afterClaim.securedChains,
@@ -398,7 +398,7 @@ export default function GamePage() {
           // Persist updated resources to Supabase after mine action
           if (store.currentUserId) {
             persistResources(store.currentUserId, {
-              energy: store.energy,
+              energy: store.cpuTokens,
               minerals: store.minerals,
               agntc_balance: store.agntcBalance,
               secured_chains: store.securedChains,
@@ -521,7 +521,7 @@ export default function GamePage() {
                         const afterDeploy = useGameStore.getState();
                         if (afterDeploy.currentUserId) {
                           persistResources(afterDeploy.currentUserId, {
-                            energy: afterDeploy.energy,
+                            energy: afterDeploy.cpuTokens,
                             minerals: afterDeploy.minerals,
                             agntc_balance: afterDeploy.agntcBalance,
                             secured_chains: afterDeploy.securedChains,
