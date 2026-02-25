@@ -202,3 +202,27 @@ def test_genesis_mining_works():
     assert len(yields) > 0
     total = sum(yields.values())
     assert total > 0
+
+
+def test_api_status_no_pool_field():
+    """Status endpoint should not reference community_pool."""
+    from agentic.testnet.api import TestnetStatus
+    fields = TestnetStatus.model_fields
+    assert "community_pool_remaining" not in fields
+
+
+def test_api_imports_cleanly():
+    """api module should import without error."""
+    import agentic.testnet.api  # should not raise
+
+
+def test_economics_modules_importable():
+    """All economics modules should import without error after constant removal."""
+    import importlib
+    modules = [
+        "agentic.economics.inflation",
+        "agentic.economics.vesting",
+        "agentic.economics.rewards",
+    ]
+    for mod in modules:
+        importlib.import_module(mod)
