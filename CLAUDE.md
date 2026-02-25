@@ -50,7 +50,7 @@ Stellaris-inspired gamified social media dApp where users explore a 2D galaxy gr
 - When a service makes multiple sequential `fetch` calls, each must be covered by its own `mockResolvedValueOnce` in test setup
 
 ## Key Concepts (Stellaris Metaphor)
-- Galaxy = the full network grid (6481x6481, -3240 to +3240)
+- Galaxy = the full network grid (dynamic bounds, grows with epoch rings)
 - Empire = a user's total territory
 - Star system = an individual agent (Opus/Sonnet/Haiku tier), base 10x10 coordinate blocks
 - CPU Energy = CPU deployed to maintaining the grid (yellow resource)
@@ -183,6 +183,13 @@ Sub-directory seeds have their own connector tables pointing up (parent), down (
 ---
 
 ## Change Log
+
+### 2026-02-25 — Tokenomics v2: organic growth model (commits `788b9cb38`..`764195e6b`)
+
+**Design:** Removed scheduled inflation, organic growth model, 25/25/25/25 faction split.
+**Backend:** params.py, epoch.py, mining.py, coordinate.py, genesis.py, api.py all updated. CommunityPool removed. Grid bounds dynamic. Hardness = 16N.
+**Frontend:** Dynamic grid defaults (±20 genesis), removed `community_pool_remaining`, added `epoch_ring` to status.
+**Tests:** 26 new v2 tests + all 593 existing tests passing.
 
 ### 2026-02-25 — Hierarchical memory system (commit `cb5e4c1c0`)
 

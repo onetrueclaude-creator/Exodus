@@ -5,6 +5,16 @@
 
 ---
 
+## 2026-02-25 — Tokenomics v2 frontend (commit `764195e6b`)
+
+**Changed:** `types/testnet.ts` — dynamic grid defaults (±20), removed `community_pool_remaining`, added `epoch_ring`.
+**Changed:** `store/gameStore.ts` — removed `poolRemaining` state.
+**Changed:** `hooks/useGameRealtime.ts`, `hooks/useTestnetWebSocket.ts` — removed pool references.
+**Changed:** `app/game/page.tsx`, `components/TimechainStats.tsx`, `components/AgentChat.tsx` — removed pool UI.
+**Changed:** `__tests__/onboarding-flow.test.ts` — updated grid bounds to ±20.
+
+---
+
 ## 2026-02-25 — Resource system frontend (commit `a783213a2`)
 
 **Changed:** `store/gameStore.ts` — `energy` renamed to `cpuTokens`, +9 new resource fields, +6 setter actions.
