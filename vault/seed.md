@@ -78,7 +78,48 @@ And I start playing and analyzing the game by clicking buttons and learning what
 
 ### Open items (TBD in implementation)
 - Exact data packet sizes per tier
-- Energy rate (tokens → CPU Energy units)
 - Energy cost per secured sub-cell per turn
 - AGNTC reward rate per filled sub-cell per block
 - Whether unsecured data is lost or just stops earning rewards
+
+---
+
+## Resource System Redesign — Approved Design
+*Captured 2026-02-25. Full design doc: `docs/plans/2026-02-25-resource-system-design.md`*
+
+### What was decided
+
+**CPU Energy → CPU Tokens (renamed + reclassified):**
+- Read-only cumulative counter — never spent or destroyed
+- Tracks total Claude API tokens spent across ALL active terminals (homenode + deployed agents)
+- Both personal total (ResourceBar) and network total (Timechain Stats) are shown
+
+**CPU Staked (new resource):**
+- Active: tokens spent by Secure sub-agents this block (live, resets each block)
+- Total: all-time cumulative Secure token spend (only ever goes up)
+
+**Subgrid Allocation System (new inner panel — private to owner):**
+- Each homenode's 8×8 minigrid sub-cells are assigned to one of 4 autonomous agent types
+- Allocation is private — other users cannot see it
+- Sub-agents loop each block automatically
+
+**4 Sub-cell Types:**
+
+| Type | Produces | Notes |
+|------|----------|-------|
+| Secure | AGNTC + Secured Chains | Drives CPU Staked counter; applies epoch hardness |
+| Develop | Development Points | Spent to level up any subsquare |
+| Research | Research Points | Spent to unlock skills |
+| Storage | Storage Size | ZK tunnel agent — private data on-chain (Filecoin PoST pattern) |
+
+**Level Scaling:** `output = base_rate × level^0.8` — diminishing returns, calibrate during testing
+
+**Per-block formulas:**
+```
+agntc = Σ base_secure × level^0.8 × density(x,y) / epoch_hardness
+dev_pts = Σ base_develop × level^0.8
+research_pts = Σ base_research × level^0.8
+storage_size += Σ base_storage × level^0.8
+cpu_tokens += Σ tokens_spent(all terminals this block)
+cpu_staked_active = Σ tokens_spent(Secure sub-agents this block)
+```
