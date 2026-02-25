@@ -163,3 +163,47 @@ The SessionStart hook injects either `compacted-summary.md` (if it exists) or th
 ## Dispatch State
 
 `.claude/dispatch-state.json` tracks multi-session feature work (phase, step, branch, completed steps, artifact paths). Check it when resuming interrupted work.
+
+---
+
+## Navigation Connectors
+
+When working in a directory, read `seed.md` first (purpose), then `CLAUDE.md` (history). Start from `seed.md` at the root to navigate the full tree.
+
+| Directory | Purpose |
+|-----------|---------|
+| `seed.md` | **Root** — project tree map, architecture table, navigation connector index |
+| `src/seed.md` → `src/CLAUDE.md` | Next.js source — components, store, services, hooks, types |
+| `vault/seed.md` → `vault/CLAUDE.md` | Knowledge base — design, product, research, engineering |
+| `playwright/seed.md` → `playwright/CLAUDE.md` | E2E test suite |
+| `docs/seed.md` → `docs/CLAUDE.md` | Public documentation |
+
+Sub-directory seeds have their own connector tables pointing up (parent), down (children), and sideways (related).
+
+---
+
+## Change Log
+
+### 2026-02-25 — Hierarchical memory system (commit `cb5e4c1c0`)
+
+**Added:** 28 `seed.md` + 23 `CLAUDE.md` files across the full project tree. Every directory now has:
+- `seed.md` — purpose/architecture descriptor, read first
+- `CLAUDE.md` — timestamped changelog with navigation connectors
+
+**Permissions:** `Read(**/seed.md)` and `Read(**/CLAUDE.md)` auto-allowed in `.claude/settings.json`.
+
+**Also:** `GalaxyGrid.tsx` faction background hidden (`visible = false`) until minigrid sub-cells are formally introduced.
+
+### 2026-02-24 — Galaxy grid: faction + connections + beta testers (commits `a0e79335e`, `adca30656`, `fbc9489c6`)
+
+**Changed:** `GalaxyGrid.tsx` — 4-faction coloring, clean same-faction connections, full grid coverage, no void cells.
+
+**Added:** 4 parallel Playwright faction beta-tester agents; fresh testnet setup per run.
+
+**Design:** Galaxy grid redesign golden prompt captured in `vault/seed.md`; approved design doc at `vault/seed.md#approved-design-summary`.
+
+### 2026-02-23 — Loading fix, energy tick guard, Playwright green (commits `~62aff06`, `~e87a349`)
+
+**Fixed:** `useGameRealtime.ts` — `Promise.race` 5s Supabase timeout; `gameStore.ts` — zero-agent tick guard.
+
+**Tests:** All 22 Playwright e2e tests passing.

@@ -41,3 +41,30 @@ Exodus/
 - `vault/agentic-chain/` → Start Python blockchain at localhost:8080
 - `playwright/` → Run E2E tests
 - `vault/seed.md` → Canonical game design vision and approved specs
+
+## Navigation Connectors
+
+Read these `seed.md` files when entering each major directory:
+
+| Directory | seed.md | CLAUDE.md | What it contains |
+|-----------|---------|-----------|-----------------|
+| `src/` | `src/seed.md` | `src/CLAUDE.md` | Next.js app source |
+| `src/components/` | `src/components/seed.md` | `src/components/CLAUDE.md` | React UI components |
+| `src/store/` | `src/store/seed.md` | `src/store/CLAUDE.md` | Zustand game store |
+| `src/services/` | `src/services/seed.md` | `src/services/CLAUDE.md` | Chain service adapters |
+| `src/hooks/` | `src/hooks/seed.md` | `src/hooks/CLAUDE.md` | Custom React hooks |
+| `src/lib/` | `src/lib/seed.md` | `src/lib/CLAUDE.md` | Utility functions |
+| `src/types/` | `src/types/seed.md` | `src/types/CLAUDE.md` | TypeScript types |
+| `src/app/` | `src/app/seed.md` | `src/app/CLAUDE.md` | App Router routes |
+| `vault/` | `vault/seed.md` | `vault/CLAUDE.md` | Knowledge base |
+| `vault/engineering/` | `vault/engineering/seed.md` | `vault/engineering/CLAUDE.md` | Architecture docs |
+| `vault/product/` | `vault/product/seed.md` | `vault/product/CLAUDE.md` | Product decisions |
+| `vault/research/` | `vault/research/seed.md` | `vault/research/CLAUDE.md` | Research artifacts |
+| `vault/skills/` | `vault/skills/seed.md` | `vault/skills/CLAUDE.md` | Claude skills |
+| `vault/ideas/` | `vault/ideas/seed.md` | `vault/ideas/CLAUDE.md` | Idea inbox |
+| `playwright/` | `playwright/seed.md` | `playwright/CLAUDE.md` | E2E test suite |
+| `docs/` | `docs/seed.md` | `docs/CLAUDE.md` | Public documentation |
+| `packages/` | `packages/seed.md` | — | Shared packages |
+
+> **Gitignored (local-only seed.md files):** `apps/`, `ZkAgentic/`, `vault/agentic-chain/`
+> These directories have local seed.md files but are excluded from the repo as external trees.
