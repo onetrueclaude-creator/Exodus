@@ -125,3 +125,243 @@ All prompts, numbered consecutively across sessions.
 68. [2026-02-24 13:27:04 UTC] restart the testnet server and show me it mining live
 [A] [2026-02-24 13:29:05 UTC] The blockchain is mining live.
 69. [2026-02-24 13:32:26 UTC] commit this
+[A] [2026-02-24 13:32:40 UTC] Already committed. The three feature commits landed in the previous step:
+70. [2026-02-24 13:44:27 UTC] push it
+[A] [2026-02-24 13:44:32 UTC] Pushed. `exodus-dev` is now at `1890a9628` on remote.
+71. [2026-02-24 13:51:22 UTC] create a PR
+[A] [2026-02-24 14:31:05 UTC] PR created: **https://github.com/onetrueclaude-creator/Exodus/pull/4**
+72. [2026-02-24 14:34:32 UTC] merge the PR
+[A] [2026-02-24 14:37:07 UTC] PR #4 is merged. Here's what happened:
+73. [2026-02-24 14:39:49 UTC] edit so that the 64 subgrids are invisible on the map
+[A] [2026-02-24 14:40:24 UTC] Done. The faction background layer is now hidden (`visible = false`) in both the initial render and the faction-change update.
+74. [2026-02-24 14:40:26 UTC] for now lets get the 4 automated beta testers ready and playing the game on a real time new fresh testnet
+[A] [2026-02-24 14:47:18 UTC] Done. **4/4 passing in 8.9s.** Here's what each run does:
+75. [2026-02-24 15:00:00 UTC] push it
+[A] [2026-02-24 15:00:07 UTC] Pushed. `fbc9489c6` is live on `origin/exodus-dev`.
+76. [2026-02-24 17:15:15 UTC] find where the zkagentic.ai domain is running from
+77. [2026-02-25 07:16:42 UTC] Hi Claude, let's continue
+[A] [2026-02-25 07:31:30 UTC] Done. Here's what was built this session:
+78. [2026-02-25 07:31:46 UTC] save and commit locally
+79. [2026-02-25 07:32:13 UTC] ## Context
+   
+   - Current git status: On branch exodus-dev
+   Your branch is up to date with 'origin/exodus-dev'.
+   
+   Changes not staged for commit:
+     (use "git add <file>..." to update what will be committed)
+     (use "git restore <file>..." to discard changes in working directory)
+   	modified:   .claude/settings.json
+   	modified:   apps/agentic-chain/CLAUDE.md
+   	modified:   src/components/GalaxyGrid.tsx
+   	modified:   vault/seed.md
+   	modified:   vault/user-prompts.md
+   
+   Untracked files:
+     (use "git add <file>..." to include in what will be committed)
+   	.playwright-mcp/
+   	block1-mined.png
+   	block3-mined.png
+   	connections-fixed-4x.png
+   	docs/CLAUDE.md
+   	docs/seed.md
+   	galaxy-4x-zoom.png
+   	galaxy-faction-connections.png
+   	galaxy-grid-after-fix.png
+   	game-current-state.png
+   	grid-100pct-final.png
+   	grid-100pct.png
+   	grid-200pct.png
+   	grid-4x-check.png
+   	grid-800pct.png
+   	grid-aligned-800pct.png
+   	grid-alignment-check.png
+   	grid-full-faction.png
+   	next-env.d.ts
+   	packages/seed.md
+   	playwright/CLAUDE.md
+   	playwright/seed.md
+   	seed.md
+   	src/CLAUDE.md
+   	src/app/CLAUDE.md
+   	src/app/seed.md
+   	src/components/CLAUDE.md
+   	src/components/seed.md
+   	src/hooks/CLAUDE.md
+   	src/hooks/seed.md
+   	src/lib/CLAUDE.md
+   	src/lib/seed.md
+   	src/seed.md
+   	src/services/CLAUDE.md
+   	src/services/seed.md
+   	src/store/CLAUDE.md
+   	src/store/seed.md
+   	src/types/CLAUDE.md
+   	src/types/seed.md
+   	vault/CLAUDE.md
+   	vault/collaborate/CLAUDE.md
+   	vault/collaborate/seed.md
+   	vault/engineering/CLAUDE.md
+   	vault/engineering/seed.md
+   	vault/ideas/CLAUDE.md
+   	vault/ideas/seed.md
+   	vault/product/CLAUDE.md
+   	vault/product/seed.md
+   	vault/prompts/seed.md
+   	vault/research/CLAUDE.md
+   	vault/research/seed.md
+   	vault/reviews/CLAUDE.md
+   	vault/reviews/seed.md
+   	vault/skills/CLAUDE.md
+   	vault/skills/seed.md
+   
+   no changes added to commit (use "git add" and/or "git commit -a")
+   - Current git diff (staged and unstaged changes): diff --git a/.claude/settings.json b/.claude/settings.json
+   index 29b564524..f3cfa839e 100644
+   --- a/.claude/settings.json
+   +++ b/.claude/settings.json
+   @@ -1,6 +1,8 @@
+    {
+      "permissions": {
+        "allow": [
+   +      "Read(**/seed.md)",
+   +      "Read(**/CLAUDE.md)",
+          "Bash(npm run:*)",
+          "Bash(npm install:*)",
+          "Bash(git:*)",
+   diff --git a/apps/agentic-chain/CLAUDE.md b/apps/agentic-chain/CLAUDE.md
+   index 0021cfcc9..946d4cfb6 100644
+   --- a/apps/agentic-chain/CLAUDE.md
+   +++ b/apps/agentic-chain/CLAUDE.md
+   @@ -34,3 +34,33 @@ Base URL: `http://localhost:8080` | Swagger: `/docs`
+    - Tests in `tests/` mirroring `agentic/` structure
+    - Genesis is deterministic: `create_genesis(seed=42)` always produces same state
+    - Frontend contract: `agentic/testnet/frontend_contract.ts` (TypeScript interfaces)
+   +
+   +---
+   +
+   +## Change Log
+   +
+   +### 2026-02-25 — Hierarchical memory system added
+   +**Added:** `seed.md` navigation descriptor for this directory.
+   +**Why:** Consistent Claude navigation across Exodus project tree.
+   +
+   +### 2026-02-24 — PoE dynamic difficulty + reward halving
+   +**Changed:**
+   +- `agentic/params.py` — Added `INITIAL_BLOCK_TIME_S=10`, `BLOCK_TIME_GROWTH_S=5`, `MAX_BLOCK_TIME_S=300`, `HALVING_INTERVAL=50`
+   +- `api.py` — `_current_block_time_s()` dynamic difficulty: grows +5s/block, caps at 300s
+   +- `mining.py` — Reward halving every 50 blocks: `effective_rate = BASE_MINING_RATE / (2**halvings)`
+   +
+   +**Commit:** `dad06aa` (vault/agentic-chain internal git)
+   +
+   +**Why:** Proof of Energy whitepaper — block time must grow to reflect increasing compute cost; halving prevents inflation.
+   +
+   +---
+   +
+   +## Navigation Connectors
+   +
+   +| Direction | Path | Why |
+   +|-----------|------|-----|
+   +| Parent | `../seed.md` | apps/ directory |
+   +| Mirror in vault | `../../vault/agentic-chain/seed.md` | Protocol design docs |
+   +| Frontend service | `../../src/services/seed.md` | TestnetChainService calls this |
+   +| Hooks that poll this | `../../src/hooks/seed.md` | useGameRealtime |
+   +| Protocol docs | `../../vault/engineering/seed.md` | Architecture decisions |
+   diff --git a/src/components/GalaxyGrid.tsx b/src/components/GalaxyGrid.tsx
+   index 70f02ee5e..56a159eca 100644
+   --- a/src/components/GalaxyGrid.tsx
+   +++ b/src/components/GalaxyGrid.tsx
+   @@ -75,7 +75,9 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
+    
+        // Grid background: faction-tinted cell fills (index 0) + grid lines (index 1)
+        // Faction background is recreated when userFaction changes (handled in separate effect)
+   -    world.addChild(createFactionBackground(GRID_EXTENT, GRID_EXTENT, userFactionRef.current));
+   +    const factionBg = createFactionBackground(GRID_EXTENT, GRID_EXTENT, userFactionRef.current);
+   +    factionBg.visible = false;  // hidden until faction cells are formally introduced
+   +    world.addChild(factionBg);
+        world.addChild(createGridBackground(GRID_EXTENT, GRID_EXTENT));
+    
+        // Minigrid layer — sits above faction background and grid lines, below nodes
+   @@ -307,7 +309,9 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
+        // Replace index 0 (faction background layer)
+        if (world.children.length > 0) {
+          world.removeChildAt(0);
+   -      world.addChildAt(createFactionBackground(GRID_EXTENT, GRID_EXTENT, userFaction), 0);
+   +      const newFactionBg = createFactionBackground(GRID_EXTENT, GRID_EXTENT, userFaction);
+   +      newFactionBg.visible = false;  // hidden until faction cells are formally introduced
+   +      world.addChildAt(newFactionBg, 0);
+        }
+      }, [appReady, userFaction]);
+    
+   diff --git a/vault/seed.md b/vault/seed.md
+   index c515da35b..f889c3f6d 100644
+   --- a/vault/seed.md
+   +++ b/vault/seed.md
+   @@ -1,6 +1,24 @@
+   -# Seed — ZK Agentic Network Vision
+   +# Seed — vault/
+    
+   -> This file captures the canonical vision prompts and approved designs for the project.
+   +> **Navigation:** Read this file first when entering `vault/`. Then read `vault/CLAUDE.md` for the changelog.
+   +> This directory is the knowledge base: design decisions, engineering specs, product vision, research.
+   +>
+   +> **Sub-directory connectors:**
+   +> - `agentic-chain/seed.md` → Blockchain protocol documentation
+   +> - `engineering/seed.md` → Architecture and runbooks
+   +> - `product/seed.md` → Feature specs, decisions, roadmap
+   +> - `research/seed.md` → Competitor, market, user research
+   +> - `collaborate/seed.md` → Clarifying questions and external input
+   +> - `ideas/seed.md` → Raw concept inbox
+   +> - `reviews/seed.md` → Code/design/architecture reviews
+   +> - `skills/seed.md` → Claude Code skill library
+   +> - `prompts/seed.md` → Agent terminal prompt templates
+   +
+   +---
+   +
+   +# Canonical Vision — ZK Agentic Network
+   +
+   +> This section captures canonical vision prompts and approved designs for the project.
+    > Updated as designs are approved. Full design docs live in `docs/plans/`.
+    
+    ---
+   diff --git a/vault/user-prompts.md b/vault/user-prompts.md
+   index 50e0dfd78..67e011bfc 100644
+   --- a/vault/user-prompts.md
+   +++ b/vault/user-prompts.md
+   @@ -125,3 +125,20 @@ All prompts, numbered consecutively across sessions.
+    68. [2026-02-24 13:27:04 UTC] restart the testnet server and show me it mining live
+    [A] [2026-02-24 13:29:05 UTC] The blockchain is mining live.
+    69. [2026-02-24 13:32:26 UTC] commit this
+   +[A] [2026-02-24 13:32:40 UTC] Already committed. The three feature commits landed in the previous step:
+   +70. [2026-02-24 13:44:27 UTC] push it
+   +[A] [2026-02-24 13:44:32 UTC] Pushed. `exodus-dev` is now at `1890a9628` on remote.
+   +71. [2026-02-24 13:51:22 UTC] create a PR
+   +[A] [2026-02-24 14:31:05 UTC] PR created: **https://github.com/onetrueclaude-creator/Exodus/pull/4**
+   +72. [2026-02-24 14:34:32 UTC] merge the PR
+   +[A] [2026-02-24 14:37:07 UTC] PR #4 is merged. Here's what happened:
+   +73. [2026-02-24 14:39:49 UTC] edit so that the 64 subgrids are invisible on the map
+   +[A] [2026-02-24 14:40:24 UTC] Done. The faction background layer is now hidden (`visible = false`) in both the initial render and the faction-change update.
+   +74. [2026-02-24 14:40:26 UTC] for now lets get the 4 automated beta testers ready and playing the game on a real time new fresh testnet
+   +[A] [2026-02-24 14:47:18 UTC] Done. **4/4 passing in 8.9s.** Here's what each run does:
+   +75. [2026-02-24 15:00:00 UTC] push it
+   +[A] [2026-02-24 15:00:07 UTC] Pushed. `fbc9489c6` is live on `origin/exodus-dev`.
+   +76. [2026-02-24 17:15:15 UTC] find where the zkagentic.ai domain is running from
+   +77. [2026-02-25 07:16:42 UTC] Hi Claude, let's continue
+   +[A] [2026-02-25 07:31:30 UTC] Done. Here's what was built this session:
+   +78. [2026-02-25 07:31:46 UTC] save and commit locally
+   - Current branch: exodus-dev
+   - Recent commits: fbc9489c6 feat(e2e): 4 parallel faction beta testers + fresh testnet setup
+   700df47ff chore: merge feat/exodus-monorepo into exodus-dev
+   1890a9628 chore: update user prompts log
+   a0e79335e feat(grid): clean connections, live chain, faction from tier
+   adca30656 fix(grid): full faction coverage — no void cells, correct grid phase
+   e0b9796f2 fix(grid): align nodes to cell centers, loosen spiral twist
+   e39121ed8 feat(grid): all-pairs faction connections + 4x initial zoom
+   e2cce34ef fix(grid): correct coordinate mapping, faction colors, fog, node scatter
+   8572170a2 fix(types): resolve TypeScript errors in useGameRealtime and game page Supabase queries
+   b1ba69d1c test(e2e): update terminal tests for bubble-click UI, add minigrid zoom test
+   
+   ## Your task
+   
+   Based on the above changes, create a single git commit.
+   
+   You have the capability to call multiple tools in a single response. Stage and create the commit using a single message. Do not use any other tools or do anything else. Do not send any other text or messages besides these tool calls.

@@ -75,7 +75,9 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
 
     // Grid background: faction-tinted cell fills (index 0) + grid lines (index 1)
     // Faction background is recreated when userFaction changes (handled in separate effect)
-    world.addChild(createFactionBackground(GRID_EXTENT, GRID_EXTENT, userFactionRef.current));
+    const factionBg = createFactionBackground(GRID_EXTENT, GRID_EXTENT, userFactionRef.current);
+    factionBg.visible = false;  // hidden until faction cells are formally introduced
+    world.addChild(factionBg);
     world.addChild(createGridBackground(GRID_EXTENT, GRID_EXTENT));
 
     // Minigrid layer — sits above faction background and grid lines, below nodes
@@ -307,7 +309,9 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     // Replace index 0 (faction background layer)
     if (world.children.length > 0) {
       world.removeChildAt(0);
-      world.addChildAt(createFactionBackground(GRID_EXTENT, GRID_EXTENT, userFaction), 0);
+      const newFactionBg = createFactionBackground(GRID_EXTENT, GRID_EXTENT, userFaction);
+      newFactionBg.visible = false;  // hidden until faction cells are formally introduced
+      world.addChildAt(newFactionBg, 0);
     }
   }, [appReady, userFaction]);
 

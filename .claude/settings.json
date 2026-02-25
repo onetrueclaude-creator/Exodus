@@ -1,6 +1,8 @@
 {
   "permissions": {
     "allow": [
+      "Read(**/seed.md)",
+      "Read(**/CLAUDE.md)",
       "Bash(npm run:*)",
       "Bash(npm install:*)",
       "Bash(git:*)",
