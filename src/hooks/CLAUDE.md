@@ -5,6 +5,12 @@
 
 ---
 
+## 2026-02-25 — useGameRealtime: subgrid resource fetch (commit `a783213a2`)
+
+**Changed:** `useGameRealtime.ts` — on startup, fetches `/api/resources/0` from chain API and dispatches subgrid projection values (cpuStaked, devPoints, researchPoints, storageUsed, pendingYield) into gameStore.
+
+---
+
 ## 2026-02-25 — Hierarchical memory system added
 
 **Added:** `seed.md` + this `CLAUDE.md`.

@@ -33,6 +33,14 @@
 
 ---
 
+## 2026-02-25 — Epoch + subgrid implementation complete (commit `a783213a2`)
+
+**Added (backend):** `EpochTracker` (`agentic/galaxy/epoch.py`) — ring-based mining expansion, hardness divides yield. `SubgridAllocator` (`agentic/galaxy/subgrid.py`) — 4-type sub-cell allocation (Secure/Develop/Research/Storage), 64 cells, `level^0.8` scaling.
+**Added (API):** `/api/epoch`, `/api/resources/{wallet_index}`, `/api/resources/{wallet_index}/assign`.
+**Added (frontend):** `gameStore.ts` `energy`→`cpuTokens` rename + 9 new resource fields; `ResourceBar.tsx` 5-counter HUD; `useGameRealtime.ts` chain resource fetch.
+
+---
+
 ## 2026-02-25 — Resource system redesign approved
 
 **Added:** `docs/plans/2026-02-25-resource-system-design.md` — full resource model revision.

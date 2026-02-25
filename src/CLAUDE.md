@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-02-25 — Resource system frontend (commit `a783213a2`)
+
+**Changed:** `store/gameStore.ts` — `energy` renamed to `cpuTokens`, +9 new resource fields, +6 setter actions.
+**Changed:** `components/ResourceBar.tsx` — 5 resource counters: CPU Tokens (yellow), CPU Staked (orange), Dev Points (indigo), Research Points (violet), Storage/DATA (teal).
+**Changed:** `hooks/useGameRealtime.ts` — fetches `/api/resources/0` for subgrid projections on startup.
+
+---
+
 ## 2026-02-25 — Hierarchical memory system added
 
 **Added:** `seed.md` + this `CLAUDE.md` + sub-seed.md/CLAUDE.md across all src/ subdirs.
