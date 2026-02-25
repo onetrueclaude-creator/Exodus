@@ -3,17 +3,54 @@
     "allow": [
       "Read(**/seed.md)",
       "Read(**/CLAUDE.md)",
+
+      "Bash(ls:*)",
+      "Bash(pwd:*)",
+      "Bash(which:*)",
+      "Bash(env:*)",
+      "Bash(stat:*)",
+      "Bash(lsof:*)",
+      "Bash(wc:*)",
+      "Bash(find:*)",
+
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(echo:*)",
+      "Bash(printf:*)",
+
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+
+      "Bash(sort:*)",
+      "Bash(uniq:*)",
+      "Bash(cut:*)",
+      "Bash(tr:*)",
+      "Bash(sed:*)",
+      "Bash(awk:*)",
+      "Bash(jq:*)",
+
+      "Bash(mkdir:*)",
+      "Bash(open:*)",
+      "Bash(curl:*)",
+      "Bash(ps:*)",
+      "Bash(launchctl:*)",
+
+      "Bash(git:*)",
+      "Bash(gh:*)",
+
       "Bash(npm run:*)",
       "Bash(npm install:*)",
-      "Bash(git:*)",
-      "Bash(npx prisma:*)",
-      "Bash(docker compose:*)",
+      "Bash(npx:*)",
+      "Bash(pnpm:*)",
+      "Bash(node:*)",
+
       "Bash(python3:*)",
-      "Bash(python3 -m pytest:*)",
+      "Bash(pip3:*)",
       "Bash(uvicorn:*)",
-      "Bash(pip3 install:*)",
-      "Bash(gh pr create:*)",
-      "Bash(gh pr view:*)"
+
+      "Bash(docker:*)",
+      "Bash(docker compose:*)"
     ]
   },
   "enabledPlugins": {
