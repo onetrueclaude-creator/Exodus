@@ -52,7 +52,9 @@
       "Bash(uvicorn:*)",
 
       "Bash(docker:*)",
-      "Bash(docker compose:*)"
+      "Bash(docker compose:*)",
+
+      "Skill(skills:competitor-expert)"
     ]
   },
   "enabledPlugins": {
