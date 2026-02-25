@@ -3,6 +3,8 @@
     "allow": [
       "Read(**/seed.md)",
       "Read(**/CLAUDE.md)",
+      "Write(**/seed.md)",
+      "Write(**/CLAUDE.md)",
 
       "Bash(ls:*)",
       "Bash(pwd:*)",
