@@ -42,6 +42,14 @@ Exodus/
 - `playwright/` → Run E2E tests
 - `vault/seed.md` → Canonical game design vision and approved specs
 
+## Active Implementation Plans
+
+| Plan | Status | Description |
+|------|--------|-------------|
+| `docs/plans/2026-02-25-blockchain-epoch-implementation.md` | 📋 Ready | Epoch ring expansion + tokenomics (7 tasks, TDD) |
+| `docs/plans/2026-02-25-blockchain-epoch-tokenomics-design.md` | ✅ Approved | Design doc for epoch system |
+| `docs/plans/2026-02-24-galaxy-grid-redesign-impl.md` | ✅ Done | Galaxy grid spiral + faction system |
+
 ## Navigation Connectors
 
 Read these `seed.md` files when entering each major directory:

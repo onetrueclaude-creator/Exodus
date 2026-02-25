@@ -371,3 +371,35 @@ All prompts, numbered consecutively across sessions.
 81. [2026-02-25 07:38:07 UTC] thank you
 [A] [2026-02-25 07:38:10 UTC] You're welcome. The project is in good shape — hierarchical navigation memory across the full tree, auto-approved permissions for common commands, and everything committed locally.
 82. [2026-02-25 07:38:13 UTC] save locally
+[A] [2026-02-25 07:38:22 UTC] Done — `6b85fe428`. Working tree is clean.
+83. [2026-02-25 07:38:35 UTC] let's work on the blockchain itself
+[A] [2026-02-25 07:42:56 UTC] Good — I've read the full blockchain stack.
+84. [2026-02-25 07:44:43 UTC] Ring from 0,0 is good, but we will implement an Epoch counter, when a 8N AGNTC coins are mined, only then the ring expands with 8N, so for the second ring, the miners have to mine a total of 8x2 Coins, for the third ring, the miners have to mine a total of 8x3 coins, so the expansion gets slower and slower, it does not matter which faction actually mines 8N, a total of 8N coin mines are calculated as total mined coins, along all factions
+[A] [2026-02-25 07:46:40 UTC] So: genesis = ring 0 + ring 1 pre-opened (3×3 = 9 cells).
+85. [2026-02-25 07:47:12 UTC] C
+[A] [2026-02-25 07:47:34 UTC] When an Epoch triggers and the new ring opens — what happens to those newly revealed cells?
+86. [2026-02-25 07:48:10 UTC] reminder: new user entry will add a homenode into the faction arm chain, but if not enough rings are expanded, the new user can not be added if the new homenode is on the outer field of the grid
+[A] [2026-02-25 07:49:01 UTC] Crucial mechanic — **new user onboarding is gated by ring expansion**.
+87. [2026-02-25 07:49:14 UTC] the homenodes are placed in a primary number series, twisting toward the outer edge, the homenodes are all linked with brighter faction link that connects to the faction arm link
+[A] [2026-02-25 07:49:31 UTC] Cumulative confirmed.
+88. [2026-02-25 07:49:32 UTC] Approach A
+[A] [2026-02-25 07:50:30 UTC] Important homenode placement detail — let me make sure I understand "primary number series" correctly before incorporating it into the design.
+89. [2026-02-25 07:51:25 UTC] remember, new homenodes can open even if its ring is not opened yet through Epoch cycles, it will only start in an empty space, not surrounded by grids yet, the Epoch counter will with time open the rings
+[A] [2026-02-25 07:51:40 UTC] Good — homenode coordinates snap to the nearest grid cell center, not the raw prime coordinate.
+90. [2026-02-25 07:52:23 UTC] revision: lets add a homenode to every ring, so with every Epoch, a new user can enter the game
+[A] [2026-02-25 07:52:34 UTC] Understood — the gating mechanic I described was wrong.
+91. [2026-02-25 07:52:47 UTC] they will still twist with the prime number series,
+[A] [2026-02-25 07:53:04 UTC] Much cleaner — one ring = one Epoch = one new player slot.
+92. [2026-02-25 07:53:33 UTC] yes
+[A] [2026-02-25 07:53:50 UTC] Got it — every ring gets a homenode (one new player per Epoch), but the **angular position within each ring** follows a prime number twist.
+93. [2026-02-25 07:54:06 UTC] let's revise the tokenomics for optimal GUI and blockchain experience
+[A] [2026-02-25 07:54:26 UTC] **What changes in `apps/agentic-chain/`:**
+94. [2026-02-25 07:54:28 UTC] like how many total coins, or mining hardness as the rings expand
+[A] [2026-02-25 07:55:11 UTC] Before revising, let me ask the most important tokenomics question for game feel — how fast should Epochs feel?
+95. [2026-02-25 07:55:13 UTC] every epoch should instill a mining hardness, much like the bitcoin algorithm
+[A] [2026-02-25 07:55:36 UTC] Good question — let me think through the key tokenomics levers and how they interact with the expanding grid.
+96. [2026-02-25 07:55:38 UTC] the mining hardness should increase with 8N
+[A] [2026-02-25 07:56:18 UTC] Bitcoin-style difficulty per epoch — important distinction: should it be **adaptive** (like Bitcoin's actual algorithm — adjusts based on how fast the last epoch completed) or **fixed schedule** (like Bitcoin's halving — difficulty increases by a set
+97. [2026-02-25 07:56:21 UTC] but never becomes so high that it is infinite
+[A] [2026-02-25 07:56:41 UTC] Mining hardness scaling as 8N creates a beautiful self-reinforcing economy: the threshold to open ring N is 4N(N+1) AGNTC, and the yield per block at ring N is BASE_RATE/N.
+98. [2026-02-25 07:56:45 UTC] Medium (hours) should be fine, also option 1 seems okay, the density does the job, we will test it further later
