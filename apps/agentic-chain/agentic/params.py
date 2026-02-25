@@ -73,5 +73,16 @@ BIRTH_PROGRAM_ID = b"agentic_birth"
 BASE_BIRTH_COST = 100  # AGNTC cost for ring-1 star system
 
 # Mining (per-block = per-turn = ~1 minute)
-BASE_MINING_RATE_PER_BLOCK = 1.0     # AGNTC per block per fully-dense system at launch
+BASE_MINING_RATE_PER_BLOCK = 0.5     # AGNTC per block per fully-dense system at hardness=1 (tuned in testing)
 ENERGY_PER_CLAIM = 1.0               # VPU cost per active claim
+
+# Epoch system — mining-driven grid expansion (replaces dynamic block time + halving)
+GENESIS_EPOCH_RING = 1            # rings pre-revealed at genesis (ring 0 + ring 1)
+MAX_EPOCH_HARDNESS = 100          # hardness caps here; yield floor = 1% of base
+HOMENODE_BASE_ANGLE = 137.5       # golden-prime twist base angle (degrees)
+# NOTE: BASE_MINING_RATE_PER_BLOCK above (0.5) is AGNTC/block at hardness=1, full density
+
+# RETIRED: INITIAL_BLOCK_TIME_S — superseded by epoch-based hardness system
+# RETIRED: BLOCK_TIME_GROWTH_S  — superseded by epoch-based hardness system
+# RETIRED: MAX_BLOCK_TIME_S     — superseded by epoch-based hardness system
+# RETIRED: HALVING_INTERVAL     — superseded by epoch-based hardness system
