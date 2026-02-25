@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-02-25 — ResourceBar: 5-counter resource HUD (commit `a783213a2`)
+
+**Changed:** `ResourceBar.tsx` — expanded from single CPU Energy counter to 5 resource counters:
+CPU Tokens (yellow), CPU Staked (orange), Dev Points (indigo), Research Points (violet), Storage/DATA (teal).
+All values sourced from `gameStore`; labels and colors match subscription tier theming.
+
+---
+
 ## 2026-02-25 — Hierarchical memory system added
 
 **Added:** `seed.md` + this `CLAUDE.md`.

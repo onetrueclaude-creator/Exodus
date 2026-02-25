@@ -5,6 +5,15 @@
 
 ---
 
+## 2026-02-25 — Resource fields expanded; energy→cpuTokens rename (commit `a783213a2`)
+
+**Changed:** `gameStore.ts`
+- `energy` field renamed to `cpuTokens` (read-only cumulative proof-of-work counter)
+- +9 new resource fields: `cpuStaked`, `cpuStakedAllTime`, `devPoints`, `researchPoints`, `storageUsed`, `storageCapacity`, `agntcBalance`, `dataFrags`, `pendingYield`
+- +6 new setter actions for the above fields
+
+---
+
 ## 2026-02-25 — Hierarchical memory system added
 
 **Added:** `seed.md` + this `CLAUDE.md`.
