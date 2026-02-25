@@ -1,6 +1,24 @@
-# Seed — ZK Agentic Network Vision
+# Seed — vault/
 
-> This file captures the canonical vision prompts and approved designs for the project.
+> **Navigation:** Read this file first when entering `vault/`. Then read `vault/CLAUDE.md` for the changelog.
+> This directory is the knowledge base: design decisions, engineering specs, product vision, research.
+>
+> **Sub-directory connectors:**
+> - `agentic-chain/seed.md` → Blockchain protocol documentation
+> - `engineering/seed.md` → Architecture and runbooks
+> - `product/seed.md` → Feature specs, decisions, roadmap
+> - `research/seed.md` → Competitor, market, user research
+> - `collaborate/seed.md` → Clarifying questions and external input
+> - `ideas/seed.md` → Raw concept inbox
+> - `reviews/seed.md` → Code/design/architecture reviews
+> - `skills/seed.md` → Claude Code skill library
+> - `prompts/seed.md` → Agent terminal prompt templates
+
+---
+
+# Canonical Vision — ZK Agentic Network
+
+> This section captures canonical vision prompts and approved designs for the project.
 > Updated as designs are approved. Full design docs live in `docs/plans/`.
 
 ---

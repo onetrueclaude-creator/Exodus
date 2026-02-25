@@ -34,3 +34,33 @@ Base URL: `http://localhost:8080` | Swagger: `/docs`
 - Tests in `tests/` mirroring `agentic/` structure
 - Genesis is deterministic: `create_genesis(seed=42)` always produces same state
 - Frontend contract: `agentic/testnet/frontend_contract.ts` (TypeScript interfaces)
+
+---
+
+## Change Log
+
+### 2026-02-25 — Hierarchical memory system added
+**Added:** `seed.md` navigation descriptor for this directory.
+**Why:** Consistent Claude navigation across Exodus project tree.
+
+### 2026-02-24 — PoE dynamic difficulty + reward halving
+**Changed:**
+- `agentic/params.py` — Added `INITIAL_BLOCK_TIME_S=10`, `BLOCK_TIME_GROWTH_S=5`, `MAX_BLOCK_TIME_S=300`, `HALVING_INTERVAL=50`
+- `api.py` — `_current_block_time_s()` dynamic difficulty: grows +5s/block, caps at 300s
+- `mining.py` — Reward halving every 50 blocks: `effective_rate = BASE_MINING_RATE / (2**halvings)`
+
+**Commit:** `dad06aa` (vault/agentic-chain internal git)
+
+**Why:** Proof of Energy whitepaper — block time must grow to reflect increasing compute cost; halving prevents inflation.
+
+---
+
+## Navigation Connectors
+
+| Direction | Path | Why |
+|-----------|------|-----|
+| Parent | `../seed.md` | apps/ directory |
+| Mirror in vault | `../../vault/agentic-chain/seed.md` | Protocol design docs |
+| Frontend service | `../../src/services/seed.md` | TestnetChainService calls this |
+| Hooks that poll this | `../../src/hooks/seed.md` | useGameRealtime |
+| Protocol docs | `../../vault/engineering/seed.md` | Architecture decisions |
