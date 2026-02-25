@@ -142,3 +142,63 @@ def test_mining_yield_formula_v2():
     hardness = et.hardness(et.current_ring)
     expected = BASE_MINING_RATE_PER_BLOCK * density * 1.0 / hardness
     assert owner_yield == pytest.approx(expected, rel=1e-6)
+
+
+def test_grid_bounds_initial_radius():
+    from agentic.galaxy.coordinate import GridBounds
+    bounds = GridBounds(initial_radius=10)
+    assert bounds.min_val == -10
+    assert bounds.max_val == 10
+    assert bounds.contains(5, 5)
+    assert not bounds.contains(15, 15)
+
+
+def test_grid_bounds_expand_to_ring():
+    from agentic.galaxy.coordinate import GridBounds
+    from agentic.params import NODE_GRID_SPACING
+    bounds = GridBounds(initial_radius=10)
+    bounds.expand_to_ring(5)
+    expected_radius = (5 + 1) * NODE_GRID_SPACING  # 60
+    assert bounds.min_val == -expected_radius
+    assert bounds.max_val == expected_radius
+
+
+def test_global_bounds_genesis_size():
+    """GLOBAL_BOUNDS should start small (genesis ring + fog), not ±3240."""
+    from agentic.galaxy.coordinate import GLOBAL_BOUNDS
+    from agentic.params import NODE_GRID_SPACING
+    # Should be 2 * NODE_GRID_SPACING = 20 (ring 1 + fog)
+    assert GLOBAL_BOUNDS.max_val == 2 * NODE_GRID_SPACING
+    assert GLOBAL_BOUNDS.min_val == -(2 * NODE_GRID_SPACING)
+
+
+def test_grid_coordinate_dynamic_offset():
+    """Offsets should be relative to bounds, not hardcoded GRID_MIN."""
+    from agentic.galaxy.coordinate import GridCoordinate, GridBounds
+    bounds = GridBounds(initial_radius=100)
+    coord = GridCoordinate(x=50, y=-30, bounds=bounds)
+    # x_offset = x - bounds.min_val = 50 - (-100) = 150
+    assert coord.x_offset == 150
+    # y_offset = y - bounds.min_val = -30 - (-100) = 70
+    assert coord.y_offset == 70
+
+
+def test_genesis_creates_without_pool():
+    """create_genesis should work without CommunityPool."""
+    from agentic.testnet.genesis import create_genesis
+    g = create_genesis(num_wallets=10, seed=42)
+    assert g.mining_engine is not None
+    assert g.mining_engine.total_blocks_processed == 0
+    assert len(g.claim_registry.all_active_claims()) == 9
+    assert not hasattr(g, 'community_pool') or g.community_pool is None
+
+
+def test_genesis_mining_works():
+    """Mining should produce yields after genesis."""
+    from agentic.testnet.genesis import create_genesis
+    g = create_genesis(num_wallets=10, seed=42)
+    claims = g.claim_registry.as_mining_claims()
+    yields = g.mining_engine.compute_block_yields(claims, epoch_tracker=g.epoch_tracker)
+    assert len(yields) > 0
+    total = sum(yields.values())
+    assert total > 0
