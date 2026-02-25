@@ -49,13 +49,14 @@ class TestMiningEngine:
     def test_compute_yields_single_claim(self):
         from agentic.galaxy.mining import MiningEngine, CommunityPool
         from agentic.galaxy.coordinate import GridCoordinate, resource_density
+        from agentic.params import BASE_MINING_RATE_PER_BLOCK
         pool = CommunityPool()
         engine = MiningEngine(pool)
         coord = GridCoordinate(x=0, y=0)
         claims = [{"owner": b"alice", "coordinate": coord, "stake": 100}]
         rewards = engine.compute_block_yields(claims)
         assert b"alice" in rewards
-        expected = 1.0 * resource_density(0, 0) * 1.0 * 1.0
+        expected = BASE_MINING_RATE_PER_BLOCK * resource_density(0, 0) * 1.0 * 1.0
         assert abs(rewards[b"alice"] - expected) < 0.001
 
     def test_compute_yields_multiple_claims(self):
