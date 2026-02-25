@@ -33,6 +33,26 @@
 
 ---
 
+## 2026-02-25 — Tokenomics v2: organic growth model
+
+**Design:** `docs/plans/2026-02-25-tokenomics-v2-design.md`
+**Impl plan:** `docs/plans/2026-02-25-tokenomics-v2-impl.md` (10 tasks, TDD)
+
+**Key changes:**
+- Removed scheduled inflation — minting IS inflation (1 AGNTC per coordinate claimed)
+- 25/25/25/25 faction distribution (Community/Machines/Founders/Professional)
+- Hardness = 16N (grows 2× faster than grid expansion)
+- Dynamic grid bounds (no fixed ±3240)
+- Genesis supply = 900 AGNTC (9 nodes × 100 coords)
+- Machines Faction: AI agents, hardcoded never-sell-below-acquisition-cost
+- 50% fee burn on chat/storage/secure/transact
+- CommunityPool removed entirely
+
+**Backend commits:** `788b9cb38`..`7f5a00950` (8 files, 26 new tests)
+**Frontend commit:** `764195e6b` (11 files — dynamic grid defaults, removed pool references)
+
+---
+
 ## 2026-02-25 — Epoch + subgrid implementation complete (commit `a783213a2`)
 
 **Added (backend):** `EpochTracker` (`agentic/galaxy/epoch.py`) — ring-based mining expansion, hardness divides yield. `SubgridAllocator` (`agentic/galaxy/subgrid.py`) — 4-type sub-cell allocation (Secure/Develop/Research/Storage), 64 cells, `level^0.8` scaling.
