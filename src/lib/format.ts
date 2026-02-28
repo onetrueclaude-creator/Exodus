@@ -1,15 +1,15 @@
 /**
  * Format a number in scientific notation for large/small values,
  * or as a compact decimal for mid-range values.
- * Cuts off after 4 decimal places (0.0000).
+ * Shows 2 decimal places (0.00).
  *
- *   1234567   → "1.2345e6"
- *   0.00034   → "3.4000e-4"
- *   42.7      → "42.7000"
- *   0         → "0.0000"
+ *   1234567   → "1.23e6"
+ *   0.00034   → "3.40e-4"
+ *   42.7      → "42.70"
+ *   0         → "0.00"
  */
 export function sciFormat(n: number): string {
-  if (n === 0) return '0.0000';
+  if (n === 0) return '0.00';
 
   const abs = Math.abs(n);
   const sign = n < 0 ? '-' : '';
@@ -18,11 +18,11 @@ export function sciFormat(n: number): string {
   if (abs >= 1e6 || (abs > 0 && abs < 0.01)) {
     const exp = Math.floor(Math.log10(abs));
     const mantissa = abs / Math.pow(10, exp);
-    return `${sign}${mantissa.toFixed(4)}e${exp}`;
+    return `${sign}${mantissa.toFixed(2)}e${exp}`;
   }
 
-  // Mid-range: show fixed 4 decimal places
-  return `${sign}${abs.toFixed(4)}`;
+  // Mid-range: show fixed 2 decimal places
+  return `${sign}${abs.toFixed(2)}`;
 }
 
 /**
