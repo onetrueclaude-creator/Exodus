@@ -18,21 +18,18 @@ const FACTION_MASTER_SIZE = 22;
 const PLAYER_SIZE = 16;
 
 /**
- * Determine the display faction for an agent based on position and ownership.
+ * Determine the display faction for an agent based on position.
+ * All nodes (owned and claimable) are classified by spiral territory.
  * Pure function — testable without PixiJS.
  */
 export function determineFaction(
   position: { x: number; y: number },
-  hasUserId: boolean,
   userFaction: Faction,
 ): FactionId {
   // Origin singularity — hardcoded at (0,0)
   if (position.x === 0 && position.y === 0) return 'origin';
 
-  // Unclaimed nodes
-  if (!hasUserId) return 'unclaimed';
-
-  // Classify via spiral
+  // Classify all nodes by spiral position (both owned and claimable)
   const gx = Math.round(position.x / CELL_SIZE);
   const gyMath = -Math.round(position.y / CELL_SIZE);
   const cls = classifyCell(gx, gyMath, userFaction);
@@ -51,13 +48,14 @@ export function createStarNode(
   container.position.set(agent.position.x, agent.position.y);
 
   const alpha = FOG_ALPHA[fogLevel];
-  const factionId = determineFaction(agent.position, !!agent.userId, userFaction);
+  const factionId = determineFaction(agent.position, userFaction);
+  const isOwned = !!agent.userId;
 
   // Determine glyph size based on node type
   let glyphSize: number;
   if (factionId === 'origin') {
     glyphSize = 28;
-  } else if (factionId === 'unclaimed') {
+  } else if (!isOwned) {
     glyphSize = 14;
   } else if (agent.isPrimary || agent.tier === 'opus') {
     glyphSize = FACTION_MASTER_SIZE;
@@ -71,8 +69,8 @@ export function createStarNode(
   hitArea.fill({ color: 0x000000, alpha: 0.001 });
   container.addChild(hitArea);
 
-  // Faction glyph (glow + line art)
-  const glyph = createFactionGlyph(factionId, glyphSize, alpha);
+  // Faction glyph — filled if owned, outline-only if claimable
+  const glyph = createFactionGlyph(factionId, glyphSize, alpha, isOwned);
   container.addChild(glyph);
 
   // Hover ring (hidden by default)

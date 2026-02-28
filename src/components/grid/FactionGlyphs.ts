@@ -84,7 +84,7 @@ export function mapSpiralFactionToId(spiralFaction: Faction | null): FactionId {
 // ── Icon Draw Functions ──────────────────────────────────────────────────────
 // Each draws relative to (0,0) center. Distinctive faction icons.
 
-function drawOriginIcon(g: Graphics, size: number, color: number, alpha: number): void {
+function drawOriginIcon(g: Graphics, size: number, color: number, alpha: number, _isOwned: boolean): void {
   // Concentric rings — the singularity
   const r1 = size * 0.21;
   const r2 = size * 0.36;
@@ -103,54 +103,73 @@ function drawOriginIcon(g: Graphics, size: number, color: number, alpha: number)
   g.fill({ color: 0xffffff, alpha });
 }
 
-function drawCommunityIcon(g: Graphics, size: number, color: number, alpha: number): void {
-  // Circle — universal, communal
+function drawCommunityIcon(g: Graphics, size: number, color: number, alpha: number, isOwned: boolean): void {
   const r = size * 0.4;
   g.circle(0, 0, r);
-  g.stroke({ width: 1.5, color, alpha });
-  g.circle(0, 0, r);
-  g.fill({ color, alpha: alpha * 0.1 });
-}
-
-function drawMachinesIcon(g: Graphics, size: number, color: number, alpha: number): void {
-  // Hexagon — tech, structure
-  const r = size * 0.42;
-  g.setStrokeStyle({ width: 1.5, color, alpha });
-  for (let i = 0; i < 6; i++) {
-    const angle = (i * Math.PI) / 3 - Math.PI / 6;
-    const x = Math.cos(angle) * r;
-    const y = Math.sin(angle) * r;
-    if (i === 0) g.moveTo(x, y);
-    else g.lineTo(x, y);
+  g.stroke({ width: isOwned ? 1.5 : 1, color, alpha });
+  if (isOwned) {
+    g.circle(0, 0, r);
+    g.fill({ color, alpha: alpha * 0.15 });
   }
-  g.closePath();
-  g.stroke();
 }
 
-function drawFoundersIcon(g: Graphics, size: number, color: number, alpha: number): void {
-  // Triangle (upward) — foundation, pyramid
+function drawMachinesIcon(g: Graphics, size: number, color: number, alpha: number, isOwned: boolean): void {
   const r = size * 0.42;
-  g.setStrokeStyle({ width: 1.5, color, alpha });
-  g.moveTo(0, -r);
-  g.lineTo(-r * 0.87, r * 0.5);
-  g.lineTo(r * 0.87, r * 0.5);
-  g.closePath();
+  const hexPath = () => {
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI) / 3 - Math.PI / 6;
+      const x = Math.cos(angle) * r;
+      const y = Math.sin(angle) * r;
+      if (i === 0) g.moveTo(x, y);
+      else g.lineTo(x, y);
+    }
+    g.closePath();
+  };
+  g.setStrokeStyle({ width: isOwned ? 1.5 : 1, color, alpha });
+  hexPath();
   g.stroke();
+  if (isOwned) {
+    hexPath();
+    g.fill({ color, alpha: alpha * 0.15 });
+  }
 }
 
-function drawProfessionalIcon(g: Graphics, size: number, color: number, alpha: number): void {
-  // Diamond (rotated square) — value, precision
+function drawFoundersIcon(g: Graphics, size: number, color: number, alpha: number, isOwned: boolean): void {
   const r = size * 0.42;
-  g.setStrokeStyle({ width: 1.5, color, alpha });
-  g.moveTo(0, -r);
-  g.lineTo(r, 0);
-  g.lineTo(0, r);
-  g.lineTo(-r, 0);
-  g.closePath();
+  const triPath = () => {
+    g.moveTo(0, -r);
+    g.lineTo(-r * 0.87, r * 0.5);
+    g.lineTo(r * 0.87, r * 0.5);
+    g.closePath();
+  };
+  g.setStrokeStyle({ width: isOwned ? 1.5 : 1, color, alpha });
+  triPath();
   g.stroke();
+  if (isOwned) {
+    triPath();
+    g.fill({ color, alpha: alpha * 0.15 });
+  }
 }
 
-function drawUnclaimedIcon(g: Graphics, size: number, color: number, alpha: number): void {
+function drawProfessionalIcon(g: Graphics, size: number, color: number, alpha: number, isOwned: boolean): void {
+  const r = size * 0.42;
+  const diamondPath = () => {
+    g.moveTo(0, -r);
+    g.lineTo(r, 0);
+    g.lineTo(0, r);
+    g.lineTo(-r, 0);
+    g.closePath();
+  };
+  g.setStrokeStyle({ width: isOwned ? 1.5 : 1, color, alpha });
+  diamondPath();
+  g.stroke();
+  if (isOwned) {
+    diamondPath();
+    g.fill({ color, alpha: alpha * 0.15 });
+  }
+}
+
+function drawUnclaimedIcon(g: Graphics, size: number, color: number, alpha: number, _isOwned: boolean): void {
   // Dashed ring — empty, waiting
   const r = size * 0.4;
   const segments = 8;
@@ -167,7 +186,9 @@ function drawUnclaimedIcon(g: Graphics, size: number, color: number, alpha: numb
 
 // ── Icon Factory ─────────────────────────────────────────────────────────────
 
-const DRAW_FNS: Record<FactionId, (g: Graphics, size: number, color: number, alpha: number) => void> = {
+type DrawFn = (g: Graphics, size: number, color: number, alpha: number, isOwned: boolean) => void;
+
+const DRAW_FNS: Record<FactionId, DrawFn> = {
   origin: drawOriginIcon,
   community: drawCommunityIcon,
   machines: drawMachinesIcon,
@@ -180,13 +201,17 @@ export function createFactionGlyph(
   factionId: FactionId,
   sizeOverride?: number,
   alpha: number = 1.0,
+  isOwned: boolean = true,
 ): Container {
   const cfg = GLYPH_CONFIGS[factionId];
   const size = sizeOverride ?? cfg.size;
   const container = new Container();
 
+  // Claimable (unowned) nodes render dimmer
+  const effectiveAlpha = isOwned ? alpha * 0.85 : alpha * 0.35;
+
   const icon = new Graphics();
-  DRAW_FNS[factionId](icon, size, cfg.strokeColor, alpha * 0.85);
+  DRAW_FNS[factionId](icon, size, cfg.strokeColor, effectiveAlpha, isOwned);
   container.addChild(icon);
 
   return container;
