@@ -9,8 +9,8 @@ import type { Faction } from '@/lib/spiral/SpiralClassifier';
  */
 export function createGridBackground(width: number, height: number, cellSize: number = 60): Graphics {
   const grid = new Graphics();
-  const lineColor = 0xffffff;
-  const lineAlpha = 0.03;
+  const lineColor = 0x667788;
+  const lineAlpha = 0.06;
   const half = cellSize / 2;
 
   grid.setStrokeStyle({ width: 1, color: lineColor, alpha: lineAlpha });
