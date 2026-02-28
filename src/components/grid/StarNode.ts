@@ -1,8 +1,10 @@
-import { Graphics, Text, Container } from 'pixi.js';
+import { Graphics, Container } from 'pixi.js';
 import type { Agent, FogLevel } from '@/types';
+import type { Faction } from '@/lib/spiral/SpiralClassifier';
+import { classifyCell } from '@/lib/spiral/SpiralClassifier';
+import { createFactionGlyph, mapSpiralFactionToId, type FactionId } from './FactionGlyphs';
 
-const TIER_RADIUS = { opus: 10, sonnet: 7, haiku: 4 };
-const TIER_COLOR = { opus: 0x8b5cf6, sonnet: 0x00d4ff, haiku: 0xfacc15 };
+const CELL_SIZE = 60;
 
 const FOG_ALPHA: Record<FogLevel, number> = {
   clear: 1.0,
@@ -11,123 +13,74 @@ const FOG_ALPHA: Record<FogLevel, number> = {
   hidden: 0.06,
 };
 
-function drawDiffractionSpikes(gfx: Graphics, length: number, color: number, alpha: number) {
-  // 4-pointed cross rays — Stellaris signature look
-  const thickness = Math.max(0.5, length * 0.04);
+// Faction master size (22px), player size (16px), unclaimed (14px), origin (28px)
+const FACTION_MASTER_SIZE = 22;
+const PLAYER_SIZE = 16;
 
-  // Horizontal spike
-  gfx.setStrokeStyle({ width: thickness, color, alpha: alpha * 0.6 });
-  gfx.moveTo(-length, 0);
-  gfx.lineTo(length, 0);
-  gfx.stroke();
+/**
+ * Determine the display faction for an agent based on position and ownership.
+ * Pure function — testable without PixiJS.
+ */
+export function determineFaction(
+  position: { x: number; y: number },
+  hasUserId: boolean,
+  userFaction: Faction,
+): FactionId {
+  // Origin singularity — hardcoded at (0,0)
+  if (position.x === 0 && position.y === 0) return 'origin';
 
-  // Vertical spike
-  gfx.setStrokeStyle({ width: thickness, color, alpha: alpha * 0.6 });
-  gfx.moveTo(0, -length);
-  gfx.lineTo(0, length);
-  gfx.stroke();
+  // Unclaimed nodes
+  if (!hasUserId) return 'unclaimed';
 
-  // Thinner diagonal rays (45°) — subtle secondary spikes
-  const diagLen = length * 0.5;
-  gfx.setStrokeStyle({ width: thickness * 0.5, color, alpha: alpha * 0.25 });
-  gfx.moveTo(-diagLen, -diagLen);
-  gfx.lineTo(diagLen, diagLen);
-  gfx.stroke();
-
-  gfx.setStrokeStyle({ width: thickness * 0.5, color, alpha: alpha * 0.25 });
-  gfx.moveTo(diagLen, -diagLen);
-  gfx.lineTo(-diagLen, diagLen);
-  gfx.stroke();
+  // Classify via spiral
+  const gx = Math.round(position.x / CELL_SIZE);
+  const gyMath = -Math.round(position.y / CELL_SIZE);
+  const cls = classifyCell(gx, gyMath, userFaction);
+  return mapSpiralFactionToId(cls.faction);
 }
 
-export function createStarNode(agent: Agent, fogLevel: FogLevel): Container {
+/**
+ * Create a star node with faction glyph, hit area, and hover effects.
+ */
+export function createStarNode(
+  agent: Agent,
+  fogLevel: FogLevel,
+  userFaction: Faction = 'free_community',
+): Container {
   const container = new Container();
   container.position.set(agent.position.x, agent.position.y);
 
   const alpha = FOG_ALPHA[fogLevel];
-  const radius = TIER_RADIUS[agent.tier];
-  const isUnclaimed = !agent.userId;
-  const showColor = !isUnclaimed && (fogLevel === 'clear' || fogLevel === 'hazy');
-  const color = isUnclaimed ? 0x3a4556 : (showColor ? TIER_COLOR[agent.tier] : 0x3a4556);
+  const factionId = determineFaction(agent.position, !!agent.userId, userFaction);
+
+  // Determine glyph size based on node type
+  let glyphSize: number;
+  if (factionId === 'origin') {
+    glyphSize = 28;
+  } else if (factionId === 'unclaimed') {
+    glyphSize = 14;
+  } else if (agent.isPrimary || agent.tier === 'opus') {
+    glyphSize = FACTION_MASTER_SIZE;
+  } else {
+    glyphSize = PLAYER_SIZE;
+  }
 
   // Hit area (invisible, larger than visual for easier clicking)
   const hitArea = new Graphics();
-  hitArea.circle(0, 0, radius * 3);
+  hitArea.circle(0, 0, glyphSize * 1.5);
   hitArea.fill({ color: 0x000000, alpha: 0.001 });
   container.addChild(hitArea);
 
-  // Soft outer glow — large diffuse halo
-  const halo = new Graphics();
-  halo.circle(0, 0, radius * 2.5);
-  halo.fill({ color, alpha: alpha * 0.05 });
-  container.addChild(halo);
-
-  // Inner glow
-  const glow = new Graphics();
-  glow.circle(0, 0, radius * 1.2);
-  glow.fill({ color, alpha: alpha * 0.12 });
-  container.addChild(glow);
-
-  // Diffraction spikes — the Stellaris look
-  const spikes = new Graphics();
-  drawDiffractionSpikes(spikes, radius * 2.2, color, alpha);
-  container.addChild(spikes);
-
-  // Core — small bright disc
-  const core = new Graphics();
-  core.circle(0, 0, radius * 0.35);
-  core.fill({ color, alpha: alpha * 0.8 });
-  container.addChild(core);
-
-  // Hot white center point
-  const hotCenter = new Graphics();
-  hotCenter.circle(0, 0, radius * 0.15);
-  hotCenter.fill({ color: 0xffffff, alpha });
-  container.addChild(hotCenter);
-
-  // Agent control indicator — small digital helmet icon above the star
-  if (showColor && agent.userId) {
-    const iconSize = radius * 0.5;
-    const icon = new Graphics();
-    // Visor shape — rounded rectangle for digital helmet look
-    icon.roundRect(-iconSize, -iconSize * 0.6, iconSize * 2, iconSize * 1.2, iconSize * 0.3);
-    icon.fill({ color, alpha: alpha * 0.5 });
-    icon.stroke({ width: 0.8, color: 0xffffff, alpha: alpha * 0.3 });
-    // Visor slit
-    icon.setStrokeStyle({ width: 0.6, color: 0xffffff, alpha: alpha * 0.6 });
-    icon.moveTo(-iconSize * 0.6, 0);
-    icon.lineTo(iconSize * 0.6, 0);
-    icon.stroke();
-    icon.position.set(0, -(radius * 0.8 + iconSize));
-    container.addChild(icon);
-  }
+  // Faction glyph (glow + line art)
+  const glyph = createFactionGlyph(factionId, glyphSize, alpha);
+  container.addChild(glyph);
 
   // Hover ring (hidden by default)
   const hoverRing = new Graphics();
-  hoverRing.circle(0, 0, radius * 1.4);
-  hoverRing.stroke({ width: 1, color: 0xffffff, alpha: 0.35 });
+  hoverRing.circle(0, 0, glyphSize * 0.7);
+  hoverRing.stroke({ width: 0.5, color: 0xffffff, alpha: 0.3 });
   hoverRing.alpha = 0;
   container.addChild(hoverRing);
-
-  // Username label (only if clear or hazy)
-  if (agent.username && (fogLevel === 'clear' || fogLevel === 'hazy')) {
-    const displayName = agent.isPrimary
-      ? `★ ${agent.username}`
-      : agent.username;
-    const label = new Text({
-      text: displayName,
-      style: {
-        fontFamily: 'Inter, sans-serif',
-        fontSize: agent.isPrimary ? 11 : 10,
-        fill: agent.isPrimary ? 0xffd700 : 0x64748b,
-        align: 'center',
-      },
-    });
-    label.anchor.set(0.5, 0);
-    label.position.set(0, radius * 0.6 + 6);
-    label.alpha = alpha * (agent.isPrimary ? 0.9 : 0.6);
-    container.addChild(label);
-  }
 
   container.eventMode = 'static';
   container.cursor = 'pointer';
@@ -135,13 +88,11 @@ export function createStarNode(agent: Agent, fogLevel: FogLevel): Container {
   // Hover effects
   container.on('pointerover', () => {
     hoverRing.alpha = 1;
-    spikes.alpha = 1.3;
-    container.scale.set(1.1);
+    container.scale.set(1.15);
   });
 
   container.on('pointerout', () => {
     hoverRing.alpha = 0;
-    spikes.alpha = 1;
     container.scale.set(1);
   });
 
