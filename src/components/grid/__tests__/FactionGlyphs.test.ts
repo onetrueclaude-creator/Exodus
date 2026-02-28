@@ -18,11 +18,15 @@ describe('FactionGlyphs', () => {
       }
     });
 
-    it('active factions have positive glow radius', () => {
-      const activeFactions: FactionId[] = ['origin', 'community', 'machines', 'founders', 'professional'];
-      for (const id of activeFactions) {
-        expect(GLYPH_CONFIGS[id].glowRadius).toBeGreaterThan(0);
+    it('all factions have no glow (glow removed)', () => {
+      const ids: FactionId[] = ['origin', 'community', 'machines', 'founders', 'professional', 'unclaimed'];
+      for (const id of ids) {
+        expect(GLYPH_CONFIGS[id].glowAlpha).toBe(0);
       }
+    });
+
+    it('community faction is white', () => {
+      expect(GLYPH_CONFIGS.community.strokeColor).toBe(0xe2e8f0);
     });
 
     it('origin is the largest glyph', () => {
