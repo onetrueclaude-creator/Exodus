@@ -6,11 +6,11 @@ import { useGameStore } from '@/store';
 import { createGridBackground, createFactionBackground } from './grid/GridBackground';
 import { createStarNode, setNodeDimmed } from './grid/StarNode';
 import { createConnectionLine } from './grid/ConnectionLine';
+import { createNebulaBg } from './grid/NebulaBg';
 import { createEmpireBorders } from './grid/EmpireBorders';
 import { getDistance, getConnectionStrength } from '@/lib/proximity';
 import type { Agent, FogLevel } from '@/types';
-import { MinigridLayer, type MacroCellRenderData } from '@/components/game/MinigridLayer';
-import { classifyCell, FACTION_COLORS } from '@/lib/spiral/SpiralClassifier';
+import { classifyCell, FACTION_COLORS, type Faction } from '@/lib/spiral/SpiralClassifier';
 
 const GRID_EXTENT = 10000;
 const CELL_SIZE = 60;  // world-unit size of each macro grid cell (matches GridBackground default)
@@ -37,7 +37,6 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
   const worldRef = useRef<Container | null>(null);
   const hasCentered = useRef(false);
   const bordersRef = useRef<Graphics | null>(null);
-  const minigridRef = useRef<MinigridLayer | null>(null);
   const userFactionRef = useRef(userFaction);
   /** Tracks when a node was last tapped — canvas pointerup uses this to avoid deselecting on node clicks */
   const lastNodeTapMsRef = useRef(0);
@@ -59,7 +58,7 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
 
     const app = new Application();
     await app.init({
-      background: 0x0a0a0f,
+      background: 0x060610,
       resizeTo: containerRef.current,
       antialias: true,
       resolution: window.devicePixelRatio || 1,
@@ -73,17 +72,16 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     app.stage.addChild(world);
     worldRef.current = world;
 
-    // Grid background: faction-tinted cell fills (index 0) + grid lines (index 1)
-    // Faction background is recreated when userFaction changes (handled in separate effect)
-    const factionBg = createFactionBackground(GRID_EXTENT, GRID_EXTENT, userFactionRef.current);
-    factionBg.visible = false;  // hidden until faction cells are formally introduced
-    world.addChild(factionBg);
-    world.addChild(createGridBackground(GRID_EXTENT, GRID_EXTENT));
+    // Layer 0: Nebula background (soft faction-colored zones + star dust)
+    world.addChild(createNebulaBg());
 
-    // Minigrid layer — sits above faction background and grid lines, below nodes
-    const minigrid = new MinigridLayer();
-    world.addChild(minigrid.displayObject);  // index 2
-    minigridRef.current = minigrid;
+    // Layer 1: Faction background (hidden until formally introduced)
+    const factionBg = createFactionBackground(GRID_EXTENT, GRID_EXTENT, userFactionRef.current);
+    factionBg.visible = false;
+    world.addChild(factionBg);
+
+    // Layer 2: Grid lines
+    world.addChild(createGridBackground(GRID_EXTENT, GRID_EXTENT));
 
     // Pan & zoom
     let dragging = false;
@@ -199,7 +197,7 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     const world = worldRef.current;
     if (!world) return;
 
-    // Clear previous star nodes (keep faction bg at 0, grid lines at 1, minigrid at 2)
+    // Clear previous star nodes (keep nebula at 0, faction bg at 1, grid lines at 2)
     while (world.children.length > 3) {
       world.removeChildAt(3);
     }
@@ -207,8 +205,8 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     const agentList = Object.values(agents);
     const viewer = currentAgentId ? agents[currentAgentId] : null;
 
-    const addClickableStarNode = (agent: Agent, fogLevel: FogLevel) => {
-      const node = createStarNode(agent, fogLevel);
+    const addClickableStarNode = (agent: Agent, fogLevel: FogLevel, faction?: Faction) => {
+      const node = createStarNode(agent, fogLevel, faction ?? userFactionRef.current);
       node.on('pointertap', () => {
         lastNodeTapMsRef.current = Date.now();
         onSelectAgent?.(agent.id);
@@ -230,6 +228,9 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
         for (let j = i + 1; j < agentList.length; j++) {
           const a = agentList[i];
           const b = agentList[j];
+          // Skip connections to/from the origin singularity node at (0,0)
+          if ((a.position.x === 0 && a.position.y === 0) ||
+              (b.position.x === 0 && b.position.y === 0)) continue;
           if (getDistance(a.position, b.position) > CELL_SIZE + 1) continue;
           const clsA = classifyAgentCell(a);
           const clsB = classifyAgentCell(b);
@@ -246,7 +247,7 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
         const cls = classifyAgentCell(agent);
         // In network-overview mode all nodes are visible — void nodes show as hazy (never hidden)
         const fogLevel = cls.fogLevel === 'hidden' ? 'hazy' : cls.fogLevel;
-        addClickableStarNode(agent, fogLevel);
+        addClickableStarNode(agent, fogLevel, userFactionRef.current);
       });
       return;
     }
@@ -255,7 +256,7 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
 
     // Empire borders placeholder — actual borders drawn in separate turn-based effect
     const borders = createEmpireBorders(agentList, { viewerUserId: currentUserId, viewerEmpireColor: empireColor });
-    world.addChildAt(borders, 3); // index 3 = right after faction bg (0), grid lines (1), minigrid (2)
+    world.addChildAt(borders, 3); // index 3 = right after nebula (0), faction bg (1), grid lines (2)
     bordersRef.current = borders;
 
     // Connection lines (behind stars) — faction-colored, bold for same-faction links
@@ -271,12 +272,12 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     });
 
     // Viewer's own star
-    addClickableStarNode(viewer, 'clear');
+    addClickableStarNode(viewer, 'clear', userFactionRef.current);
 
     // All other stars — fog level from SpiralClassifier (faction-based, not distance)
     others.forEach(agent => {
       const cls = classifyAgentCell(agent);
-      addClickableStarNode(agent, cls.fogLevel);
+      addClickableStarNode(agent, cls.fogLevel, userFactionRef.current);
     });
 
   }, [appReady, agents, currentAgentId, currentUserId]);
@@ -306,12 +307,11 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     if (!appReady) return;
     const world = worldRef.current;
     if (!world) return;
-    // Replace index 0 (faction background layer)
-    if (world.children.length > 0) {
-      world.removeChildAt(0);
+    if (world.children.length > 1) {
+      world.removeChildAt(1);
       const newFactionBg = createFactionBackground(GRID_EXTENT, GRID_EXTENT, userFaction);
-      newFactionBg.visible = false;  // hidden until faction cells are formally introduced
-      world.addChildAt(newFactionBg, 0);
+      newFactionBg.visible = false;
+      world.addChildAt(newFactionBg, 1);
     }
   }, [appReady, userFaction]);
 
@@ -329,62 +329,6 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
       }
     });
   }, [hoveredNodeId]);
-
-  // Update minigrid layer when zoom changes
-  // At zoom >= 3 render 8x8 sub-cells for all visible macro cells; below that, clear.
-  useEffect(() => {
-    if (!appReady) return;
-    const world = worldRef.current;
-    const app = appRef.current;
-    const minigrid = minigridRef.current;
-    if (!world || !app || !minigrid) return;
-
-    if (zoom < 3) {
-      minigrid.render([]);
-      return;
-    }
-
-    // Compute which macro cells are currently visible in the viewport
-    const screenW = app.screen.width;
-    const screenH = app.screen.height;
-    const scale = world.scale.x;
-    const offsetX = world.position.x;
-    const offsetY = world.position.y;
-
-    // World-space bounds of the visible screen
-    const worldLeft   = (-offsetX) / scale;
-    const worldTop    = (-offsetY) / scale;
-    const worldRight  = (screenW - offsetX) / scale;
-    const worldBottom = (screenH - offsetY) / scale;
-
-    // Snap to shifted grid (cells centered at multiples of CELL_SIZE, offset by -HALF)
-    const HALF = CELL_SIZE / 2;
-    const startCellX = Math.floor((worldLeft + HALF) / CELL_SIZE) * CELL_SIZE - HALF;
-    const startCellY = Math.floor((worldTop + HALF) / CELL_SIZE) * CELL_SIZE - HALF;
-
-    const cellData: MacroCellRenderData[] = [];
-
-    for (let wx = startCellX; wx < worldRight; wx += CELL_SIZE) {
-      for (let wy = startCellY; wy < worldBottom; wy += CELL_SIZE) {
-        // Cell center = wx + HALF; grid index = center / CELL_SIZE
-        const gx = Math.round((wx + HALF) / CELL_SIZE);
-        // Negate gy: PixiJS y-down → SpiralClassifier math y-up convention
-        const gyMath = -Math.round((wy + HALF) / CELL_SIZE);
-        const cls = classifyCell(gx, gyMath, userFactionRef.current);
-        cellData.push({
-          macroX: wx,
-          macroY: wy,
-          macroSize: CELL_SIZE,
-          fogLevel: cls.fogLevel,
-          factionColor: cls.faction ? FACTION_COLORS[cls.faction] : 0x222244,
-          slots: Array.from({ length: 64 }, () => ({ fillRatio: 0 })),
-        });
-      }
-    }
-
-    minigrid.render(cellData);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appReady, zoom]);
 
   // Focus on a specific node when requested via store
   const focusRequest = useGameStore((s) => s.focusRequest);
