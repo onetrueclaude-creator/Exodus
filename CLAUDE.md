@@ -1,5 +1,8 @@
 # ZK Agentic Network
 
+## Required Reading
+**Before working on any feature, read `vault/whitepaper.md`** — the v1.0 whitepaper (21K words) is the authoritative specification for all protocol mechanics: PoAIV consensus, dual staking, tokenomics, subgrid resources, privacy architecture, and the SOL→L1 migration path. All implementation must align with the whitepaper.
+
 ## Project Overview
 Stellaris-inspired gamified social media dApp where users explore a 2D galaxy grid, communicate via haiku through AI agents, develop star systems with planets (content storage), research technologies, and build diplomatic relationships. All state is backed by the Agentic Chain testnet blockchain ledger.
 
