@@ -6,19 +6,17 @@ import { ZapIcon, LockIcon, VoteIcon, ShieldIcon, DiamondIcon } from "@/componen
 
 const healthMetrics = [
   { label: "Total Supply", value: "1,000,000,000", unit: "AGNTC" },
-  { label: "Genesis Circulating", value: "21,000,000", unit: "AGNTC" },
+  { label: "Genesis Circulating", value: "900", unit: "AGNTC" },
   { label: "Current APY", value: "9.2", unit: "%", trend: "up" as const },
   { label: "Active Verifiers", value: "8,240", trend: "up" as const },
   { label: "CPU Staked", value: "2.1M", unit: "vCPUs", trend: "up" as const },
 ];
 
 const distribution = [
-  { label: "Community Staking Pool", percentage: 30, color: "#00D4FF" },
-  { label: "Team & Advisors (4yr vest)", percentage: 20, color: "#8B5CF6" },
-  { label: "Foundation Reserve", percentage: 15, color: "#06B6D4" },
-  { label: "Ecosystem Development", percentage: 15, color: "#A78BFA" },
-  { label: "Public Sale", percentage: 10, color: "#22D3EE" },
-  { label: "Private Sale", percentage: 10, color: "#C4B5FD" },
+  { label: "Community (Free Tier)", percentage: 25, color: "#0D9488" },
+  { label: "Machines (AI Agents)", percentage: 25, color: "#DC2680" },
+  { label: "Founders (Team & Advisors)", percentage: 25, color: "#F59E0B" },
+  { label: "Professional (Paid Tier)", percentage: 25, color: "#3B82F6" },
 ];
 
 const utilities = [
@@ -31,8 +29,8 @@ const comparisons = [
   { metric: "Consensus", agntc: "PoAI Verification", sol: "Tower BFT", aleo: "Proof of Succinct Work", mina: "Ouroboros" },
   { metric: "Staking Model", agntc: "CPU + Token", sol: "Token Only", aleo: "GPU (Proving)", mina: "Token Only" },
   { metric: "Privacy", agntc: "Isolated Ledger Spaces", sol: "Public", aleo: "Private by Default", mina: "Public" },
-  { metric: "Supply", agntc: "1B (Inflationary \u2192 Deflationary)", sol: "~600M (Inflationary)", aleo: "1.5B (Fixed)", mina: "~1.2B (Inflationary)" },
-  { metric: "Genesis Circulating", agntc: "21M (2.1%)", sol: "~260M (43%)", aleo: "~187M (12.5%)", mina: "~800M (67%)" },
+  { metric: "Supply", agntc: "1B (Organic Growth)", sol: "~600M (Inflationary)", aleo: "1.5B (Fixed)", mina: "~1.2B (Inflationary)" },
+  { metric: "Genesis Circulating", agntc: "900 (0.00009%)", sol: "~260M (43%)", aleo: "~187M (12.5%)", mina: "~800M (67%)" },
   { metric: "Verifier Work", agntc: "AI Chain Auditing", sol: "Vote Confirmation", aleo: "ZK Proof Generation", mina: "SNARK Production" },
 ];
 
@@ -44,6 +42,21 @@ export default function TokenomicsPage() {
         highlight="Tokenomics"
         subtitle="Agentic Coin — the dual-utility token powering ZK Agentic Chain. Gas, staking, and governance in one."
       />
+
+      {/* Contract Address */}
+      <section className="py-6 border-y border-card-border">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <p className="text-xs text-text-muted uppercase tracking-widest mb-2">Solana Mainnet Contract</p>
+          <a
+            href="https://solscan.io/token/3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block font-mono text-sm text-accent-cyan hover:text-white transition-colors break-all"
+          >
+            3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd
+          </a>
+        </div>
+      </section>
 
       {/* Chain Health */}
       <section className="py-8 border-y border-card-border">
@@ -69,9 +82,9 @@ export default function TokenomicsPage() {
           </div>
           <div className="mt-6 glass-card p-5 border-l-2 border-accent-cyan/40">
             <p className="text-sm text-text-secondary leading-relaxed">
-              <span className="text-text-primary font-medium">Community Staking Pool (30%)</span> — Not airdropped.
-              Emitted gradually to users who opt into free community staking on our website.
-              More CPU delegated, more share from the pool. Open to anyone with a computer.
+              <span className="text-text-primary font-medium">31,623 &times; 31,623 Grid = 1B AGNTC</span> — The galaxy grid IS the supply.
+              Each coordinate yields 1 AGNTC when claimed. Supply grows organically as players explore.
+              Equal 25% allocation across all four factions.
             </p>
           </div>
         </div>
@@ -102,17 +115,17 @@ export default function TokenomicsPage() {
             Economic <span className="gradient-text">Model</span>
           </h2>
           <p className="text-center text-text-secondary mb-12 max-w-2xl mx-auto">
-            Designed to transition from inflationary bootstrap to deflationary maturity.
+            Organic growth — no scheduled inflation. Supply grows only when coordinates are claimed.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="glass-card p-6 text-center group hover:border-accent-cyan/30 transition-colors">
               <div className="w-10 h-10 mx-auto mb-3 rounded-lg bg-accent-cyan/10 flex items-center justify-center text-accent-cyan">
                 <DiamondIcon size={20} />
               </div>
-              <p className="text-sm text-text-muted uppercase tracking-widest mb-2">Inflation</p>
-              <p className="text-3xl font-bold gradient-text">6%</p>
-              <p className="text-sm text-text-secondary mt-2">Starting rate, decreasing 15% per year</p>
-              <p className="text-xs text-text-muted mt-1">Floor: 1.0%</p>
+              <p className="text-sm text-text-muted uppercase tracking-widest mb-2">Growth</p>
+              <p className="text-3xl font-bold gradient-text">Organic</p>
+              <p className="text-sm text-text-secondary mt-2">1 AGNTC per coordinate claimed</p>
+              <p className="text-xs text-text-muted mt-1">No scheduled inflation</p>
             </div>
             <div className="glass-card p-6 text-center group hover:border-accent-cyan/30 transition-colors">
               <div className="w-10 h-10 mx-auto mb-3 rounded-lg bg-accent-cyan/10 flex items-center justify-center text-accent-cyan">
@@ -171,18 +184,14 @@ export default function TokenomicsPage() {
                 </div>
               </div>
             </div>
-            <div className="mt-6 grid grid-cols-3 gap-4 text-center">
-              <div className="glass-card p-3">
-                <p className="text-xs text-text-muted uppercase tracking-wider">Orderer</p>
-                <p className="text-lg font-bold text-text-primary mt-1">10%</p>
-              </div>
+            <div className="mt-6 grid grid-cols-2 gap-4 text-center">
               <div className="glass-card p-3">
                 <p className="text-xs text-text-muted uppercase tracking-wider">Verifier</p>
-                <p className="text-lg font-bold text-accent-cyan mt-1">55%</p>
+                <p className="text-lg font-bold text-accent-cyan mt-1">60%</p>
               </div>
               <div className="glass-card p-3">
                 <p className="text-xs text-text-muted uppercase tracking-wider">Staker</p>
-                <p className="text-lg font-bold text-accent-purple mt-1">35%</p>
+                <p className="text-lg font-bold text-accent-purple mt-1">40%</p>
               </div>
             </div>
           </div>

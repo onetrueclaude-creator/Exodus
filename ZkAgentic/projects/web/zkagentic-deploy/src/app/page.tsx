@@ -35,7 +35,7 @@ const differentiators = [
 
 const metrics = [
   { label: "Total Supply", value: "1B", unit: "AGNTC" },
-  { label: "Genesis Circulating", value: "21M", unit: "AGNTC" },
+  { label: "Genesis Circulating", value: "900", unit: "AGNTC" },
   { label: "Consensus", value: "PoAIV" },
   { label: "Staking", value: "CPU" },
 ];
