@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="brush" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="turbulence" baseFrequency="0.008" numOctaves="4" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="glow"><feGaussianBlur stdDeviation="5" result="blur"/><feComposite in="blur" in2="SourceGraphic" operator="over"/></filter>
+    <linearGradient id="conn" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.5"/>
+    </linearGradient>
+    <linearGradient id="perim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.4"/>
+    </linearGradient>
+    <radialGradient id="nc" cx="40%" cy="35%"><stop offset="0%" stop-color="#67FFFF"/><stop offset="100%" stop-color="#00D4FF"/></radialGradient>
+    <radialGradient id="n-w" cx="40%" cy="35%"><stop offset="0%" stop-color="#F1F5F9"/><stop offset="100%" stop-color="#CBD5E1"/></radialGradient>
+    <radialGradient id="n-g" cx="40%" cy="35%"><stop offset="0%" stop-color="#FCD34D"/><stop offset="100%" stop-color="#D97706"/></radialGradient>
+    <radialGradient id="n-r" cx="40%" cy="35%"><stop offset="0%" stop-color="#FCA5A5"/><stop offset="100%" stop-color="#EF4444"/></radialGradient>
+    <radialGradient id="n-c" cx="40%" cy="35%"><stop offset="0%" stop-color="#5EEAFF"/><stop offset="100%" stop-color="#00B4D8"/></radialGradient>
+  </defs>
+
+  <!-- Coin disc -->
+  <circle cx="256" cy="256" r="250" fill="#0A0A0F"/>
+  <circle cx="256" cy="256" r="242" fill="none" stroke="url(#ring)" stroke-width="2.5"/>
+  <circle cx="256" cy="256" r="232" fill="none" stroke="url(#ring)" stroke-width="0.8" opacity="0.3"/>
+
+  <g filter="url(#brush)">
+    <!-- Curved perimeter (organic Bezier square) -->
+    <path d="M248,75 Q400,55 440,248" stroke="url(#perim)" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M440,248 Q460,430 264,437" stroke="url(#perim)" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    <path d="M264,437 Q60,460 72,264" stroke="url(#perim)" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+    <path d="M72,264 Q55,70 248,75" stroke="url(#perim)" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+
+    <!-- Curved radials to center (double stroke for glow) -->
+    <path d="M256,256 Q252,160 248,75" stroke="#00D4FF" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.1"/>
+    <path d="M256,256 Q252,160 248,75" stroke="url(#conn)" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M256,256 Q355,252 440,248" stroke="#D97706" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.1"/>
+    <path d="M256,256 Q355,252 440,248" stroke="url(#conn)" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M256,256 Q260,350 264,437" stroke="#EF4444" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.1"/>
+    <path d="M256,256 Q260,350 264,437" stroke="url(#conn)" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M256,256 Q158,260 72,264" stroke="#00B4D8" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.1"/>
+    <path d="M256,256 Q158,260 72,264" stroke="url(#conn)" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+    <!-- ZK dashed cross connections -->
+    <path d="M248,75 Q265,360 264,437" stroke="#8B5CF6" stroke-width="1.5" fill="none" stroke-dasharray="8 12" opacity="0.2"/>
+    <path d="M72,264 Q360,250 440,248" stroke="#8B5CF6" stroke-width="1.5" fill="none" stroke-dasharray="8 12" opacity="0.18"/>
+  </g>
+
+  <!-- Nodes -->
+  <g filter="url(#glow)">
+    <circle cx="256" cy="256" r="18" fill="url(#nc)" opacity="0.95"/>
+    <circle cx="256" cy="256" r="10" fill="#fff" opacity="0.15"/>
+    <circle cx="248" cy="75" r="14" fill="url(#n-w)" opacity="0.9"/>
+    <circle cx="440" cy="248" r="15" fill="url(#n-g)" opacity="0.9"/>
+    <circle cx="264" cy="437" r="13" fill="url(#n-r)" opacity="0.85"/>
+    <circle cx="72" cy="264" r="15" fill="url(#n-c)" opacity="0.9"/>
+  </g>
+</svg>

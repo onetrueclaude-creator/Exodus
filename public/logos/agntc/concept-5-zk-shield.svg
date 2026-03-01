@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="5" result="blur"/><feComposite in="blur" in2="SourceGraphic" operator="over"/></filter>
+    <filter id="brush" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="turbulence" baseFrequency="0.008" numOctaves="4" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.4"/>
+    </linearGradient>
+    <linearGradient id="zk-line" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.35"/>
+    </linearGradient>
+    <linearGradient id="conn" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.35"/>
+    </linearGradient>
+    <radialGradient id="nc" cx="40%" cy="35%"><stop offset="0%" stop-color="#67FFFF"/><stop offset="100%" stop-color="#00D4FF"/></radialGradient>
+  </defs>
+
+  <!-- Coin disc -->
+  <circle cx="256" cy="256" r="250" fill="#0A0A0F"/>
+  <circle cx="256" cy="256" r="242" fill="none" stroke="url(#ring)" stroke-width="2.5"/>
+
+  <g filter="url(#brush)">
+    <!-- Prominent ZK cross connections (the main visual element) -->
+    <line x1="256" y1="80" x2="256" y2="432" stroke="url(#zk-line)" stroke-width="3" stroke-linecap="round"/>
+    <line x1="80" y1="256" x2="432" y2="256" stroke="url(#zk-line)" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Diagonal shield lines -->
+    <line x1="256" y1="80" x2="432" y2="256" stroke="url(#conn)" stroke-width="2" stroke-linecap="round"/>
+    <line x1="432" y1="256" x2="256" y2="432" stroke="url(#conn)" stroke-width="2" stroke-linecap="round"/>
+    <line x1="256" y1="432" x2="80" y2="256" stroke="url(#conn)" stroke-width="2" stroke-linecap="round"/>
+    <line x1="80" y1="256" x2="256" y2="80" stroke="url(#conn)" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- Inner diamond (half-size, rotated — creates shield within shield) -->
+    <line x1="256" y1="168" x2="344" y2="256" stroke="url(#conn)" stroke-width="1.2" stroke-linecap="round" opacity="0.3"/>
+    <line x1="344" y1="256" x2="256" y2="344" stroke="url(#conn)" stroke-width="1.2" stroke-linecap="round" opacity="0.3"/>
+    <line x1="256" y1="344" x2="168" y2="256" stroke="url(#conn)" stroke-width="1.2" stroke-linecap="round" opacity="0.3"/>
+    <line x1="168" y1="256" x2="256" y2="168" stroke="url(#conn)" stroke-width="1.2" stroke-linecap="round" opacity="0.3"/>
+  </g>
+
+  <!-- Nodes -->
+  <g filter="url(#glow)">
+    <!-- Center (large, dominant) -->
+    <circle cx="256" cy="256" r="20" fill="url(#nc)" opacity="0.95"/>
+    <circle cx="256" cy="256" r="11" fill="#fff" opacity="0.15"/>
+
+    <!-- Faction corners -->
+    <circle cx="256" cy="80" r="14" fill="#CBD5E1" opacity="0.9"/>
+    <circle cx="432" cy="256" r="14" fill="#D97706" opacity="0.9"/>
+    <circle cx="256" cy="432" r="14" fill="#EF4444" opacity="0.85"/>
+    <circle cx="80" cy="256" r="14" fill="#00D4FF" opacity="0.9"/>
+
+    <!-- Inner diamond accent nodes (small) -->
+    <circle cx="256" cy="168" r="5" fill="#8B5CF6" opacity="0.5"/>
+    <circle cx="344" cy="256" r="5" fill="#8B5CF6" opacity="0.5"/>
+    <circle cx="256" cy="344" r="5" fill="#8B5CF6" opacity="0.5"/>
+    <circle cx="168" cy="256" r="5" fill="#8B5CF6" opacity="0.5"/>
+  </g>
+</svg>
