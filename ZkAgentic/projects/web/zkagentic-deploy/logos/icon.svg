@@ -1,81 +1,64 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
   <defs>
-    <!-- Organic brush displacement -->
-    <filter id="brush" x="-5%" y="-5%" width="110%" height="110%">
-      <feTurbulence type="turbulence" baseFrequency="0.012" numOctaves="4" seed="7" result="noise"/>
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.2" xChannelSelector="R" yChannelSelector="G"/>
-    </filter>
-
-    <!-- Node glow -->
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="4" result="blur"/>
-      <feComposite in="blur" in2="SourceGraphic" operator="over"/>
-    </filter>
-
-    <!-- Connection gradients -->
-    <linearGradient id="grad-radial" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.7"/>
-      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.5"/>
+    <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="blur"/><feComposite in="blur" in2="SourceGraphic" operator="over"/></filter>
+    <filter id="glow-strong"><feGaussianBlur stdDeviation="5" result="blur"/><feComposite in="blur" in2="SourceGraphic" operator="over"/></filter>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.4"/>
     </linearGradient>
-    <linearGradient id="grad-perim" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.35"/>
-      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.25"/>
+    <linearGradient id="orbit" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.2"/>
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.2"/>
     </linearGradient>
-    <radialGradient id="node-cyan" cx="40%" cy="35%">
-      <stop offset="0%" stop-color="#5EEAFF"/>
-      <stop offset="100%" stop-color="#00B4D8"/>
-    </radialGradient>
-    <radialGradient id="node-purple" cx="40%" cy="35%">
-      <stop offset="0%" stop-color="#A78BFA"/>
-      <stop offset="100%" stop-color="#7C3AED"/>
-    </radialGradient>
-    <radialGradient id="node-center" cx="40%" cy="35%">
-      <stop offset="0%" stop-color="#67FFFF"/>
-      <stop offset="100%" stop-color="#00D4FF"/>
-    </radialGradient>
+    <radialGradient id="nc" cx="40%" cy="35%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#CBD5E1"/></radialGradient>
   </defs>
 
-  <!-- Brushwork connections -->
-  <g filter="url(#brush)">
-    <!-- Perimeter connections (thinner, subtler) -->
-    <path d="M95,24 Q140,18 168,56" stroke="url(#grad-perim)" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <path d="M168,56 Q178,110 153,152" stroke="url(#grad-perim)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-    <path d="M153,152 Q100,175 44,146" stroke="url(#grad-perim)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-    <path d="M44,146 Q18,108 30,68" stroke="url(#grad-perim)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-    <path d="M30,68 Q48,32 95,24" stroke="url(#grad-perim)" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Coin disc -->
+  <circle cx="100" cy="100" r="98" fill="#0A0A0F"/>
+  <circle cx="100" cy="100" r="94" fill="none" stroke="url(#ring)" stroke-width="1"/>
 
-    <!-- Radial connections from center (thicker, brush-like) -->
-    <!-- Double-stroke technique: thick underlayer + thin bright overlay -->
-    <path d="M100,100 Q96,58 95,24" stroke="#00D4FF" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.15"/>
-    <path d="M100,100 Q96,58 95,24" stroke="url(#grad-radial)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Faction-colored spokes to singularity -->
+  <line x1="100" y1="100" x2="52" y2="52" stroke="#0D9488" stroke-width="2.5" stroke-linecap="round" opacity="0.08"/>
+  <line x1="100" y1="100" x2="52" y2="52" stroke="#0D9488" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+  <line x1="100" y1="100" x2="148" y2="52" stroke="#DC2680" stroke-width="2.5" stroke-linecap="round" opacity="0.08"/>
+  <line x1="100" y1="100" x2="148" y2="52" stroke="#DC2680" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+  <line x1="100" y1="100" x2="148" y2="148" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" opacity="0.08"/>
+  <line x1="100" y1="100" x2="148" y2="148" stroke="#F59E0B" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+  <line x1="100" y1="100" x2="52" y2="148" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" opacity="0.08"/>
+  <line x1="100" y1="100" x2="52" y2="148" stroke="#3B82F6" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
 
-    <path d="M100,100 Q140,72 168,56" stroke="#8B5CF6" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.15"/>
-    <path d="M100,100 Q140,72 168,56" stroke="url(#grad-radial)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Square frame (neutral) -->
+  <line x1="52" y1="52" x2="148" y2="52" stroke="#667788" stroke-width="0.7" stroke-linecap="round" opacity="0.35"/>
+  <line x1="148" y1="52" x2="148" y2="148" stroke="#667788" stroke-width="0.7" stroke-linecap="round" opacity="0.35"/>
+  <line x1="148" y1="148" x2="52" y2="148" stroke="#667788" stroke-width="0.7" stroke-linecap="round" opacity="0.35"/>
+  <line x1="52" y1="148" x2="52" y2="52" stroke="#667788" stroke-width="0.7" stroke-linecap="round" opacity="0.35"/>
 
-    <path d="M100,100 Q132,132 153,152" stroke="#00D4FF" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.15"/>
-    <path d="M100,100 Q132,132 153,152" stroke="url(#grad-radial)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <!-- Orbital ring -->
+  <circle cx="100" cy="100" r="68" fill="none" stroke="url(#orbit)" stroke-width="0.8"/>
 
-    <path d="M100,100 Q66,128 44,146" stroke="#8B5CF6" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.15"/>
-    <path d="M100,100 Q66,128 44,146" stroke="url(#grad-radial)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-
-    <path d="M100,100 Q58,82 30,68" stroke="#00D4FF" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.15"/>
-    <path d="M100,100 Q58,82 30,68" stroke="url(#grad-radial)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-
-    <!-- ZK hidden cross-connection (dashed, privacy motif) -->
-    <path d="M95,24 Q105,140 44,146" stroke="#8B5CF6" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-dasharray="6 8" opacity="0.3"/>
+  <!-- Faction glow halos -->
+  <g filter="url(#glow-strong)">
+    <circle cx="52" cy="52" r="3" fill="#0D9488" opacity="0.15"/>
+    <circle cx="148" cy="52" r="3" fill="#DC2680" opacity="0.15"/>
+    <circle cx="148" cy="148" r="3" fill="#F59E0B" opacity="0.15"/>
+    <circle cx="52" cy="148" r="3" fill="#3B82F6" opacity="0.15"/>
   </g>
 
-  <!-- Nodes with glow -->
+  <!-- Nodes -->
   <g filter="url(#glow)">
-    <!-- Center hub (largest, brightest) -->
-    <circle cx="100" cy="100" r="11" fill="url(#node-center)" opacity="0.95"/>
-    <circle cx="100" cy="100" r="6" fill="#fff" opacity="0.25"/>
+    <circle cx="100" cy="100" r="7" fill="url(#nc)" opacity="0.95"/>
+    <circle cx="100" cy="100" r="4" fill="#fff" opacity="0.15"/>
+    <circle cx="52" cy="52" r="5.5" fill="#0D9488" opacity="0.9"/>
+    <circle cx="148" cy="52" r="5.5" fill="#DC2680" opacity="0.9"/>
+    <circle cx="148" cy="148" r="5.5" fill="#F59E0B" opacity="0.85"/>
+    <circle cx="52" cy="148" r="5.5" fill="#3B82F6" opacity="0.9"/>
 
-    <!-- Outer nodes (alternating cyan/purple, varying size) -->
-    <circle cx="95" cy="24" r="7" fill="url(#node-cyan)" opacity="0.9"/>
-    <circle cx="168" cy="56" r="7.5" fill="url(#node-purple)" opacity="0.9"/>
-    <circle cx="153" cy="152" r="6" fill="url(#node-cyan)" opacity="0.85"/>
-    <circle cx="44" cy="146" r="7.5" fill="url(#node-purple)" opacity="0.9"/>
-    <circle cx="30" cy="68" r="6.5" fill="url(#node-cyan)" opacity="0.9"/>
+    <!-- Unclaimed midpoint nodes -->
+    <circle cx="100" cy="52" r="1.5" fill="#8B5CF6" opacity="0.4"/>
+    <circle cx="148" cy="100" r="1.5" fill="#8B5CF6" opacity="0.4"/>
+    <circle cx="100" cy="148" r="1.5" fill="#8B5CF6" opacity="0.4"/>
+    <circle cx="52" cy="100" r="1.5" fill="#8B5CF6" opacity="0.4"/>
   </g>
 </svg>

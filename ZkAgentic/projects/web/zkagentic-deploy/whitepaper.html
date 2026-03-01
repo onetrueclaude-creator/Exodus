@@ -4,15 +4,15 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="stylesheet" href="/_next/static/chunks/35eb57da504c74ac.css" data-precedence="next"/>
-  <title>AGNTC Whitepaper v0.3 - ZK Agentic Chain</title>
-  <meta name="description" content="ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification. AGNTC Whitepaper v0.3."/>
-  <meta property="og:title" content="AGNTC Whitepaper v0.3"/>
-  <meta property="og:description" content="A Privacy-Preserving Blockchain with AI-Powered Verification."/>
+  <title>AGNTC Whitepaper v1.0 - ZK Agentic Chain</title>
+  <meta name="description" content="ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification. AGNTC Whitepaper v1.0 — 25 sections, 21K words."/>
+  <meta property="og:title" content="AGNTC Whitepaper v1.0"/>
+  <meta property="og:description" content="A Privacy-Preserving Blockchain with AI-Powered Verification. Complete protocol specification."/>
   <meta property="og:site_name" content="ZK Agentic Chain"/>
   <meta property="og:type" content="article"/>
   <meta name="twitter:card" content="summary"/>
-  <meta name="twitter:title" content="AGNTC Whitepaper v0.3"/>
-  <meta name="twitter:description" content="A Privacy-Preserving Blockchain with AI-Powered Verification."/>
+  <meta name="twitter:title" content="AGNTC Whitepaper v1.0"/>
+  <meta name="twitter:description" content="A Privacy-Preserving Blockchain with AI-Powered Verification. Complete protocol specification."/>
   <link rel="icon" href="/favicon.ico?favicon.0b3bf435.ico" sizes="256x256" type="image/x-icon"/>
   <link rel="icon" href="/logos/logo-mini.svg" type="image/svg+xml"/>
   <link rel="apple-touch-icon" href="/apple-icon.png"/>
@@ -58,9 +58,9 @@
         ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification
       </p>
       <div class="mt-8">
-        <a href="/AGNTC-Whitepaper-v0.3.pdf" download class="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 bg-gradient-to-r from-accent-cyan to-accent-purple text-white shadow-glow hover:shadow-glow-lg hover:scale-105">
+        <a href="/AGNTC-Whitepaper-v1.0.pdf" download class="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 bg-gradient-to-r from-accent-cyan to-accent-purple text-white shadow-glow hover:shadow-glow-lg hover:scale-105">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          Download PDF
+          Download PDF (v1.0)
         </a>
       </div>
     </div>
@@ -69,7 +69,7 @@
   <!-- Version -->
   <section class="py-4 border-y border-card-border">
     <div class="max-w-3xl mx-auto px-6 text-center">
-      <p class="text-xs text-text-muted uppercase tracking-widest">Version 0.3 &middot; March 2026 &middot; Draft</p>
+      <p class="text-xs text-text-muted uppercase tracking-widest">Version 1.0 &middot; March 2026 &middot; 25 Sections &middot; 21,000 Words</p>
     </div>
   </section>
 
@@ -79,45 +79,65 @@
 
       <!-- Table of Contents -->
       <nav class="glass-card p-6 mb-12">
-        <p class="text-xs text-text-muted uppercase tracking-widest mb-4">Contents</p>
-        <ol class="space-y-1.5 text-sm text-text-secondary" style="list-style:decimal;padding-left:1.5rem">
-          <li><a href="#abstract" class="hover:text-accent-cyan transition-colors">Abstract</a></li>
-          <li><a href="#introduction" class="hover:text-accent-cyan transition-colors">Introduction</a></li>
-          <li>
-            <a href="#protocol" class="hover:text-accent-cyan transition-colors">Protocol Design</a>
-            <ol class="mt-1 space-y-1 text-text-muted" style="list-style:decimal;padding-left:1.5rem">
-              <li><a href="#poaiv" class="hover:text-accent-cyan transition-colors">Proof of AI Verification</a></li>
-              <li><a href="#architecture" class="hover:text-accent-cyan transition-colors">Five-Layer Architecture</a></li>
+        <p class="text-xs text-text-muted uppercase tracking-widest mb-4">Contents &mdash; 9 Parts, 25 Sections</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm text-text-secondary">
+          <div>
+            <p class="text-text-muted text-xs uppercase tracking-wider mb-2">Part I &mdash; Foundations</p>
+            <ol class="space-y-1" style="list-style:decimal;padding-left:1.5rem">
+              <li><a href="#abstract" class="hover:text-accent-cyan transition-colors">Abstract</a></li>
+              <li><a href="#introduction" class="hover:text-accent-cyan transition-colors">Introduction</a></li>
+              <li><a href="#protocol" class="hover:text-accent-cyan transition-colors">Protocol Design</a></li>
+            </ol>
+            <p class="text-text-muted text-xs uppercase tracking-wider mb-2 mt-4">Part II &mdash; Consensus</p>
+            <ol class="space-y-1" style="list-style:decimal;padding-left:1.5rem" start="4">
+              <li><a href="#consensus" class="hover:text-accent-cyan transition-colors">Consensus Mechanism</a></li>
+              <li><a href="#bft" class="hover:text-accent-cyan transition-colors">BFT Ordering &amp; Finality</a></li>
               <li><a href="#zk-channels" class="hover:text-accent-cyan transition-colors">ZK Private Channels</a></li>
             </ol>
-          </li>
-          <li>
-            <a href="#consensus" class="hover:text-accent-cyan transition-colors">Consensus Mechanism</a>
-            <ol class="mt-1 space-y-1 text-text-muted" style="list-style:decimal;padding-left:1.5rem">
-              <li><a href="#commit-reveal" class="hover:text-accent-cyan transition-colors">Commit-Reveal Verification</a></li>
-              <li><a href="#bft" class="hover:text-accent-cyan transition-colors">BFT Ordering &amp; Finality</a></li>
+            <p class="text-text-muted text-xs uppercase tracking-wider mb-2 mt-4">Part III &mdash; Ledger</p>
+            <ol class="space-y-1" style="list-style:decimal;padding-left:1.5rem" start="7">
+              <li><a href="#smt" class="hover:text-accent-cyan transition-colors">Sparse Merkle Tree</a></li>
+              <li><a href="#galaxy" class="hover:text-accent-cyan transition-colors">Galaxy Grid Coordinate System</a></li>
+              <li><a href="#epochs" class="hover:text-accent-cyan transition-colors">Epoch System &amp; Grid Expansion</a></li>
             </ol>
-          </li>
-          <li>
-            <a href="#staking" class="hover:text-accent-cyan transition-colors">Staking Model</a>
-            <ol class="mt-1 space-y-1 text-text-muted" style="list-style:decimal;padding-left:1.5rem">
+            <p class="text-text-muted text-xs uppercase tracking-wider mb-2 mt-4">Part IV &mdash; Economics</p>
+            <ol class="space-y-1" style="list-style:decimal;padding-left:1.5rem" start="10">
+              <li><a href="#tokenomics" class="hover:text-accent-cyan transition-colors">Token Economics</a></li>
+              <li><a href="#factions" class="hover:text-accent-cyan transition-colors">Faction System</a></li>
+              <li><a href="#fee-model" class="hover:text-accent-cyan transition-colors">Fee Model &amp; Burn Mechanics</a></li>
+            </ol>
+          </div>
+          <div>
+            <p class="text-text-muted text-xs uppercase tracking-wider mb-2">Part V &mdash; Staking &amp; Rewards</p>
+            <ol class="space-y-1" style="list-style:decimal;padding-left:1.5rem" start="13">
               <li><a href="#dual-staking" class="hover:text-accent-cyan transition-colors">ZK-CPU Dual Staking</a></li>
-              <li><a href="#rewards" class="hover:text-accent-cyan transition-colors">Reward Distribution</a></li>
-              <li><a href="#slashing" class="hover:text-accent-cyan transition-colors">Slashing</a></li>
+              <li><a href="#rewards" class="hover:text-accent-cyan transition-colors">Reward Distribution &amp; Vesting</a></li>
+              <li><a href="#slashing" class="hover:text-accent-cyan transition-colors">Slashing &amp; Dispute Resolution</a></li>
             </ol>
-          </li>
-          <li>
-            <a href="#tokenomics" class="hover:text-accent-cyan transition-colors">Token Economics</a>
-            <ol class="mt-1 space-y-1 text-text-muted" style="list-style:decimal;padding-left:1.5rem">
-              <li><a href="#supply" class="hover:text-accent-cyan transition-colors">Supply &amp; Distribution</a></li>
-              <li><a href="#growth" class="hover:text-accent-cyan transition-colors">Organic Growth Model</a></li>
-              <li><a href="#fee-model" class="hover:text-accent-cyan transition-colors">Fee Model &amp; Burn</a></li>
+            <p class="text-text-muted text-xs uppercase tracking-wider mb-2 mt-4">Part VI &mdash; Subgrid &amp; Resources</p>
+            <ol class="space-y-1" style="list-style:decimal;padding-left:1.5rem" start="16">
+              <li><a href="#subgrid" class="hover:text-accent-cyan transition-colors">Subgrid Allocation System</a></li>
+              <li><a href="#resources" class="hover:text-accent-cyan transition-colors">Resource Production &amp; Scaling</a></li>
             </ol>
-          </li>
-          <li><a href="#security" class="hover:text-accent-cyan transition-colors">Security Considerations</a></li>
-          <li><a href="#related" class="hover:text-accent-cyan transition-colors">Related Work</a></li>
-          <li><a href="#references" class="hover:text-accent-cyan transition-colors">References</a></li>
-        </ol>
+            <p class="text-text-muted text-xs uppercase tracking-wider mb-2 mt-4">Part VII &mdash; Network Design</p>
+            <ol class="space-y-1" style="list-style:decimal;padding-left:1.5rem" start="18">
+              <li><a href="#agents" class="hover:text-accent-cyan transition-colors">Agent Terminal Architecture</a></li>
+              <li><a href="#spatial" class="hover:text-accent-cyan transition-colors">Spatial Economy &amp; Game Design</a></li>
+            </ol>
+            <p class="text-text-muted text-xs uppercase tracking-wider mb-2 mt-4">Part VIII &mdash; Roadmap</p>
+            <ol class="space-y-1" style="list-style:decimal;padding-left:1.5rem" start="20">
+              <li><a href="#migration" class="hover:text-accent-cyan transition-colors">SOL &rarr; L1 Migration Path</a></li>
+              <li><a href="#zk-roadmap" class="hover:text-accent-cyan transition-colors">ZK Proof Implementation Roadmap</a></li>
+            </ol>
+            <p class="text-text-muted text-xs uppercase tracking-wider mb-2 mt-4">Part IX &mdash; Formal Specification</p>
+            <ol class="space-y-1" style="list-style:decimal;padding-left:1.5rem" start="22">
+              <li><a href="#parameters" class="hover:text-accent-cyan transition-colors">Complete Parameter Table</a></li>
+              <li><a href="#proofs" class="hover:text-accent-cyan transition-colors">Mathematical Proofs</a></li>
+              <li><a href="#glossary" class="hover:text-accent-cyan transition-colors">Glossary (50 Terms)</a></li>
+              <li><a href="#references" class="hover:text-accent-cyan transition-colors">References (28 Citations)</a></li>
+            </ol>
+          </div>
+        </div>
       </nav>
 
       <!-- 1. Abstract -->
@@ -572,7 +592,7 @@
 
       <!-- Footer -->
       <div class="border-t border-card-border pt-6 text-center">
-        <p class="text-xs text-text-muted">AGNTC Whitepaper v0.3 &middot; Draft &middot; March 2026</p>
+        <p class="text-xs text-text-muted">AGNTC Whitepaper v1.0 &middot; March 2026 &middot; 9 Parts &middot; 25 Sections &middot; 21,000 Words</p>
         <p class="text-xs text-text-muted mt-1">
           Solana Mainnet Contract:
           <a href="https://solscan.io/token/3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd" target="_blank" rel="noopener noreferrer" class="text-accent-cyan hover:text-white transition-colors font-mono">3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd</a>

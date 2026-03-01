@@ -1,52 +1,65 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <filter id="brush-m" x="-5%" y="-5%" width="110%" height="110%">
-      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="3" seed="7" result="noise"/>
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" xChannelSelector="R" yChannelSelector="G"/>
-    </filter>
-    <filter id="glow-m">
-      <feGaussianBlur stdDeviation="2" result="blur"/>
-      <feComposite in="blur" in2="SourceGraphic" operator="over"/>
-    </filter>
-    <linearGradient id="conn-m" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.6"/>
-      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.45"/>
+    <filter id="glow"><feGaussianBlur stdDeviation="6" result="blur"/><feComposite in="blur" in2="SourceGraphic" operator="over"/></filter>
+    <filter id="glow-strong"><feGaussianBlur stdDeviation="12" result="blur"/><feComposite in="blur" in2="SourceGraphic" operator="over"/></filter>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.4"/>
     </linearGradient>
-    <radialGradient id="nc-m" cx="40%" cy="35%">
-      <stop offset="0%" stop-color="#67FFFF"/>
-      <stop offset="100%" stop-color="#00D4FF"/>
-    </radialGradient>
-    <radialGradient id="np-m" cx="40%" cy="35%">
-      <stop offset="0%" stop-color="#A78BFA"/>
-      <stop offset="100%" stop-color="#7C3AED"/>
-    </radialGradient>
+    <linearGradient id="orbit" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.2"/>
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.2"/>
+    </linearGradient>
+    <radialGradient id="nc" cx="40%" cy="35%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#CBD5E1"/></radialGradient>
   </defs>
 
-  <!-- Simplified 3-node triangle + center -->
-  <g filter="url(#brush-m)">
-    <!-- Triangle perimeter -->
-    <path d="M32,10 Q50,8 52,42" stroke="url(#conn-m)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-    <path d="M52,42 Q34,56 12,42" stroke="url(#conn-m)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-    <path d="M12,42 Q14,18 32,10" stroke="url(#conn-m)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <!-- Coin disc -->
+  <circle cx="256" cy="256" r="250" fill="#0A0A0F"/>
+  <circle cx="256" cy="256" r="242" fill="none" stroke="url(#ring)" stroke-width="2.5"/>
 
-    <!-- Radial to center -->
-    <path d="M32,32 Q32,18 32,10" stroke="#00D4FF" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.15"/>
-    <path d="M32,32 Q32,18 32,10" stroke="url(#conn-m)" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <path d="M32,32 Q44,38 52,42" stroke="#8B5CF6" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.15"/>
-    <path d="M32,32 Q44,38 52,42" stroke="url(#conn-m)" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <path d="M32,32 Q20,38 12,42" stroke="#00D4FF" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.15"/>
-    <path d="M32,32 Q20,38 12,42" stroke="url(#conn-m)" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Faction-colored spokes to singularity -->
+  <line x1="256" y1="256" x2="132" y2="132" stroke="#0D9488" stroke-width="6" stroke-linecap="round" opacity="0.08"/>
+  <line x1="256" y1="256" x2="132" y2="132" stroke="#0D9488" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  <line x1="256" y1="256" x2="380" y2="132" stroke="#DC2680" stroke-width="6" stroke-linecap="round" opacity="0.08"/>
+  <line x1="256" y1="256" x2="380" y2="132" stroke="#DC2680" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  <line x1="256" y1="256" x2="380" y2="380" stroke="#F59E0B" stroke-width="6" stroke-linecap="round" opacity="0.08"/>
+  <line x1="256" y1="256" x2="380" y2="380" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  <line x1="256" y1="256" x2="132" y2="380" stroke="#3B82F6" stroke-width="6" stroke-linecap="round" opacity="0.08"/>
+  <line x1="256" y1="256" x2="132" y2="380" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
 
-    <!-- ZK dashed cross -->
-    <path d="M32,10 Q28,40 12,42" stroke="#8B5CF6" stroke-width="1" fill="none" stroke-linecap="round" stroke-dasharray="3 5" opacity="0.25"/>
+  <!-- Square frame (neutral) -->
+  <line x1="132" y1="132" x2="380" y2="132" stroke="#667788" stroke-width="1.8" stroke-linecap="round" opacity="0.35"/>
+  <line x1="380" y1="132" x2="380" y2="380" stroke="#667788" stroke-width="1.8" stroke-linecap="round" opacity="0.35"/>
+  <line x1="380" y1="380" x2="132" y2="380" stroke="#667788" stroke-width="1.8" stroke-linecap="round" opacity="0.35"/>
+  <line x1="132" y1="380" x2="132" y2="132" stroke="#667788" stroke-width="1.8" stroke-linecap="round" opacity="0.35"/>
+
+  <!-- Orbital ring through corners -->
+  <circle cx="256" cy="256" r="175" fill="none" stroke="url(#orbit)" stroke-width="2"/>
+
+  <!-- Faction glow halos at corners -->
+  <g filter="url(#glow-strong)">
+    <circle cx="132" cy="132" r="8" fill="#0D9488" opacity="0.15"/>
+    <circle cx="380" cy="132" r="8" fill="#DC2680" opacity="0.15"/>
+    <circle cx="380" cy="380" r="8" fill="#F59E0B" opacity="0.15"/>
+    <circle cx="132" cy="380" r="8" fill="#3B82F6" opacity="0.15"/>
   </g>
 
-  <!-- Nodes -->
-  <g filter="url(#glow-m)">
-    <circle cx="32" cy="32" r="5.5" fill="url(#nc-m)" opacity="0.95"/>
-    <circle cx="32" cy="32" r="3" fill="#fff" opacity="0.2"/>
-    <circle cx="32" cy="10" r="4" fill="url(#nc-m)" opacity="0.9"/>
-    <circle cx="52" cy="42" r="4.2" fill="url(#np-m)" opacity="0.9"/>
-    <circle cx="12" cy="42" r="3.8" fill="url(#nc-m)" opacity="0.9"/>
+  <!-- Nodes at corners -->
+  <g filter="url(#glow)">
+    <circle cx="256" cy="256" r="18" fill="url(#nc)" opacity="0.95"/>
+    <circle cx="256" cy="256" r="10" fill="#fff" opacity="0.15"/>
+
+    <circle cx="132" cy="132" r="14" fill="#0D9488" opacity="0.9"/>
+    <circle cx="380" cy="132" r="14" fill="#DC2680" opacity="0.9"/>
+    <circle cx="380" cy="380" r="14" fill="#F59E0B" opacity="0.85"/>
+    <circle cx="132" cy="380" r="14" fill="#3B82F6" opacity="0.9"/>
+
+    <!-- Unclaimed starting nodes at edge midpoints -->
+    <circle cx="256" cy="132" r="4" fill="#8B5CF6" opacity="0.4"/>
+    <circle cx="380" cy="256" r="4" fill="#8B5CF6" opacity="0.4"/>
+    <circle cx="256" cy="380" r="4" fill="#8B5CF6" opacity="0.4"/>
+    <circle cx="132" cy="256" r="4" fill="#8B5CF6" opacity="0.4"/>
   </g>
 </svg>

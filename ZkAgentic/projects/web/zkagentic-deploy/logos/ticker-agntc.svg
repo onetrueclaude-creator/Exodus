@@ -1,64 +1,52 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80" width="300" height="80">
   <defs>
-    <linearGradient id="conn-tk" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.7"/>
-      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.55"/>
+    <filter id="glow-t"><feGaussianBlur stdDeviation="1.5" result="blur"/><feComposite in="blur" in2="SourceGraphic" operator="over"/></filter>
+    <filter id="glow-strong-t"><feGaussianBlur stdDeviation="3" result="blur"/><feComposite in="blur" in2="SourceGraphic" operator="over"/></filter>
+    <linearGradient id="ring-t" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.4"/>
     </linearGradient>
-    <radialGradient id="nc-tk" cx="40%" cy="35%">
-      <stop offset="0%" stop-color="#67FFFF"/>
-      <stop offset="100%" stop-color="#00D4FF"/>
-    </radialGradient>
-    <radialGradient id="np-tk" cx="40%" cy="35%">
-      <stop offset="0%" stop-color="#C4B5FD"/>
+    <radialGradient id="nc-t" cx="40%" cy="35%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#CBD5E1"/></radialGradient>
+    <linearGradient id="text-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00D4FF"/>
       <stop offset="100%" stop-color="#8B5CF6"/>
-    </radialGradient>
-    <linearGradient id="ring-tk" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.5"/>
-      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.35"/>
-      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.5"/>
     </linearGradient>
-    <filter id="glow-tk">
-      <feGaussianBlur stdDeviation="3" result="blur"/>
-      <feComposite in="blur" in2="SourceGraphic" operator="over"/>
-    </filter>
   </defs>
 
-  <!-- Coin disc -->
-  <circle cx="200" cy="200" r="198" fill="#0A0A0F"/>
-  <circle cx="200" cy="200" r="192" fill="none" stroke="url(#ring-tk)" stroke-width="2.5"/>
-  <circle cx="200" cy="200" r="180" fill="none" stroke="url(#ring-tk)" stroke-width="0.8" opacity="0.4"/>
+  <!-- Mini coin mark at (40, 40) -->
+  <circle cx="40" cy="40" r="30" fill="#0A0A0F"/>
+  <circle cx="40" cy="40" r="28" fill="none" stroke="url(#ring-t)" stroke-width="0.8"/>
 
-  <!-- Network mark — centered, no text, high contrast -->
-  <g transform="translate(200, 190)">
-    <!-- Connections (pentagon perimeter) -->
-    <line x1="0" y1="-80" x2="76" y2="-25" stroke="url(#conn-tk)" stroke-width="3" stroke-linecap="round"/>
-    <line x1="76" y1="-25" x2="47" y2="65" stroke="url(#conn-tk)" stroke-width="3" stroke-linecap="round"/>
-    <line x1="47" y1="65" x2="-47" y2="65" stroke="url(#conn-tk)" stroke-width="3" stroke-linecap="round"/>
-    <line x1="-47" y1="65" x2="-76" y2="-25" stroke="url(#conn-tk)" stroke-width="3" stroke-linecap="round"/>
-    <line x1="-76" y1="-25" x2="0" y2="-80" stroke="url(#conn-tk)" stroke-width="3" stroke-linecap="round"/>
+  <!-- Faction-colored spokes -->
+  <line x1="40" y1="40" x2="22" y2="22" stroke="#0D9488" stroke-width="0.8" stroke-linecap="round" opacity="0.6"/>
+  <line x1="40" y1="40" x2="58" y2="22" stroke="#DC2680" stroke-width="0.8" stroke-linecap="round" opacity="0.6"/>
+  <line x1="40" y1="40" x2="58" y2="58" stroke="#F59E0B" stroke-width="0.8" stroke-linecap="round" opacity="0.6"/>
+  <line x1="40" y1="40" x2="22" y2="58" stroke="#3B82F6" stroke-width="0.8" stroke-linecap="round" opacity="0.6"/>
 
-    <!-- Radial spokes to center -->
-    <line x1="0" y1="0" x2="0" y2="-80" stroke="url(#conn-tk)" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="0" y1="0" x2="76" y2="-25" stroke="url(#conn-tk)" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="0" y1="0" x2="47" y2="65" stroke="url(#conn-tk)" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="0" y1="0" x2="-47" y2="65" stroke="url(#conn-tk)" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="0" y1="0" x2="-76" y2="-25" stroke="url(#conn-tk)" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Square frame -->
+  <line x1="22" y1="22" x2="58" y2="22" stroke="#667788" stroke-width="0.4" opacity="0.3"/>
+  <line x1="58" y1="22" x2="58" y2="58" stroke="#667788" stroke-width="0.4" opacity="0.3"/>
+  <line x1="58" y1="58" x2="22" y2="58" stroke="#667788" stroke-width="0.4" opacity="0.3"/>
+  <line x1="22" y1="58" x2="22" y2="22" stroke="#667788" stroke-width="0.4" opacity="0.3"/>
 
-    <!-- ZK hidden cross (dashed) -->
-    <line x1="0" y1="-80" x2="-47" y2="65" stroke="#8B5CF6" stroke-width="1.2" stroke-dasharray="6 8" opacity="0.3" stroke-linecap="round"/>
-    <line x1="76" y1="-25" x2="-76" y2="-25" stroke="#8B5CF6" stroke-width="1.2" stroke-dasharray="6 8" opacity="0.2" stroke-linecap="round"/>
-
-    <!-- Outer glow rings on nodes -->
-    <g filter="url(#glow-tk)">
-      <!-- Center hub -->
-      <circle cx="0" cy="0" r="14" fill="url(#nc-tk)"/>
-      <circle cx="0" cy="0" r="8" fill="#fff" opacity="0.15"/>
-      <!-- Outer nodes -->
-      <circle cx="0" cy="-80" r="10" fill="url(#nc-tk)"/>
-      <circle cx="76" cy="-25" r="10" fill="url(#np-tk)"/>
-      <circle cx="47" cy="65" r="10" fill="url(#nc-tk)"/>
-      <circle cx="-47" cy="65" r="10" fill="url(#np-tk)"/>
-      <circle cx="-76" cy="-25" r="10" fill="url(#nc-tk)"/>
-    </g>
+  <!-- Faction glow halos -->
+  <g filter="url(#glow-strong-t)">
+    <circle cx="22" cy="22" r="1.5" fill="#0D9488" opacity="0.15"/>
+    <circle cx="58" cy="22" r="1.5" fill="#DC2680" opacity="0.15"/>
+    <circle cx="58" cy="58" r="1.5" fill="#F59E0B" opacity="0.15"/>
+    <circle cx="22" cy="58" r="1.5" fill="#3B82F6" opacity="0.15"/>
   </g>
+
+  <!-- Nodes -->
+  <g filter="url(#glow-t)">
+    <circle cx="40" cy="40" r="3" fill="url(#nc-t)" opacity="0.95"/>
+    <circle cx="22" cy="22" r="2.5" fill="#0D9488" opacity="0.9"/>
+    <circle cx="58" cy="22" r="2.5" fill="#DC2680" opacity="0.9"/>
+    <circle cx="58" cy="58" r="2.5" fill="#F59E0B" opacity="0.85"/>
+    <circle cx="22" cy="58" r="2.5" fill="#3B82F6" opacity="0.9"/>
+  </g>
+
+  <!-- Ticker text: AGNTC -->
+  <text x="85" y="48" font-family="'SF Mono', 'Fira Code', 'JetBrains Mono', 'Courier New', monospace" font-size="28" font-weight="700" letter-spacing="4" fill="url(#text-grad)">AGNTC</text>
 </svg>
