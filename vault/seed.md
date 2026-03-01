@@ -49,7 +49,7 @@ And I start playing and analyzing the game by clicking buttons and learning what
 - Logarithmic spiral, 0.5-turn left-handed (CCW), ±25° arm width
 - Every macro cell (10×10 blockchain coords) contains an 8×8 = 64 sub-cell minigrid
 - Minigrids visible at zoom ×3+; fully detailed at zoom ×8+
-- Factions: Free Community (N arm / white), Treasury (E / gold), Founder Pool (S / red), Professional Pool (W / cyan)
+- Factions: Free Community (N arm / teal), Treasury (E / reddish purple), Founder Pool (S / gold-orange), Professional Pool (W / blue)
 - Fog: faction-tinted glow for rival arms, near-black for inter-arm void
 
 **Minigrids = blockchain ledger visualization:**
@@ -123,3 +123,73 @@ storage_size += Σ base_storage × level^0.8
 cpu_tokens += Σ tokens_spent(all terminals this block)
 cpu_staked_active = Σ tokens_spent(Secure sub-agents this block)
 ```
+
+---
+
+## Whitepaper v1.0 Audit — Implementation Gap Analysis
+*Audited 2026-03-02 against `vault/whitepaper.md` (v1.0, 21K words, 25 sections).*
+
+### Backend (Python) — 90% aligned
+
+| Area | Status | Key Gaps |
+|------|--------|----------|
+| Consensus (PoAIV, 13/9, VRF, commit-reveal) | IMPLEMENTED | AI verification simulated (no real Claude API calls) |
+| BFT & Finality (60s blocks, deterministic) | IMPLEMENTED | — |
+| Token Economics (1B supply, 25/25/25/25, hardness) | IMPLEMENTED | Machines floor not enforced (needs smart contract) |
+| Staking (S_eff = 0.4T + 0.6C) | IMPLEMENTED | No VPU challenge-response benchmarks |
+| Rewards (60/40 split, vesting) | IMPLEMENTED | — |
+| Slashing (false attestation, CPU fraud, downtime) | IMPLEMENTED | — |
+| Subgrid (64 cells, 4 types, level^0.8) | IMPLEMENTED | — |
+| Mining & Epochs (threshold, hardness=16N) | IMPLEMENTED | — |
+| Privacy (SMT depth 26, nullifiers) | PARTIAL | Poseidon hashing missing (using SHA-256); ZK proofs simulated |
+| All 21 core parameters | 100% MATCH | — |
+
+### Frontend (Next.js) — 70% aligned
+
+| Area | Status | Key Gaps |
+|------|--------|----------|
+| Galaxy grid (spiral, factions, glyphs) | IMPLEMENTED | Fog of war logic exists but not rendered; epoch rings not drawn |
+| Agent terminal (command tree, bubbles) | IMPLEMENTED | Actions simulated, not calling real chain |
+| ResourceBar (7 counters, delta flash) | IMPLEMENTED | — |
+| Onboarding (OAuth, username, tiers) | IMPLEMENTED | — |
+| Timechain Stats | IMPLEMENTED | — |
+| SubgridAllocationPanel (8x8 grid UI) | MISSING | No component exists |
+| Governance weight (1x/2x/5x) | MISSING | Not in subscription or store |
+| Node limits per tier (1/5/20) | MISSING | No enforcement |
+| Chain write operations | MISSING | Terminal is read-only; no real Secure/Deploy/Transact |
+
+### API Layer — 70% aligned
+
+| Area | Status | Key Gaps |
+|------|--------|----------|
+| Core endpoints (status, claims, mine, epoch, resources) | IMPLEMENTED | — |
+| WebSocket broadcasts | IMPLEMENTED | — |
+| AGNTC Transfer (Transact) | MISSING | No transfer endpoint |
+| Staking control (stake/unstake) | MISSING | Backend exists, not exposed |
+| Vesting query | MISSING | Backend exists, not exposed |
+| Reward dashboard | MISSING | Backend exists, not exposed |
+| NCP (Neural Communication Packets) | MISSING | Only basic 140-char messages |
+| Governance/voting | MISSING | Future roadmap |
+| Safe mode status | MISSING | Logic exists, not exposed |
+
+### Priority Ranking — What to Build Next
+
+**Tier 1 — Expose existing backend logic (quick wins, ~1 day):**
+1. `GET /api/rewards/{wallet}` — reward query
+2. `GET /api/vesting/{wallet}` — vesting balance query
+3. `GET /api/staking/{wallet}` — effective stake + CPU status
+4. `GET /api/safe-mode` — network health status
+5. Add `hardness`, `circulating_supply`, `burned_fees` to `/api/status`
+
+**Tier 2 — Missing features blocking gameplay (~3-5 days):**
+6. `POST /api/transact` — AGNTC transfers with fee burn
+7. SubgridAllocationPanel UI — the 8x8 grid management component
+8. Wire terminal actions to real chain (Secure, Deploy, Transact)
+9. Node deployment limits by tier (1/5/20)
+10. Fog of war rendering on galaxy grid
+
+**Tier 3 — Advanced protocol features (~1-2 weeks):**
+11. NCP messaging with privacy
+12. Governance voting system
+13. Real Claude API integration for verification
+14. Poseidon hashing migration
