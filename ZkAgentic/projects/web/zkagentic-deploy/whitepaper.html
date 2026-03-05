@@ -47,7 +47,7 @@
 <main class="flex-1 pt-16">
 
   <!-- Hero -->
-  <section class="relative min-h-[50vh] flex items-center justify-center grid-bg overflow-hidden">
+  <section class="relative py-20 md:py-28 flex items-center justify-center grid-bg overflow-hidden">
     <div class="absolute top-1/4 -left-32 w-96 h-96 bg-accent-cyan/10 rounded-full blur-3xl"></div>
     <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-accent-purple/10 rounded-full blur-3xl"></div>
     <div class="relative z-10 max-w-4xl mx-auto px-6 text-center">
@@ -57,28 +57,25 @@
       <p class="mt-6 text-lg md:text-xl text-text-secondary max-w-2xl mx-auto">
         ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification
       </p>
-      <div class="mt-8">
-        <a href="/AGNTC-Whitepaper-v1.0.pdf" download class="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 bg-gradient-to-r from-accent-cyan to-accent-purple text-white shadow-glow hover:shadow-glow-lg hover:scale-105">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          Download PDF (v1.0)
-        </a>
-      </div>
     </div>
   </section>
 
-  <!-- Version -->
-  <section class="py-4 border-y border-card-border">
-    <div class="max-w-3xl mx-auto px-6 text-center">
+  <!-- Version + Download -->
+  <section class="py-5 border-y border-card-border">
+    <div class="max-w-3xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
       <p class="text-xs text-text-muted uppercase tracking-widest">Version 1.0 &middot; March 2026 &middot; 25 Sections &middot; 21,000 Words</p>
+      <a href="/AGNTC-Whitepaper-v1.0.pdf" download class="inline-flex items-center gap-2 px-4 py-2 rounded-md text-xs font-medium transition-all duration-200 border border-accent-cyan/30 text-accent-cyan hover:bg-accent-cyan/10 hover:border-accent-cyan/60" style="white-space:nowrap">
+        <svg style="width:14px;height:14px;flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        Download PDF
+      </a>
     </div>
   </section>
 
-  <!-- Document Body -->
-  <section class="py-16">
+  <!-- Table of Contents -->
+  <section class="py-12">
     <div class="max-w-3xl mx-auto px-6">
 
-      <!-- Table of Contents -->
-      <nav class="glass-card p-6 mb-12">
+      <nav class="glass-card p-6">
         <p class="text-xs text-text-muted uppercase tracking-widest mb-4">Contents &mdash; 9 Parts, 25 Sections</p>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm text-text-secondary">
           <div>
@@ -139,467 +136,6 @@
           </div>
         </div>
       </nav>
-
-      <!-- 1. Abstract -->
-      <div id="abstract" class="mb-12">
-        <h2 class="text-2xl font-bold text-text-primary mb-4">1. Abstract</h2>
-        <p class="text-sm text-text-secondary leading-relaxed">
-          We present ZK Agentic Chain, a Layer-1 blockchain that replaces traditional proof-of-work hash computation and
-          pure proof-of-stake capital requirements with <em>Proof of AI Verification</em> (PoAIV) &mdash; a novel consensus
-          mechanism in which AI agents verify chain integrity through zero-knowledge private channels. Validators stake
-          CPU compute alongside AGNTC tokens in a dual-staking model that weights computational contribution (60%) over
-          capital (40%), reducing plutocratic concentration<sup><a href="#ref-1" class="text-accent-cyan hover:text-white">[1]</a></sup>.
-          The protocol employs isolated per-user ledger spaces, Sparse Merkle Trees (depth 26) with nullifier-based
-          privacy<sup><a href="#ref-2" class="text-accent-cyan hover:text-white">[2]</a></sup>, and a commit-reveal
-          verification pipeline with BFT ordering<sup><a href="#ref-4" class="text-accent-cyan hover:text-white">[4]</a></sup>.
-          AGNTC, the native token, has a fixed maximum supply of 1,000,000,000 units tied to a 31,623 &times; 31,623
-          coordinate grid; supply grows organically as coordinates are claimed, with no scheduled inflation. 50% of
-          transaction fees are burned. This paper describes the protocol architecture, consensus mechanism, staking model,
-          and token economics of ZK Agentic Chain.
-        </p>
-      </div>
-
-      <!-- 2. Introduction -->
-      <div id="introduction" class="mb-12">
-        <h2 class="text-2xl font-bold text-text-primary mb-4">2. Introduction</h2>
-        <p class="text-sm text-text-secondary leading-relaxed mb-4">
-          Existing blockchain consensus mechanisms face a trilemma between decentralization, security, and
-          scalability<sup><a href="#ref-8" class="text-accent-cyan hover:text-white">[8]</a></sup>.
-          Proof-of-Work (PoW) systems like Bitcoin<sup><a href="#ref-1" class="text-accent-cyan hover:text-white">[1]</a></sup>
-          require specialized hardware (ASICs, GPUs), concentrating validation power among well-capitalized miners.
-          Proof-of-Stake (PoS) systems such as Ethereum<sup><a href="#ref-7" class="text-accent-cyan hover:text-white">[7]</a></sup>
-          replace energy expenditure with capital lockup but introduce wealth concentration, where the largest token
-          holders exert disproportionate influence over consensus.
-        </p>
-        <p class="text-sm text-text-secondary leading-relaxed mb-4">
-          Neither approach incorporates <em>intelligent reasoning</em> into the validation process. Validators in both
-          PoW and PoS execute deterministic checks &mdash; verifying cryptographic signatures, checking state transitions
-          against predefined rules. No semantic understanding of transaction correctness is applied.
-        </p>
-        <p class="text-sm text-text-secondary leading-relaxed mb-4">
-          Furthermore, most public blockchains expose all transaction data, balances, and state transitions to every
-          participant. While projects like Zcash<sup><a href="#ref-2" class="text-accent-cyan hover:text-white">[2]</a></sup>
-          have introduced zero-knowledge proofs for transaction privacy, the verification layer itself remains non-private:
-          validators see the data they validate.
-        </p>
-        <p class="text-sm text-text-secondary leading-relaxed">
-          ZK Agentic Chain addresses these limitations with three design principles: (1) <strong>democratic
-          validation</strong> &mdash; any CPU can participate as a verifier, with computational contribution weighted
-          above capital; (2) <strong>intelligent verification</strong> &mdash; AI
-          agents<sup><a href="#ref-10" class="text-accent-cyan hover:text-white">[10]</a></sup> reason about chain
-          integrity rather than executing purely deterministic checks; (3) <strong>verification-layer privacy</strong>
-          &mdash; agents operate within zero-knowledge private channels, proving correctness without exposing the
-          underlying data<sup><a href="#ref-6" class="text-accent-cyan hover:text-white">[6]</a></sup>.
-        </p>
-      </div>
-
-      <!-- 3. Protocol Design -->
-      <div id="protocol" class="mb-12">
-        <h2 class="text-2xl font-bold text-text-primary mb-4">3. Protocol Design</h2>
-
-        <div id="poaiv" class="mb-8">
-          <h3 class="text-lg font-semibold text-text-primary mb-3">3.1 Proof of AI Verification (PoAIV)</h3>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">
-            PoAIV selects a committee of <em>k</em> = 13 AI verification agents per block. Each agent independently
-            audits the proposed block's transactions, state transitions, and proof correctness. A block achieves
-            consensus when at least <em>t</em> = 9 of the 13 agents produce matching attestations (a 9/13
-            supermajority threshold).
-          </p>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">
-            Unlike deterministic validation, PoAIV agents apply <em>reasoning</em> to their verification &mdash;
-            examining logical consistency, cross-referencing state across ledger spaces, and flagging anomalous
-            patterns. This introduces an adaptive security layer that evolves with the AI models powering the agents.
-          </p>
-          <div class="glass-card p-4 font-mono text-sm text-accent-cyan mb-4">
-            <p class="text-text-muted text-xs mb-2">PoAIV Consensus Rule:</p>
-            <p>valid(block) &hArr; |{a<sub>i</sub> : attest(a<sub>i</sub>, block) = true}| &ge; t, &nbsp; t = 9, &nbsp; k = 13</p>
-          </div>
-          <p class="text-sm text-text-secondary leading-relaxed">
-            Agent selection follows a verifiable random function (VRF) weighted by effective stake (Section 5.1),
-            ensuring both randomness and proportional representation.
-          </p>
-        </div>
-
-        <div id="architecture" class="mb-8">
-          <h3 class="text-lg font-semibold text-text-primary mb-3">3.2 Five-Layer Architecture</h3>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">
-            The protocol is organized into five layers, each handling a distinct concern:
-          </p>
-          <div class="space-y-2 mb-4">
-            <div class="flex gap-3 text-sm">
-              <span class="text-accent-cyan font-mono w-8 flex-shrink-0">L1</span>
-              <span class="text-text-primary font-medium w-32 flex-shrink-0">User Layer</span>
-              <span class="text-text-secondary">Wallets, transactions, and isolated per-user ledger spaces.</span>
-            </div>
-            <div class="flex gap-3 text-sm">
-              <span class="text-accent-cyan font-mono w-8 flex-shrink-0">L2</span>
-              <span class="text-text-primary font-medium w-32 flex-shrink-0">Ledger Layer</span>
-              <span class="text-text-secondary">Per-user record chains with UTXO-like state management, backed by Sparse Merkle Trees (depth 26).</span>
-            </div>
-            <div class="flex gap-3 text-sm">
-              <span class="text-accent-cyan font-mono w-8 flex-shrink-0">L3</span>
-              <span class="text-text-primary font-medium w-32 flex-shrink-0">ZK Channel Layer</span>
-              <span class="text-text-secondary">Zero-knowledge private channels between verification agents (Section 3.3).</span>
-            </div>
-            <div class="flex gap-3 text-sm">
-              <span class="text-accent-cyan font-mono w-8 flex-shrink-0">L4</span>
-              <span class="text-text-primary font-medium w-32 flex-shrink-0">Agent Layer</span>
-              <span class="text-text-secondary">AI verifier instances that audit transactions with reasoning, not just computation.</span>
-            </div>
-            <div class="flex gap-3 text-sm">
-              <span class="text-accent-cyan font-mono w-8 flex-shrink-0">L5</span>
-              <span class="text-text-primary font-medium w-32 flex-shrink-0">Consensus Layer</span>
-              <span class="text-text-secondary">BFT ordering combined with ZK proof finality (Section 4).</span>
-            </div>
-          </div>
-          <p class="text-sm text-text-secondary leading-relaxed">
-            Each user's state is isolated in its own ledger space. Verification agents communicate only through ZK
-            channels &mdash; they prove correctness of state transitions without exposing the underlying data to
-            other agents or to the network.
-          </p>
-        </div>
-
-        <div id="zk-channels" class="mb-8">
-          <h3 class="text-lg font-semibold text-text-primary mb-3">3.3 ZK Private Channels</h3>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">
-            ZK Agentic Chain implements verification-layer privacy through <em>ZK private channels</em> &mdash;
-            isolated communication pathways between AI agents where data is verified but never exposed in plaintext
-            to the broader
-            network<sup><a href="#ref-6" class="text-accent-cyan hover:text-white">[6]</a></sup>.
-          </p>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">
-            Each ledger space maintains a Sparse Merkle Tree of depth 26, supporting 2<sup>26</sup> leaf nodes.
-            State transitions produce succinct zero-knowledge
-            proofs<sup><a href="#ref-5" class="text-accent-cyan hover:text-white">[5]</a></sup> that are verified
-            by the agent committee without requiring access to the underlying data. Nullifiers prevent double-spending
-            while preserving transaction
-            privacy<sup><a href="#ref-2" class="text-accent-cyan hover:text-white">[2]</a></sup>.
-          </p>
-          <p class="text-sm text-text-secondary leading-relaxed">
-            This design provides <em>private-by-default</em> semantics: unlike public ledgers where privacy is
-            opt-in (e.g., shielded transactions in Zcash), all state in ZK Agentic Chain is private unless explicitly
-            published by the user.
-          </p>
-        </div>
-      </div>
-
-      <!-- 4. Consensus Mechanism -->
-      <div id="consensus" class="mb-12">
-        <h2 class="text-2xl font-bold text-text-primary mb-4">4. Consensus Mechanism</h2>
-
-        <div id="commit-reveal" class="mb-8">
-          <h3 class="text-lg font-semibold text-text-primary mb-3">4.1 Commit-Reveal Verification</h3>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">
-            Block verification follows a two-phase commit-reveal protocol to prevent attestation copying:
-          </p>
-          <ol class="space-y-2 text-sm text-text-secondary mb-4" style="list-style:decimal;padding-left:2rem">
-            <li>
-              <strong class="text-text-primary">Commit phase</strong> (10s window): Each selected agent submits a
-              cryptographic commitment <code class="text-accent-cyan">H(attestation || nonce)</code> to the ordering node.
-            </li>
-            <li>
-              <strong class="text-text-primary">Reveal phase</strong> (20s window): Agents reveal their attestations
-              and nonces. The ordering node verifies that each reveal matches its commitment.
-            </li>
-          </ol>
-          <p class="text-sm text-text-secondary leading-relaxed">
-            Agents that fail to reveal within the window forfeit their block reward and receive a liveness penalty.
-            The hard deadline for finalization is 60 seconds.
-          </p>
-        </div>
-
-        <div id="bft" class="mb-8">
-          <h3 class="text-lg font-semibold text-text-primary mb-3">4.2 BFT Ordering &amp; Finality</h3>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">
-            Transaction ordering uses a Byzantine Fault Tolerant
-            protocol<sup><a href="#ref-4" class="text-accent-cyan hover:text-white">[4]</a></sup> with a target
-            block time of 60 seconds. Blocks are organized into epochs of 100 slots each.
-          </p>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">
-            The protocol tolerates up to <em>f</em> = 4 Byzantine agents in each 13-agent committee
-            (&lfloor;(k&minus;1)/3&rfloor; = 4, with consensus threshold <em>t</em> = 9 &gt; 2<em>f</em> + 1).
-            If fewer than 9 agents produce matching attestations, the block is rejected and re-proposed.
-          </p>
-          <p class="text-sm text-text-secondary leading-relaxed">
-            ZK proof finality is targeted at 20 seconds after block proposal. Once a block receives &ge; 9 matching
-            attestations and the corresponding ZK proofs are verified, it achieves irreversible finality.
-          </p>
-        </div>
-      </div>
-
-      <!-- 5. Staking Model -->
-      <div id="staking" class="mb-12">
-        <h2 class="text-2xl font-bold text-text-primary mb-4">5. Staking Model</h2>
-
-        <div id="dual-staking" class="mb-8">
-          <h3 class="text-lg font-semibold text-text-primary mb-3">5.1 ZK-CPU Dual Staking</h3>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">
-            ZK Agentic Chain introduces <em>dual staking</em>: validators must commit both AGNTC tokens and CPU
-            compute resources. The effective stake that determines committee selection probability and reward share
-            is a weighted combination:
-          </p>
-          <div class="glass-card p-4 font-mono text-sm text-accent-cyan mb-4">
-            <p class="text-text-muted text-xs mb-2">Effective Stake Formula:</p>
-            <p>S<sub>eff</sub> = &alpha; &middot; (T<sub>stake</sub> / T<sub>total</sub>) + &beta; &middot; (C<sub>cpu</sub> / C<sub>total</sub>)</p>
-            <p class="text-text-muted text-xs mt-2">&alpha; = 0.40 (token weight), &beta; = 0.60 (CPU weight)</p>
-          </div>
-          <p class="text-sm text-text-secondary leading-relaxed">
-            By setting &beta; &gt; &alpha;, the protocol rewards computational contribution over capital. A validator
-            with modest token holdings but strong CPU resources earns proportionally more than a well-capitalized
-            validator with minimal compute. This design choice directly addresses the wealth concentration problem
-            inherent in pure PoS
-            systems<sup><a href="#ref-7" class="text-accent-cyan hover:text-white">[7]</a></sup>.
-          </p>
-        </div>
-
-        <div id="rewards" class="mb-8">
-          <h3 class="text-lg font-semibold text-text-primary mb-3">5.2 Reward Distribution</h3>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">
-            Block rewards are split between verifiers and stakers:
-          </p>
-          <div class="flex gap-8 mb-4">
-            <div class="text-sm">
-              <span class="text-text-muted">Verifiers:</span>
-              <span class="text-accent-cyan font-bold"> 60%</span>
-            </div>
-            <div class="text-sm">
-              <span class="text-text-muted">Stakers:</span>
-              <span class="text-accent-purple font-bold"> 40%</span>
-            </div>
-          </div>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">
-            Verification rewards vest partially: 50% is liquid upon block confirmation, while the remaining 50%
-            vests linearly over 30 days. This vesting schedule aligns validator incentives with long-term network
-            health and discourages verification-and-dump behavior.
-          </p>
-          <p class="text-sm text-text-secondary leading-relaxed">Mining yield at a given coordinate is determined by:</p>
-          <div class="glass-card p-4 font-mono text-sm text-accent-cyan mt-2">
-            <p>yield = BASE_RATE &times; density(x,y) &times; stake_weight / hardness(ring)</p>
-            <p class="text-text-muted text-xs mt-2">where density is a deterministic hash in [0,1] and hardness = 16 &times; ring</p>
-          </div>
-        </div>
-
-        <div id="slashing" class="mb-8">
-          <h3 class="text-lg font-semibold text-text-primary mb-3">5.3 Slashing</h3>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">The protocol enforces three slashing conditions:</p>
-          <ul class="space-y-2 text-sm text-text-secondary" style="padding-left:1.5rem">
-            <li><strong class="text-text-primary">False attestation:</strong> Submitting a verification result that contradicts the supermajority consensus. Slashed tokens are burned.</li>
-            <li><strong class="text-text-primary">False CPU attestation:</strong> Claiming compute resources not actually committed. Detected via challenge-response VPU benchmarks.</li>
-            <li><strong class="text-text-primary">Extended downtime:</strong> Validators offline for more than one full epoch without notice enter a probationary period (3 epochs) before re-activation.</li>
-          </ul>
-          <p class="text-sm text-text-secondary leading-relaxed mt-4">
-            Dispute resolution uses a re-verification process with 2&times; the standard committee size (26 agents).
-            If the re-verification contradicts the original result, the original attestors are slashed.
-          </p>
-        </div>
-      </div>
-
-      <!-- 6. Token Economics -->
-      <div id="tokenomics" class="mb-12">
-        <h2 class="text-2xl font-bold text-text-primary mb-4">6. Token Economics</h2>
-
-        <div id="supply" class="mb-8">
-          <h3 class="text-lg font-semibold text-text-primary mb-3">6.1 Supply &amp; Distribution</h3>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">
-            AGNTC has a fixed maximum supply of 1,000,000,000 (1 billion) tokens. The supply is intrinsically
-            linked to a 31,623 &times; 31,623 coordinate grid &mdash; each grid cell yields exactly 1 AGNTC when
-            claimed. There is no pre-mine, no scheduled inflation, and no treasury allocation beyond the genesis supply.
-          </p>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">
-            Genesis supply is 900 AGNTC, distributed across 9 genesis nodes (1 origin + 4 faction masters + 4
-            diagonal homenodes), each claiming a 10&times;10 coordinate block (100 AGNTC per node).
-          </p>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">
-            The supply is distributed equally across four factions:
-          </p>
-          <div class="grid grid-cols-2 gap-2 text-sm mb-4">
-            <div class="glass-card p-3">
-              <span class="text-text-muted">Community (Free Tier):</span>
-              <span class="text-text-primary font-bold"> 25%</span>
-            </div>
-            <div class="glass-card p-3">
-              <span class="text-text-muted">Machines (AI Agents):</span>
-              <span class="text-text-primary font-bold"> 25%</span>
-            </div>
-            <div class="glass-card p-3">
-              <span class="text-text-muted">Founders (Team):</span>
-              <span class="text-text-primary font-bold"> 25%</span>
-            </div>
-            <div class="glass-card p-3">
-              <span class="text-text-muted">Professional (Paid Tier):</span>
-              <span class="text-text-primary font-bold"> 25%</span>
-            </div>
-          </div>
-          <p class="text-sm text-text-secondary leading-relaxed">
-            Founder tokens are subject to a 4-year vesting schedule with a 12-month cliff. Machine faction
-            agents are hardcoded to never sell below acquisition cost, providing a price floor mechanism.
-          </p>
-        </div>
-
-        <div id="growth" class="mb-8">
-          <h3 class="text-lg font-semibold text-text-primary mb-3">6.2 Organic Growth Model</h3>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">
-            Supply growth in ZK Agentic Chain is purely organic: new AGNTC enters circulation only when grid
-            coordinates are claimed through mining. There is no scheduled emission curve, no annual inflation
-            rate, and no algorithmic minting.
-          </p>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">
-            The grid expands through an epoch-ring system. Each epoch corresponds to a concentric ring around
-            the origin. Mining the required cumulative AGNTC threshold opens the next ring:
-          </p>
-          <div class="glass-card p-4 font-mono text-sm text-accent-cyan mb-4">
-            <p>threshold(N) = 4 &times; N &times; (N + 1) cumulative AGNTC mined</p>
-            <p class="text-text-muted text-xs mt-2">N = ring number; each opened ring reveals new claimable coordinates</p>
-          </div>
-          <p class="text-sm text-text-secondary leading-relaxed">
-            Mining difficulty increases proportionally with ring distance: hardness(ring) = 16 &times; ring.
-            This creates natural disinflation &mdash; as the grid expands outward, each new AGNTC requires
-            proportionally more compute to mine, without any artificial halving schedule.
-          </p>
-        </div>
-
-        <div id="fee-model" class="mb-8">
-          <h3 class="text-lg font-semibold text-text-primary mb-3">6.3 Fee Model &amp; Burn</h3>
-          <p class="text-sm text-text-secondary leading-relaxed mb-4">
-            Every transaction on ZK Agentic Chain requires AGNTC as gas. Transaction fees are split:
-          </p>
-          <div class="flex gap-8 mb-4">
-            <div class="text-sm">
-              <span class="text-text-muted">Burned:</span>
-              <span class="text-accent-cyan font-bold"> 50%</span>
-            </div>
-            <div class="text-sm">
-              <span class="text-text-muted">Verifiers &amp; Treasury:</span>
-              <span class="text-text-primary font-bold"> 50%</span>
-            </div>
-          </div>
-          <p class="text-sm text-text-secondary leading-relaxed">
-            The 50% burn rate creates sustained deflationary pressure. As network usage grows, the burn rate
-            may exceed the mining rate, transitioning AGNTC to a net-deflationary asset. Slashed tokens
-            are also permanently burned.
-          </p>
-        </div>
-      </div>
-
-      <!-- 7. Security -->
-      <div id="security" class="mb-12">
-        <h2 class="text-2xl font-bold text-text-primary mb-4">7. Security Considerations</h2>
-        <p class="text-sm text-text-secondary leading-relaxed mb-4">
-          <strong class="text-text-primary">Sybil resistance.</strong> The dual-staking requirement (tokens + CPU)
-          makes Sybil attacks costly along two independent dimensions. An attacker must acquire both significant
-          AGNTC holdings and proportional compute resources.
-        </p>
-        <p class="text-sm text-text-secondary leading-relaxed mb-4">
-          <strong class="text-text-primary">AI model integrity.</strong> Verification agents run deterministic model
-          inference; the same input produces the same attestation. The commit-reveal protocol prevents agents from
-          copying others' attestations. Model updates follow governance votes to prevent unilateral changes.
-        </p>
-        <p class="text-sm text-text-secondary leading-relaxed mb-4">
-          <strong class="text-text-primary">Privacy guarantees.</strong> ZK
-          proofs<sup><a href="#ref-5" class="text-accent-cyan hover:text-white">[5]</a></sup> ensure that verification
-          produces a boolean result (valid/invalid) without exposing the underlying state. Nullifiers prevent replay
-          attacks. The Sparse Merkle Tree structure allows efficient membership proofs without revealing non-queried leaves.
-        </p>
-        <p class="text-sm text-text-secondary leading-relaxed mb-4">
-          <strong class="text-text-primary">Liveness.</strong> Safe mode activates when &gt;20% of validators go
-          offline, suspending non-critical operations until &ge;80% recovery. This prevents liveness failures from
-          cascading into safety violations.
-        </p>
-        <p class="text-sm text-text-secondary leading-relaxed">
-          <strong class="text-text-primary">Economic security.</strong> The 9/13 supermajority threshold requires an
-          attacker to control &ge;69% of effective stake to unilaterally produce invalid blocks. Combined with
-          slashing, the cost of a sustained attack exceeds the potential gain.
-        </p>
-      </div>
-
-      <!-- 8. Related Work -->
-      <div id="related" class="mb-12">
-        <h2 class="text-2xl font-bold text-text-primary mb-4">8. Related Work</h2>
-        <p class="text-sm text-text-secondary leading-relaxed mb-4">
-          <strong class="text-text-primary">Zero-knowledge blockchains.</strong>
-          Zcash<sup><a href="#ref-2" class="text-accent-cyan hover:text-white">[2]</a></sup> pioneered the use of
-          zk-SNARKs for transaction privacy. Mina Protocol uses recursive SNARKs for constant-size blockchain proofs.
-          Aleo implements program-level privacy with zk execution. ZK Agentic Chain differs by applying ZK proofs to
-          the <em>verification layer</em> &mdash; not just transactions but the entire validation process operates
-          within private channels.
-        </p>
-        <p class="text-sm text-text-secondary leading-relaxed mb-4">
-          <strong class="text-text-primary">AI and blockchain.</strong> Projects like Bittensor, Fetch.ai, and
-          SingularityNET integrate AI with blockchain for model training or agent coordination. ZK Agentic Chain is
-          distinct in using AI agents as <em>consensus participants</em> rather than application-layer services.
-          The AI is embedded in the consensus mechanism itself.
-        </p>
-        <p class="text-sm text-text-secondary leading-relaxed mb-4">
-          <strong class="text-text-primary">CPU-friendly consensus.</strong> Monero uses RandomX, a CPU-friendly PoW
-          algorithm, to democratize mining. ZK Agentic Chain goes further by combining CPU contribution with token
-          staking in a dual model, and replacing hash computation with AI verification.
-        </p>
-        <p class="text-sm text-text-secondary leading-relaxed">
-          <strong class="text-text-primary">Decentralized storage.</strong>
-          Filecoin<sup><a href="#ref-9" class="text-accent-cyan hover:text-white">[9]</a></sup> pioneered
-          proof-of-storage for decentralized file systems. ZK Agentic Chain incorporates storage as one of four
-          sub-cell types in its grid system, allowing validators to earn rewards for data persistence alongside
-          computation.
-        </p>
-      </div>
-
-      <!-- 9. References -->
-      <div id="references" class="mb-12">
-        <h2 class="text-2xl font-bold text-text-primary mb-6">9. References</h2>
-        <ol class="space-y-3">
-          <li id="ref-1" class="text-sm text-text-secondary flex gap-3">
-            <span class="text-accent-cyan font-mono flex-shrink-0">[1]</span>
-            <span>Nakamoto, S. (2008). Bitcoin: A Peer-to-Peer Electronic Cash System. <a href="https://bitcoin.org/bitcoin.pdf" target="_blank" rel="noopener noreferrer" class="text-accent-cyan hover:text-white transition-colors break-all">https://bitcoin.org/bitcoin.pdf</a></span>
-          </li>
-          <li id="ref-2" class="text-sm text-text-secondary flex gap-3">
-            <span class="text-accent-cyan font-mono flex-shrink-0">[2]</span>
-            <span>Ben-Sasson, E., Chiesa, A., Garman, C., Green, M., Miers, I., Tromer, E., &amp; Virza, M. (2014). Zerocash: Decentralized Anonymous Payments from Bitcoin. IEEE S&amp;P. <a href="https://doi.org/10.1109/SP.2014.36" target="_blank" rel="noopener noreferrer" class="text-accent-cyan hover:text-white transition-colors break-all">https://doi.org/10.1109/SP.2014.36</a></span>
-          </li>
-          <li id="ref-3" class="text-sm text-text-secondary flex gap-3">
-            <span class="text-accent-cyan font-mono flex-shrink-0">[3]</span>
-            <span>Yakovenko, A. (2018). Solana: A new architecture for a high performance blockchain. <a href="https://solana.com/solana-whitepaper.pdf" target="_blank" rel="noopener noreferrer" class="text-accent-cyan hover:text-white transition-colors break-all">https://solana.com/solana-whitepaper.pdf</a></span>
-          </li>
-          <li id="ref-4" class="text-sm text-text-secondary flex gap-3">
-            <span class="text-accent-cyan font-mono flex-shrink-0">[4]</span>
-            <span>Castro, M., &amp; Liskov, B. (1999). Practical Byzantine Fault Tolerance. OSDI. <a href="https://pmg.csail.mit.edu/papers/osdi99.pdf" target="_blank" rel="noopener noreferrer" class="text-accent-cyan hover:text-white transition-colors break-all">https://pmg.csail.mit.edu/papers/osdi99.pdf</a></span>
-          </li>
-          <li id="ref-5" class="text-sm text-text-secondary flex gap-3">
-            <span class="text-accent-cyan font-mono flex-shrink-0">[5]</span>
-            <span>Groth, J. (2016). On the Size of Pairing-Based Non-Interactive Arguments. EUROCRYPT. <a href="https://doi.org/10.1007/978-3-662-49896-5_11" target="_blank" rel="noopener noreferrer" class="text-accent-cyan hover:text-white transition-colors break-all">https://doi.org/10.1007/978-3-662-49896-5_11</a></span>
-          </li>
-          <li id="ref-6" class="text-sm text-text-secondary flex gap-3">
-            <span class="text-accent-cyan font-mono flex-shrink-0">[6]</span>
-            <span>Goldwasser, S., Micali, S., &amp; Rackoff, C. (1989). The Knowledge Complexity of Interactive Proof Systems. SIAM J. Computing, 18(1), 186&ndash;208. <a href="https://doi.org/10.1137/0218012" target="_blank" rel="noopener noreferrer" class="text-accent-cyan hover:text-white transition-colors break-all">https://doi.org/10.1137/0218012</a></span>
-          </li>
-          <li id="ref-7" class="text-sm text-text-secondary flex gap-3">
-            <span class="text-accent-cyan font-mono flex-shrink-0">[7]</span>
-            <span>Buterin, V. (2014). Ethereum: A Next-Generation Smart Contract and Decentralized Application Platform. <a href="https://ethereum.org/en/whitepaper/" target="_blank" rel="noopener noreferrer" class="text-accent-cyan hover:text-white transition-colors break-all">https://ethereum.org/en/whitepaper/</a></span>
-          </li>
-          <li id="ref-8" class="text-sm text-text-secondary flex gap-3">
-            <span class="text-accent-cyan font-mono flex-shrink-0">[8]</span>
-            <span>Bonneau, J., Miller, A., Clark, J., Narayanan, A., Kroll, J. A., &amp; Felten, E. W. (2015). SoK: Research Perspectives and Challenges for Bitcoin and Cryptocurrencies. IEEE S&amp;P. <a href="https://doi.org/10.1109/SP.2015.14" target="_blank" rel="noopener noreferrer" class="text-accent-cyan hover:text-white transition-colors break-all">https://doi.org/10.1109/SP.2015.14</a></span>
-          </li>
-          <li id="ref-9" class="text-sm text-text-secondary flex gap-3">
-            <span class="text-accent-cyan font-mono flex-shrink-0">[9]</span>
-            <span>Protocol Labs. (2017). Filecoin: A Decentralized Storage Network. <a href="https://filecoin.io/filecoin.pdf" target="_blank" rel="noopener noreferrer" class="text-accent-cyan hover:text-white transition-colors break-all">https://filecoin.io/filecoin.pdf</a></span>
-          </li>
-          <li id="ref-10" class="text-sm text-text-secondary flex gap-3">
-            <span class="text-accent-cyan font-mono flex-shrink-0">[10]</span>
-            <span>Anthropic. (2024). Claude 3 Model Card. <a href="https://www.anthropic.com" target="_blank" rel="noopener noreferrer" class="text-accent-cyan hover:text-white transition-colors break-all">https://www.anthropic.com</a></span>
-          </li>
-        </ol>
-      </div>
-
-      <!-- Footer -->
-      <div class="border-t border-card-border pt-6 text-center">
-        <p class="text-xs text-text-muted">AGNTC Whitepaper v1.0 &middot; March 2026 &middot; 9 Parts &middot; 25 Sections &middot; 21,000 Words</p>
-        <p class="text-xs text-text-muted mt-1">
-          Solana Mainnet Contract:
-          <a href="https://solscan.io/token/3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd" target="_blank" rel="noopener noreferrer" class="text-accent-cyan hover:text-white transition-colors font-mono">3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd</a>
-        </p>
-        <p class="text-xs text-text-muted mt-2">&copy; 2026 ZK Agentic Chain. All rights reserved.</p>
-      </div>
-
     </div>
   </section>
 
@@ -611,14 +147,12 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
       <div>
         <img alt="ZK Agentic Chain" loading="lazy" width="200" height="44" decoding="async" style="color:transparent" src="/logos/logo-full.svg"/>
-        <p class="mt-4 text-sm text-text-muted">L1 blockchain powered by Proof of AI Verification. Built by agents and vibe coding.</p>
+        <p class="mt-4 text-sm text-text-muted">L1 blockchain powered by Proof of AI Verification.</p>
       </div>
       <div>
         <h3 class="text-sm font-semibold text-text-primary mb-3">Product</h3>
         <ul class="space-y-2">
           <li><a class="text-sm text-text-muted hover:text-text-secondary transition-colors" href="/technology">Technology</a></li>
-          <li><a class="text-sm text-text-muted hover:text-text-secondary transition-colors" href="/whitepaper">Whitepaper</a></li>
-          <li><a class="text-sm text-text-muted hover:text-text-secondary transition-colors" href="/tokenomics">Tokenomics</a></li>
           <li><a class="text-sm text-text-muted hover:text-text-secondary transition-colors" href="/roadmap">Roadmap</a></li>
           <li><a class="text-sm text-text-muted hover:text-text-secondary transition-colors" href="/staking">Staking</a></li>
         </ul>
@@ -627,6 +161,7 @@
         <h3 class="text-sm font-semibold text-text-primary mb-3">Resources</h3>
         <ul class="space-y-2">
           <li><a class="text-sm text-text-muted hover:text-text-secondary transition-colors" href="/whitepaper">Whitepaper</a></li>
+          <li><a class="text-sm text-text-muted hover:text-text-secondary transition-colors" href="/tokenomics">Tokenomics</a></li>
           </ul>
       </div>
       
