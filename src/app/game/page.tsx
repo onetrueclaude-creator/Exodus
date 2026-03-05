@@ -31,22 +31,22 @@ import { getDistance } from '@/lib/proximity';
 import { getFogLevel } from '@/lib/fog';
 import { getClarityLevel } from '@/lib/diplomacy';
 import type { AgentTier, SubscriptionTier } from '@/types';
-import { pickBestStartingNode } from '@/lib/placement';
+import { computeFactionSpawnPoint } from '@/lib/factionPlacement';
 import { visualToChain } from '@/services/testnetChainService';
 
 /** Map subscription tier to empire border color */
 const SUBSCRIPTION_EMPIRE_COLOR: Record<SubscriptionTier, number> = {
-  COMMUNITY: 0xf59e0b,   // yellow-amber
-  PROFESSIONAL: 0x00d4ff, // cyan
+  COMMUNITY: 0x0d9488,   // teal
+  PROFESSIONAL: 0x3b82f6, // blue
   MAX: 0x8b5cf6,          // purple
 };
 
 /** Map subscription tier to spiral galaxy faction arm */
-const SUBSCRIPTION_FACTION = {
-  COMMUNITY: 'free_community',    // N arm — white (free/open)
-  PROFESSIONAL: 'professional_pool', // W arm — cyan (matches professional theme)
-  MAX: 'treasury',                // E arm — gold (wealth/max tier)
-} as const;
+const SUBSCRIPTION_FACTION: Record<SubscriptionTier, string> = {
+  COMMUNITY: 'community',        // N arm — teal (free/open)
+  PROFESSIONAL: 'professional',  // W arm — blue (matches professional theme)
+  MAX: 'founders',               // S arm — purple (wealth/max tier)
+};
 
 /** Map subscription tier to max deployable agent tier */
 const SUBSCRIPTION_MAX_TIER: Record<SubscriptionTier, AgentTier> = {
@@ -169,24 +169,34 @@ export default function GamePage() {
     async function init() {
       setInitializing(true);
 
-      // Check subscription — redirect to /subscribe if not yet chosen
-      try {
-        const statusRes = await fetch('/api/user/status');
-        if (statusRes.ok) {
-          const userStatus = await statusRes.json() as { subscription: SubscriptionTier | null };
-          if (!userStatus.subscription) {
-            window.location.href = '/subscribe';
-            return;
+      const isDev = process.env.NODE_ENV === 'development';
+
+      if (isDev) {
+        // Dev mode: skip auth — go straight to Founders faction, MAX tier
+        const store = useGameStore.getState();
+        store.setUserFaction('founders');
+        store.setEmpireColor(SUBSCRIPTION_EMPIRE_COLOR.MAX);
+        store.setMaxDeployTier(SUBSCRIPTION_MAX_TIER.MAX);
+      } else {
+        // Production: check subscription — redirect to /subscribe if not yet chosen
+        try {
+          const statusRes = await fetch('/api/user/status');
+          if (statusRes.ok) {
+            const userStatus = await statusRes.json() as { subscription: SubscriptionTier | null };
+            if (!userStatus.subscription) {
+              window.location.href = '/subscribe';
+              return;
+            }
+            // Apply faction, empire color, and max deploy tier from subscription
+            const tier = userStatus.subscription;
+            const store = useGameStore.getState();
+            store.setUserFaction(SUBSCRIPTION_FACTION[tier]);
+            store.setEmpireColor(SUBSCRIPTION_EMPIRE_COLOR[tier]);
+            store.setMaxDeployTier(SUBSCRIPTION_MAX_TIER[tier]);
           }
-          // Apply faction, empire color, and max deploy tier from subscription
-          const tier = userStatus.subscription;
-          const store = useGameStore.getState();
-          store.setUserFaction(SUBSCRIPTION_FACTION[tier]);
-          store.setEmpireColor(SUBSCRIPTION_EMPIRE_COLOR[tier]);
-          store.setMaxDeployTier(SUBSCRIPTION_MAX_TIER[tier]);
+        } catch {
+          // /api/user/status returned 401 (unauthenticated) or network error — continue with defaults
         }
-      } catch {
-        // /api/user/status returned 401 (unauthenticated) or network error — continue with defaults
       }
 
       // Try testnet API first, fall back to mock
@@ -201,7 +211,7 @@ export default function GamePage() {
       feed.forEach(addHaiku);
 
       // Populate grid with all agents from the chain service (genesis + claimed nodes).
-      // This runs before the owned-agent check below so pickBestStartingNode has
+      // This runs before the owned-agent check below so computeFactionSpawnPoint has
       // nodes to work with even when Supabase is unreachable.
       await syncFromChain();
 
@@ -274,16 +284,46 @@ export default function GamePage() {
         // Center camera on homenode
         useGameStore.getState().setCamera(homenode.position, 2);
       } else {
-        // New user — generate an ID and auto-select the best starting node
-        const newUserId = `user-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        // New user — generate ID, compute faction spawn point, claim on-chain
+        const newUserId = isDev
+          ? `dev-founder-${Date.now()}`
+          : `user-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
         useGameStore.setState({ currentUserId: newUserId });
 
-        // Smart placement: find the best starting node and focus camera on it
         const store = useGameStore.getState();
-        const bestNode = pickBestStartingNode(store.agents);
-        if (bestNode) {
-          setSelectedAgent(bestNode.id);
-          store.setCamera(bestNode.position, 2); // zoom in on recommended node
+        const userFaction = store.userFaction || 'community';
+        // Map legacy faction names to new Faction type
+        const factionName = (userFaction === 'free_community' ? 'community'
+          : userFaction === 'professional_pool' ? 'professional'
+          : userFaction === 'treasury' ? 'founders'
+          : userFaction) as 'community' | 'machines' | 'founders' | 'professional';
+
+        const spawnCoord = computeFactionSpawnPoint(factionName, Object.values(store.agents));
+
+        // Register on-chain
+        const svc = chainRef.current;
+        if (svc) {
+          try {
+            await svc.claimNode(spawnCoord.x, spawnCoord.y, 200);
+          } catch (err) {
+            console.error('Failed to auto-claim spawn point:', err);
+          }
+        }
+
+        // Refresh from chain to get the new node
+        await syncFromChain();
+
+        // Find our newly claimed node and set as homenode
+        const afterSync = useGameStore.getState();
+        const spawnedNode = Object.values(afterSync.agents).find(
+          a => a.position.x === spawnCoord.x && a.position.y === spawnCoord.y
+        );
+        if (spawnedNode) {
+          afterSync.claimNode(spawnedNode.id, isDev ? 'opus' : 'sonnet');
+          afterSync.setPrimary(spawnedNode.id);
+          setCurrentUser(newUserId, spawnedNode.id);
+          afterSync.setCamera(spawnCoord, 2);
+          setActiveDockPanel('terminal');
         }
       }
 
