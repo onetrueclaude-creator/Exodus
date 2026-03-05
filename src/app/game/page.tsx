@@ -323,6 +323,7 @@ export default function GamePage() {
           afterSync.setPrimary(spawnedNode.id);
           setCurrentUser(newUserId, spawnedNode.id);
           afterSync.setCamera(spawnCoord, 2);
+          afterSync.triggerSpawnAnimation(spawnCoord);
           setActiveDockPanel('terminal');
         }
       }
