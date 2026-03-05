@@ -165,8 +165,12 @@ def test_grid_bounds_expand_to_ring():
 
 def test_global_bounds_genesis_size():
     """GLOBAL_BOUNDS should start small (genesis ring + fog), not ±3240."""
-    from agentic.galaxy.coordinate import GLOBAL_BOUNDS
+    from agentic.galaxy.coordinate import GLOBAL_BOUNDS, GridBounds
     from agentic.params import NODE_GRID_SPACING
+    # Reset to initial state (other tests may have expanded it)
+    fresh = GridBounds(initial_radius=2 * NODE_GRID_SPACING)
+    GLOBAL_BOUNDS.min_val = fresh.min_val
+    GLOBAL_BOUNDS.max_val = fresh.max_val
     # Should be 2 * NODE_GRID_SPACING = 20 (ring 1 + fog)
     assert GLOBAL_BOUNDS.max_val == 2 * NODE_GRID_SPACING
     assert GLOBAL_BOUNDS.min_val == -(2 * NODE_GRID_SPACING)
