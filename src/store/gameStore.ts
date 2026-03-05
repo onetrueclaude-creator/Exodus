@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Agent, HaikuMessage, GridPosition, DiplomaticState, Planet } from '@/types';
+import type { Agent, HaikuMessage, GridPosition, DiplomaticState, Planet, SafeModeResponse } from '@/types';
 import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE, TIER_CLAIM_COST } from '@/types/agent';
 import type { AgentTier } from '@/types';
 import type { Faction } from '@/lib/spiral/SpiralClassifier';
@@ -58,6 +58,15 @@ interface GameState {
   stateRoot: string;
   nextBlockIn: number;
 
+  // Economics (from /api/status + /api/safe-mode)
+  networkHardness: number;
+  circulatingSupply: number;
+  totalBurnedFees: number;
+  safeMode: SafeModeResponse | null;
+  pendingRewards: number;  // AGNTC pending from rewards endpoint
+  vestingLocked: number;   // locked tokens from vesting endpoint
+  stakingEffective: number; // S_eff from staking endpoint
+
   // Subscription restriction
   maxDeployTier: AgentTier; // highest tier this user can deploy (from subscription)
 
@@ -69,6 +78,7 @@ interface GameState {
   empireColor: number;
   activeDockPanel: DockPanelId | null;
   focusRequest: { nodeId: string; ts: number } | null;
+  spawnAnimation: { coord: { x: number; y: number }; startedAt: number } | null;
 
   // Actions
   addAgent: (agent: Agent) => void;
@@ -109,8 +119,15 @@ interface GameState {
   switchAgent: (agentId: string) => void;
   requestFocus: (nodeId: string) => void;
   clearFocusRequest: () => void;
+  setNetworkEconomics: (hardness: number, circulating: number, burned: number) => void;
+  setSafeMode: (sm: SafeModeResponse | null) => void;
+  setPendingRewards: (v: number) => void;
+  setVestingLocked: (v: number) => void;
+  setStakingEffective: (v: number) => void;
   setMaxDeployTier: (tier: AgentTier) => void;
   setUserFaction: (faction: Faction) => void;
+  triggerSpawnAnimation: (coord: { x: number; y: number }) => void;
+  clearSpawnAnimation: () => void;
   cpuTokensEarnedHistory: number[]; // last N CPU Token awards, for estimating per-turn rate
   addCpuEnergy: (amount: number) => void;
   recordEnergyEarned: (amount: number) => void;
@@ -147,12 +164,20 @@ const initialState = {
   totalMined: 0,
   stateRoot: '',
   nextBlockIn: 60,
+  networkHardness: 16,
+  circulatingSupply: 0,
+  totalBurnedFees: 0,
+  safeMode: null as SafeModeResponse | null,
+  pendingRewards: 0,
+  vestingLocked: 0,
+  stakingEffective: 0,
   maxDeployTier: 'haiku' as AgentTier, // default: Community tier (haiku only)
   userFaction: 'free_community' as Faction,
   activeTab: 'network' as GameTab,
   empireColor: 0x8b5cf6, // default: purple (Opus)
   activeDockPanel: null as DockPanelId | null,
   focusRequest: null as { nodeId: string; ts: number } | null,
+  spawnAnimation: null as { coord: { x: number; y: number }; startedAt: number } | null,
   cpuTokensEarnedHistory: [] as number[],
 };
 
@@ -525,9 +550,21 @@ export const useGameStore = create<GameState>((set) => ({
 
   clearFocusRequest: () => set({ focusRequest: null }),
 
+  setNetworkEconomics: (hardness, circulating, burned) => set({
+    networkHardness: hardness,
+    circulatingSupply: circulating,
+    totalBurnedFees: burned,
+  }),
+  setSafeMode: (sm) => set({ safeMode: sm }),
+  setPendingRewards: (v) => set({ pendingRewards: v }),
+  setVestingLocked: (v) => set({ vestingLocked: v }),
+  setStakingEffective: (v) => set({ stakingEffective: v }),
   setMaxDeployTier: (tier) => set({ maxDeployTier: tier }),
 
   setUserFaction: (faction) => set({ userFaction: faction }),
+
+  triggerSpawnAnimation: (coord) => set({ spawnAnimation: { coord, startedAt: Date.now() } }),
+  clearSpawnAnimation: () => set({ spawnAnimation: null }),
 
   addCpuEnergy: (amount) =>
     set((s) => ({ cpuTokens: Math.max(0, s.cpuTokens + amount) })),

@@ -9,6 +9,7 @@ import { createConnectionLine } from './grid/ConnectionLine';
 import { createNebulaBg } from './grid/NebulaBg';
 import { createEmpireBorders } from './grid/EmpireBorders';
 import { getDistance, getConnectionStrength } from '@/lib/proximity';
+import { lerp, easeOutCubic } from '@/lib/spawnAnimation';
 import type { Agent, FogLevel } from '@/types';
 import { classifyCell, FACTION_COLORS, type Faction } from '@/lib/spiral/SpiralClassifier';
 
@@ -243,6 +244,29 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
           world.addChild(createConnectionLine(a.position, b.position, 0.5, color, sameFaction));
         }
       }
+
+      // User network lines: connect each user's claimed nodes back to their homenode
+      const userHomenodes = new Map<string, Agent>();
+      const userClaimed = new Map<string, Agent[]>();
+      agentList.forEach(agent => {
+        if (!agent.userId) return;
+        if (agent.isPrimary) userHomenodes.set(agent.userId, agent);
+        else {
+          const list = userClaimed.get(agent.userId) ?? [];
+          list.push(agent);
+          userClaimed.set(agent.userId, list);
+        }
+      });
+      userHomenodes.forEach((homenode, userId) => {
+        const claimed = userClaimed.get(userId);
+        if (!claimed) return;
+        const cls = classifyAgentCell(homenode);
+        const lineColor = cls.faction ? FACTION_COLORS[cls.faction] : 0x667788;
+        claimed.forEach(node => {
+          world.addChild(createConnectionLine(homenode.position, node.position, 0.3, lineColor, false));
+        });
+      });
+
       agentList.forEach(agent => {
         const cls = classifyAgentCell(agent);
         // In network-overview mode all nodes are visible — void nodes show as hazy (never hidden)
@@ -270,6 +294,17 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
         world.addChild(createConnectionLine(viewer.position, agent.position, strength, lineColor, bold));
       }
     });
+
+    // User network lines: connect viewer's claimed nodes back to homenode
+    if (currentUserId) {
+      const viewerCls = classifyAgentCell(viewer);
+      const userLineColor = viewerCls.faction ? FACTION_COLORS[viewerCls.faction] : 0x667788;
+      others.forEach(agent => {
+        if (agent.userId === currentUserId && !agent.isPrimary) {
+          world.addChild(createConnectionLine(viewer.position, agent.position, 0.3, userLineColor, false));
+        }
+      });
+    }
 
     // Viewer's own star
     addClickableStarNode(viewer, 'clear', userFactionRef.current);
@@ -349,6 +384,77 @@ export default function GalaxyGrid({ onSelectAgent, onDeselect }: GalaxyGridProp
     setCamera({ x: world.position.x, y: world.position.y }, world.scale.x);
     clearFocusRequest();
   }, [focusRequest, clearFocusRequest, setCamera]);
+
+  // Spawn animation — 3-phase: zoom-in, materialize (alpha pulse), connect
+  const spawnAnimation = useGameStore((s) => s.spawnAnimation);
+  const clearSpawnAnimation = useGameStore((s) => s.clearSpawnAnimation);
+  useEffect(() => {
+    if (!spawnAnimation || !appReady) return;
+    const app = appRef.current;
+    const world = worldRef.current;
+    if (!app || !world) return;
+
+    const { coord, startedAt } = spawnAnimation;
+    const TOTAL_DURATION = 3500; // ms
+
+    const tickerCb = () => {
+      const elapsed = Date.now() - startedAt;
+      if (elapsed >= TOTAL_DURATION) {
+        // Animation complete — restore any dimmed node and clean up
+        clearSpawnAnimation();
+        app.ticker.remove(tickerCb);
+        return;
+      }
+
+      // Find the spawn node container by matching its label (agent id) or position
+      let targetNode: Container | null = null;
+      for (const child of world.children) {
+        if (!(child instanceof Container) || !child.label) continue;
+        // Star nodes are positioned at the agent's world coords
+        if (Math.abs(child.position.x - coord.x) < 1 && Math.abs(child.position.y - coord.y) < 1) {
+          targetNode = child as Container;
+          break;
+        }
+      }
+
+      if (elapsed < 1000) {
+        // Phase 1: Camera zoom-in (0-1s)
+        const t = easeOutCubic(elapsed / 1000);
+        const targetZoom = lerp(world.scale.x, 4, t * 0.1); // gentle zoom nudge
+        const centerX = app.screen.width / 2;
+        const centerY = app.screen.height / 2;
+        world.position.x = centerX - coord.x * targetZoom;
+        world.position.y = centerY - coord.y * targetZoom;
+        world.scale.set(targetZoom, targetZoom);
+      } else if (elapsed < 2500) {
+        // Phase 2: Materialize — alpha pulse (1-2.5s)
+        if (targetNode) {
+          const phaseT = (elapsed - 1000) / 1500;
+          // Pulse: ramp up with ease-out
+          targetNode.alpha = easeOutCubic(phaseT);
+        }
+      } else {
+        // Phase 3: Connect (2.5-3.5s) — just ensure node is fully visible
+        if (targetNode) {
+          targetNode.alpha = 1;
+        }
+      }
+    };
+
+    // If we have a target node, start it invisible for the materialize phase
+    for (const child of world.children) {
+      if (!(child instanceof Container) || !child.label) continue;
+      if (Math.abs(child.position.x - coord.x) < 1 && Math.abs(child.position.y - coord.y) < 1) {
+        (child as Container).alpha = 0;
+        break;
+      }
+    }
+
+    app.ticker.add(tickerCb);
+    return () => {
+      app.ticker.remove(tickerCb);
+    };
+  }, [spawnAnimation, appReady, clearSpawnAnimation]);
 
   // Center on home neural node
   const handleCenterHome = useCallback(() => {
