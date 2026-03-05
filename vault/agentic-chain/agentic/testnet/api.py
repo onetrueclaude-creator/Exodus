@@ -59,11 +59,18 @@ from agentic.galaxy.allocator import CoordinateAllocator
 from agentic.galaxy.coordinate import GridCoordinate, resource_density, storage_slots
 from agentic.ledger.transaction import BirthTx, validate_birth
 from agentic.params import (
-    BASE_BIRTH_COST, BLOCK_TIME_MS, GRID_MIN, GRID_MAX, NODE_GRID_SPACING,
+    BASE_BIRTH_COST, BLOCK_TIME_MS, NODE_GRID_SPACING,
 )
 from agentic.testnet.genesis import GenesisState, create_genesis
 from agentic.verification.agent import VerificationAgent, AgentState
 from agentic.verification.dispute import DisputeOutcome
+
+def _grid_bounds(g) -> tuple[int, int]:
+    """Dynamic grid bounds derived from current epoch ring."""
+    ring = g.epoch_tracker.current_ring
+    radius = (ring + 1) * NODE_GRID_SPACING
+    return -radius, radius
+
 
 # Block timing — fixed interval (epoch hardness replaces old dynamic difficulty)
 _BLOCK_TIME_S: float = BLOCK_TIME_MS / 1000.0  # 60s fixed block time
@@ -100,7 +107,6 @@ class TestnetStatus(BaseModel):
     state_root: str
     record_count: int
     total_claims: int
-    community_pool_remaining: float
     blocks_processed: int
     total_mined: float
     next_block_in: float      # seconds until next block can be mined (-1 = chain idle)
@@ -111,6 +117,10 @@ class TestnetStatus(BaseModel):
     epoch_next_threshold: float = 24.0
     epoch_progress: float = 0.0
     epoch_agntc_remaining: float = 24.0
+    # Economics fields (v2)
+    hardness: float = 16.0
+    circulating_supply: float = 0.0
+    burned_fees: int = 0
 
 
 class EpochStatus(BaseModel):
@@ -282,6 +292,41 @@ class SubgridAssignRequest(BaseModel):
     storage: int = 0
 
 
+class RewardsResponse(BaseModel):
+    wallet_index: int
+    agntc_earned: float
+    dev_points: float
+    research_points: float
+    storage_units: float
+    secured_chains: int
+
+
+class VestingResponse(BaseModel):
+    faction: str
+    total_allocation: int
+    vested: int
+    locked: int
+    next_unlock_month: int
+    immediate_pct: float
+    vest_days: int
+
+
+class StakingResponse(BaseModel):
+    wallet_index: int
+    token_staked: float
+    cpu_staked: float
+    effective_stake: float
+    positions: List[Dict]
+    status: str
+
+
+class SafeModeResponse(BaseModel):
+    is_active: bool
+    online_ratio: float
+    threshold: float
+    recovery_target: float
+
+
 class ResourceState(BaseModel):
     agntc_per_block: float
     dev_points_per_block: float
@@ -301,7 +346,7 @@ app = FastAPI(title="Agentic Chain Testnet API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3001", "http://localhost:3000"],
+    allow_origins=["http://localhost:3001", "http://localhost:3000", "http://localhost:8080"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -310,13 +355,16 @@ app.add_middleware(
 # Global genesis state — populated at startup.
 _genesis: Optional[GenesisState] = None
 _allocator: Optional[CoordinateAllocator] = None
+_machine_behavior = None  # MachineAgentBehavior instance
 
 
 @app.on_event("startup")
 def _init_genesis() -> None:
-    global _genesis, _allocator
+    global _genesis, _allocator, _machine_behavior
     _genesis = create_genesis(num_wallets=50, num_claims=0, seed=42)
     _allocator = CoordinateAllocator()
+    from agentic.testnet.machines import MachineAgentBehavior
+    _machine_behavior = MachineAgentBehavior(state=_genesis)
 
 
 @app.on_event("startup")
@@ -345,6 +393,7 @@ async def _auto_mine_loop() -> None:
 def _do_mine(g: GenesisState) -> dict:
     """Core mining logic shared by auto-miner and /api/mine."""
     global _last_block_time
+    old_ring = g.epoch_tracker.current_ring
     block_slot = g.mining_engine.total_blocks_processed + 1
     block = Block(slot=block_slot, leader_id=0, status=BlockStatus.ORDERED)
     state_root = g.ledger_state.get_state_root()
@@ -382,8 +431,15 @@ def _do_mine(g: GenesisState) -> dict:
             g.resource_totals[owner]["research_points"] += out.research_points
             g.resource_totals[owner]["storage_units"] += out.storage_units
 
-    # Check for newly opened rings after mining
-    newly_opened = getattr(g.mining_engine, '_last_newly_opened', [])
+    # --- Machine faction auto-expansion tick ---------------------------------
+    if _machine_behavior is not None:
+        # Find the machine wallet's reward from this block
+        machine_wallet_key = g.wallets[_machine_behavior.wallet_index].public_key.hex()
+        machine_reward = hex_yields.get(machine_wallet_key, 0.0)
+        _machine_behavior.tick(g, block_reward=machine_reward)
+
+    # Track epoch ring changes after mining
+    new_ring = g.epoch_tracker.current_ring
 
     _last_block_time = time.time()
 
@@ -396,12 +452,11 @@ def _do_mine(g: GenesisState) -> dict:
                 "verifiers_assigned": vresult.assigned_count,
                 "valid_proofs": vresult.valid_proof_count,
             }))
-            # Broadcast epoch_advance event when new rings open
-            if newly_opened:
+            # Broadcast epoch_advance event when ring changes
+            if new_ring > old_ring:
                 loop.create_task(_ws_manager.broadcast("epoch_advance", {
-                    "newly_opened_rings": newly_opened,
-                    "current_ring": g.epoch_tracker.current_ring,
-                    "total_mined": g.epoch_tracker.total_mined,
+                    "old_ring": old_ring,
+                    "new_ring": new_ring,
                 }))
     except RuntimeError:
         pass
@@ -434,20 +489,26 @@ def _g() -> GenesisState:
 @app.get("/api/status", response_model=TestnetStatus)
 def get_status() -> TestnetStatus:
     g = _g()
+    ring = g.epoch_tracker.current_ring
+    hardness = g.epoch_tracker.hardness(ring)
+    # Circulating supply = total rewards distributed (all AGNTC is mined, not pre-minted)
+    circulating = g.mining_engine.total_rewards_distributed
     return TestnetStatus(
         state_root=g.ledger_state.get_state_root().hex(),
         record_count=g.ledger_state.record_count,
         total_claims=len(g.claim_registry.all_active_claims()),
-        community_pool_remaining=g.community_pool.remaining,
         blocks_processed=g.mining_engine.total_blocks_processed,
         total_mined=g.mining_engine.total_rewards_distributed,
         next_block_in=_next_block_in(),
         current_block_time=_BLOCK_TIME_S,
-        epoch_ring=g.epoch_tracker.current_ring,
+        epoch_ring=ring,
         epoch_total_mined=g.epoch_tracker.total_mined,
         epoch_next_threshold=g.epoch_tracker.next_epoch_threshold(),
         epoch_progress=g.epoch_tracker.progress_to_next(),
         epoch_agntc_remaining=g.epoch_tracker.agntc_to_next_epoch(),
+        hardness=hardness,
+        circulating_supply=circulating,
+        burned_fees=g.fee_engine.total_burned,
     )
 
 
@@ -456,7 +517,7 @@ def get_epoch_status() -> EpochStatus:
     """Return detailed epoch/ring expansion state."""
     g = _g()
     et = g.epoch_tracker
-    factions = ["community", "treasury", "founder", "professional"]
+    factions = ["community", "machines", "founders", "professional"]
     homenodes = {
         f: [et.homenode_coordinate(f, r) for r in range(1, et.current_ring + 1)]
         for f in factions
@@ -468,6 +529,145 @@ def get_epoch_status() -> EpochStatus:
         progress=et.progress_to_next(),
         agntc_remaining=et.agntc_to_next_epoch(),
         homenode_coordinates=homenodes,
+    )
+
+
+@app.get("/api/rewards/{wallet_index}", response_model=RewardsResponse)
+def get_rewards(wallet_index: int) -> RewardsResponse:
+    """Return cumulative rewards earned by a wallet."""
+    g = _g()
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    wallet = g.wallets[wallet_index]
+    owner = wallet.public_key
+
+    # AGNTC earned = total mining rewards distributed to this wallet's claims
+    agntc_earned = 0.0
+    claims = g.claim_registry.get_claims(owner)
+    secured = len(claims)
+
+    totals = g.resource_totals.get(owner, {
+        "dev_points": 0.0, "research_points": 0.0, "storage_units": 0.0,
+    })
+    return RewardsResponse(
+        wallet_index=wallet_index,
+        agntc_earned=round(agntc_earned, 6),
+        dev_points=totals.get("dev_points", 0.0),
+        research_points=totals.get("research_points", 0.0),
+        storage_units=totals.get("storage_units", 0.0),
+        secured_chains=secured,
+    )
+
+
+@app.get("/api/vesting/{wallet_index}", response_model=VestingResponse)
+def get_vesting(wallet_index: int) -> VestingResponse:
+    """Return vesting info for a wallet based on its faction."""
+    g = _g()
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+
+    from agentic.economics.vesting import create_default_schedules
+    from agentic.params import SECURE_REWARD_IMMEDIATE, SECURE_REWARD_VEST_DAYS
+
+    schedules = create_default_schedules()
+    # Map wallet to faction: 0=origin, 1-4=faction masters (community/machines/founders/professional)
+    # 5-8=regular homenodes, 9+=later claims
+    factions = ["community", "machines", "founders", "professional"]
+    if wallet_index == 0:
+        faction_idx = 0  # origin → community
+    elif wallet_index <= 4:
+        faction_idx = wallet_index - 1
+    elif wallet_index <= 8:
+        faction_idx = wallet_index - 5
+    else:
+        faction_idx = wallet_index % 4
+
+    schedule = schedules[faction_idx]
+    faction = factions[faction_idx]
+
+    # Current month approximation from blocks mined (1 block/min, ~43200 blocks/month)
+    blocks = g.mining_engine.total_blocks_processed
+    current_month = blocks // 43200
+
+    vested = schedule.vested_at_month(current_month)
+    locked = schedule.unvested_at_month(current_month)
+    next_unlock = current_month + 1 if locked > 0 else current_month
+
+    return VestingResponse(
+        faction=faction,
+        total_allocation=schedule.total_allocation,
+        vested=vested,
+        locked=locked,
+        next_unlock_month=next_unlock,
+        immediate_pct=SECURE_REWARD_IMMEDIATE * 100,
+        vest_days=SECURE_REWARD_VEST_DAYS,
+    )
+
+
+@app.get("/api/staking/{wallet_index}", response_model=StakingResponse)
+def get_staking(wallet_index: int) -> StakingResponse:
+    """Return staking info for a wallet."""
+    g = _g()
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+
+    from agentic.params import ALPHA, BETA
+
+    wallet = g.wallets[wallet_index]
+    positions = g.stake_registry.get_staker_positions(wallet.public_key)
+
+    token_staked = sum(p.amount for p in positions if p.status.value in ("warmup", "active"))
+    # CPU stake from validator VPU (if wallet owns a validator)
+    cpu_staked = 0.0
+    for i, v in enumerate(g.validators):
+        if i == wallet_index and v.online:
+            cpu_staked = v.cpu_vpu
+            break
+
+    effective = ALPHA * token_staked + BETA * cpu_staked
+
+    pos_list = [
+        {
+            "validator_id": p.validator_id,
+            "amount": p.amount,
+            "status": p.status.value,
+            "start_epoch": p.start_epoch,
+        }
+        for p in positions
+    ]
+
+    status = "active" if any(p.status.value == "active" for p in positions) else (
+        "warmup" if positions else "none"
+    )
+
+    return StakingResponse(
+        wallet_index=wallet_index,
+        token_staked=float(token_staked),
+        cpu_staked=cpu_staked,
+        effective_stake=round(effective, 4),
+        positions=pos_list,
+        status=status,
+    )
+
+
+@app.get("/api/safe-mode", response_model=SafeModeResponse)
+def get_safe_mode() -> SafeModeResponse:
+    """Return safe mode status of the verification pipeline."""
+    g = _g()
+    sm = g.verification_pipeline.safe_mode
+
+    from agentic.params import SAFE_MODE_THRESHOLD, SAFE_MODE_RECOVERY
+
+    # Calculate current online ratio from validators
+    total = len(g.validators)
+    online = sum(1 for v in g.validators if v.online)
+    online_ratio = online / total if total > 0 else 1.0
+
+    return SafeModeResponse(
+        is_active=sm.active,
+        online_ratio=round(online_ratio, 4),
+        threshold=SAFE_MODE_THRESHOLD,
+        recovery_target=SAFE_MODE_RECOVERY,
     )
 
 
@@ -556,12 +756,13 @@ def assign_subgrid(wallet_index: int, req: SubgridAssignRequest) -> dict:
 
 @app.get("/api/coordinate/{x}/{y}", response_model=CoordinateInfo)
 def get_coordinate(x: int, y: int) -> CoordinateInfo:
-    if not (GRID_MIN <= x <= GRID_MAX) or not (GRID_MIN <= y <= GRID_MAX):
+    g = _g()
+    grid_min, grid_max = _grid_bounds(g)
+    if not (grid_min <= x <= grid_max) or not (grid_min <= y <= grid_max):
         raise HTTPException(
             status_code=400,
-            detail=f"Coordinates out of range [{GRID_MIN}, {GRID_MAX}]",
+            detail=f"Coordinates out of range [{grid_min}, {grid_max}]",
         )
-    g = _g()
     coord = GridCoordinate(x=x, y=y)
     density = round(resource_density(x, y), 6)
     slots = storage_slots(x, y)
@@ -604,10 +805,11 @@ def get_grid_region(
     y_max: int = Query(...),
 ) -> GridRegion:
     # Clamp to grid bounds
-    x_min = max(x_min, GRID_MIN)
-    x_max = min(x_max, GRID_MAX)
-    y_min = max(y_min, GRID_MIN)
-    y_max = min(y_max, GRID_MAX)
+    grid_min, grid_max = _grid_bounds(_g())
+    x_min = max(x_min, grid_min)
+    x_max = min(x_max, grid_max)
+    y_min = max(y_min, grid_min)
+    y_max = min(y_max, grid_max)
 
     width = x_max - x_min + 1
     height = y_max - y_min + 1
@@ -682,7 +884,8 @@ def claim_node(req: ClaimNodeRequest) -> ClaimNodeResult:
     # Determine coordinate — snap to nearest grid square centre
     if req.x is not None and req.y is not None:
         x, y = _snap_to_grid(req.x), _snap_to_grid(req.y)
-        if not (GRID_MIN <= x <= GRID_MAX and GRID_MIN <= y <= GRID_MAX):
+        grid_min, grid_max = _grid_bounds(g)
+        if not (grid_min <= x <= grid_max and grid_min <= y <= grid_max):
             raise HTTPException(status_code=400, detail=f"Coordinate ({x},{y}) out of grid bounds")
         coord = GridCoordinate(x=x, y=y)
         if g.claim_registry.get_claim_at(coord) is not None:
@@ -690,9 +893,10 @@ def claim_node(req: ClaimNodeRequest) -> ClaimNodeResult:
     else:
         # Auto-assign: pick a random unclaimed coordinate
         rng = _random.Random(time.time_ns())
+        grid_min, grid_max = _grid_bounds(g)
         for _ in range(1000):
-            x = rng.randint(GRID_MIN, GRID_MAX)
-            y = rng.randint(GRID_MIN, GRID_MAX)
+            x = rng.randint(grid_min, grid_max)
+            y = rng.randint(grid_min, grid_max)
             coord = GridCoordinate(x=x, y=y)
             if g.claim_registry.get_claim_at(coord) is None:
                 break
@@ -802,10 +1006,11 @@ def get_nodes(
     attempts = 0
     max_attempts = count * 3
 
+    grid_min, grid_max = _grid_bounds(g)
     while len(nodes) < count and attempts < max_attempts:
         attempts += 1
-        x = rng.randint(GRID_MIN, GRID_MAX)
-        y = rng.randint(GRID_MIN, GRID_MAX)
+        x = rng.randint(grid_min, grid_max)
+        y = rng.randint(grid_min, grid_max)
         if (x, y) in coords_seen:
             continue
         coords_seen.add((x, y))
@@ -921,10 +1126,12 @@ def reset_testnet(
     seed: int = Query(default=42),
 ) -> ResetResult:
     """Wipe the testnet and rebuild from a fresh genesis."""
-    global _genesis, _allocator, _last_block_time
+    global _genesis, _allocator, _last_block_time, _machine_behavior
     _last_block_time = 0.0
     _genesis = create_genesis(num_wallets=wallets, num_claims=claims, seed=seed)
     _allocator = CoordinateAllocator()
+    from agentic.testnet.machines import MachineAgentBehavior
+    _machine_behavior = MachineAgentBehavior(state=_genesis)
     g = _genesis
     return ResetResult(
         state_root=g.ledger_state.get_state_root().hex(),
@@ -952,7 +1159,8 @@ def set_intro(req: IntroRequest) -> IntroResult:
     y = req.agent_coordinate.get("y")
     if x is None or y is None:
         raise HTTPException(status_code=400, detail="agent_coordinate must have x and y")
-    if not (GRID_MIN <= x <= GRID_MAX) or not (GRID_MIN <= y <= GRID_MAX):
+    grid_min, grid_max = _grid_bounds(g)
+    if not (grid_min <= x <= grid_max) or not (grid_min <= y <= grid_max):
         raise HTTPException(status_code=400, detail="Coordinates out of range")
 
     text = req.message.strip()
@@ -1051,10 +1259,10 @@ def send_message(req: MessageRequest) -> MessageResult:
 @app.get("/api/messages/{x}/{y}", response_model=List[MessageInfo])
 def get_messages(x: int, y: int) -> List[MessageInfo]:
     """Fetch message history for agent at coordinate (max 50 most recent)."""
-    if not (GRID_MIN <= x <= GRID_MAX) or not (GRID_MIN <= y <= GRID_MAX):
-        raise HTTPException(status_code=400, detail="Coordinates out of range")
-
     g = _g()
+    grid_min, grid_max = _grid_bounds(g)
+    if not (grid_min <= x <= grid_max) or not (grid_min <= y <= grid_max):
+        raise HTTPException(status_code=400, detail="Coordinates out of range")
     key = (x, y)
     messages = g.message_history.get(key, [])
     return [MessageInfo(**m) for m in messages]

@@ -48,6 +48,19 @@ export function useTestnetWebSocket() {
                 }))
                 .catch(() => { /* status fetch failed — keep stale data */ })
             }
+
+            if (type === 'epoch_advance') {
+              // Refresh full agent list to pick up new machine nodes
+              fetch(`${TESTNET_API}/api/agents`)
+                .then(r => r.json())
+                .then((agents: unknown[]) => {
+                  const store = useGameStore.getState()
+                  agents.forEach((a) => store.addAgent(a as import('@/types').Agent))
+                })
+                .catch(() => { /* agent refresh failed */ })
+              // Flash epoch indicator
+              flashDelta('epoch', 1)
+            }
           } catch {
             // Malformed message — ignore
           }
