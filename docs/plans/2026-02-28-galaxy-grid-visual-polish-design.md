@@ -58,27 +58,27 @@ All faction icons are **thin-stroke line art** (1–2px) rendered with PixiJS Gr
 
 **Community** (N arm — faction master at 0,+10)
 - **Glyph:** 3 dots (radius 1.5px) connected by thin lines forming an open triangle — a minimal network/graph motif
-- **Color:** Amber (#F59E0B) stroke
+- **Color:** Teal (#0D9488) stroke
 - **Size:** 22px master, 16px player nodes (scaled proportionally)
-- **Glow:** Amber radial, radius 33px, alpha 0.12
+- **Glow:** Teal radial, radius 33px, alpha 0.12
 
 **Machines** (E arm — faction master at +10,0)
 - **Glyph:** Angle bracket pair `⟨ ⟩` with a horizontal line through center — processor register motif
-- **Color:** Gold (#D97706) stroke
+- **Color:** Reddish purple (#DC2680) stroke
 - **Size:** 22px / 16px
-- **Glow:** Gold radial, radius 33px, alpha 0.12
+- **Glow:** Reddish purple radial, radius 33px, alpha 0.12
 
 **Founders** (S arm — faction master at 0,−10)
 - **Glyph:** Vertical line with two angled lines branching from the base — root/tree fork, foundation motif
-- **Color:** Crimson (#EF4444) stroke
+- **Color:** Gold-orange (#F59E0B) stroke
 - **Size:** 22px / 16px
-- **Glow:** Red radial, radius 33px, alpha 0.12
+- **Glow:** Gold-orange radial, radius 33px, alpha 0.12
 
 **Professional** (W arm — faction master at −10,0)
 - **Glyph:** Two parallel vertical bars with a diagonal slash — hash/rate symbol motif
-- **Color:** Cyan (#00D4FF) stroke
+- **Color:** Blue (#3B82F6) stroke
 - **Size:** 22px / 16px
-- **Glow:** Cyan radial, radius 33px, alpha 0.12
+- **Glow:** Blue radial, radius 33px, alpha 0.12
 
 **Unclaimed** (diagonal homenodes)
 - **Glyph:** Single thin ring, dashed stroke (4px dash, 4px gap)
@@ -170,12 +170,12 @@ Replace the flat dark background with a layered nebula effect:
 |---------|---------|-----|-----|
 | Background | #0A0A0F | #060610 | Deeper black for nebula contrast |
 | Grid lines | #1E293B | #0D1117 @ 0.3 alpha | Recede behind nebula |
-| Community | #F59E0B | #F59E0B (unchanged) | Already good |
-| Machines | #D97706 | #D97706 (unchanged) | Already good |
-| Founders | #EF4444 | #EF4444 (unchanged) | Already good |
-| Professional | #00D4FF | #00D4FF (unchanged) | Already good |
+| Community | #F59E0B | #0D9488 | Teal |
+| Machines | #D97706 | #DC2680 | Reddish purple/vermillion |
+| Founders | #EF4444 | #F59E0B | Gold-orange |
+| Professional | #00D4FF | #3B82F6 | Blue |
 | Unclaimed | #475569 | #334155 | Slightly dimmer |
-| Origin | N/A | #E2E8F0 + #D97706 | White-gold dual tone |
+| Origin | N/A | #CBD5E1 | Grayish white |
 
 ---
 

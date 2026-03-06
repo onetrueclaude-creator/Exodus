@@ -36,10 +36,10 @@ For each macro cell `(gx, gy)`:
 
 | Arm angle (center) | Faction | Color |
 |---|---|---|
-| 90° (North) | Free Community | White |
-| 0° (East) | Treasury | Gold |
-| 270° (South) | Founder Pool | Red |
-| 180° (West) | Professional Pool | Cyan |
+| 90° (North) | Free Community | Teal |
+| 0° (East) | Treasury | Reddish Purple |
+| 270° (South) | Founder Pool | Gold-Orange |
+| 180° (West) | Professional Pool | Blue |
 
 With a 0.5-turn CCW twist, the Free Community arm sweeps from N at center to S at edge — placing it in the upper-left quadrant at mid-radius, matching the golden prompt spec.
 

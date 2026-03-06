@@ -21,7 +21,7 @@ Existing brand assets live on the deployed site. Before creating new graphics:
 
 ## Operating Constraints
 - **Brand colors**: Cyan (#00D4FF), Purple (#8B5CF6), Dark (#0A0A0F)
-- **4 factions**: Community (white #e2e8f0), Machines (gold #d97706), Founders (red #ef4444), Professional (cyan #00d4ff)
+- **4 factions**: Community (teal #0D9488), Machines (reddish purple #DC2680), Founders (gold-orange #F59E0B), Professional (blue #3B82F6)
 - **Visual motif**: Hub-and-spoke network graph with 4 outer faction nodes + 1 center Origin node
 - **ZK signature**: Dashed cross-connections in purple (zero-knowledge channels)
 - **Token**: AGNTC — organic supply, coin disc format for token logos

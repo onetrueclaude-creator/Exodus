@@ -13,6 +13,7 @@ export type {
   GridRegion, GridCell, MappedGridCell, MineResult, BirthResult,
   ClaimNodeResult, NodeInfo,
   IntroRequest, IntroResult, MessageRequest, MessageResult, MessageInfo,
+  RewardsResponse, VestingResponse, StakingResponse, SafeModeResponse,
 } from './testnet';
 export { CHAIN_GRID_MIN, CHAIN_GRID_MAX, CHAIN_GRID_SPAN } from './testnet';
 

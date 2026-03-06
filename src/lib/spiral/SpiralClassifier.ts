@@ -83,10 +83,10 @@ export function classifyCell(
 
 // Faction display colors (PixiJS hex)
 export const FACTION_COLORS: Record<Faction, number> = {
-  free_community:    0xffffff,  // white
-  treasury:          0xffd700,  // gold
-  founder_pool:      0xff4444,  // red
-  professional_pool: 0x00ffff,  // cyan
+  free_community:    0x0d9488,  // teal
+  treasury:          0xdc2680,  // reddish purple/vermillion
+  founder_pool:      0xf59e0b,  // gold-orange
+  professional_pool: 0x3b82f6,  // blue
 }
 
 export const FACTION_FOG_ALPHA: Record<FogLevel, number> = {

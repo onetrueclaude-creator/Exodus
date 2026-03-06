@@ -4,20 +4,18 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
-from agentic.params import MAX_PLANETS_PER_SYSTEM
-
-# Local defaults — grid bounds expand dynamically via EpochTracker.
-# These serve as initial bounds for genesis (ring 1).
-GRID_MIN = -3240
-GRID_MAX = 3240
+from agentic.params import MAX_PLANETS_PER_SYSTEM, NODE_GRID_SPACING
 
 
 class GridBounds:
-    """Dynamic grid bounds that can expand as territories grow."""
+    """Dynamic grid bounds that expand as epoch rings open.
 
-    def __init__(self, initial_min: int = GRID_MIN, initial_max: int = GRID_MAX):
-        self.min_val = initial_min
-        self.max_val = initial_max
+    v2: No fixed GRID_MIN/GRID_MAX. Bounds grow with the galaxy.
+    """
+
+    def __init__(self, initial_radius: int = NODE_GRID_SPACING):
+        self.min_val = -initial_radius
+        self.max_val = initial_radius
 
     def contains(self, x: int, y: int) -> bool:
         return self.min_val <= x <= self.max_val and self.min_val <= y <= self.max_val
@@ -26,9 +24,15 @@ class GridBounds:
         self.min_val = min(self.min_val, x, y)
         self.max_val = max(self.max_val, x, y)
 
+    def expand_to_ring(self, ring: int) -> None:
+        """Expand bounds to contain all coordinates up to the given epoch ring."""
+        radius = (ring + 1) * NODE_GRID_SPACING
+        self.min_val = min(self.min_val, -radius)
+        self.max_val = max(self.max_val, radius)
 
-# Global bounds instance — shared across the simulator
-GLOBAL_BOUNDS = GridBounds()
+
+# Global bounds instance — starts at genesis ring + fog, expands as epochs advance
+GLOBAL_BOUNDS = GridBounds(initial_radius=2 * NODE_GRID_SPACING)  # ring 1 + fog = 20
 
 
 @dataclass(frozen=True)
@@ -60,18 +64,21 @@ class GridCoordinate:
 
     @property
     def x_offset(self) -> int:
-        """Non-negative offset for Record.data encoding."""
-        return self.x - GRID_MIN
+        """Non-negative offset for Record.data encoding (relative to current bounds)."""
+        b = self.bounds or GLOBAL_BOUNDS
+        return self.x - b.min_val
 
     @property
     def y_offset(self) -> int:
-        """Non-negative offset for Record.data encoding."""
-        return self.y - GRID_MIN
+        """Non-negative offset for Record.data encoding (relative to current bounds)."""
+        b = self.bounds or GLOBAL_BOUNDS
+        return self.y - b.min_val
 
     @classmethod
-    def from_offsets(cls, x_offset: int, y_offset: int) -> GridCoordinate:
+    def from_offsets(cls, x_offset: int, y_offset: int, bounds: GridBounds | None = None) -> GridCoordinate:
         """Create from Record.data offsets."""
-        return cls(x=x_offset + GRID_MIN, y=y_offset + GRID_MIN)
+        b = bounds or GLOBAL_BOUNDS
+        return cls(x=x_offset + b.min_val, y=y_offset + b.min_val, bounds=b)
 
 
 def star_system_seed(x: int, y: int) -> bytes:

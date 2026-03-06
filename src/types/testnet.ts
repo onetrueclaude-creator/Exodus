@@ -24,6 +24,10 @@ export interface TestnetStatus {
   total_mined: number;
   next_block_in: number;
   epoch_ring: number;
+  // Economics (v2)
+  hardness: number;
+  circulating_supply: number;
+  burned_fees: number;
 }
 
 // GET /api/coordinate/{x}/{y}
@@ -164,4 +168,48 @@ export interface MessageInfo {
   sender_coord: { x: number; y: number };
   text: string;
   timestamp: number;
+}
+
+// GET /api/rewards/{wallet_index}
+export interface RewardsResponse {
+  wallet_index: number;
+  agntc_earned: number;
+  dev_points: number;
+  research_points: number;
+  storage_units: number;
+  secured_chains: number;
+}
+
+// GET /api/vesting/{wallet_index}
+export interface VestingResponse {
+  faction: string;
+  total_allocation: number;
+  vested: number;
+  locked: number;
+  next_unlock_month: number;
+  immediate_pct: number;
+  vest_days: number;
+}
+
+// GET /api/staking/{wallet_index}
+export interface StakingResponse {
+  wallet_index: number;
+  token_staked: number;
+  cpu_staked: number;
+  effective_stake: number;
+  positions: Array<{
+    validator_id: number;
+    amount: number;
+    status: string;
+    start_epoch: number;
+  }>;
+  status: string;
+}
+
+// GET /api/safe-mode
+export interface SafeModeResponse {
+  is_active: boolean;
+  online_ratio: number;
+  threshold: number;
+  recovery_target: number;
 }

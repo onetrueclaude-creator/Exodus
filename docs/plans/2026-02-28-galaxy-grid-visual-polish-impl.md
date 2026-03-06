@@ -31,11 +31,11 @@ The `SpiralClassifier` uses internal faction names. The glyphs use display names
 
 | SpiralClassifier (`Faction`) | Display `FactionId` | Color Hex | Glyph Shape |
 |------------------------------|---------------------|-----------|-------------|
-| — (position 0,0) | `origin` | 0xE2E8F0 + 0xD97706 | Concentric rings |
-| `free_community` | `community` | 0xF59E0B | Network triangle (3 dots + lines) |
-| `treasury` | `machines` | 0xD97706 | Angle brackets + line |
-| `founder_pool` | `founders` | 0xEF4444 | Root fork (Y-branch) |
-| `professional_pool` | `professional` | 0x00D4FF | Double bars + slash |
+| — (position 0,0) | `origin` | 0xCBD5E1 | Concentric rings |
+| `free_community` | `community` | 0x0D9488 | Network triangle (3 dots + lines) |
+| `treasury` | `machines` | 0xDC2680 | Angle brackets + line |
+| `founder_pool` | `founders` | 0xF59E0B | Root fork (Y-branch) |
+| `professional_pool` | `professional` | 0x3B82F6 | Double bars + slash |
 | — (no userId) | `unclaimed` | 0x475569 | Dashed ring |
 
 ### Testing Approach
@@ -150,40 +150,40 @@ export const GLYPH_CONFIGS: Record<FactionId, GlyphConfig> = {
   origin: {
     faction: 'origin',
     size: 28,
-    strokeColor: 0xe2e8f0,
-    glowColor: 0xd97706,
+    strokeColor: 0xcbd5e1,
+    glowColor: 0xcbd5e1,
     glowRadius: 42,
     glowAlpha: 0.15,
   },
   community: {
     faction: 'community',
     size: 22,
-    strokeColor: 0xf59e0b,
-    glowColor: 0xf59e0b,
+    strokeColor: 0x0d9488,
+    glowColor: 0x0d9488,
     glowRadius: 33,
     glowAlpha: 0.12,
   },
   machines: {
     faction: 'machines',
     size: 22,
-    strokeColor: 0xd97706,
-    glowColor: 0xd97706,
+    strokeColor: 0xdc2680,
+    glowColor: 0xdc2680,
     glowRadius: 33,
     glowAlpha: 0.12,
   },
   founders: {
     faction: 'founders',
     size: 22,
-    strokeColor: 0xef4444,
-    glowColor: 0xef4444,
+    strokeColor: 0xf59e0b,
+    glowColor: 0xf59e0b,
     glowRadius: 33,
     glowAlpha: 0.12,
   },
   professional: {
     faction: 'professional',
     size: 22,
-    strokeColor: 0x00d4ff,
-    glowColor: 0x00d4ff,
+    strokeColor: 0x3b82f6,
+    glowColor: 0x3b82f6,
     glowRadius: 33,
     glowAlpha: 0.12,
   },
@@ -221,7 +221,7 @@ function drawOriginGlyph(g: Graphics, size: number, color: number, alpha: number
 
   // Outer ring
   g.circle(0, 0, r3);
-  g.stroke({ width: 1, color: 0xd97706, alpha: alpha * 0.3 });
+  g.stroke({ width: 1, color: 0xcbd5e1, alpha: alpha * 0.3 });
 
   // Mid ring
   g.circle(0, 0, r2);
@@ -445,18 +445,18 @@ interface NebulaZone {
 }
 
 const NEBULA_ZONES: NebulaZone[] = [
-  // NW quadrant: Community (amber)
-  { x: -300, y: -300, radius: 500, color: 0xf59e0b, alpha: 0.04 },
-  // NE quadrant: Machines (gold)
-  { x: 300, y: -300, radius: 500, color: 0xd97706, alpha: 0.04 },
-  // SE quadrant: Founders (red)
-  { x: 300, y: 300, radius: 500, color: 0xef4444, alpha: 0.035 },
-  // SW quadrant: Professional (cyan)
-  { x: -300, y: 300, radius: 500, color: 0x00d4ff, alpha: 0.035 },
-  // Center: origin influence (white-gold)
-  { x: 0, y: 0, radius: 350, color: 0xe2e8f0, alpha: 0.03 },
+  // NW quadrant: Community (teal)
+  { x: -300, y: -300, radius: 500, color: 0x0d9488, alpha: 0.04 },
+  // NE quadrant: Machines (reddish purple)
+  { x: 300, y: -300, radius: 500, color: 0xdc2680, alpha: 0.04 },
+  // SE quadrant: Founders (gold-orange)
+  { x: 300, y: 300, radius: 500, color: 0xf59e0b, alpha: 0.035 },
+  // SW quadrant: Professional (blue)
+  { x: -300, y: 300, radius: 500, color: 0x3b82f6, alpha: 0.035 },
+  // Center: origin influence (grayish white)
+  { x: 0, y: 0, radius: 350, color: 0xcbd5e1, alpha: 0.03 },
   // Secondary center wash
-  { x: 0, y: 0, radius: 200, color: 0xd97706, alpha: 0.025 },
+  { x: 0, y: 0, radius: 200, color: 0xcbd5e1, alpha: 0.025 },
 ];
 
 /**

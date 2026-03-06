@@ -10,6 +10,10 @@ export default function TimechainStats() {
   const stateRoot = useGameStore((s) => s.stateRoot);
   const nextBlockIn = useGameStore((s) => s.nextBlockIn);
   const totalMined = useGameStore((s) => s.totalMined);
+  const hardness = useGameStore((s) => s.networkHardness);
+  const circulating = useGameStore((s) => s.circulatingSupply);
+  const burnedFees = useGameStore((s) => s.totalBurnedFees);
+  const safeMode = useGameStore((s) => s.safeMode);
 
   // Genesis timestamp — fixed for testnet
   const [genesis] = useState(() => {
@@ -51,6 +55,18 @@ export default function TimechainStats() {
         <StatRow label="Epochs" value={epochs.toLocaleString()} />
         <StatRow label="Blocks" value={testnetBlocks.toLocaleString()} />
         <StatRow label="Mined" value={totalMined.toLocaleString()} />
+        <StatRow label="Hardness" value={`${hardness.toLocaleString()}x`} valueClass="text-orange-400" />
+        <StatRow label="Circulating" value={circulating.toLocaleString()} valueClass="text-accent-cyan" />
+        {burnedFees > 0 && (
+          <StatRow label="Burned" value={burnedFees.toLocaleString()} valueClass="text-red-400" />
+        )}
+        {safeMode && (
+          <StatRow
+            label="Safe Mode"
+            value={safeMode.is_active ? 'ACTIVE' : 'OFF'}
+            valueClass={safeMode.is_active ? 'text-red-400 animate-pulse' : 'text-green-400'}
+          />
+        )}
         <StatRow
           label="Next Block"
           value={`~${countdown}s`}

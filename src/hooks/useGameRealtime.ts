@@ -79,12 +79,19 @@ export function useGameRealtime() {
         // Supabase unavailable — proceed with empty grid
       }
 
-      // After Supabase hydrate, also fetch resource/epoch state from chain API
+      // After Supabase hydrate, also fetch resource/epoch/economics state from chain API
       try {
-        const resResp = await fetch('http://localhost:8080/api/resources/0')
+        const BASE = 'http://localhost:8080'
+        const [resResp, statusResp, safeModeResp] = await Promise.all([
+          fetch(`${BASE}/api/resources/0`),
+          fetch(`${BASE}/api/status`),
+          fetch(`${BASE}/api/safe-mode`),
+        ])
+
+        const store = useGameStore.getState()
+
         if (resResp.ok) {
           const res = await resResp.json()
-          const store = useGameStore.getState()
           store.setSubgridProjection(
             res.agntc_per_block ?? 0,
             res.dev_points_per_block ?? 0,
@@ -94,6 +101,20 @@ export function useGameRealtime() {
           store.setDevPoints(res.total_dev_points ?? 0)
           store.setResearchPoints(res.total_research_points ?? 0)
           store.setStorageSize(res.total_storage_units ?? 0)
+        }
+
+        if (statusResp.ok) {
+          const status = await statusResp.json()
+          store.setNetworkEconomics(
+            status.hardness ?? 16,
+            status.circulating_supply ?? 0,
+            status.burned_fees ?? 0,
+          )
+        }
+
+        if (safeModeResp.ok) {
+          const sm = await safeModeResp.json()
+          store.setSafeMode(sm)
         }
       } catch {
         // chain API unavailable — degrade gracefully
@@ -118,6 +139,19 @@ export function useGameRealtime() {
             nextBlockIn: row.next_block_in,
             blocks: row.blocks_processed,
           })
+          // Refresh economics on each block update
+          fetch('http://localhost:8080/api/status')
+            .then(r => r.ok ? r.json() : null)
+            .then(status => {
+              if (status) {
+                useGameStore.getState().setNetworkEconomics(
+                  status.hardness ?? 16,
+                  status.circulating_supply ?? 0,
+                  status.burned_fees ?? 0,
+                )
+              }
+            })
+            .catch(() => {})
         }
       )
       .on(

@@ -8,6 +8,8 @@ from unittest.mock import patch
 
 from agentic.actions.pipeline import ActionPipeline
 from agentic.consensus.validator import Validator
+from agentic.economics.fees import FeeEngine
+from agentic.economics.staking import StakeRegistry
 from agentic.galaxy.claims import ClaimRegistry
 from agentic.galaxy.coordinate import GridCoordinate, resource_density, storage_slots
 from agentic.galaxy.mining import MiningEngine
@@ -39,6 +41,8 @@ class GenesisState:
     subgrid_allocators: dict = field(default_factory=dict)
     resource_totals: dict = field(default_factory=dict)
     viewing_keys: dict = None
+    fee_engine: FeeEngine = field(default_factory=FeeEngine)
+    stake_registry: StakeRegistry = field(default_factory=StakeRegistry)
     # Agent intro messages: (x, y) -> str
     intro_messages: dict = field(default_factory=dict)
     # Agent-to-agent message history: (x, y) -> list[dict]
@@ -110,7 +114,7 @@ def create_genesis(
             density = resource_density(x, y)
             slots = storage_slots(x, y)
             density_scaled = int(density * 1_000_000)
-            star_tag = hash_tag(wallet.viewing_key, BIRTH_PROGRAM_ID, state.record_count)
+            star_tag = hash_tag(wallet.viewing_key, BIRTH_PROGRAM_ID, state.record_count.to_bytes(32, 'big'))
             star_record = Record(
                 owner=wallet.public_key,
                 data=[0, coord.x_offset, coord.y_offset, density_scaled, slots],

@@ -18,7 +18,12 @@
       <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.5"/>
       <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.35"/>
     </linearGradient>
-    <radialGradient id="nc" cx="40%" cy="35%"><stop offset="0%" stop-color="#67FFFF"/><stop offset="100%" stop-color="#00D4FF"/></radialGradient>
+    <linearGradient id="orbit" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.2"/>
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.2"/>
+    </linearGradient>
+    <radialGradient id="nc" cx="40%" cy="35%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#CBD5E1"/></radialGradient>
   </defs>
 
   <!-- Coin disc -->
@@ -26,39 +31,42 @@
   <circle cx="256" cy="256" r="242" fill="none" stroke="url(#ring)" stroke-width="2.5"/>
 
   <g filter="url(#brush)">
-    <!-- Prominent ZK cross connections (the main visual element) -->
-    <line x1="256" y1="80" x2="256" y2="432" stroke="url(#zk-line)" stroke-width="3" stroke-linecap="round"/>
-    <line x1="80" y1="256" x2="432" y2="256" stroke="url(#zk-line)" stroke-width="3" stroke-linecap="round"/>
+    <!-- Prominent ZK diagonal cross (these ARE the spokes to singularity) -->
+    <line x1="132" y1="132" x2="380" y2="380" stroke="url(#zk-line)" stroke-width="3" stroke-linecap="round"/>
+    <line x1="380" y1="132" x2="132" y2="380" stroke="url(#zk-line)" stroke-width="3" stroke-linecap="round"/>
 
-    <!-- Diagonal shield lines -->
-    <line x1="256" y1="80" x2="432" y2="256" stroke="url(#conn)" stroke-width="2" stroke-linecap="round"/>
-    <line x1="432" y1="256" x2="256" y2="432" stroke="url(#conn)" stroke-width="2" stroke-linecap="round"/>
-    <line x1="256" y1="432" x2="80" y2="256" stroke="url(#conn)" stroke-width="2" stroke-linecap="round"/>
-    <line x1="80" y1="256" x2="256" y2="80" stroke="url(#conn)" stroke-width="2" stroke-linecap="round"/>
+    <!-- Square frame -->
+    <line x1="132" y1="132" x2="380" y2="132" stroke="url(#conn)" stroke-width="2" stroke-linecap="round"/>
+    <line x1="380" y1="132" x2="380" y2="380" stroke="url(#conn)" stroke-width="2" stroke-linecap="round"/>
+    <line x1="380" y1="380" x2="132" y2="380" stroke="url(#conn)" stroke-width="2" stroke-linecap="round"/>
+    <line x1="132" y1="380" x2="132" y2="132" stroke="url(#conn)" stroke-width="2" stroke-linecap="round"/>
 
-    <!-- Inner diamond (half-size, rotated — creates shield within shield) -->
-    <line x1="256" y1="168" x2="344" y2="256" stroke="url(#conn)" stroke-width="1.2" stroke-linecap="round" opacity="0.3"/>
-    <line x1="344" y1="256" x2="256" y2="344" stroke="url(#conn)" stroke-width="1.2" stroke-linecap="round" opacity="0.3"/>
-    <line x1="256" y1="344" x2="168" y2="256" stroke="url(#conn)" stroke-width="1.2" stroke-linecap="round" opacity="0.3"/>
-    <line x1="168" y1="256" x2="256" y2="168" stroke="url(#conn)" stroke-width="1.2" stroke-linecap="round" opacity="0.3"/>
+    <!-- Inner diamond at edge midpoints (decorative) -->
+    <line x1="256" y1="132" x2="380" y2="256" stroke="url(#conn)" stroke-width="1.2" stroke-linecap="round" opacity="0.3"/>
+    <line x1="380" y1="256" x2="256" y2="380" stroke="url(#conn)" stroke-width="1.2" stroke-linecap="round" opacity="0.3"/>
+    <line x1="256" y1="380" x2="132" y2="256" stroke="url(#conn)" stroke-width="1.2" stroke-linecap="round" opacity="0.3"/>
+    <line x1="132" y1="256" x2="256" y2="132" stroke="url(#conn)" stroke-width="1.2" stroke-linecap="round" opacity="0.3"/>
   </g>
+
+  <!-- Orbital ring through corners -->
+  <circle cx="256" cy="256" r="175" fill="none" stroke="url(#orbit)" stroke-width="2"/>
 
   <!-- Nodes -->
   <g filter="url(#glow)">
-    <!-- Center (large, dominant) -->
+    <!-- Singularity -->
     <circle cx="256" cy="256" r="20" fill="url(#nc)" opacity="0.95"/>
     <circle cx="256" cy="256" r="11" fill="#fff" opacity="0.15"/>
 
-    <!-- Faction corners -->
-    <circle cx="256" cy="80" r="14" fill="#CBD5E1" opacity="0.9"/>
-    <circle cx="432" cy="256" r="14" fill="#D97706" opacity="0.9"/>
-    <circle cx="256" cy="432" r="14" fill="#EF4444" opacity="0.85"/>
-    <circle cx="80" cy="256" r="14" fill="#00D4FF" opacity="0.9"/>
+    <!-- Faction nodes at corners -->
+    <circle cx="132" cy="132" r="14" fill="#0D9488" opacity="0.9"/>
+    <circle cx="380" cy="132" r="14" fill="#DC2680" opacity="0.9"/>
+    <circle cx="380" cy="380" r="14" fill="#F59E0B" opacity="0.85"/>
+    <circle cx="132" cy="380" r="14" fill="#3B82F6" opacity="0.9"/>
 
-    <!-- Inner diamond accent nodes (small) -->
-    <circle cx="256" cy="168" r="5" fill="#8B5CF6" opacity="0.5"/>
-    <circle cx="344" cy="256" r="5" fill="#8B5CF6" opacity="0.5"/>
-    <circle cx="256" cy="344" r="5" fill="#8B5CF6" opacity="0.5"/>
-    <circle cx="168" cy="256" r="5" fill="#8B5CF6" opacity="0.5"/>
+    <!-- Inner diamond accent nodes (small, at edge midpoints) -->
+    <circle cx="256" cy="132" r="5" fill="#8B5CF6" opacity="0.5"/>
+    <circle cx="380" cy="256" r="5" fill="#8B5CF6" opacity="0.5"/>
+    <circle cx="256" cy="380" r="5" fill="#8B5CF6" opacity="0.5"/>
+    <circle cx="132" cy="256" r="5" fill="#8B5CF6" opacity="0.5"/>
   </g>
 </svg>

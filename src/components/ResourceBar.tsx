@@ -99,6 +99,7 @@ export default function ResourceBar({ cpuTokensDelta, cpuTokensEstPerTurn }: Res
   const agents = useGameStore((s) => s.agents);
   const chainMode = useGameStore((s) => s.chainMode);
   const testnetBlocks = useGameStore((s) => s.testnetBlocks);
+  const pendingRewards = useGameStore((s) => s.pendingRewards);
   const agent = currentAgentId ? agents[currentAgentId] : null;
 
   // Prop-driven est per turn (caller computes from cpuTokensEarnedHistory)
@@ -189,6 +190,9 @@ export default function ResourceBar({ cpuTokensDelta, cpuTokensEstPerTurn }: Res
         <div className="w-1.5 h-1.5 rounded-full bg-accent-cyan shrink-0" />
         <span className="text-xs font-mono text-accent-cyan tabular-nums">{sciFormat(agntcBalance)}</span>
         <sup className="text-[9px] leading-none"><DeltaFlash resourceKey="agntc" /></sup>
+        {pendingRewards > 0 && (
+          <span className="text-[9px] font-mono text-green-400/80 animate-pulse">+{sciFormat(pendingRewards)}</span>
+        )}
       </div>
 
       {/* Dev Points — indigo */}

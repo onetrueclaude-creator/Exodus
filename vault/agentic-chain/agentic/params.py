@@ -18,7 +18,10 @@ REWARD_SPLIT_STAKER = 0.40
 
 # Tokenomics — organic growth model (v2)
 # No scheduled inflation. Supply grows only when coordinates are claimed (1 AGNTC each).
+# Total potential supply = 1,000,000,000 AGNTC
 # See docs/plans/2026-02-25-tokenomics-v2-design.md
+GRID_SIDE = 31_623                # ~31,623 × 31,623 coordinate grid (~1B cells)
+MAX_SUPPLY = 1_000_000_000       # 1 billion AGNTC
 GENESIS_SUPPLY = 900              # 9 genesis nodes × 100 coords × 1 AGNTC
 FEE_BURN_RATE = 0.50              # 50% of fees burned, 50% to verifiers/stakers
 
@@ -30,6 +33,10 @@ DIST_PROFESSIONAL = 0.25   # Professional (W arm, cyan) — paid-tier users
 
 # Machines Faction constraint — agents cannot sell below acquisition cost
 MACHINES_MIN_SELL_RATIO = 1.0
+
+# Solana Mainnet
+AGNTC_MINT_ADDRESS = "3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd"
+AGNTC_MINT_TX = "mD3RT38puitUxCcPMF5RBf6VUAF9WXTA6JEEy2zMCe5KgoNFU6d2iLE9mu3qaqUZEBBfKSniWvMKZCpahrs5PYH"
 
 # Ledger
 MERKLE_TREE_DEPTH = 26

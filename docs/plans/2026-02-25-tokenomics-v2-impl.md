@@ -125,10 +125,10 @@ Replace distribution section (lines 27-31) with:
 
 ```python
 # Faction distribution — equal 25% per faction (applies to newly minted AGNTC)
-DIST_COMMUNITY    = 0.25   # Free Community (N arm, white)
-DIST_MACHINES     = 0.25   # Machines Faction (E arm, gold) — AI agent economy
-DIST_FOUNDERS     = 0.25   # Founder Pool (S arm, red) — team & advisors (4yr vest, 12mo cliff)
-DIST_PROFESSIONAL = 0.25   # Professional (W arm, cyan) — paid-tier users
+DIST_COMMUNITY    = 0.25   # Free Community (N arm, teal)
+DIST_MACHINES     = 0.25   # Machines Faction (E arm, reddish purple) — AI agent economy
+DIST_FOUNDERS     = 0.25   # Founder Pool (S arm, gold-orange) — team & advisors (4yr vest, 12mo cliff)
+DIST_PROFESSIONAL = 0.25   # Professional (W arm, blue) — paid-tier users
 
 # Machines Faction constraint — agents cannot sell below acquisition cost
 MACHINES_MIN_SELL_RATIO = 1.0

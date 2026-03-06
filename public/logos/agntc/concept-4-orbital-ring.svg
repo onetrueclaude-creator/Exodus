@@ -7,56 +7,52 @@
       <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.4"/>
     </linearGradient>
     <linearGradient id="orbit" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.2"/>
-      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.15"/>
-      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.2"/>
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.25"/>
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.25"/>
     </linearGradient>
     <linearGradient id="conn" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.55"/>
       <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.4"/>
     </linearGradient>
-    <radialGradient id="nc" cx="40%" cy="35%"><stop offset="0%" stop-color="#67FFFF"/><stop offset="100%" stop-color="#00D4FF"/></radialGradient>
+    <radialGradient id="nc" cx="40%" cy="35%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#CBD5E1"/></radialGradient>
   </defs>
 
   <!-- Coin disc -->
   <circle cx="256" cy="256" r="250" fill="#0A0A0F"/>
   <circle cx="256" cy="256" r="242" fill="none" stroke="url(#ring-outer)" stroke-width="2.5"/>
 
-  <!-- Orbital ring (nodes sit on this) -->
-  <circle cx="256" cy="256" r="160" fill="none" stroke="url(#orbit)" stroke-width="2"/>
+  <!-- Orbital ring through all 4 corners -->
+  <circle cx="256" cy="256" r="175" fill="none" stroke="url(#orbit)" stroke-width="2.5"/>
 
-  <!-- Radial spokes -->
-  <line x1="256" y1="256" x2="256" y2="96" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="256" y1="256" x2="416" y2="256" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="256" y1="256" x2="256" y2="416" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="256" y1="256" x2="96" y2="256" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Square frame connecting corner faction nodes -->
+  <line x1="132" y1="132" x2="380" y2="132" stroke="url(#conn)" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+  <line x1="380" y1="132" x2="380" y2="380" stroke="url(#conn)" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+  <line x1="380" y1="380" x2="132" y2="380" stroke="url(#conn)" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+  <line x1="132" y1="380" x2="132" y2="132" stroke="url(#conn)" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
 
-  <!-- Square perimeter on the orbit ring -->
-  <line x1="256" y1="96" x2="416" y2="256" stroke="url(#conn)" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
-  <line x1="416" y1="256" x2="256" y2="416" stroke="url(#conn)" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
-  <line x1="256" y1="416" x2="96" y2="256" stroke="url(#conn)" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
-  <line x1="96" y1="256" x2="256" y2="96" stroke="url(#conn)" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+  <!-- Radial spokes to singularity -->
+  <line x1="256" y1="256" x2="132" y2="132" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="256" y1="256" x2="380" y2="132" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="256" y1="256" x2="380" y2="380" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="256" y1="256" x2="132" y2="380" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
 
-  <!-- ZK dashed cross -->
-  <line x1="256" y1="96" x2="256" y2="416" stroke="#8B5CF6" stroke-width="1.2" stroke-dasharray="8 10" opacity="0.18" stroke-linecap="round"/>
-  <line x1="96" y1="256" x2="416" y2="256" stroke="#8B5CF6" stroke-width="1.2" stroke-dasharray="8 10" opacity="0.18" stroke-linecap="round"/>
+  <!-- Tiny dots at edge midpoints (decorative) -->
+  <circle cx="256" cy="132" r="3" fill="#8B5CF6" opacity="0.3"/>
+  <circle cx="380" cy="256" r="3" fill="#8B5CF6" opacity="0.3"/>
+  <circle cx="256" cy="380" r="3" fill="#8B5CF6" opacity="0.3"/>
+  <circle cx="132" cy="256" r="3" fill="#8B5CF6" opacity="0.3"/>
 
   <!-- Nodes -->
   <g filter="url(#glow)">
-    <!-- Center -->
+    <!-- Singularity -->
     <circle cx="256" cy="256" r="20" fill="url(#nc)" opacity="0.95"/>
     <circle cx="256" cy="256" r="11" fill="#fff" opacity="0.15"/>
 
-    <!-- Faction nodes on orbit ring (faction colors) -->
-    <circle cx="256" cy="96" r="13" fill="#CBD5E1" opacity="0.9"/>
-    <circle cx="416" cy="256" r="13" fill="#D97706" opacity="0.9"/>
-    <circle cx="256" cy="416" r="13" fill="#EF4444" opacity="0.85"/>
-    <circle cx="96" cy="256" r="13" fill="#00D4FF" opacity="0.9"/>
-
-    <!-- Tiny orbit dots (decorative, between factions) -->
-    <circle cx="349" cy="163" r="3" fill="#8B5CF6" opacity="0.3"/>
-    <circle cx="349" cy="349" r="3" fill="#8B5CF6" opacity="0.3"/>
-    <circle cx="163" cy="349" r="3" fill="#8B5CF6" opacity="0.3"/>
-    <circle cx="163" cy="163" r="3" fill="#8B5CF6" opacity="0.3"/>
+    <!-- Faction nodes at corners -->
+    <circle cx="132" cy="132" r="13" fill="#0D9488" opacity="0.9"/>
+    <circle cx="380" cy="132" r="13" fill="#DC2680" opacity="0.9"/>
+    <circle cx="380" cy="380" r="13" fill="#F59E0B" opacity="0.85"/>
+    <circle cx="132" cy="380" r="13" fill="#3B82F6" opacity="0.9"/>
   </g>
 </svg>

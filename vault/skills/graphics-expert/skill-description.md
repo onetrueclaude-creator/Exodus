@@ -24,11 +24,11 @@ Primary Accents:
   Light Purple: #A78BFA (node highlights)
 
 Faction Colors:
-  Community:    #e2e8f0 (white/silver — universal)
-  Machines:     #d97706 (gold — tech/structure)
-  Founders:     #ef4444 (crimson — foundation)
-  Professional: #00d4ff (cyan — precision)
-  Origin:       #67FFFF → #00D4FF (center gradient)
+  Community:    #0D9488 (teal — universal)
+  Machines:     #DC2680 (reddish purple/vermillion — tech/structure)
+  Founders:     #F59E0B (gold-orange — foundation)
+  Professional: #3B82F6 (blue — precision)
+  Origin:       #CBD5E1 (grayish white — center)
 
 Backgrounds:
   Dark base:    #0A0A0F (coin disc, card backgrounds)
@@ -132,10 +132,10 @@ For the 4-faction square layout (AGNTC coin standard):
 Canvas: 512x512, center at (256, 256)
 
 Center:  (256, 256)  — r=18-22
-Top:     (256, 80)   — Community (white)
-Right:   (432, 256)  — Machines (gold)
-Bottom:  (256, 432)  — Founders (red)
-Left:    (80, 256)   — Professional (cyan)
+Top:     (256, 80)   — Community (teal)
+Right:   (432, 256)  — Machines (reddish purple)
+Bottom:  (256, 432)  — Founders (gold-orange)
+Left:    (80, 256)   — Professional (blue)
 ```
 
 Scaling rules:
