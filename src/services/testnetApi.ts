@@ -8,6 +8,7 @@ import type {
   TestnetStatus, CoordinateInfo, ClaimInfo,
   GridRegion, MappedGridCell, MineResult, BirthResult, ClaimNodeResult, NodeInfo,
   IntroResult, MessageResult, MessageInfo,
+  RewardsResponse, VestingResponse, StakingResponse, SafeModeResponse,
 } from '@/types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_TESTNET_API ?? 'http://localhost:8080';
@@ -139,6 +140,26 @@ export function getMessages(x: number, y: number): Promise<MessageInfo[]> {
 /** GET /api/nodes — deterministic neural nodes from chain coordinate grid */
 export function getNodes(count: number = 1000, seed: number = 42): Promise<NodeInfo[]> {
   return get<NodeInfo[]>(`/api/nodes?count=${count}&seed=${seed}`);
+}
+
+/** GET /api/rewards/{wallet_index} — cumulative rewards for a wallet */
+export function getRewards(walletIndex: number): Promise<RewardsResponse> {
+  return get<RewardsResponse>(`/api/rewards/${walletIndex}`);
+}
+
+/** GET /api/vesting/{wallet_index} — vesting schedule info */
+export function getVesting(walletIndex: number): Promise<VestingResponse> {
+  return get<VestingResponse>(`/api/vesting/${walletIndex}`);
+}
+
+/** GET /api/staking/{wallet_index} — staking positions and effective stake */
+export function getStaking(walletIndex: number): Promise<StakingResponse> {
+  return get<StakingResponse>(`/api/staking/${walletIndex}`);
+}
+
+/** GET /api/safe-mode — verification pipeline safe mode status */
+export function getSafeMode(): Promise<SafeModeResponse> {
+  return get<SafeModeResponse>('/api/safe-mode');
 }
 
 /** Check if the testnet API is reachable */

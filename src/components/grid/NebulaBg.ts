@@ -9,18 +9,18 @@ interface NebulaZone {
 }
 
 const NEBULA_ZONES: NebulaZone[] = [
-  // NW quadrant: Community (amber)
-  { x: -300, y: -300, radius: 500, color: 0xf59e0b, alpha: 0.04 },
-  // NE quadrant: Machines (gold)
-  { x: 300, y: -300, radius: 500, color: 0xd97706, alpha: 0.04 },
-  // SE quadrant: Founders (red)
-  { x: 300, y: 300, radius: 500, color: 0xef4444, alpha: 0.035 },
-  // SW quadrant: Professional (cyan)
-  { x: -300, y: 300, radius: 500, color: 0x00d4ff, alpha: 0.035 },
-  // Center: origin influence (white-gold)
-  { x: 0, y: 0, radius: 350, color: 0xe2e8f0, alpha: 0.03 },
+  // NW quadrant: Community (teal)
+  { x: -300, y: -300, radius: 500, color: 0x0d9488, alpha: 0.04 },
+  // NE quadrant: Machines (reddish purple)
+  { x: 300, y: -300, radius: 500, color: 0xdc2680, alpha: 0.04 },
+  // SE quadrant: Founders (gold-orange)
+  { x: 300, y: 300, radius: 500, color: 0xf59e0b, alpha: 0.035 },
+  // SW quadrant: Professional (blue)
+  { x: -300, y: 300, radius: 500, color: 0x3b82f6, alpha: 0.035 },
+  // Center: origin influence (grayish white)
+  { x: 0, y: 0, radius: 350, color: 0xcbd5e1, alpha: 0.03 },
   // Secondary center wash
-  { x: 0, y: 0, radius: 200, color: 0xd97706, alpha: 0.025 },
+  { x: 0, y: 0, radius: 200, color: 0xcbd5e1, alpha: 0.025 },
 ];
 
 /**

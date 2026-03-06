@@ -20,40 +20,40 @@ export const GLYPH_CONFIGS: Record<FactionId, GlyphConfig> = {
   origin: {
     faction: 'origin',
     size: 28,
-    strokeColor: 0xe2e8f0,
-    glowColor: 0xd97706,
+    strokeColor: 0xcbd5e1,
+    glowColor: 0xcbd5e1,
     glowRadius: 42,
     glowAlpha: 0,
   },
   community: {
     faction: 'community',
     size: 22,
-    strokeColor: 0xe2e8f0,
-    glowColor: 0xe2e8f0,
+    strokeColor: 0x0d9488,
+    glowColor: 0x0d9488,
     glowRadius: 33,
     glowAlpha: 0,
   },
   machines: {
     faction: 'machines',
     size: 22,
-    strokeColor: 0xd97706,
-    glowColor: 0xd97706,
+    strokeColor: 0xdc2680,
+    glowColor: 0xdc2680,
     glowRadius: 33,
     glowAlpha: 0,
   },
   founders: {
     faction: 'founders',
     size: 22,
-    strokeColor: 0xef4444,
-    glowColor: 0xef4444,
+    strokeColor: 0xf59e0b,
+    glowColor: 0xf59e0b,
     glowRadius: 33,
     glowAlpha: 0,
   },
   professional: {
     faction: 'professional',
     size: 22,
-    strokeColor: 0x00d4ff,
-    glowColor: 0x00d4ff,
+    strokeColor: 0x3b82f6,
+    glowColor: 0x3b82f6,
     glowRadius: 33,
     glowAlpha: 0,
   },
@@ -81,107 +81,90 @@ export function mapSpiralFactionToId(spiralFaction: Faction | null): FactionId {
   return SPIRAL_TO_DISPLAY[spiralFaction] ?? 'unclaimed';
 }
 
-// ── Icon Draw Functions ──────────────────────────────────────────────────────
-// Each draws relative to (0,0) center. Distinctive faction icons.
+// ── Star Draw Functions ──────────────────────────────────────────────────────
+// All nodes render as star-like points of light. Faction identity through color.
 
-function drawOriginIcon(g: Graphics, size: number, color: number, alpha: number, _isOwned: boolean): void {
-  // Concentric rings — the singularity
-  const r1 = size * 0.21;
-  const r2 = size * 0.36;
-  const r3 = size * 0.50;
+function drawStarPoint(g: Graphics, size: number, color: number, alpha: number, isOwned: boolean): void {
+  const coreR = size * 0.12;
+  const glowR = size * 0.35;
+  const flareLen = size * 0.5;
+  const flareWidth = size * 0.04;
 
-  g.circle(0, 0, r3);
-  g.stroke({ width: 1, color: 0xd97706, alpha: alpha * 0.3 });
+  // Outer glow halo
+  g.circle(0, 0, glowR);
+  g.fill({ color, alpha: alpha * (isOwned ? 0.12 : 0.06) });
 
-  g.circle(0, 0, r2);
-  g.stroke({ width: 1, color, alpha: alpha * 0.6 });
+  // 4-point cross flare
+  const fa = alpha * (isOwned ? 0.4 : 0.2);
+  // Vertical flare
+  g.moveTo(-flareWidth, 0);
+  g.lineTo(0, -flareLen);
+  g.lineTo(flareWidth, 0);
+  g.lineTo(0, flareLen);
+  g.closePath();
+  g.fill({ color, alpha: fa });
+  // Horizontal flare
+  g.moveTo(0, -flareWidth);
+  g.lineTo(-flareLen, 0);
+  g.lineTo(0, flareWidth);
+  g.lineTo(flareLen, 0);
+  g.closePath();
+  g.fill({ color, alpha: fa });
 
-  g.circle(0, 0, r1);
-  g.stroke({ width: 1.5, color, alpha });
+  // Bright core
+  g.circle(0, 0, coreR * 1.5);
+  g.fill({ color, alpha: alpha * (isOwned ? 0.6 : 0.3) });
+  g.circle(0, 0, coreR);
+  g.fill({ color: 0xffffff, alpha: alpha * (isOwned ? 0.9 : 0.4) });
+}
 
-  g.circle(0, 0, size * 0.07);
+function drawOriginStar(g: Graphics, size: number, color: number, alpha: number, _isOwned: boolean): void {
+  // The singularity — larger, brighter, white with concentric pulses
+  const coreR = size * 0.1;
+  const midR = size * 0.25;
+  const outerR = size * 0.45;
+  const flareLen = size * 0.6;
+  const flareWidth = size * 0.05;
+
+  // Outer pulse ring
+  g.circle(0, 0, outerR);
+  g.stroke({ width: 0.5, color: 0xcbd5e1, alpha: alpha * 0.2 });
+
+  // Mid pulse ring
+  g.circle(0, 0, midR);
+  g.stroke({ width: 0.8, color, alpha: alpha * 0.4 });
+
+  // 4-point cross flare (brighter)
+  g.moveTo(-flareWidth, 0);
+  g.lineTo(0, -flareLen);
+  g.lineTo(flareWidth, 0);
+  g.lineTo(0, flareLen);
+  g.closePath();
+  g.fill({ color: 0xffffff, alpha: alpha * 0.3 });
+  g.moveTo(0, -flareWidth);
+  g.lineTo(-flareLen, 0);
+  g.lineTo(0, flareWidth);
+  g.lineTo(flareLen, 0);
+  g.closePath();
+  g.fill({ color: 0xffffff, alpha: alpha * 0.3 });
+
+  // Bright core
+  g.circle(0, 0, coreR * 1.8);
+  g.fill({ color, alpha: alpha * 0.7 });
+  g.circle(0, 0, coreR);
   g.fill({ color: 0xffffff, alpha });
 }
 
-function drawCommunityIcon(g: Graphics, size: number, color: number, alpha: number, isOwned: boolean): void {
-  const r = size * 0.4;
-  g.circle(0, 0, r);
-  g.stroke({ width: isOwned ? 1.5 : 1, color, alpha });
-  if (isOwned) {
-    g.circle(0, 0, r);
-    g.fill({ color, alpha: alpha * 0.15 });
-  }
-}
+function drawUnclaimedStar(g: Graphics, size: number, color: number, alpha: number, _isOwned: boolean): void {
+  // Dim, small point — barely visible, waiting to be claimed
+  const coreR = size * 0.08;
+  const glowR = size * 0.2;
 
-function drawMachinesIcon(g: Graphics, size: number, color: number, alpha: number, isOwned: boolean): void {
-  const r = size * 0.42;
-  const hexPath = () => {
-    for (let i = 0; i < 6; i++) {
-      const angle = (i * Math.PI) / 3 - Math.PI / 6;
-      const x = Math.cos(angle) * r;
-      const y = Math.sin(angle) * r;
-      if (i === 0) g.moveTo(x, y);
-      else g.lineTo(x, y);
-    }
-    g.closePath();
-  };
-  g.setStrokeStyle({ width: isOwned ? 1.5 : 1, color, alpha });
-  hexPath();
-  g.stroke();
-  if (isOwned) {
-    hexPath();
-    g.fill({ color, alpha: alpha * 0.15 });
-  }
-}
+  g.circle(0, 0, glowR);
+  g.fill({ color, alpha: alpha * 0.05 });
 
-function drawFoundersIcon(g: Graphics, size: number, color: number, alpha: number, isOwned: boolean): void {
-  const r = size * 0.42;
-  const triPath = () => {
-    g.moveTo(0, -r);
-    g.lineTo(-r * 0.87, r * 0.5);
-    g.lineTo(r * 0.87, r * 0.5);
-    g.closePath();
-  };
-  g.setStrokeStyle({ width: isOwned ? 1.5 : 1, color, alpha });
-  triPath();
-  g.stroke();
-  if (isOwned) {
-    triPath();
-    g.fill({ color, alpha: alpha * 0.15 });
-  }
-}
-
-function drawProfessionalIcon(g: Graphics, size: number, color: number, alpha: number, isOwned: boolean): void {
-  const r = size * 0.42;
-  const diamondPath = () => {
-    g.moveTo(0, -r);
-    g.lineTo(r, 0);
-    g.lineTo(0, r);
-    g.lineTo(-r, 0);
-    g.closePath();
-  };
-  g.setStrokeStyle({ width: isOwned ? 1.5 : 1, color, alpha });
-  diamondPath();
-  g.stroke();
-  if (isOwned) {
-    diamondPath();
-    g.fill({ color, alpha: alpha * 0.15 });
-  }
-}
-
-function drawUnclaimedIcon(g: Graphics, size: number, color: number, alpha: number, _isOwned: boolean): void {
-  // Dashed ring — empty, waiting
-  const r = size * 0.4;
-  const segments = 8;
-  const arcLen = (Math.PI * 2) / segments;
-  const gapRatio = 0.4;
-
-  for (let i = 0; i < segments; i++) {
-    const startAngle = i * arcLen;
-    const endAngle = startAngle + arcLen * (1 - gapRatio);
-    g.arc(0, 0, r, startAngle, endAngle);
-    g.stroke({ width: 1, color, alpha: alpha * 0.5 });
-  }
+  g.circle(0, 0, coreR);
+  g.fill({ color, alpha: alpha * 0.3 });
 }
 
 // ── Icon Factory ─────────────────────────────────────────────────────────────
@@ -189,12 +172,12 @@ function drawUnclaimedIcon(g: Graphics, size: number, color: number, alpha: numb
 type DrawFn = (g: Graphics, size: number, color: number, alpha: number, isOwned: boolean) => void;
 
 const DRAW_FNS: Record<FactionId, DrawFn> = {
-  origin: drawOriginIcon,
-  community: drawCommunityIcon,
-  machines: drawMachinesIcon,
-  founders: drawFoundersIcon,
-  professional: drawProfessionalIcon,
-  unclaimed: drawUnclaimedIcon,
+  origin: drawOriginStar,
+  community: drawStarPoint,
+  machines: drawStarPoint,
+  founders: drawStarPoint,
+  professional: drawStarPoint,
+  unclaimed: drawUnclaimedStar,
 };
 
 export function createFactionGlyph(

@@ -25,8 +25,8 @@ describe('FactionGlyphs', () => {
       }
     });
 
-    it('community faction is white', () => {
-      expect(GLYPH_CONFIGS.community.strokeColor).toBe(0xe2e8f0);
+    it('community faction is teal', () => {
+      expect(GLYPH_CONFIGS.community.strokeColor).toBe(0x0d9488);
     });
 
     it('origin is the largest glyph', () => {

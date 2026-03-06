@@ -2,7 +2,7 @@ import { Graphics, Container } from 'pixi.js';
 import type { Agent, FogLevel } from '@/types';
 import type { Faction } from '@/lib/spiral/SpiralClassifier';
 import { classifyCell } from '@/lib/spiral/SpiralClassifier';
-import { createFactionGlyph, mapSpiralFactionToId, type FactionId } from './FactionGlyphs';
+import { createFactionGlyph, mapSpiralFactionToId, GLYPH_CONFIGS, type FactionId } from './FactionGlyphs';
 
 const CELL_SIZE = 60;
 
@@ -69,9 +69,20 @@ export function createStarNode(
   hitArea.fill({ color: 0x000000, alpha: 0.001 });
   container.addChild(hitArea);
 
-  // Faction glyph — filled if owned, outline-only if claimable
+  // Faction glyph — star-like point of light
   const glyph = createFactionGlyph(factionId, glyphSize, alpha, isOwned);
   container.addChild(glyph);
+
+  // Bold faction ring around homenodes (primary agents / homenode)
+  const isHomenode = isOwned && (agent.isPrimary || agent.tier === 'opus');
+  if (isHomenode && factionId !== 'origin') {
+    const cfg = GLYPH_CONFIGS[factionId];
+    const ringRadius = glyphSize * 0.55;
+    const factionRing = new Graphics();
+    factionRing.circle(0, 0, ringRadius);
+    factionRing.stroke({ width: 2.5, color: cfg.strokeColor, alpha: alpha * 0.8 });
+    container.addChild(factionRing);
+  }
 
   // Hover ring (hidden by default)
   const hoverRing = new Graphics();

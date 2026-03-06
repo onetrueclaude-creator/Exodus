@@ -7,56 +7,59 @@
       <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.3"/>
       <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.4"/>
     </linearGradient>
-    <radialGradient id="nc" cx="40%" cy="35%"><stop offset="0%" stop-color="#67FFFF"/><stop offset="100%" stop-color="#00D4FF"/></radialGradient>
+    <linearGradient id="orbit" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.2"/>
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.2"/>
+    </linearGradient>
+    <radialGradient id="nc" cx="40%" cy="35%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#CBD5E1"/></radialGradient>
   </defs>
 
   <!-- Coin disc -->
   <circle cx="256" cy="256" r="250" fill="#0A0A0F"/>
   <circle cx="256" cy="256" r="242" fill="none" stroke="url(#ring)" stroke-width="2.5"/>
 
-  <!-- Faction-colored connections (each spoke glows its faction color) -->
-  <!-- Community (white) — top -->
-  <line x1="256" y1="256" x2="256" y2="85" stroke="#CBD5E1" stroke-width="6" stroke-linecap="round" opacity="0.08"/>
-  <line x1="256" y1="256" x2="256" y2="85" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  <!-- Faction-colored spokes to singularity -->
+  <line x1="256" y1="256" x2="132" y2="132" stroke="#0D9488" stroke-width="6" stroke-linecap="round" opacity="0.08"/>
+  <line x1="256" y1="256" x2="132" y2="132" stroke="#0D9488" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  <line x1="256" y1="256" x2="380" y2="132" stroke="#DC2680" stroke-width="6" stroke-linecap="round" opacity="0.08"/>
+  <line x1="256" y1="256" x2="380" y2="132" stroke="#DC2680" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  <line x1="256" y1="256" x2="380" y2="380" stroke="#F59E0B" stroke-width="6" stroke-linecap="round" opacity="0.08"/>
+  <line x1="256" y1="256" x2="380" y2="380" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  <line x1="256" y1="256" x2="132" y2="380" stroke="#3B82F6" stroke-width="6" stroke-linecap="round" opacity="0.08"/>
+  <line x1="256" y1="256" x2="132" y2="380" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
 
-  <!-- Machines (gold) — right -->
-  <line x1="256" y1="256" x2="427" y2="256" stroke="#D97706" stroke-width="6" stroke-linecap="round" opacity="0.08"/>
-  <line x1="256" y1="256" x2="427" y2="256" stroke="#D97706" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  <!-- Square frame (neutral) -->
+  <line x1="132" y1="132" x2="380" y2="132" stroke="#667788" stroke-width="1.8" stroke-linecap="round" opacity="0.35"/>
+  <line x1="380" y1="132" x2="380" y2="380" stroke="#667788" stroke-width="1.8" stroke-linecap="round" opacity="0.35"/>
+  <line x1="380" y1="380" x2="132" y2="380" stroke="#667788" stroke-width="1.8" stroke-linecap="round" opacity="0.35"/>
+  <line x1="132" y1="380" x2="132" y2="132" stroke="#667788" stroke-width="1.8" stroke-linecap="round" opacity="0.35"/>
 
-  <!-- Founders (red) — bottom -->
-  <line x1="256" y1="256" x2="256" y2="427" stroke="#EF4444" stroke-width="6" stroke-linecap="round" opacity="0.08"/>
-  <line x1="256" y1="256" x2="256" y2="427" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  <!-- Orbital ring through corners -->
+  <circle cx="256" cy="256" r="175" fill="none" stroke="url(#orbit)" stroke-width="2"/>
 
-  <!-- Professional (cyan) — left -->
-  <line x1="256" y1="256" x2="85" y2="256" stroke="#00D4FF" stroke-width="6" stroke-linecap="round" opacity="0.08"/>
-  <line x1="256" y1="256" x2="85" y2="256" stroke="#00D4FF" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
-
-  <!-- Square perimeter (neutral gradient) -->
-  <line x1="256" y1="85" x2="427" y2="256" stroke="#667788" stroke-width="1.8" stroke-linecap="round" opacity="0.35"/>
-  <line x1="427" y1="256" x2="256" y2="427" stroke="#667788" stroke-width="1.8" stroke-linecap="round" opacity="0.35"/>
-  <line x1="256" y1="427" x2="85" y2="256" stroke="#667788" stroke-width="1.8" stroke-linecap="round" opacity="0.35"/>
-  <line x1="85" y1="256" x2="256" y2="85" stroke="#667788" stroke-width="1.8" stroke-linecap="round" opacity="0.35"/>
-
-  <!-- ZK dashed cross -->
-  <line x1="256" y1="85" x2="256" y2="427" stroke="#8B5CF6" stroke-width="1.2" stroke-dasharray="8 10" opacity="0.15"/>
-  <line x1="85" y1="256" x2="427" y2="256" stroke="#8B5CF6" stroke-width="1.2" stroke-dasharray="8 10" opacity="0.15"/>
-
-  <!-- Faction glow halos -->
+  <!-- Faction glow halos at corners -->
   <g filter="url(#glow-strong)">
-    <circle cx="256" cy="85" r="8" fill="#CBD5E1" opacity="0.15"/>
-    <circle cx="427" cy="256" r="8" fill="#D97706" opacity="0.15"/>
-    <circle cx="256" cy="427" r="8" fill="#EF4444" opacity="0.15"/>
-    <circle cx="85" cy="256" r="8" fill="#00D4FF" opacity="0.15"/>
+    <circle cx="132" cy="132" r="8" fill="#0D9488" opacity="0.15"/>
+    <circle cx="380" cy="132" r="8" fill="#DC2680" opacity="0.15"/>
+    <circle cx="380" cy="380" r="8" fill="#F59E0B" opacity="0.15"/>
+    <circle cx="132" cy="380" r="8" fill="#3B82F6" opacity="0.15"/>
   </g>
 
-  <!-- Nodes -->
+  <!-- Nodes at corners -->
   <g filter="url(#glow)">
     <circle cx="256" cy="256" r="18" fill="url(#nc)" opacity="0.95"/>
     <circle cx="256" cy="256" r="10" fill="#fff" opacity="0.15"/>
 
-    <circle cx="256" cy="85" r="14" fill="#CBD5E1" opacity="0.9"/>
-    <circle cx="427" cy="256" r="14" fill="#D97706" opacity="0.9"/>
-    <circle cx="256" cy="427" r="14" fill="#EF4444" opacity="0.85"/>
-    <circle cx="85" cy="256" r="14" fill="#00D4FF" opacity="0.9"/>
+    <circle cx="132" cy="132" r="14" fill="#0D9488" opacity="0.9"/>
+    <circle cx="380" cy="132" r="14" fill="#DC2680" opacity="0.9"/>
+    <circle cx="380" cy="380" r="14" fill="#F59E0B" opacity="0.85"/>
+    <circle cx="132" cy="380" r="14" fill="#3B82F6" opacity="0.9"/>
+
+    <!-- Unclaimed starting nodes at edge midpoints -->
+    <circle cx="256" cy="132" r="4" fill="#8B5CF6" opacity="0.4"/>
+    <circle cx="380" cy="256" r="4" fill="#8B5CF6" opacity="0.4"/>
+    <circle cx="256" cy="380" r="4" fill="#8B5CF6" opacity="0.4"/>
+    <circle cx="132" cy="256" r="4" fill="#8B5CF6" opacity="0.4"/>
   </g>
 </svg>

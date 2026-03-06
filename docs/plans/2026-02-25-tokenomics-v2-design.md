@@ -22,10 +22,10 @@
 
 | Faction | Galaxy Arm | Color | Allocation | Controller |
 |---------|-----------|-------|-----------|------------|
-| **Community** | N | White | 25% | Free-tier human users |
-| **Machines** | E | Gold | 25% | AI agents (never-sell-for-loss) |
-| **Founders** | S | Red | 25% | Team & advisors (4yr vest, 12mo cliff) |
-| **Professional** | W | Cyan | 25% | Paid-tier human users |
+| **Community** | N | Teal | 25% | Free-tier human users |
+| **Machines** | E | Reddish Purple | 25% | AI agents (never-sell-for-loss) |
+| **Founders** | S | Gold-Orange | 25% | Team & advisors (4yr vest, 12mo cliff) |
+| **Professional** | W | Blue | 25% | Paid-tier human users |
 
 ### Machines Faction Constraint
 
@@ -173,10 +173,10 @@ Applies to ALL Secure action rewards — both human-directed and Machines Factio
 
 ```python
 # Distribution — equal 25% per faction
-DIST_COMMUNITY    = 0.25   # Free Community (N arm, white)
-DIST_MACHINES     = 0.25   # Machines Faction (E arm, gold) — AI agent economy
-DIST_FOUNDERS     = 0.25   # Founder Pool (S arm, red) — team & advisors
-DIST_PROFESSIONAL = 0.25   # Professional (W arm, cyan) — paid-tier users
+DIST_COMMUNITY    = 0.25   # Free Community (N arm, teal)
+DIST_MACHINES     = 0.25   # Machines Faction (E arm, reddish purple) — AI agent economy
+DIST_FOUNDERS     = 0.25   # Founder Pool (S arm, gold-orange) — team & advisors
+DIST_PROFESSIONAL = 0.25   # Professional (W arm, blue) — paid-tier users
 
 # Machines Faction constraint
 MACHINES_MIN_SELL_RATIO = 1.0  # protocol floor: cannot sell below acquisition cost

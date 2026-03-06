@@ -10,11 +10,7 @@
       <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.3"/>
       <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.4"/>
     </linearGradient>
-    <radialGradient id="n-center" cx="40%" cy="35%"><stop offset="0%" stop-color="#67FFFF"/><stop offset="100%" stop-color="#00D4FF"/></radialGradient>
-    <radialGradient id="n-community" cx="40%" cy="35%"><stop offset="0%" stop-color="#F1F5F9"/><stop offset="100%" stop-color="#CBD5E1"/></radialGradient>
-    <radialGradient id="n-machines" cx="40%" cy="35%"><stop offset="0%" stop-color="#FCD34D"/><stop offset="100%" stop-color="#D97706"/></radialGradient>
-    <radialGradient id="n-founders" cx="40%" cy="35%"><stop offset="0%" stop-color="#FCA5A5"/><stop offset="100%" stop-color="#EF4444"/></radialGradient>
-    <radialGradient id="n-professional" cx="40%" cy="35%"><stop offset="0%" stop-color="#5EEAFF"/><stop offset="100%" stop-color="#00B4D8"/></radialGradient>
+    <radialGradient id="nc" cx="40%" cy="35%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#CBD5E1"/></radialGradient>
   </defs>
 
   <!-- Coin disc -->
@@ -22,29 +18,37 @@
   <circle cx="256" cy="256" r="242" fill="none" stroke="url(#ring)" stroke-width="2.5"/>
   <circle cx="256" cy="256" r="232" fill="none" stroke="url(#ring)" stroke-width="0.8" opacity="0.3"/>
 
-  <!-- Square perimeter connections -->
-  <line x1="256" y1="80" x2="432" y2="256" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="432" y1="256" x2="256" y2="432" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="256" y1="432" x2="80" y2="256" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="80" y1="256" x2="256" y2="80" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Square frame connecting corner faction nodes -->
+  <line x1="132" y1="132" x2="380" y2="132" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="380" y1="132" x2="380" y2="380" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="380" y1="380" x2="132" y2="380" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="132" y1="380" x2="132" y2="132" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
 
-  <!-- Cross connections (ZK dashed) -->
-  <line x1="256" y1="80" x2="256" y2="432" stroke="#8B5CF6" stroke-width="1.5" stroke-dasharray="8 10" opacity="0.2" stroke-linecap="round"/>
-  <line x1="80" y1="256" x2="432" y2="256" stroke="#8B5CF6" stroke-width="1.5" stroke-dasharray="8 10" opacity="0.2" stroke-linecap="round"/>
+  <!-- Orbital ring through all 4 corners -->
+  <circle cx="256" cy="256" r="175" fill="none" stroke="url(#ring)" stroke-width="2" opacity="0.5"/>
 
-  <!-- Radial spokes to center -->
-  <line x1="256" y1="256" x2="256" y2="80" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="256" y1="256" x2="432" y2="256" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="256" y1="256" x2="256" y2="432" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="256" y1="256" x2="80" y2="256" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Radial spokes to singularity -->
+  <line x1="256" y1="256" x2="132" y2="132" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="256" y1="256" x2="380" y2="132" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="256" y1="256" x2="380" y2="380" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="256" y1="256" x2="132" y2="380" stroke="url(#conn)" stroke-width="2.5" stroke-linecap="round"/>
 
   <!-- Nodes -->
   <g filter="url(#glow)">
-    <circle cx="256" cy="256" r="18" fill="url(#n-center)" opacity="0.95"/>
+    <!-- Singularity (center) -->
+    <circle cx="256" cy="256" r="18" fill="url(#nc)" opacity="0.95"/>
     <circle cx="256" cy="256" r="10" fill="#fff" opacity="0.15"/>
-    <circle cx="256" cy="80" r="14" fill="url(#n-community)" opacity="0.9"/>
-    <circle cx="432" cy="256" r="14" fill="url(#n-machines)" opacity="0.9"/>
-    <circle cx="256" cy="432" r="14" fill="url(#n-founders)" opacity="0.9"/>
-    <circle cx="80" cy="256" r="14" fill="url(#n-professional)" opacity="0.9"/>
+
+    <!-- Faction nodes at corners -->
+    <circle cx="132" cy="132" r="14" fill="#0D9488" opacity="0.9"/>
+    <circle cx="380" cy="132" r="14" fill="#DC2680" opacity="0.9"/>
+    <circle cx="380" cy="380" r="14" fill="#F59E0B" opacity="0.85"/>
+    <circle cx="132" cy="380" r="14" fill="#3B82F6" opacity="0.9"/>
+
+    <!-- Unclaimed starting nodes at edge midpoints -->
+    <circle cx="256" cy="132" r="4" fill="#8B5CF6" opacity="0.4"/>
+    <circle cx="380" cy="256" r="4" fill="#8B5CF6" opacity="0.4"/>
+    <circle cx="256" cy="380" r="4" fill="#8B5CF6" opacity="0.4"/>
+    <circle cx="132" cy="256" r="4" fill="#8B5CF6" opacity="0.4"/>
   </g>
 </svg>
