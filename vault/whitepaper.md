@@ -8,7 +8,7 @@
 
 ## Abstract
 
-We present ZK Agentic Chain, a Layer-1 blockchain protocol that introduces *Proof of AI Verification* (PoAIV) — a novel consensus mechanism in which autonomous AI agents verify chain integrity through zero-knowledge private channels. Unlike traditional proof-of-work systems that consume energy solving arbitrary hash puzzles, or proof-of-stake systems that concentrate power among the wealthiest token holders, PoAIV selects a committee of 13 AI verification agents per block, requiring a 9/13 supermajority attestation threshold for consensus. Verification agents apply *reasoning* to their audits — examining logical consistency, cross-referencing state across isolated ledger spaces, and flagging anomalous patterns — introducing an adaptive security layer that evolves with the underlying AI models.
+We present ZK Agentic Chain, a Layer-1 blockchain protocol that introduces *Proof of AI Verification* (PoAIV) — a consensus mechanism in which autonomous AI agents verify chain integrity through zero-knowledge private channels. Unlike traditional proof-of-work systems that consume energy solving arbitrary hash puzzles, or proof-of-stake systems that concentrate power among the wealthiest token holders, PoAIV selects a committee of 13 AI verification agents per block, requiring a 9/13 supermajority attestation threshold for consensus. Verification agents apply *reasoning* to their audits — examining logical consistency, cross-referencing state across isolated ledger spaces, and flagging anomalous patterns — providing an additional verification layer whose capabilities improve as the underlying AI models advance.
 
 The protocol employs a dual-staking model that weights computational contribution (60%) over capital (40%), reducing plutocratic concentration inherent in pure proof-of-stake designs. Validators must commit both AGNTC tokens and CPU compute resources; the effective stake that determines committee selection and reward share is a weighted combination of both dimensions.
 
@@ -68,7 +68,7 @@ This paper describes the protocol architecture, consensus mechanism, privacy sys
 | PPT | Probabilistic Polynomial Time (adversary) |
 | negl(lambda) | Negligible function of security parameter |
 
-All pseudocode uses Python-like syntax. Security games follow the Zcash convention: challenger C interacts with adversary A.
+All pseudocode uses Python-like syntax. Security games follow the Zcash convention [5]: challenger C interacts with adversary A.
 
 ---
 
@@ -78,17 +78,17 @@ All pseudocode uses Python-like syntax. Security games follow the Zcash conventi
 
 #### 1.1 The Problem: Consensus Without Intelligence
 
-Blockchain consensus mechanisms face a persistent trilemma between decentralization, security, and scalability [8]. The two dominant paradigms — Proof of Work and Proof of Stake — each resolve this trilemma with significant trade-offs that leave fundamental capabilities unaddressed.
+Blockchain consensus mechanisms face the well-known trilemma between decentralization, security, and scalability [36]. The two dominant paradigms — Proof of Work and Proof of Stake — each resolve this trilemma with significant trade-offs that leave fundamental capabilities unaddressed.
 
-**Proof of Work** systems, pioneered by Bitcoin [1], require validators to solve computationally intensive hash puzzles. This design achieves robust Sybil resistance but at extraordinary cost: the Bitcoin network alone consumes approximately 176 TWh annually as of 2025, comparable to the energy consumption of mid-sized nations. The requirement for specialized hardware (ASICs, high-end GPUs) has concentrated mining power among well-capitalized industrial operations, undermining the original vision of democratic participation. Furthermore, the computational work performed — iterating SHA-256 nonces — produces no useful output beyond the proof itself. The energy is consumed to demonstrate commitment, not to perform any reasoning about the validity of the transactions being confirmed.
+**Proof of Work** systems, pioneered by Bitcoin [1], require validators to solve computationally intensive hash puzzles. This design achieves robust Sybil resistance but at extraordinary cost: the Bitcoin network alone consumes approximately 176 TWh annually as of 2025 [37], comparable to the energy consumption of mid-sized nations. The requirement for specialized hardware (ASICs, high-end GPUs) has concentrated mining power among well-capitalized industrial operations, undermining the original vision of democratic participation. Furthermore, the computational work performed — iterating SHA-256 nonces — produces no useful output beyond the proof itself. The energy is consumed to demonstrate commitment, not to perform any reasoning about the validity of the transactions being confirmed.
 
-**Proof of Stake** systems, adopted by Ethereum after the Merge [7] and used natively by Solana [3], Cosmos, and others, replace energy expenditure with capital lockup. Validators stake tokens as collateral, and consensus participation is proportional to stake size. While dramatically more energy-efficient than PoW, PoS introduces wealth concentration: the largest token holders exert disproportionate influence over consensus. In Ethereum's current validator set, liquid staking derivatives (Lido, Coinbase) control over 30% of all staked ETH, creating centralization pressure that the protocol was designed to avoid. Solana's validator economics similarly favor well-capitalized operators who can afford the hardware requirements and minimum stake thresholds.
+**Proof of Stake** systems, adopted by Ethereum after the Merge [2] and used natively by Solana [3], Cosmos [22], and others, replace energy expenditure with capital lockup. Validators stake tokens as collateral, and consensus participation is proportional to stake size. While dramatically more energy-efficient than PoW, PoS introduces wealth concentration: the largest token holders exert disproportionate influence over consensus. In Ethereum's current validator set, liquid staking derivatives (Lido, Coinbase) control over 30% of all staked ETH [38], creating centralization pressure that the protocol was designed to avoid. Solana's validator economics similarly favor well-capitalized operators who can afford the hardware requirements and minimum stake thresholds.
 
-Neither paradigm incorporates *intelligent reasoning* into the validation process. Validators in both PoW and PoS execute deterministic checks — verifying cryptographic signatures, confirming that state transitions follow predefined rules, checking Merkle proofs against committed roots. No semantic understanding of transaction correctness is applied. A validator cannot reason about whether a pattern of transactions suggests coordinated manipulation, whether a smart contract's state transitions are logically consistent with its declared purpose, or whether cross-ledger references maintain referential integrity. Validation is mechanical, not cognitive.
+Neither paradigm incorporates *intelligent reasoning* into the validation process. Validators in both PoW and PoS execute deterministic checks — verifying cryptographic signatures, confirming that state transitions follow predefined rules, checking Merkle proofs [39] against committed roots. No semantic understanding of transaction correctness is applied. A validator cannot reason about whether a pattern of transactions suggests coordinated manipulation, whether a smart contract's state transitions are logically consistent with its declared purpose, or whether cross-ledger references maintain referential integrity. Validation is mechanical, not cognitive.
 
-Additionally, most public blockchains expose all transaction data, balances, and state transitions to every participant. While projects like Zcash [2] have introduced zero-knowledge proofs for transaction privacy, the verification layer itself remains non-private: validators must see the data they validate. This creates a fundamental tension between privacy and verifiability that existing architectures do not resolve.
+Additionally, most public blockchains expose all transaction data, balances, and state transitions to every participant. While projects like Zcash [5] have introduced zero-knowledge proofs [29] for transaction privacy, the verification layer itself remains non-private: validators must see the data they validate. This creates a fundamental tension between privacy and verifiability that existing architectures do not resolve.
 
-Finally, the emergence of autonomous AI agents as economic actors — systems that hold wallets, execute transactions, earn income, and make spending decisions — has no native blockchain substrate. Projects like Bittensor [11], Fetch.ai [12], and Autonolas [13] integrate AI with blockchain at the application layer, but none embed AI into the consensus mechanism itself. AI agents in these systems are users of the blockchain, not participants in its security model.
+Finally, the emergence of autonomous AI agents as economic actors — systems that hold wallets, execute transactions, earn income, and make spending decisions — has no native blockchain substrate. Projects like Bittensor [17], Fetch.ai [18], and Autonolas integrate AI with blockchain at the application layer, but none embed AI into the consensus mechanism itself. AI agents in these systems are users of the blockchain, not participants in its security model.
 
 #### 1.2 Our Thesis: AI as Consensus Participant
 
@@ -96,9 +96,9 @@ ZK Agentic Chain addresses these limitations with three design principles:
 
 **Democratic validation.** Any CPU can participate as a verifier. The protocol's dual-staking model weights computational contribution (60%) above capital (40%) in determining effective stake. A validator with modest token holdings but strong CPU resources earns proportionally more than a well-capitalized validator with minimal compute. This design directly addresses the wealth concentration problem inherent in pure PoS systems while avoiding the energy waste of PoW.
 
-**Intelligent verification.** AI agents reason about chain integrity rather than executing purely deterministic checks. A committee of 13 AI verification agents audits each proposed block, examining transaction validity, state transition correctness, and proof integrity. Agents cross-reference state across isolated ledger spaces, flag anomalous patterns, and produce attestations that reflect semantic understanding of the data — not just cryptographic validity. This introduces an adaptive security layer that evolves as the underlying AI models improve.
+**Intelligent verification.** AI agents reason about chain integrity rather than executing purely deterministic checks. A committee of 13 AI verification agents audits each proposed block, examining transaction validity, state transition correctness, and proof integrity. Agents cross-reference state across isolated ledger spaces, flag anomalous patterns, and produce attestations that reflect semantic understanding of the data — not just cryptographic validity. This provides an additional verification layer whose detection capabilities improve as the underlying AI models advance.
 
-**Verification-layer privacy.** Agents operate within zero-knowledge private channels, proving correctness without exposing the underlying data [6]. Unlike public blockchains where validators must read transaction data to validate it, ZK Agentic Chain's verification agents receive ZK proofs of state transitions and validate those proofs — never accessing the plaintext state. All user data is private by default; privacy is not an opt-in feature but the fundamental operating mode of the protocol.
+**Verification-layer privacy.** Agents operate within zero-knowledge private channels, proving correctness without exposing the underlying data [6] [29]. Unlike public blockchains where validators must read transaction data to validate it, ZK Agentic Chain's verification agents receive ZK proofs of state transitions and validate those proofs — never accessing the plaintext state. All user data is private by default; privacy is not an opt-in feature but the fundamental operating mode of the protocol.
 
 #### 1.3 Vision: The Agentic Galaxy
 
@@ -126,23 +126,23 @@ ZK Agentic Chain preserves the democratic CPU participation principle of early P
 
 #### 2.2 Proof of Stake and Plutocratic Concentration
 
-Ethereum's transition to Proof of Stake via the Merge (September 2022) [7] reduced the network's energy consumption by approximately 99.95%. Validators stake 32 ETH and earn rewards for proposing and attesting to blocks. As of September 2025, over 35.6 million ETH (approximately 29-30% of total supply) is staked across more than 1.06 million validators, with staking yields ranging from 3.5-4.0% APY for standard validators and up to 5.69% for MEV-Boost participants.
+Ethereum's transition to Proof of Stake via the Merge (September 2022) [2] reduced the network's energy consumption by approximately 99.95%. Validators stake 32 ETH and earn rewards for proposing and attesting to blocks. As of September 2025, over 35.6 million ETH (approximately 29-30% of total supply) is staked across more than 1.06 million validators [38], with staking yields ranging from 3.5-4.0% APY for standard validators and up to 5.69% for MEV-Boost participants.
 
 However, the 32 ETH minimum (~$90,000 at current prices) creates a significant barrier to entry. Liquid staking derivatives (Lido, Rocket Pool, Coinbase) lower this barrier but introduce centralization risk — a small number of operators control the majority of delegated stake. Governance influence concentrates among the largest holders, reproducing the plutocratic dynamics that PoS was intended to avoid.
 
-Solana [3] employs a PoS variant with Proof of History for time ordering. Starting with approximately 8% annual inflation in 2020, Solana's inflation decreases by 15% per year toward a terminal rate of 1.5% (projected ~2031). Current staking APY ranges from 5-8%. Solana's 2025 fee model burns 50% of base fees and sends 100% of priority fees to validators, creating a two-tier fee market that separates protocol-level burns from validator incentives.
+Solana [3] [35] employs a PoS variant with Proof of History for time ordering. Starting with approximately 8% annual inflation in 2020, Solana's inflation decreases by 15% per year toward a terminal rate of 1.5% (projected ~2031). Current staking APY ranges from 5-8%. Solana's 2025 fee model burns 50% of base fees and sends 100% of priority fees to validators, creating a two-tier fee market that separates protocol-level burns from validator incentives.
 
-Cosmos uses a dynamic, target-staking-rate inflation model that self-adjusts between 7% and 20% based on participation: if staking falls below two-thirds of supply, inflation increases to incentivize lockup; if it exceeds two-thirds, inflation decreases. This adaptive mechanism maintains robust staking levels across varying market conditions — a design insight relevant to any network where validator participation must be actively incentivized.
+Cosmos [22] uses a dynamic, target-staking-rate inflation model that self-adjusts between 7% and 20% based on participation: if staking falls below two-thirds of supply, inflation increases to incentivize lockup; if it exceeds two-thirds, inflation decreases. This adaptive mechanism maintains robust staking levels across varying market conditions — a design insight relevant to any network where validator participation must be actively incentivized.
 
 ZK Agentic Chain's dual-staking model (Section 13) addresses the concentration problem directly: by weighting CPU contribution at 60% and token stake at 40%, the protocol ensures that computational work — not just capital — determines validator influence.
 
 #### 2.3 Zero-Knowledge Blockchains
 
-Zcash [2] pioneered the deployment of zk-SNARKs (Zero-Knowledge Succinct Non-Interactive Arguments of Knowledge) for transaction privacy. The Sapling upgrade (2018) introduced an efficient nullifier scheme that has become the canonical reference for private ownership proofs: a note commitment (Pedersen hash of value, owner public key, and randomness) is added to a Merkle tree of depth 32; spending requires a ZK proof of knowledge of the note's opening and correct computation of the nullifier, which prevents double-spending without revealing which note was spent [5].
+Zcash [5] pioneered the deployment of zk-SNARKs (Zero-Knowledge Succinct Non-Interactive Arguments of Knowledge) [4] [29] for transaction privacy. The Sapling upgrade (2018) introduced an efficient nullifier scheme that has become the canonical reference for private ownership proofs: a note commitment (Pedersen hash of value, owner public key, and randomness) is added to a Merkle tree [39] of depth 32; spending requires a ZK proof of knowledge of the note's opening and correct computation of the nullifier, which prevents double-spending without revealing which note was spent.
 
-Mina Protocol maintains a constant 22 KB blockchain size using recursive zk-SNARKs — each new block contains a proof that the entire chain history up to that point is valid. This recursive composition means verification cost is constant regardless of chain length, enabling browser-based full verification.
+Mina Protocol [40] maintains a constant 22 KB blockchain size using recursive zk-SNARKs — each new block contains a proof that the entire chain history up to that point is valid. This recursive composition means verification cost is constant regardless of chain length, enabling browser-based full verification.
 
-Aztec Network launched the Ignition Chain in November 2025 as the first decentralized privacy-preserving Layer 2 on Ethereum. Aztec's architecture is particularly relevant to ZK Agentic Chain: it uses client-side proof generation (sensitive data never leaves the user's device), a note-based UTXO model for private state, and the Noir programming language — a Rust-inspired domain-specific language for ZK circuits that compiles to PLONK proofs via the Barretenberg backend.
+Aztec Network [24] launched the Ignition Chain in November 2025 as a privacy-preserving Layer 2 on Ethereum. Aztec's architecture is relevant to ZK Agentic Chain: it uses client-side proof generation (sensitive data never leaves the user's device), a note-based UTXO model for private state, and the Noir programming language — a Rust-inspired domain-specific language for ZK circuits that compiles to PLONK [7] proofs via the Barretenberg backend.
 
 ZK Agentic Chain extends the privacy-preserving paradigm beyond transactions to the *verification layer itself*. In Zcash and Aztec, validators still see the data they validate (or at minimum, interact with it during proof generation). In ZK Agentic Chain, verification agents operate within ZK private channels — they validate proofs of state transitions without ever accessing the underlying plaintext data.
 
@@ -150,9 +150,9 @@ ZK Agentic Chain extends the privacy-preserving paradigm beyond transactions to 
 
 The intersection of artificial intelligence and blockchain has produced several distinct approaches:
 
-**Bittensor (TAO)** [11] organizes AI production into competitive subnets — independently governed marketplaces for specific AI tasks. Miners run AI models and compete on output quality; validators score results; the best performers earn TAO rewards. With a Bitcoin-like 21 million hard cap and halving schedule, Bittensor's first halving occurred in December 2025. The Dynamic TAO (dTAO) upgrade introduced per-subnet alpha tokens, creating a meta-market where subnets compete for TAO emissions by attracting real staking demand. Bittensor's key innovation is using AI output quality as proof of work — but the AI operates at the application layer, not within consensus itself.
+**Bittensor (TAO)** [17] organizes AI production into competitive subnets — independently governed marketplaces for specific AI tasks. Miners run AI models and compete on output quality; validators score results; the best performers earn TAO rewards. With a Bitcoin-like 21 million hard cap and halving schedule, Bittensor's first halving occurred in December 2025. The Dynamic TAO (dTAO) upgrade introduced per-subnet alpha tokens, creating a meta-market where subnets compete for TAO emissions by attracting real staking demand. Bittensor's key innovation is using AI output quality as proof of work — but the AI operates at the application layer, not within consensus itself.
 
-**Fetch.ai / Artificial Superintelligence Alliance (ASI)** [12] builds Autonomous Economic Agents (AEAs) that act, trade, and transact on behalf of users. Fetch.ai's agent-centric model treats AI agents as first-class economic citizens with their own wallets, earnings, and spending patterns. The 2024 merger with SingularityNET and Ocean Protocol created the ASI alliance, though governance disputes led to Ocean Protocol's withdrawal in October 2025.
+**Fetch.ai / Artificial Superintelligence Alliance (ASI)** [18] builds Autonomous Economic Agents (AEAs) that act, trade, and transact on behalf of users. Fetch.ai's agent-centric model treats AI agents as first-class economic citizens with their own wallets, earnings, and spending patterns. The 2024 merger with SingularityNET and Ocean Protocol created the ASI alliance, though governance disputes led to Ocean Protocol's withdrawal in October 2025.
 
 **Autonolas (OLAS)** provides infrastructure for deploying multi-agent systems on-chain, with off-chain agent execution and on-chain settlement. Agents are organized into "services" — compositions of agent components that collaborate autonomously.
 
@@ -172,17 +172,17 @@ ZK Agentic Chain is distinct from all of these in a fundamental way: AI agents a
 | Block time | ~10 min | ~12 sec | ~400 ms | ~75 sec | ~12 sec | **~60 sec** |
 
 **Key differentiators:**
-1. **AI-as-consensus** is unique to AGNTC. No other L1 embeds AI into the consensus mechanism itself.
-2. **Dual staking** formalizes compute-weighted staking with explicit anti-plutocratic properties.
+1. **AI-as-consensus.** To our knowledge, no other production L1 embeds AI reasoning into the consensus mechanism itself as of March 2026.
+2. **Dual staking** formalizes compute-weighted staking with explicit anti-plutocratic properties (Section 23.3).
 3. **Privacy by default** combined with AI-enhanced anomaly detection within the privacy layer.
 
 #### 2.6 Compute-Tokenomics Networks
 
 Several projects have established models for tokenizing computational resources:
 
-**Render Network (RENDER)** introduced the Burn-Mint Equilibrium (BME) model: rendering jobs are quoted in USD, the RENDER paid for completed jobs is burned (100%), and the network mints new RENDER for node operators based on work completed and reputation scores. This creates a self-balancing supply where demand-side burns offset supply-side emissions.
+**Render Network (RENDER)** [28] introduced the Burn-Mint Equilibrium (BME) model: rendering jobs are quoted in USD, the RENDER paid for completed jobs is burned (100%), and the network mints new RENDER for node operators based on work completed and reputation scores. This creates a self-balancing supply where demand-side burns offset supply-side emissions.
 
-**Filecoin (FIL)** [9] employs a dual minting model: simple minting releases tokens on a fixed 6-year half-life regardless of network activity, while baseline minting releases tokens only when aggregate storage capacity crosses a growing threshold. This gates the majority of emissions behind demonstrated utility — tokens are minted in proportion to real-world storage delivered, not just time elapsed. The 180-day vesting on 75% of block rewards reduces immediate sell pressure.
+**Filecoin (FIL)** [15] employs a dual minting model: simple minting releases tokens on a fixed 6-year half-life regardless of network activity, while baseline minting releases tokens only when aggregate storage capacity crosses a growing threshold. This gates the majority of emissions behind demonstrated utility — tokens are minted in proportion to real-world storage delivered, not just time elapsed. The 180-day vesting on 75% of block rewards reduces immediate sell pressure.
 
 **Akash Network (AKT)** uses a reverse auction for compute: providers bid against each other, and the lowest bidder wins. Compute is priced in stablecoins (USDC), with AKT buyback-and-burn creating the value capture loop. This separation of pricing currency (stable) from native token (volatile) prevents compute cost unpredictability.
 
@@ -199,7 +199,7 @@ Existing blockchain projects can be positioned along two axes: (1) whether conse
 | **Deterministic Consensus** | Bitcoin, Ethereum, Solana | Zcash, Aztec, Mina |
 | **Intelligent Consensus** | Bittensor (AI at application layer) | **ZK Agentic Chain** |
 
-No existing project combines AI-powered intelligent verification with zero-knowledge privacy at the verification layer. ZK Agentic Chain occupies this previously empty quadrant: agents reason about chain state (not just check signatures), and they do so within private channels (not on exposed data).
+To our knowledge, no existing project as of March 2026 combines AI-powered intelligent verification with zero-knowledge privacy at the verification layer. ZK Agentic Chain targets this quadrant: agents reason about chain state (not just check signatures), and they do so within private channels (not on exposed data).
 
 The addition of a spatial coordinate economy (the galaxy grid), CPU-weighted dual staking, and a gamified exploration interface further differentiates the protocol from both traditional blockchains and AI-blockchain hybrids.
 
@@ -326,7 +326,7 @@ Coordinates near the origin tend to have higher strategic value because they wer
 
 #### 5.1 Verification Agent Selection
 
-For each block, the protocol selects a committee of k = 13 AI verification agents. Selection follows a Verifiable Random Function (VRF) weighted by effective stake (Section 13.1), ensuring both randomness (no party can predict committee membership in advance) and proportional representation (validators with higher effective stake are more likely to be selected, but never guaranteed).
+For each block, the protocol selects a committee of k = 13 AI verification agents. Selection follows a Verifiable Random Function (VRF) [41] [32] weighted by effective stake (Section 13.1), ensuring both randomness (no party can predict committee membership in advance) and proportional representation (validators with higher effective stake are more likely to be selected, but never guaranteed).
 
 The VRF produces a pseudorandom value for each registered validator:
 
@@ -428,7 +428,7 @@ Algorithm: SELECT_COMMITTEE(block_height, epoch_seed)
 
 #### VRF Construction
 
-Committee selection uses Ed25519-based VRF as specified in RFC 9381 (ECVRF-EDWARDS25519-SHA512-ELL2). Each validator generates a VRF proof using their staking key and the epoch seed.
+Committee selection uses Ed25519-based VRF [42] as specified in RFC 9381 [32] (ECVRF-EDWARDS25519-SHA512-ELL2). Each validator generates a VRF proof using their staking key and the epoch seed.
 
 - **Seed derivation:** `epoch_seed = BLAKE2b(previous_epoch_final_block_hash || epoch_number)`
 - **Per-block nonce:** `block_seed = BLAKE2b(epoch_seed || block_height)`
@@ -537,7 +537,7 @@ Traditional BFT validators execute deterministic checks: signature validity, sta
 
 #### 6.1 ZK Private Channels
 
-ZK Agentic Chain implements verification-layer privacy through *ZK private channels* — isolated communication pathways between AI agents where data is verified but never exposed in plaintext to the broader network [6].
+ZK Agentic Chain implements verification-layer privacy through *ZK private channels* — isolated communication pathways between AI agents where data is verified but never exposed in plaintext to the broader network [29].
 
 The design inverts the traditional blockchain transparency model. In Bitcoin and Ethereum, all transaction data is public; validators read and verify the same data that every other node can see. In Zcash and Aztec, transaction data can be hidden from observers, but validators still interact with the data (or its encrypted form) during proof generation. In ZK Agentic Chain, the verification agents themselves operate within a privacy boundary — they receive ZK proofs as input and produce attestations as output, never accessing the underlying state that the proofs describe.
 
@@ -545,15 +545,15 @@ This architecture provides *private-by-default* semantics: unlike public ledgers
 
 #### 6.2 Sparse Merkle Tree (Depth 26)
 
-Each user's ledger space is backed by a Sparse Merkle Tree of depth 26 (MERKLE_TREE_DEPTH = 26), supporting 2^26 = 67,108,864 leaf nodes. The SMT provides efficient membership proofs (proving that a specific leaf exists at a specific position) and non-membership proofs (proving that a specific position is empty) without revealing any information about non-queried leaves.
+Each user's ledger space is backed by a Sparse Merkle Tree [43] of depth 26 (MERKLE_TREE_DEPTH = 26), supporting 2^26 = 67,108,864 leaf nodes. The SMT provides efficient membership proofs (proving that a specific leaf exists at a specific position) and non-membership proofs (proving that a specific position is empty) without revealing any information about non-queried leaves.
 
 State transitions — such as claiming a coordinate, transferring AGNTC, or updating subgrid allocation — modify the SMT by updating the relevant leaf nodes and recomputing the root hash along the path from leaf to root. The new root hash is committed on-chain as the user's current state root. A ZK proof accompanies each state transition, proving that the new root was correctly derived from the old root given the claimed operation.
 
-The choice of depth 26 balances capacity (67 million leaves per user — sufficient for all foreseeable state entries) against proof size (26 hash computations along the Merkle path). The SMT uses Poseidon hashing (Section 6.3) rather than SHA-256, reducing the in-circuit cost of Merkle path verification by approximately 100x.
+The choice of depth 26 balances capacity (67 million leaves per user — sufficient for all foreseeable state entries) against proof size (26 hash computations along the Merkle path). The SMT uses Poseidon hashing [11] (Section 6.3) rather than SHA-256, reducing the in-circuit cost of Merkle path verification by approximately 100x.
 
 #### 6.3 Nullifier-Based Ownership
 
-The ownership proof system follows the Zcash Sapling design [2], adapted for the ZK Agentic Chain's coordinate-based state model.
+The ownership proof system follows the Zcash Sapling design [5], adapted for the ZK Agentic Chain's coordinate-based state model.
 
 **Note commitment.** Each state entry (a "note") is committed using a Poseidon hash:
 
@@ -580,7 +580,7 @@ Where `nk` is the nullifier deriving key (derived from the owner's spending key)
 3. The nullifier was correctly computed from `nk` and the note position
 4. The note's value satisfies any constraints required by the transaction (e.g., sufficient balance for a transfer)
 
-**Hash function: Poseidon.** All hashing within ZK circuits uses the Poseidon hash function — a SNARK-friendly algebraic hash designed specifically for zero-knowledge proof systems. Poseidon operates natively over prime fields, requiring approximately 100x fewer constraints in R1CS (Rank-1 Constraint Systems) than SHA-256. It is used by Aztec, Zcash Orchard, Semaphore, and most production ZK systems as of 2025.
+**Hash function: Poseidon.** All hashing within ZK circuits uses the Poseidon hash function [11] — a SNARK-friendly algebraic hash designed for zero-knowledge proof systems. Poseidon operates natively over prime fields, requiring approximately 100x fewer constraints in R1CS (Rank-1 Constraint Systems) than SHA-256. It is used by Aztec [24], Zcash Orchard [5], Semaphore, and most production ZK systems as of 2025.
 
 #### 6.4 ZK Proof Stack
 
@@ -590,16 +590,16 @@ The protocol's ZK proof requirements span three use cases, each with distinct pe
 
 **Subgrid state proofs.** Prove that a user's 8x8 private subgrid (64 cells) has been correctly updated — that the new state root is a valid transformation of the old state root given the declared operations. These are moderate-frequency proofs triggered by subgrid allocation changes.
 
-**NCP privacy proofs.** Prove that a Neural Communication Packet was sent by a valid network participant within their messaging quota, without revealing the sender's identity. These use a Rate-Limiting Nullifier (RLN) design derived from Ethereum Foundation's Privacy and Scaling Explorations work.
+**NCP privacy proofs.** Prove that a Neural Communication Packet was sent by a valid network participant within their messaging quota, without revealing the sender's identity. These use a Rate-Limiting Nullifier (RLN) [44] design derived from Ethereum Foundation's Privacy and Scaling Explorations work.
 
 The proof stack evolves across protocol phases:
 
 | Phase | System | Setup | Proof Size | Use |
 |-------|--------|-------|-----------|-----|
-| Testnet | Groth16 (Circom + snarkjs) | Per-circuit trusted | ~128-200 bytes | Fastest verification, smallest proofs |
-| Alpha | PLONK (Noir + Barretenberg) | Universal, updateable | ~800-900 bytes | One ceremony for all circuits |
-| Beta | PLONK + RLN | Universal | ~800 bytes | NCP rate-limiting privacy |
-| Mainnet | Halo2 or Nova | None (transparent) | ~2-10 KB | No trusted setup, recursive epoch proofs |
+| Testnet | Groth16 [6] (Circom + snarkjs) | Per-circuit trusted | ~192 bytes | Fastest verification, smallest proofs |
+| Alpha | PLONK [7] (Noir + Barretenberg) | Universal, updateable | ~800-900 bytes | One ceremony for all circuits |
+| Beta | PLONK + RLN [44] | Universal | ~800 bytes | NCP rate-limiting privacy |
+| Mainnet | Halo2 [8] or Nova [27] | None (transparent) | ~2-10 KB | No trusted setup, recursive epoch proofs |
 
 #### 6.5 Client-Side Proving
 
@@ -618,9 +618,9 @@ This design ensures that subgrid allocation (which cells are assigned to Secure,
 
 The ZK proof pipeline uses a two-tier proving system:
 
-1. **Per-transaction proofs (Groth16):** Each state transition (transfer, claim, stake) is proved individually using a Groth16 SNARK with BN254 pairing. Groth16 provides the smallest proof size (~128 bytes) and fastest verification time (~6ms), at the cost of requiring a trusted setup per circuit.
+1. **Per-transaction proofs (Groth16 [6]):** Each state transition (transfer, claim, stake) is proved individually using a Groth16 SNARK with BN254 pairing. Groth16 provides the smallest proof size (~192 bytes on BN254) and fastest verification time (~6ms), at the cost of requiring a trusted setup per circuit.
 
-2. **Batch proofs (Recursive PLONK):** Multiple per-transaction proofs are aggregated into a single batch proof using recursive PLONK composition. This reduces on-chain verification cost: instead of verifying 13 Groth16 proofs per block, validators verify 1 recursive proof.
+2. **Batch proofs (Recursive PLONK [7]):** Multiple per-transaction proofs are aggregated into a single batch proof using recursive PLONK composition. This reduces on-chain verification cost: instead of verifying 13 Groth16 proofs per block, validators verify 1 recursive proof.
 
 ```
 Transaction Flow:
@@ -682,7 +682,7 @@ The block production pipeline proceeds as follows:
 
 #### 7.2 Byzantine Fault Tolerance
 
-The 13-agent committee tolerates up to f = 4 Byzantine agents — agents that may crash, produce incorrect attestations, or actively attempt to subvert consensus. This tolerance follows from the standard BFT bound:
+The 13-agent committee tolerates up to f = 4 Byzantine agents — agents that may crash, produce incorrect attestations, or actively attempt to subvert consensus. This tolerance follows from the standard BFT bound [12]:
 
 ```
 f = floor((k - 1) / 3) = floor((13 - 1) / 3) = 4
@@ -696,7 +696,7 @@ t = 9 > 2f + 1 = 2(4) + 1 = 9
 
 Since t = 2f + 1, the protocol achieves optimal Byzantine tolerance: it tolerates the maximum number of faulty agents possible under the BFT bound. Safety is guaranteed: no two conflicting blocks can both receive 9 attestations, because that would require at least 9 + 9 - 13 = 5 agents to attest to both blocks, exceeding the Byzantine tolerance of 4.
 
-The small committee size (13) makes even PBFT's O(n^2) message complexity trivial — 13^2 = 169 messages per round, well within the capacity of any modern network link. However, the protocol is designed with future scaling in mind: the committee selection and attestation aggregation mechanisms are compatible with HotStuff's O(n) linear complexity, enabling expansion to larger committee sizes without protocol changes.
+The small committee size (13) makes even PBFT's O(n^2) message complexity trivial — 13^2 = 169 messages per round, well within the capacity of any modern network link. However, the protocol is designed with future scaling in mind: the committee selection and attestation aggregation mechanisms are compatible with HotStuff's [13] O(n) linear complexity, enabling expansion to larger committee sizes without protocol changes.
 
 #### 7.3 ZK Proof Finality
 
@@ -712,7 +712,7 @@ Once these conditions are met, the block is appended to the chain with a finalit
 
 #### 7.4 Comparison with Existing BFT Protocols
 
-| Property | PBFT | HotStuff | Tendermint | ZK Agentic Chain |
+| Property | PBFT [12] | HotStuff [13] | Tendermint [14] | ZK Agentic Chain |
 |----------|------|----------|-----------|-----------------|
 | Message complexity | O(n^2) | O(n) | O(n) | O(n^2) (acceptable at n=13) |
 | Rounds to finality | 2 | 3 | 2 | 2 (commit + reveal) |
@@ -747,7 +747,7 @@ At no point does any verifier see the contents of any user's subtree. They see o
 
 We consider a computationally bounded adversary A (PPT) operating under the following assumptions:
 
-- **Network model:** Partial synchrony (Dwork, Lynch, Stockmeyer 1988). Messages between honest nodes are delivered within a known bound Delta after GST (Global Stabilization Time). Before GST, the adversary controls message ordering.
+- **Network model:** Partial synchrony [45]. Messages between honest nodes are delivered within a known bound Delta after GST (Global Stabilization Time). Before GST, the adversary controls message ordering.
 - **Corruption model:** Adaptive corruption of up to t < n/3 committee members per block (i.e., up to 4 of 13). Corruption means full control of the agent's signing key and model.
 - **Computational bound:** A runs in polynomial time in the security parameter lambda.
 - **AI model access:** A may fine-tune or replace AI models on corrupted agents. A may craft adversarial inputs (prompt injection) but cannot modify the verification schema enforced by honest agents.
@@ -942,7 +942,7 @@ This distribution is self-enforcing: it follows from the geographic structure of
 
 #### 10.3 Machines Faction Floor Mechanism
 
-The Machines Faction represents a novel approach to token supply stability. AI agents in this faction operate autonomously — mining coordinates, earning AGNTC, and participating in the economy — but are subject to a protocol-level sell constraint:
+The Machines Faction represents a protocol-enforced approach to token supply stability. AI agents in this faction operate autonomously — mining coordinates, earning AGNTC, and participating in the economy — but are subject to a protocol-level sell constraint:
 
 ```
 MACHINES_MIN_SELL_RATIO = 1.0
@@ -1137,7 +1137,7 @@ The interaction between organic supply growth (mining) and fee burns creates a s
 
 **Mature network (equilibrium).** As the grid expands to higher rings with greater hardness, the minting rate decelerates. Meanwhile, increased network usage generates more fees and more burns. At some point, the burn rate equals the minting rate — circulating supply stabilizes.
 
-**Active network (net deflationary).** In a mature network with high transaction volume but slowing coordinate claims, the burn rate exceeds the minting rate. Circulating supply contracts, increasing scarcity and token value. This mirrors Ethereum's "ultrasound money" thesis — scarcity that intensifies as the network succeeds.
+**Active network (net deflationary).** In a mature network with high transaction volume but slowing coordinate claims, the burn rate exceeds the minting rate. Circulating supply contracts, increasing scarcity and token value. This mirrors Ethereum's "ultrasound money" thesis [26] — scarcity that intensifies as the network succeeds.
 
 The 50% burn rate is calibrated to produce meaningful deflationary pressure without being so aggressive as to discourage usage. For comparison:
 
@@ -1176,7 +1176,7 @@ Where:
 
 The choice of α = 0.40 and β = 0.60 is a deliberate design decision: computational contribution is weighted 50% more heavily than capital. This creates an economic structure where participants who deploy real compute resources — running AI verification agents, executing Secure operations, processing transactions — receive proportionally greater influence and rewards than those who merely lock tokens.
 
-**Design rationale.** In pure proof-of-stake systems (α = 1, β = 0), validator power is directly proportional to wealth. This produces plutocratic concentration: the wealthiest participants earn the most rewards, accumulate more tokens, and entrench their position. The Gini coefficient of validator distributions in mature PoS networks typically exceeds 0.85 — worse than most national income distributions.
+**Design rationale.** In pure proof-of-stake systems (α = 1, β = 0), validator power is directly proportional to wealth. This produces plutocratic concentration: the wealthiest participants earn the most rewards, accumulate more tokens, and entrench their position. The Gini coefficient of validator stake distributions in mature PoS networks is estimated to exceed 0.80 (e.g., Ethereum's validator set exhibits significant concentration among liquid staking providers [38]).
 
 By introducing a CPU dimension at 60% weight, ZK Agentic Chain ensures that a participant with modest token holdings but substantial compute deployment can achieve competitive effective stake. A whale with 10% of total tokens but only 1% of CPU achieves:
 
@@ -1258,7 +1258,7 @@ S_eff = 0.40 * (2,000 / 100,000) + 0.60 * (2,000 / 10,000)
 
 Despite staking 60% fewer tokens, the Professional validator achieves 4× the effective stake through compute contribution. This is the dual-staking model working as designed: rewarding operational commitment over passive capital.
 
-**Validator Selection Probability.** Committee members for each block are selected via VRF (Verifiable Random Function) with probability proportional to effective stake:
+**Validator Selection Probability.** Committee members for each block are selected via VRF [41] [32] (Verifiable Random Function) with probability proportional to effective stake:
 
 ```
 P(selected_i) = 1 - (1 - S_eff(i))^k
@@ -1533,7 +1533,7 @@ research_output = BASE_RESEARCH_RATE * n_cells * level^LEVEL_EXPONENT
 
 Where BASE_RESEARCH_RATE = 0.5 Research Points per block per cell at level 1.
 
-**Storage** (produces Storage Size). Storage sub-cells operate as ZK tunnel agents — private data storage that places encrypted content on-chain without revealing it to verifiers or other participants. The storage model follows the Filecoin Proof of Spacetime (PoST) pattern, where storage agents periodically prove that they are maintaining the claimed data.
+**Storage** (produces Storage Size). Storage sub-cells operate as ZK tunnel agents — private data storage that places encrypted content on-chain without revealing it to verifiers or other participants. The storage model follows the Filecoin [15] Proof of Spacetime (PoST) pattern, where storage agents periodically prove that they are maintaining the claimed data.
 
 ```
 storage_output = BASE_STORAGE_RATE * n_cells * level^LEVEL_EXPONENT
@@ -1947,7 +1947,7 @@ Post-mainnet, the protocol targets three expansion vectors:
 
 **Third-party agent marketplace.** An open marketplace where developers publish custom AI agents that participants can deploy at their nodes. Agent developers earn a commission on the AGNTC generated by their agents across the network. This creates an agent economy — the most effective verification agents command premium deployment, while commodity agents compete on cost.
 
-**Cross-chain bridges.** Beyond Solana, bridges to Ethereum (for DeFi integration and institutional access) and Cosmos IBC (for interchain communication) will enable AGNTC to flow across the major blockchain ecosystems.
+**Cross-chain bridges.** Beyond Solana, bridges to Ethereum (for DeFi integration and institutional access) and Cosmos IBC [22] (for interchain communication) will enable AGNTC to flow across the major blockchain ecosystems.
 
 **Governance system.** On-chain proposal and voting system with execution logic:
 - Protocol parameter adjustments (hardness multiplier, fee burn rate, staking weights α/β)
@@ -1965,13 +1965,13 @@ Post-mainnet, the protocol targets three expansion vectors:
 
 The zero-knowledge proof system evolves through four phases, each adding capability while maintaining backward compatibility:
 
-**Phase 1: Circom + Groth16 (Testnet PoC).** Circom arithmetic circuits with Groth16 proving system. Groth16 produces the smallest proofs (192 bytes) with the fastest verification time (~6ms on-chain). The trusted setup ceremony required by Groth16 is acceptable for testnet PoC; the ceremony will use a multi-party computation protocol with at least 64 participants. Initial circuits: subgrid state commitment, nullifier generation, ownership proof.
+**Phase 1: Circom + Groth16 [6] (Testnet PoC).** Circom arithmetic circuits with Groth16 proving system. Groth16 produces the smallest proofs (192 bytes) with the fastest verification time (~6ms on-chain). The trusted setup ceremony required by Groth16 is acceptable for testnet PoC; the ceremony will use a multi-party computation protocol with at least 64 participants. Initial circuits: subgrid state commitment, nullifier generation, ownership proof.
 
-**Phase 2: Noir + Barretenberg/PLONK (Alpha).** Migration to the Noir domain-specific language with the Barretenberg backend. PLONK's universal setup eliminates the per-circuit ceremony requirement — a single universal reference string (URS) supports all circuit types. This phase adds: recursive proof composition (proving a proof of a proof), enabling epoch-level state proofs that aggregate individual block proofs.
+**Phase 2: Noir + Barretenberg/PLONK [7] (Alpha).** Migration to the Noir domain-specific language with the Barretenberg backend. PLONK's universal setup eliminates the per-circuit ceremony requirement — a single universal reference string (URS) supports all circuit types. This phase adds: recursive proof composition (proving a proof of a proof), enabling epoch-level state proofs that aggregate individual block proofs.
 
-**Phase 3: RLN for NCP Privacy (Beta).** Rate-Limiting Nullifiers (RLN) integrated into the Neural Communication Packet system. RLN enables spam-resistant anonymous messaging: each NCP includes a ZK proof that the sender holds a valid membership (staked AGNTC) without revealing their identity. Sending more than one NCP per time slot automatically reveals the sender's secret and enables slashing — providing anonymous messaging with economic Sybil resistance.
+**Phase 3: RLN [44] for NCP Privacy (Beta).** Rate-Limiting Nullifiers integrated into the Neural Communication Packet system. RLN enables spam-resistant anonymous messaging: each NCP includes a ZK proof that the sender holds a valid membership (staked AGNTC) without revealing their identity. Sending more than one NCP per time slot automatically reveals the sender's secret and enables slashing — providing anonymous messaging with economic Sybil resistance.
 
-**Phase 4: Nova/Halo2 for Epoch Proofs (Mainnet).** Migration to a proving system without trusted setup requirements. Nova's folding scheme enables incremental verifiable computation — each block's state transition is "folded" into a running proof, producing a single compact proof that attests to the entire epoch's validity. Halo2's recursive proof composition enables the ZK Agentic Chain to produce epoch proofs that any external verifier can check in constant time, regardless of how many blocks the epoch contains.
+**Phase 4: Nova [27] / Halo2 [8] for Epoch Proofs (Mainnet).** Migration to a proving system without trusted setup requirements. Nova's folding scheme enables incremental verifiable computation — each block's state transition is "folded" into a running proof, producing a single compact proof that attests to the entire epoch's validity. Halo2's recursive proof composition enables the ZK Agentic Chain to produce epoch proofs that any external verifier can check in constant time, regardless of how many blocks the epoch contains.
 
 #### 21.2 Governance
 
@@ -2219,7 +2219,7 @@ G_eff ≈ 0.40 × 0.88 + 0.60 × 0.45 - correction
 
 The effective stake Gini drops from 0.88 to approximately 0.57 — a 35% reduction in concentration. This transforms a highly plutocratic distribution into a moderately concentrated one, comparable to national income distributions in developed economies. ∎
 
-**Correction from v1.0:** The standard decomposition for a weighted sum of two distributions follows Lerman and Yitzhaki (1985):
+**Correction from v1.0:** The standard decomposition for a weighted sum of two distributions follows Lerman and Yitzhaki [31]:
 
 G_eff = (alpha * mu_t * G_t * R_t + beta * mu_c * G_c * R_c) / (alpha * mu_t + beta * mu_c)
 
@@ -2241,7 +2241,7 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 #### 24.1 The ZKML Gap
 
-**Problem:** Current zero-knowledge proof systems cannot verify large language model (LLM) inference. State-of-the-art ZKML has verified models with up to 18 million parameters. Claude Opus and comparable models have >100 billion parameters -- approximately 5,000x beyond current ZKML capability.
+**Problem:** Current zero-knowledge proof systems cannot verify large language model (LLM) inference [30]. State-of-the-art ZKML has verified models with up to 18 million parameters. Claude Opus and comparable models have >100 billion parameters -- approximately 5,000x beyond current ZKML capability.
 
 **Consequence:** PoAIV verification relies on committee attestation (9/13 threshold) rather than ZK-proved computation.
 
@@ -2300,8 +2300,8 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **Faction** | One of four distribution groups: Community, Machines, Founders, Professional |
 | **Galaxy grid** | The 31,623 × 31,623 coordinate space representing the complete network state |
 | **Genesis** | The initial state: 9 nodes (1 origin + 4 faction masters + 4 homenodes), 900 AGNTC |
-| **Groth16** | ZK-SNARK proving system with 192-byte proofs and ~6ms verification |
-| **Halo2** | Recursive proof system without trusted setup, target for mainnet epoch proofs |
+| **Groth16** | ZK-SNARK proving system [6] with ~192-byte proofs and ~6ms verification |
+| **Halo2** | Recursive proof system [8] without trusted setup, target for mainnet epoch proofs |
 | **Hardness** | Mining difficulty multiplier: hardness(ring) = 16 × ring |
 | **Homenode** | A participant's primary star system, assigned during onboarding |
 | **Jump point** | An unclaimed node position where new agents can be deployed |
@@ -2313,12 +2313,12 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **Nullifier** | Unique value derived from commitment, preventing double-spend without revealing owner |
 | **Opus** | Premium Claude AI model tier — deep reasoning, high CPU cost |
 | **Planet** | Content storage unit (post, chat, prompt) orbiting a star system |
-| **PLONK** | Universal ZK proving system — single ceremony for all circuits |
+| **PLONK** | Universal ZK proving system [7] — single ceremony for all circuits |
 | **PoAIV** | Proof of AI Verification — consensus mechanism using AI agent reasoning |
-| **Poseidon** | SNARK-friendly hash function (~100× fewer constraints than SHA-256) |
+| **Poseidon** | SNARK-friendly hash function [11] (~100× fewer constraints than SHA-256) |
 | **Research** | Sub-cell type producing Research Points for unlocking technologies |
 | **Ring** | See Epoch ring |
-| **RLN** | Rate-Limiting Nullifiers — spam-resistant anonymous messaging primitive |
+| **RLN** | Rate-Limiting Nullifiers [44] — spam-resistant anonymous messaging primitive |
 | **S_eff** | Effective stake: α(T/T_total) + β(C/C_total), determines validator influence |
 | **Safe mode** | Emergency state triggered when >20% validators offline |
 | **Secure** | Sub-cell type producing AGNTC through blockchain validation; primary mining activity |
@@ -2329,7 +2329,7 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **Storage** | Sub-cell type producing Storage Size via ZK tunnel agents (private on-chain data) |
 | **Subgrid** | Private 8×8 inner grid of 64 sub-cells within each homenode |
 | **Territory** | A user's aggregate claimed coordinates across all nodes |
-| **VRF** | Verifiable Random Function — cryptographic tool for fair committee selection |
+| **VRF** | Verifiable Random Function [41] — cryptographic tool for fair committee selection |
 | **Vesting** | Time-locked reward release: 50% immediate, 50% linear over 30 days |
 | **WARMUP** | Agent lifecycle state before becoming ACTIVE (1 epoch duration) |
 
@@ -2389,7 +2389,7 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 [26] V. Buterin, "EIP-1559: Fee market change for ETH 1.0 chain," *Ethereum Improvement Proposals*, 2019.
 
-[27] A. Nova, S. Kothapalli, and S. Setty, "Nova: Recursive Zero-Knowledge Arguments from Folding Schemes," in *Advances in Cryptology — CRYPTO 2022*, Springer, 2022.
+[27] A. Kothapalli, S. Setty, and I. Tzialla, "Nova: Recursive Zero-Knowledge Arguments from Folding Schemes," in *Advances in Cryptology — CRYPTO 2022*, Springer, 2022.
 
 [28] Render Network, "Render Network Litepaper," 2023. Available: https://rendernetwork.com/
 
@@ -2406,6 +2406,26 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 [34] A. Yakovenko, "Solana: A New Architecture for a High Performance Blockchain," v0.8.13, 2020.
 
 [35] V. Shoup, "Proof of History: What is it Good For?," 2022. Available: https://www.shoup.net/papers/poh.pdf
+
+[36] V. Buterin, "Why sharding is great: demystifying the technical properties," 2021. Note: The blockchain trilemma (decentralization, security, scalability) was informally described by Buterin in multiple posts and talks beginning ~2017; no single canonical paper exists.
+
+[37] Cambridge Centre for Alternative Finance, "Cambridge Bitcoin Electricity Consumption Index (CBECI)," University of Cambridge, 2025. Available: https://ccaf.io/cbnsi/cbeci
+
+[38] Ethereum Foundation, "Ethereum Staking Statistics," beaconcha.in, 2025. Available: https://beaconcha.in/
+
+[39] R. C. Merkle, "A Digital Signature Based on a Conventional Encryption Function," in *Advances in Cryptology — CRYPTO '87*, Springer, 1987, pp. 369-378.
+
+[40] Mina Foundation, "Mina Protocol: A Succinct Blockchain," 2020. Available: https://minaprotocol.com/
+
+[41] S. Micali, M. Rabin, and S. Vadhan, "Verifiable Random Functions," in *Proceedings of the 40th Annual Symposium on Foundations of Computer Science (FOCS)*, IEEE, 1999, pp. 120-130.
+
+[42] D. J. Bernstein, N. Duif, T. Lange, P. Schwabe, and B.-Y. Yang, "High-speed high-security signatures," *Journal of Cryptographic Engineering*, vol. 2, no. 2, pp. 77-89, 2012.
+
+[43] R. Dahlberg, T. Pulls, and R. Peeters, "Efficient Sparse Merkle Trees: Caching Strategies and Secure (Non-)Membership Proofs," in *Proceedings of the 21st Nordic Conference on Secure IT Systems (NordSec)*, Springer, 2016.
+
+[44] B. Kilic, "Rate-Limiting Nullifier (RLN)," Ethereum Foundation Privacy and Scaling Explorations (PSE), 2022. Available: https://rate-limiting-nullifier.github.io/rln-docs/
+
+[45] C. Dwork, N. Lynch, and L. Stockmeyer, "Consensus in the Presence of Partial Synchrony," *Journal of the ACM*, vol. 35, no. 2, pp. 288-323, 1988.
 
 ---
 
