@@ -1,8 +1,8 @@
-# AGNTC Whitepaper v1.1
+# AGNTC Whitepaper v1.0
 
 > **ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification**
 >
-> Version 1.1 | March 2026
+> Version 1.0 | March 2026
 
 ---
 
@@ -47,28 +47,8 @@ This paper describes the protocol architecture, consensus mechanism, privacy sys
 - [21. Technical Roadmap](#21-technical-roadmap)
 - [22. Protocol Parameters](#22-protocol-parameters)
 - [23. Mathematical Proofs](#23-mathematical-proofs)
-- [24. Limitations and Open Problems](#24-limitations-and-open-problems)
-- [25. Glossary](#25-glossary)
-- [26. References](#26-references)
-
----
-
-## Notation and Conventions
-
-| Symbol | Meaning |
-|--------|---------|
-| lambda | Security parameter |
-| n | Committee size (13) |
-| t | Byzantine threshold (4, i.e., n - supermajority) |
-| S_eff(i) | Effective stake of validator i |
-| T, C | Token stake, CPU stake (normalized) |
-| alpha, beta | Staking weights (0.40, 0.60) |
-| N | Current epoch ring number |
-| H(N) | Hardness at ring N = 16 * N |
-| PPT | Probabilistic Polynomial Time (adversary) |
-| negl(lambda) | Negligible function of security parameter |
-
-All pseudocode uses Python-like syntax. Security games follow the Zcash convention: challenger C interacts with adversary A.
+- [24. Glossary](#24-glossary)
+- [25. References](#25-references)
 
 ---
 
@@ -160,23 +140,7 @@ The intersection of artificial intelligence and blockchain has produced several 
 
 ZK Agentic Chain is distinct from all of these in a fundamental way: AI agents are embedded in the *consensus mechanism itself*, not deployed as application-layer services. The 13-agent verification committee is not using AI to produce content or trade assets — it is using AI to validate the blockchain's state transitions with reasoning that goes beyond deterministic rule checking.
 
-#### 2.5 Comparative Positioning
-
-| Feature | Bitcoin | Ethereum | Solana | Zcash | Bittensor | **AGNTC** |
-|---------|---------|----------|--------|-------|-----------|-----------|
-| Consensus | PoW | PoS (Casper) | PoH + Tower BFT | PoW (Equihash) | Yuma consensus | **PoAIV** |
-| AI role | None | None | None | None | Scoring/ranking | **Consensus verification** |
-| Privacy | Pseudonymous | Pseudonymous | Pseudonymous | Shielded (ZK) | Pseudonymous | **Private by default (ZK)** |
-| Staking model | Mining | Token-only | Token-only | Mining | Token + compute | **Dual (40% token, 60% CPU)** |
-| Supply model | Fixed (21M, halving) | Inflationary + burn | Inflationary | Fixed (21M, halving) | Inflationary | **Organic (mining-driven)** |
-| Block time | ~10 min | ~12 sec | ~400 ms | ~75 sec | ~12 sec | **~60 sec** |
-
-**Key differentiators:**
-1. **AI-as-consensus** is unique to AGNTC. No other L1 embeds AI into the consensus mechanism itself.
-2. **Dual staking** formalizes compute-weighted staking with explicit anti-plutocratic properties.
-3. **Privacy by default** combined with AI-enhanced anomaly detection within the privacy layer.
-
-#### 2.6 Compute-Tokenomics Networks
+#### 2.5 Compute-Tokenomics Networks
 
 Several projects have established models for tokenizing computational resources:
 
@@ -190,7 +154,7 @@ Several projects have established models for tokenizing computational resources:
 
 ZK Agentic Chain draws on these models in its CPU-weighted staking design (Filecoin's utility-gated emissions), fee burn mechanism (Render/Ethereum's burn equilibrium), and reward vesting (Filecoin's 180-day vest adapted to 30 days).
 
-#### 2.7 Where ZK Agentic Chain Fits
+#### 2.6 Where ZK Agentic Chain Fits
 
 Existing blockchain projects can be positioned along two axes: (1) whether consensus involves intelligent reasoning or purely deterministic checks, and (2) whether the verification layer preserves privacy or operates transparently.
 
@@ -296,30 +260,6 @@ The density function maps each coordinate to a float in [0, 1]. Because SHA-256 
 
 Coordinates near the origin tend to have higher strategic value because they were claimable earliest (lowest hardness) and because ring 1 hardness (16) is the minimum. However, density itself is uniformly distributed regardless of distance from origin — a coordinate at ring 300 can have density 0.99 just as a coordinate at ring 1 can have density 0.01. The strategic advantage of inner coordinates comes from lower hardness, not higher density.
 
-**Figure 1: Galaxy Grid Structure**
-
-```
-                    Community (NW)          Machines (NE)
-                         \                    /
-                          \    Ring 3        /
-                           \  .--------.   /
-                            \/ Ring 2   \ /
-                             .--------.  X
-                            / Ring 1  / \
-                           /  [ORIGIN]    \
-                            \ Ring 1  \ /
-                             '--------'
-                            /  Ring 2   \
-                           /  '--------'  \
-                          /    Ring 3      \
-                         /                  \
-                    Professional (SW)    Founders (SE)
-
-    4-arm logarithmic spiral | 31,623 x 31,623 coordinate space
-    Each coordinate yields exactly 1 AGNTC when claimed
-    Epoch rings expand outward as mining reaches threshold
-```
-
 ---
 
 ### 5. Proof of AI Verification (PoAIV)
@@ -402,134 +342,6 @@ Verification agents follow a defined lifecycle to ensure network stability:
 **COOLDOWN / PROBATION.** Agents that go offline for more than one full epoch enter a probationary period of 3 epochs (AGENT_PROBATION_EPOCHS = 3) before re-activation. During probation, the agent must demonstrate consistent uptime but does not earn rewards.
 
 **Safe mode.** When more than 20% of registered validators go offline simultaneously (SAFE_MODE_THRESHOLD = 0.20), the protocol enters safe mode: non-critical operations (subgrid allocation changes, NCP messaging, content creation) are suspended while critical operations (transfers, Secure actions, block production) continue with a reduced committee size. Safe mode exits when validator online rate recovers to 80% or above (SAFE_MODE_RECOVERY = 0.80).
-
-#### 5.5 Committee Selection Algorithm
-
-```
-Algorithm: SELECT_COMMITTEE(block_height, epoch_seed)
-  Input: block_height h, epoch_seed s (hash of previous epoch's last block)
-  Output: committee C of size VERIFIERS_PER_BLOCK (13)
-
-  1. seed <- BLAKE2b(s || h)
-  2. candidates <- {v : v in ValidatorSet, S_eff(v) > 0}
-  3. C <- empty set
-  4. nonce <- 0
-  5. while |C| < 13:
-       vrf_output <- VRF_Ed25519(v.secret_key, seed || nonce)
-       threshold <- S_eff(v) / sum(S_eff(all candidates))
-       if vrf_output / 2^256 < threshold:
-         C <- C union {v}
-         candidates <- candidates \ {v}  // without replacement
-       nonce <- nonce + 1
-  6. return C
-```
-
-**Note:** Selection is WITHOUT replacement (hypergeometric distribution). Each selected validator is removed from the candidate pool.
-
-#### VRF Construction
-
-Committee selection uses Ed25519-based VRF as specified in RFC 9381 (ECVRF-EDWARDS25519-SHA512-ELL2). Each validator generates a VRF proof using their staking key and the epoch seed.
-
-- **Seed derivation:** `epoch_seed = BLAKE2b(previous_epoch_final_block_hash || epoch_number)`
-- **Per-block nonce:** `block_seed = BLAKE2b(epoch_seed || block_height)`
-- **Threshold:** `P(selected_i) = S_eff(i) / sum(S_eff(all))`
-- **Output format:** 32-byte hash (SHA-512 of VRF proof), interpreted as unsigned 256-bit integer
-
-#### 5.6 Attestation Protocol
-
-```
-Algorithm: VERIFY_AND_ATTEST(agent_i, proposed_block)
-  Input: agent_i (committee member), proposed_block B
-  Output: attestation a_i or REJECT
-
-  1. // Deterministic verification (all agents)
-     valid_txs <- verify_signatures(B.transactions)
-     valid_state <- verify_state_transition(B.prev_state, B.transactions, B.new_state)
-     valid_merkle <- verify_merkle_root(B.new_state, B.state_root)
-
-  2. // AI-enhanced verification (the PoAIV addition)
-     anomaly_score <- AI_REASON(agent_i.model, {
-       context: B.transactions,
-       state_diff: B.prev_state -> B.new_state,
-       historical_patterns: agent_i.local_state_cache,
-       schema: VERIFICATION_JSON_SCHEMA  // prevents prompt injection
-     })
-
-  3. if valid_txs AND valid_state AND valid_merkle AND anomaly_score < ANOMALY_THRESHOLD:
-       a_i <- SIGN(agent_i.key, APPROVE || B.hash)
-     else:
-       a_i <- SIGN(agent_i.key, REJECT || B.hash || reason)
-
-  4. BROADCAST(a_i) via ZK private channel
-  5. return a_i
-```
-
-**Figure 2: Block Production Lifecycle**
-
-```
-  Epoch Seed                Block Height
-       |                         |
-       v                         v
-  [VRF Committee Selection] -----> 13 agents selected
-       |
-       v
-  [Block Proposer] creates candidate block
-       |
-       v
-  [Deterministic Checks] --- signatures, state, merkle
-       |
-       v
-  [AI Verification] --- anomaly detection, pattern analysis
-       |
-       v
-  [Attestation Broadcast] --- via ZK private channels
-       |
-       v
-  [9/13 Threshold?] --NO--> block rejected
-       |YES
-       v
-  [Finality] --- block committed, state root updated
-       |
-       v
-  [Rewards Distributed] --- 60% verifiers, 40% stakers
-```
-
-#### 5.7 Value of AI Verification Over Deterministic Validation
-
-Traditional BFT validators execute deterministic checks: signature validity, state transition correctness, Merkle proof integrity. These are necessary but not sufficient for the following threat classes:
-
-1. **Economic anomaly detection.** An adversary constructs a valid state transition that is technically correct but economically suspicious -- e.g., a coordinated series of transactions that collectively constitute a wash trade or market manipulation. Deterministic validators approve each transaction individually; AI agents can detect the collective pattern.
-
-2. **Semantic state inconsistency.** After a complex sequence of subgrid reallocations, the resulting resource distribution may be technically valid per the state machine rules but violates higher-order invariants (e.g., a single entity controlling >50% of a ring's secure cells). AI agents cross-reference spatial patterns against economic invariants.
-
-3. **Slow-burn governance attacks.** A series of individually innocuous parameter change proposals that collectively steer the protocol toward adversarial conditions. AI agents maintain temporal context across blocks and flag cumulative drift.
-
-**Limitation:** AI verification is probabilistic, not provably sound. The committee structure (13 agents, 9/13 threshold) provides statistical confidence rather than mathematical certainty. Section 24 discusses the ZKML gap -- current zero-knowledge proof systems cannot verify LLM inference, so AI verification relies on committee attestation rather than ZK-proved computation.
-
-#### 5.8 Attack Analysis
-
-**Attack 1: Model Poisoning**
-- *Vector:* Adversary fine-tunes or replaces the AI model used by corrupted committee members to always approve invalid blocks.
-- *Mitigation:* Heterogeneous model requirement -- the protocol mandates that each committee of 13 must include agents running at least 3 distinct model providers. A single compromised model family can corrupt at most ~4 of 13 agents, below the 5-agent Byzantine threshold.
-- *Residual risk:* If all major model providers are simultaneously compromised (supply chain attack on AI infrastructure), the committee loses its AI advantage and degrades to deterministic-only verification.
-
-**Attack 2: Prompt Injection**
-- *Vector:* Adversary crafts transaction data containing prompt injection payloads that cause verification agents to approve invalid state transitions.
-- *Mitigation:* (a) Verification input uses a strict JSON schema -- agents receive structured data, not free-form text. (b) Agent system prompts are immutable and loaded from chain state, not from transaction data. (c) No tool-use or function-calling is permitted during verification -- agents output only APPROVE/REJECT with structured reasoning.
-- *Residual risk:* Novel injection techniques may bypass schema enforcement. The 9/13 threshold means an injection must fool at least 9 independent agents simultaneously.
-
-**Attack 3: Inference Cost Attack**
-- *Vector:* Adversary submits blocks requiring disproportionately expensive AI inference, draining committee members' compute budgets.
-- *Mitigation:* (a) Maximum transaction count per block (BLOCK_TX_LIMIT). (b) Verification agents have a per-block compute budget; if exceeded, the agent abstains rather than approving without full analysis. (c) Fee market ensures the adversary pays proportionally for complex blocks.
-
-**Attack 4: Committee Sybil Attack**
-- *Vector:* Adversary acquires sufficient stake to dominate committee selection.
-- *Mitigation:* Dual staking (60% CPU, 40% capital) makes Sybil attacks approximately 2.5x more expensive than pure-PoS systems. See Section 8 for the full derivation.
-
-**Attack 5: Deterministic Inference Divergence**
-- *Vector:* Two honest agents running the same model at temperature=0 produce different outputs due to floating-point non-determinism across hardware.
-- *Mitigation:* (a) Verification outputs are quantized to APPROVE/REJECT (binary, not continuous). (b) The anomaly threshold is set conservatively so that minor numerical differences do not cross the threshold. (c) The 9/13 supermajority tolerates up to 4 divergent results.
-- *Residual risk:* Acknowledged as an open problem. See Section 24.
 
 ---
 
@@ -614,50 +426,6 @@ When a user modifies their subgrid state, the process is:
 
 This design ensures that subgrid allocation (which cells are assigned to Secure, Develop, Research, or Storage) remains private to the owner. Other users can see that a node exists at a coordinate, but not how its internal resources are allocated.
 
-#### 6.6 Circuit Architecture
-
-The ZK proof pipeline uses a two-tier proving system:
-
-1. **Per-transaction proofs (Groth16):** Each state transition (transfer, claim, stake) is proved individually using a Groth16 SNARK with BN254 pairing. Groth16 provides the smallest proof size (~128 bytes) and fastest verification time (~6ms), at the cost of requiring a trusted setup per circuit.
-
-2. **Batch proofs (Recursive PLONK):** Multiple per-transaction proofs are aggregated into a single batch proof using recursive PLONK composition. This reduces on-chain verification cost: instead of verifying 13 Groth16 proofs per block, validators verify 1 recursive proof.
-
-```
-Transaction Flow:
-  User constructs tx -> Client generates Groth16 proof ->
-  Block proposer collects proofs -> Recursive PLONK aggregation ->
-  Committee verifies single batch proof -> State root updated
-```
-
-**Estimated constraint counts** (subject to circuit implementation):
-
-| Circuit | Estimated Constraints | Proving Time (est.) |
-|---------|----------------------|---------------------|
-| Transfer (nullifier + commitment) | ~50,000 | ~2s (client-side) |
-| Claim coordinate | ~30,000 | ~1s |
-| Stake/unstake | ~40,000 | ~1.5s |
-| Batch aggregation (per block) | ~200,000 | ~10s (proposer) |
-
-**Figure 5: ZK Proof Pipeline**
-
-```
-  User (client-side)        Block Proposer          Committee
-  ==================        ==============          =========
-  Construct transaction
-         |
-  Generate Groth16 proof -> Collect tx + proofs
-  (~2s per tx)                     |
-                            Aggregate via recursive
-                            PLONK (~10s per block)
-                                   |
-                            Propose block + ------> Verify batch proof
-                            batch proof             (~6ms)
-                                                         |
-                                                    AI verification
-                                                         |
-                                                    9/13 Attestation
-```
-
 ---
 
 
@@ -723,51 +491,11 @@ Once these conditions are met, the block is appended to the chain with a finalit
 
 The primary distinction is not in the BFT mechanics (which are well-established) but in the *content* of verification: ZK Agentic Chain's committee members apply reasoning to their audits rather than executing purely deterministic checks.
 
-#### 7.5 Cross-User State Verification
-
-Each user's private state is a subtree in the global Sparse Merkle Tree (depth 26). The global state root is a commitment to all subtrees. Verifiers confirm global consistency as follows:
-
-1. The block proposer computes the new global state root after applying all transactions.
-2. For each transaction, the proposer provides a ZK proof that the state transition is valid WITHOUT revealing the contents of any user's subtree.
-3. Verifiers check: (a) the ZK proof is valid, (b) the new state root is consistent with the previous root plus the proved transitions, (c) no nullifier is reused (double-spend prevention).
-
-The ZK circuit for state transitions proves:
-- The old leaf existed in the tree (Merkle inclusion proof)
-- The nullifier is correctly derived from the old leaf (prevents double-spend)
-- The new leaf is correctly computed (balance update, ownership transfer)
-- The new root is the result of replacing the old leaf with the new leaf
-
-At no point does any verifier see the contents of any user's subtree. They see only: nullifiers (which are unlinkable to leaf positions), commitments (which are hiding), and the global root (which commits to all state without revealing it).
-
 ---
 
 ### 8. Security Analysis
 
-#### 8.1 Adversary Model
-
-We consider a computationally bounded adversary A (PPT) operating under the following assumptions:
-
-- **Network model:** Partial synchrony (Dwork, Lynch, Stockmeyer 1988). Messages between honest nodes are delivered within a known bound Delta after GST (Global Stabilization Time). Before GST, the adversary controls message ordering.
-- **Corruption model:** Adaptive corruption of up to t < n/3 committee members per block (i.e., up to 4 of 13). Corruption means full control of the agent's signing key and model.
-- **Computational bound:** A runs in polynomial time in the security parameter lambda.
-- **AI model access:** A may fine-tune or replace AI models on corrupted agents. A may craft adversarial inputs (prompt injection) but cannot modify the verification schema enforced by honest agents.
-
-#### 8.2 Security Properties
-
-We define three core security properties for PoAIV:
-
-**Property 1: Verification Integrity (VER-INT)**
-No PPT adversary controlling fewer than 5 of 13 committee members can cause the committee to finalize a block containing an invalid state transition, except with negligible probability.
-
-**Property 2: Verification Privacy (VER-PRIV)**
-The verification process reveals no information about the contents of private ledger spaces beyond the validity assertion (APPROVE/REJECT), even to committee members.
-
-**Property 3: Committee Unbiasability (COM-UNBIAS)**
-No PPT adversary controlling less than 1/3 of total effective stake can predictably influence committee composition beyond their proportional representation, except with negligible probability.
-
-*Full formal definitions as cryptographic games and proofs are provided in the companion PoAIV Formal Paper.*
-
-#### 8.3 Sybil Resistance
+#### 8.1 Sybil Resistance
 
 Sybil attacks — where a single adversary creates multiple identities to gain disproportionate influence — are resisted along two independent dimensions:
 
@@ -777,7 +505,7 @@ Sybil attacks — where a single adversary creates multiple identities to gain d
 
 The dual-staking requirement makes Sybil attacks approximately 2.5x more expensive than pure PoS attacks: the attacker must invest along both axes simultaneously, and neither axis alone is sufficient for majority committee control.
 
-#### 8.4 AI Model Integrity
+#### 8.2 AI Model Integrity
 
 The use of AI agents as consensus participants introduces attack surfaces not present in traditional blockchain protocols:
 
@@ -789,7 +517,7 @@ The use of AI agents as consensus participants introduces attack surfaces not pr
 
 **Model diversity.** The three-tier model system (Haiku, Sonnet, Opus) ensures that the verification committee is not composed of identical instances. Different model architectures and sizes have different failure modes; a vulnerability in one tier is unlikely to affect all three.
 
-#### 8.5 Liveness Guarantees
+#### 8.3 Liveness Guarantees
 
 The protocol maintains liveness (continued block production) under the following conditions:
 
@@ -806,7 +534,7 @@ The protocol maintains liveness (continued block production) under the following
 
 This design prevents liveness failures from cascading into safety violations: the network degrades gracefully rather than halting entirely.
 
-#### 8.6 Threat Model for AI-Verified Chains
+#### 8.4 Threat Model for AI-Verified Chains
 
 ZK Agentic Chain's use of AI in consensus introduces threat vectors unique to AI-verified systems:
 
@@ -818,7 +546,7 @@ ZK Agentic Chain's use of AI in consensus introduces threat vectors unique to AI
 
 **Inference cost attacks.** An adversary could construct blocks with transactions specifically designed to maximize verification compute cost, attempting to exhaust agents' CPU budgets or cause timeouts. **Mitigation:** Transaction complexity is bounded by MAX_TXS_PER_BLOCK = 50, and the 60-second hard deadline prevents unbounded verification time. Blocks that cannot be verified within the deadline are rejected.
 
-#### 8.7 Economic Security
+#### 8.5 Economic Security
 
 The 9/13 supermajority threshold requires an attacker to control at least 69.2% of the committee's effective stake to unilaterally produce invalid blocks. Given the dual-staking model, this means acquiring both:
 
@@ -828,29 +556,6 @@ The 9/13 supermajority threshold requires an attacker to control at least 69.2% 
 The cost of this attack scales with the total value staked in the network. Combined with slashing (Section 15) — which burns the attacker's stake upon detection — the expected cost of a sustained attack exceeds the potential gain from any single invalid block.
 
 Dispute resolution provides an additional economic deterrent: if the original 13-member committee's result is challenged, a 26-member committee (DISPUTE_REVERIFY_MULTIPLIER = 2) re-verifies the block. If the re-verification contradicts the original, all original attestors who voted incorrectly are slashed. This means an attacker who successfully corrupts one committee faces a second, larger committee with fresh agent selection — making sustained attacks exponentially more expensive.
-
-#### 8.8 What Survives Compromised Components
-
-| Compromised Component | Properties Preserved | Properties Lost |
-|-----------------------|---------------------|-----------------|
-| Single AI model family | VER-INT (threshold), VER-PRIV, COM-UNBIAS | None (below threshold) |
-| All AI models (catastrophic) | VER-PRIV (ZK still holds), COM-UNBIAS | VER-INT degrades to deterministic-only |
-| Trusted setup (Groth16) | VER-PRIV (soundness lost, but ZK preserved) | VER-INT (adversary can forge proofs) |
-| API provider (Anthropic) | VER-INT, VER-PRIV | COM-UNBIAS (CPU stake measurement unreliable) |
-
-#### Sybil Cost Derivation
-
-**Claim:** Controlling 1/3 of effective stake in dual-staking costs approximately 2.5x more than in pure PoS.
-
-**Derivation:**
-- In pure PoS: Cost = (1/3) * total_token_value = X
-- In dual staking: S_eff = 0.40*(T/T_total) + 0.60*(C/C_total)
-- To achieve S_eff >= 1/3, adversary needs both token and CPU components
-- Token cost scales linearly with market cap (liquid market)
-- CPU cost scales with ongoing operational expenditure (API subscriptions, not one-time purchase)
-- The CPU component introduces a continuous cost floor: even if an adversary acquires tokens cheaply, maintaining 55.6% of network compute requires sustained operational spending
-- **Empirical estimate:** At current Claude API pricing ($15/M output tokens for Opus), maintaining 55.6% of network compute for a 100-validator network costs ~$50K/month ongoing, compared to a one-time token acquisition cost
-- The ratio of total cost (one-time + ongoing) to pure-PoS cost (one-time only) ranges from 2.0x to 3.0x depending on attack duration; we conservatively estimate 2.5x
 
 ---
 
@@ -1272,35 +977,6 @@ P(selected) = 1 - (1 - 0.128)^13 = 1 - 0.872^13 ≈ 0.835
 
 This validator has an 83.5% chance of being selected to at least one committee slot per block — reflecting their substantial compute contribution to network security.
 
-**Correction from v1.0:** The selection probability formula assumes independent sampling with replacement. The actual committee selection uses sampling WITHOUT replacement (see Section 5.5), which follows a multivariate hypergeometric distribution. For small k/n ratios (13/n where n >> 13), the with-replacement approximation is accurate to within 1%.
-
-#### 13.5 Trust Assumptions and Mitigation
-
-**CPU Measurement Trust:** The CPU component of effective stake depends on verified API usage from AI providers (currently Anthropic's Claude API). This introduces Anthropic as a trusted third party for CPU stake measurement.
-
-**Acknowledged centralization:** Unlike token stake (verified on-chain via self-custody), CPU stake relies on off-chain attestation from the API provider. This is an explicit design tradeoff: the anti-plutocratic benefits of dual staking outweigh the centralization risk of a single measurement source.
-
-**Mitigation roadmap:**
-1. **Multi-provider measurement (Phase 2):** Require CPU attestation from at least 2 independent AI providers. Discrepancies trigger a dispute resolution process.
-2. **TEE attestation (Phase 3):** CPU usage proved via Trusted Execution Environment (Intel TDX, AMD SEV) attestation, removing the API provider from the trust chain.
-3. **ZK-proved computation (Phase 4+):** When ZKML technology matures, CPU usage can be verified via zero-knowledge proofs of inference execution.
-
-**Figure 3: Dual Staking Model**
-
-```
-  Token Stake (T)          CPU Stake (C)
-  [On-chain, self-custody]  [API usage, off-chain attestation]
-       |                         |
-       | weight: 0.40            | weight: 0.60
-       |                         |
-       v                         v
-  S_eff(i) = 0.40*(T_i/T_total) + 0.60*(C_i/C_total)
-       |
-       +---> Committee selection probability
-       +---> Reward share proportion
-       +---> Slashing exposure
-```
-
 ---
 
 ### 14. Reward Distribution and Vesting
@@ -1386,18 +1062,6 @@ The vesting mechanism serves two purposes:
 | 100 | 1,600 | 0.0025 | 3.6 | 1,314 | — |
 
 APY depends on the AGNTC market price, the validator's token stake, and their CPU cost. The break-even point — where staking rewards exceed the cost of CPU Energy (Claude API usage) — is a function of network maturity. In early rings with low hardness, the break-even is trivially achieved. As the network matures and hardness increases, only efficient operators with optimized CPU usage and high-density coordinates will maintain profitability.
-
-**Network-level APY projections** (block reward + fee share, assuming 60s blocks):
-
-| Epoch Ring | Total Supply (est.) | Staking Ratio (est.) | Block Reward | Verifier APY | Staker APY |
-|-----------|--------------------|--------------------|-------------|-------------|-----------|
-| 1 (genesis) | 900 | 50% | 0.5 AGNTC | ~40% | ~27% |
-| 5 | ~5,000 | 40% | 0.3 AGNTC | ~22% | ~15% |
-| 10 | ~15,000 | 35% | 0.2 AGNTC | ~14% | ~9% |
-| 50 | ~200,000 | 30% | 0.05 AGNTC | ~5% | ~3% |
-| 100 | ~500,000 | 25% | 0.02 AGNTC | ~2% | ~1.5% |
-
-**Assumptions:** Block time = 60s, 60% of block reward to verifiers, 40% to stakers. APY assumes continuous compounding over 365 days. These are testnet projections.
 
 ---
 
@@ -1486,22 +1150,6 @@ Each sub-cell can be assigned to one of four autonomous agent types. Unassigned 
 This lifecycle prevents rapid type-switching to exploit temporary market conditions — committing sub-cells to a type is a meaningful strategic decision with a time cost for reversal.
 
 **Privacy guarantee.** The subgrid allocation is stored client-side and committed to the Sparse Merkle Tree as a state root hash. Verifiers confirm that the owner's claimed output is consistent with a valid allocation, but they never see the allocation itself. The ZK proof demonstrates: "this output is consistent with some valid 64-cell allocation" without revealing which cells are assigned to which types.
-
-**Figure 4: Subgrid Allocation**
-
-```
-  +------+------+------+------+------+------+------+------+
-  | SEC  | SEC  | SEC  | DEV  | DEV  | RES  | RES  | STO  |
-  | Lv.3 | Lv.2 | Lv.1 | Lv.2 | Lv.1 | Lv.1 | Lv.1 | Lv.1 |
-  +------+------+------+------+------+------+------+------+
-  |      |              (64 cells total)              |      |
-  +------+  SEC = Secure (yields AGNTC)               +------+
-  |      |  DEV = Develop (yields dev points)         |      |
-  +------+  RES = Research (yields research points)   +------+
-  |      |  STO = Storage (yields ZK data capacity)   |      |
-  +------+------+------+------+------+------+------+------+
-  Output per cell: base_rate * level^0.8 (diminishing returns)
-```
 
 #### 16.2 Four Sub-Cell Types
 
@@ -1862,24 +1510,6 @@ The Solana deployment provides:
 
 The 1 billion SPL tokens represent the total AGNTC supply that will eventually exist on the ZK Agentic Chain. During Phase 1, these tokens function as a tradeable asset with utility within the game UI but without the full protocol mechanics (mining, staking, verification) that will be enabled on the native chain.
 
-**Figure 6: Migration Architecture**
-
-```
-  Phase 1 (Current)       Phase 2 (Bridge)       Phase 3 (Native)
-  ================       ================       ================
-  Solana SPL token       Lock-and-Mint Bridge   Native L1 token
-  (1B AGNTC minted)     (1:1 ratio)            (ZK Agentic Chain)
-                                |
-  User locks SPL  -------> Bridge contract locks
-  AGNTC on Solana           on Solana side
-                                |
-                          Mint equivalent -------> User receives
-                          on L1 side               native AGNTC
-                                |
-                          Oracle + ZK proof
-                          verifies lock event
-```
-
 #### 20.2 Phase 2 — Testnet (Current)
 
 **Status: In progress.**
@@ -2143,13 +1773,6 @@ The series S(N) grows quadratically, but the *rate of growth* (dS/dN = 8N+4) is 
 
 **Corollary.** For a network of 1,000 active miners with electricity cost of $0.10/kWh and AGNTC price of $0.01, the equilibrium supply converges to approximately 42 million AGNTC — the natural "soft cap" at ring 324. ∎
 
-**Economic assumptions (not mathematical constants):**
-- Electricity cost: $0.05/kWh (global average for data centers)
-- AGNTC price: $0.10 at ring 50, growing logarithmically
-- Miner hardware: consumer GPU, 300W continuous
-
-These assumptions determine the convergence point (~42M AGNTC at ring 324) but are NOT part of the mathematical proof. The mathematical claim is only: the hardness function H(N) = 16N causes the marginal mining cost to increase linearly with ring distance, while the reward per coordinate decreases inversely.
-
 #### 23.2 Byzantine Tolerance Proof
 
 **Theorem.** The ZK Agentic Chain consensus with k = 13 committee members and threshold t = 9 tolerates f = 4 Byzantine agents while maintaining both safety and liveness.
@@ -2219,69 +1842,11 @@ G_eff ≈ 0.40 × 0.88 + 0.60 × 0.45 - correction
 
 The effective stake Gini drops from 0.88 to approximately 0.57 — a 35% reduction in concentration. This transforms a highly plutocratic distribution into a moderately concentrated one, comparable to national income distributions in developed economies. ∎
 
-**Correction from v1.0:** The standard decomposition for a weighted sum of two distributions follows Lerman and Yitzhaki (1985):
-
-G_eff = (alpha * mu_t * G_t * R_t + beta * mu_c * G_c * R_c) / (alpha * mu_t + beta * mu_c)
-
-where R_t, R_c are the Gini correlations. When token and CPU stake are negatively correlated (which dual staking encourages), G_eff < the simple weighted average.
-
-**Numerical example (corrected):**
-- G_t = 0.65, G_c = 0.35, R_t = 0.85, R_c = 0.70, mu_t = mu_c = 1
-- G_eff = (0.4 * 0.65 * 0.85 + 0.6 * 0.35 * 0.70) / 1.0 = 0.368
-
-This represents a 43% reduction from the pure-PoS Gini of 0.65.
-
 ---
 
 ## Back Matter
 
-### 24. Limitations and Open Problems
-
-This section enumerates known limitations and unsolved problems. Honest disclosure is essential for academic credibility and community trust.
-
-#### 24.1 The ZKML Gap
-
-**Problem:** Current zero-knowledge proof systems cannot verify large language model (LLM) inference. State-of-the-art ZKML has verified models with up to 18 million parameters. Claude Opus and comparable models have >100 billion parameters -- approximately 5,000x beyond current ZKML capability.
-
-**Consequence:** PoAIV verification relies on committee attestation (9/13 threshold) rather than ZK-proved computation.
-
-**Mitigation:** (a) The committee structure provides Byzantine fault tolerance independent of AI soundness. (b) Deterministic checks are provably correct. (c) AI verification adds a probabilistic anomaly detection layer on top of provably correct deterministic checks.
-
-**Roadmap:** As ZKML technology advances (expected 2027-2030 for billion-parameter models), the protocol can transition to ZK-proved inference.
-
-#### 24.2 Deterministic Inference
-
-**Problem:** LLM inference at temperature=0 is not fully deterministic across hardware platforms due to floating-point non-associativity.
-
-**Mitigation:** Verification output is quantized to binary (APPROVE/REJECT). The anomaly threshold is set conservatively. The 9/13 threshold tolerates up to 4 divergent results.
-
-#### 24.3 API Provider Trust
-
-**Problem:** CPU staking depends on API usage attestation from AI providers (currently Anthropic). This introduces a single trusted third party for 60% of staking weight.
-
-**Mitigation path:** Multi-provider -> TEE attestation -> ZK-proved computation (see Section 13.5).
-
-#### 24.4 Committee Scalability
-
-**Problem:** Each block requires 13 AI agents to perform verification inference. At current Opus pricing (~$15/M output tokens), this creates a per-block verification cost of approximately $0.10-$0.50.
-
-**Mitigation:** (a) Smaller, specialized verification models can reduce cost 10-100x. (b) Model distillation. (c) Future on-device inference.
-
-#### 24.5 No Formal Governance Mechanism
-
-**Status:** Governance specification is deferred to post-mainnet. During testnet and alpha phases, protocol parameters are adjusted by the core development team.
-
-#### 24.6 Network Protocol Unspecified
-
-**Status:** Network protocol specification will be published as a separate document during the Beta phase.
-
-#### 24.7 Transaction Format Unspecified
-
-**Status:** Transaction format specification is part of the Enforced ZK L1 implementation. The testnet uses a preliminary format that will be formalized before mainnet.
-
----
-
-### 25. Glossary
+### 24. Glossary
 
 | Term | Definition |
 |------|-----------|
@@ -2335,7 +1900,7 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 ---
 
-### 26. References
+### 25. References
 
 [1] S. Nakamoto, "Bitcoin: A Peer-to-Peer Electronic Cash System," 2008. Available: https://bitcoin.org/bitcoin.pdf
 
@@ -2393,21 +1958,7 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 [28] Render Network, "Render Network Litepaper," 2023. Available: https://rendernetwork.com/
 
-[29] S. Goldwasser, S. Micali, and C. Rackoff, "The Knowledge Complexity of Interactive Proof Systems," *SIAM Journal on Computing*, vol. 18, no. 1, pp. 186-208, 1989.
-
-[30] Modulus Labs, "The Cost of Intelligence: Proving AI Inference in Zero Knowledge," 2024. Available: https://www.moduluslabs.xyz/
-
-[31] R. Lerman and S. Yitzhaki, "Income Inequality Effects by Income Source: A New Approach and Applications to the United States," *Review of Economics and Statistics*, vol. 67, no. 1, pp. 151-156, 1985.
-
-[32] S. Goldberg, L. Reyzin, D. Papadopoulos, and J. Vcelak, "Verifiable Random Functions (VRFs)," *RFC 9381*, IETF, 2023.
-
-[33] Lightchain AI, "Proof of Intelligence: AI-Integrated Consensus," 2025. Available: https://lightchain.ai/
-
-[34] A. Yakovenko, "Solana: A New Architecture for a High Performance Blockchain," v0.8.13, 2020.
-
-[35] V. Shoup, "Proof of History: What is it Good For?," 2022. Available: https://www.shoup.net/papers/poh.pdf
-
 ---
 
-*AGNTC Whitepaper v1.1 — ZK Agentic Chain*
+*AGNTC Whitepaper v1.0 — ZK Agentic Chain*
 *Copyright © 2026 ZK Agentic Network. All rights reserved.*
