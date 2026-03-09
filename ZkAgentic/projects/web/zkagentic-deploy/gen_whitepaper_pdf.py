@@ -8,11 +8,11 @@ class WhitepaperPDF(FPDF):
         if self.page_no() > 1:
             self.set_font("Helvetica", "I", 8)
             self.set_text_color(120, 120, 120)
-            self.cell(0, 10, "ZK Agentic Chain - AGNTC Whitepaper v1.1", align="C")
-            self.ln(3)
+            self.cell(0, 8, "ZK Agentic Chain - AGNTC Whitepaper v1.1", align="C", new_x="LEFT", new_y="NEXT")
+            self.ln(2)
             self.set_draw_color(200, 200, 200)
             self.line(20, self.get_y(), 190, self.get_y())
-            self.ln(5)
+            self.ln(4)
 
     def footer(self):
         self.set_y(-15)
@@ -177,56 +177,190 @@ def render_title_page(pdf):
 
 
 def render_table(pdf, table_lines):
-    """Render a markdown table."""
+    """Render a markdown table with auto-sized columns and proper pagination."""
     if len(table_lines) < 2:
         return
 
     # Parse header
-    header_cells = [c.strip() for c in table_lines[0].split('|')[1:-1]]
+    header_cells = [clean_inline(c.strip()) for c in table_lines[0].split('|')[1:-1]]
     # Skip separator row (index 1)
     data_rows = []
     for row_line in table_lines[2:]:
-        cells = [c.strip() for c in row_line.split('|')[1:-1]]
+        cells = [clean_inline(c.strip()) for c in row_line.split('|')[1:-1]]
         data_rows.append(cells)
 
     num_cols = len(header_cells)
     if num_cols == 0:
         return
 
-    # Calculate column widths
     usable_width = 170
-    col_width = usable_width / num_cols
 
-    # Header row
-    pdf.set_font("Helvetica", "B", 9)
-    pdf.set_text_color(0, 0, 0)
-    pdf.set_fill_color(235, 235, 235)
-    for hcell in header_cells:
-        pdf.cell(col_width, 6, clean_inline(hcell)[:40], border=1, fill=True)
-    pdf.ln()
+    # Scale font for wide tables
+    if num_cols >= 7:
+        header_font_size = 6
+        data_font_size = 5.5
+        row_height = 4.5
+    elif num_cols >= 5:
+        header_font_size = 7
+        data_font_size = 6.5
+        row_height = 5
+    else:
+        header_font_size = 9
+        data_font_size = 8
+        row_height = 6
 
-    # Data rows
-    pdf.set_font("Helvetica", "", 8)
-    pdf.set_text_color(40, 40, 40)
-    for row in data_rows:
-        max_h = 6
-        # Use multi_cell for potentially long content
-        x_start = pdf.get_x()
-        y_start = pdf.get_y()
-
+    # Calculate proportional column widths based on max content length
+    all_rows = [header_cells] + data_rows
+    max_lens = [0] * num_cols
+    for row in all_rows:
         for j, cell in enumerate(row):
             if j < num_cols:
-                pdf.set_xy(x_start + j * col_width, y_start)
-                cell_text = clean_inline(cell)[:60]
-                pdf.cell(col_width, 6, cell_text, border=1)
+                max_lens[j] = max(max_lens[j], len(cell))
+
+    # Ensure minimum width and compute proportional widths
+    min_col_chars = 4
+    max_lens = [max(ml, min_col_chars) for ml in max_lens]
+    total_chars = sum(max_lens)
+    col_widths = [(ml / total_chars) * usable_width for ml in max_lens]
+
+    # Clamp: no column wider than 50% or narrower than 10mm
+    for j in range(num_cols):
+        col_widths[j] = max(col_widths[j], 10)
+        col_widths[j] = min(col_widths[j], usable_width * 0.5)
+    # Normalize to fit usable_width
+    scale = usable_width / sum(col_widths)
+    col_widths = [w * scale for w in col_widths]
+
+    def draw_header_row(continued=False):
+        """Draw the table header row."""
+        if continued:
+            pdf.set_font("Helvetica", "I", max(data_font_size - 1, 5))
+            pdf.set_text_color(140, 140, 140)
+            pdf.cell(usable_width, row_height, "(continued)", align="R")
+            pdf.ln()
+        pdf.set_font("Helvetica", "B", header_font_size)
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_fill_color(235, 235, 235)
+        for j, hcell in enumerate(header_cells):
+            pdf.cell(col_widths[j], row_height, hcell[:50], border=1, fill=True)
         pdf.ln()
 
+    # Disable auto page break during table rendering (we handle it manually)
+    pdf.set_auto_page_break(auto=False)
+    page_bottom = pdf.h - 20  # match the margin=20
+
+    # If the entire table fits on the current page, render in place.
+    # Otherwise, if we can't even fit header + 2 rows, start a new page.
+    total_table_height = (len(data_rows) + 1) * row_height + 6
+    remaining = page_bottom - pdf.get_y()
+    min_start_height = row_height * 3  # header + 2 data rows minimum
+
+    if total_table_height <= remaining:
+        # Whole table fits — render here
+        pass
+    elif remaining < min_start_height:
+        # Not even room for header + 2 rows — start fresh page
+        pdf.add_page()
+
+    # Draw initial header
+    draw_header_row()
+
+    # Data rows
+    pdf.set_font("Helvetica", "", data_font_size)
+    pdf.set_text_color(40, 40, 40)
+
+    for row in data_rows:
+        # Check if there's room for this row; if not, new page + re-draw header
+        if pdf.get_y() + row_height > page_bottom:
+            pdf.add_page()
+            draw_header_row(continued=True)
+            pdf.set_font("Helvetica", "", data_font_size)
+            pdf.set_text_color(40, 40, 40)
+
+        x_start = pdf.get_x()
+        y_start = pdf.get_y()
+        for j in range(num_cols):
+            cell_text = row[j] if j < len(row) else ''
+            # Truncate to fit column width (approx chars that fit)
+            max_chars = int(col_widths[j] / (data_font_size * 0.22))
+            if len(cell_text) > max_chars:
+                cell_text = cell_text[:max_chars - 1] + '.'
+            pdf.set_xy(x_start + sum(col_widths[:j]), y_start)
+            pdf.cell(col_widths[j], row_height, cell_text, border=1)
+        pdf.ln()
+
+    # Re-enable auto page break
+    pdf.set_auto_page_break(auto=True, margin=20)
     pdf.ln(3)
 
 
-def render_blocks(pdf, blocks):
-    """Render parsed blocks to PDF."""
+def render_toc(pdf, toc_entries):
+    """Render a Table of Contents page with section titles and page numbers."""
+    pdf.add_page()
+    pdf.set_font("Helvetica", "B", 16)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(0, 12, "Table of Contents", align="C")
+    pdf.ln(8)
+
+    row_h = 5  # compact row height
+
+    for level, title, page_num in toc_entries:
+        if level == 'part':
+            pdf.ln(2.5)
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_text_color(0, 0, 0)
+            indent = 0
+        elif level == 'h2':
+            pdf.ln(0.5)
+            pdf.set_font("Helvetica", "B", 9)
+            pdf.set_text_color(30, 30, 30)
+            indent = 0
+        elif level == 'h3':
+            pdf.set_font("Helvetica", "", 8.5)
+            pdf.set_text_color(60, 60, 60)
+            indent = 8
+        else:
+            continue  # skip h4 in TOC
+
+        x = pdf.get_x() + indent
+        usable = 170 - indent
+        # Title on the left, page number on the right, dots in between
+        title_w = pdf.get_string_width(title)
+        page_str = str(page_num)
+        page_w = pdf.get_string_width(page_str)
+        dot_w = usable - title_w - page_w - 4
+        if dot_w < 10:
+            # Title too long, truncate
+            while dot_w < 10 and len(title) > 10:
+                title = title[:-2] + '.'
+                title_w = pdf.get_string_width(title)
+                dot_w = usable - title_w - page_w - 4
+
+        num_dots = max(int(dot_w / pdf.get_string_width('.')), 3)
+        dots = ' ' + '.' * num_dots + ' '
+
+        pdf.set_x(x)
+        pdf.cell(title_w + 2, row_h, title)
+        pdf.set_text_color(180, 180, 180)
+        pdf.cell(dot_w, row_h, dots)
+        # Page number in dark color
+        pdf.set_text_color(60, 60, 60)
+        pdf.cell(page_w + 2, row_h, page_str, align="R")
+        pdf.ln()
+
+        # Page break if TOC itself overflows
+        if pdf.get_y() > pdf.h - 25:
+            pdf.add_page()
+
+
+def render_blocks(pdf, blocks, collect_toc=None):
+    """Render parsed blocks to PDF. If collect_toc is a list, append (level, title, page) entries."""
     skip_until_toc_end = False
+    page_bottom = lambda: pdf.h - 20  # margin=20
+
+    def needs_page_break(min_space_mm):
+        """Check if we need a page break to fit min_space_mm below current Y."""
+        return pdf.get_y() + min_space_mm > page_bottom()
 
     for i, (btype, content) in enumerate(blocks):
         # Skip the title (h1) — we already have a title page
@@ -242,21 +376,26 @@ def render_blocks(pdf, blocks):
                 skip_until_toc_end = False
             continue
 
-        # Skip "Abstract" as h2 since we render it inline
-        # Skip blockquote that is the subtitle
+        # Skip blockquote that is the subtitle (already on title page)
+        if btype == 'quote' and 'ZK Agentic Chain' in content and 'Version' in content:
+            continue
 
         if btype == 'h2':
             # Part headers (e.g., "Part I: Vision and Context")
             if content.startswith('Part '):
                 pdf.add_page()
+                if collect_toc is not None:
+                    collect_toc.append(('part', content, pdf.page_no()))
                 pdf.ln(10)
                 pdf.set_font("Helvetica", "B", 16)
                 pdf.set_text_color(0, 0, 0)
                 pdf.cell(0, 12, content, align="C")
                 pdf.ln(15)
                 continue
-            # Regular section
+            # Regular section — always starts a new page
             pdf.add_page()
+            if collect_toc is not None:
+                collect_toc.append(('h2', content, pdf.page_no()))
             pdf.set_font("Helvetica", "B", 14)
             pdf.set_text_color(0, 0, 0)
             pdf.ln(4)
@@ -264,6 +403,12 @@ def render_blocks(pdf, blocks):
             pdf.ln(4)
 
         elif btype == 'h3':
+            # Keep-with-next: heading with spacing (~16mm) + at least 3 lines
+            # of paragraph content below (~30mm) = ~46mm minimum
+            if needs_page_break(46):
+                pdf.add_page()
+            if collect_toc is not None:
+                collect_toc.append(('h3', content, pdf.page_no()))
             pdf.ln(6)
             pdf.set_font("Helvetica", "B", 12)
             pdf.set_text_color(0, 0, 0)
@@ -271,6 +416,10 @@ def render_blocks(pdf, blocks):
             pdf.ln(3)
 
         elif btype == 'h4':
+            # Keep-with-next: heading with spacing (~10mm) + at least 3 lines
+            # of paragraph content below (~20mm) = ~30mm minimum
+            if needs_page_break(30):
+                pdf.add_page()
             pdf.ln(4)
             pdf.set_font("Helvetica", "B", 10)
             pdf.set_text_color(30, 30, 30)
@@ -328,6 +477,10 @@ def render_blocks(pdf, blocks):
             render_table(pdf, content)
 
         elif btype == 'hr':
+            # Skip hr if next block is a heading (would create blank page)
+            next_type = blocks[i + 1][0] if i + 1 < len(blocks) else None
+            if next_type in ('h1', 'h2', 'h3'):
+                continue
             pdf.ln(3)
             pdf.set_draw_color(200, 200, 200)
             pdf.line(20, pdf.get_y(), 190, pdf.get_y())
@@ -342,6 +495,27 @@ def main():
     blocks = parse_markdown(whitepaper_path)
     print(f"  Parsed {len(blocks)} blocks")
 
+    # --- Pass 1: Render to collect TOC page numbers ---
+    print("Pass 1: collecting TOC entries...")
+    toc_entries = []
+    pdf1 = WhitepaperPDF()
+    pdf1.alias_nb_pages()
+    pdf1.set_auto_page_break(auto=True, margin=20)
+    pdf1.add_page()  # title page
+    render_title_page(pdf1)
+    pdf1.add_page()  # placeholder for TOC (1 page assumed)
+    render_blocks(pdf1, blocks, collect_toc=toc_entries)
+    # Check if TOC needs 2 pages (>40 entries)
+    toc_page_count = 1 if len(toc_entries) <= 40 else 2
+    print(f"  {len(toc_entries)} TOC entries, {toc_page_count} TOC page(s)")
+
+    # Adjust page numbers: pass 1 assumed 1 TOC page, correct if 2
+    if toc_page_count == 2:
+        toc_entries = [(lvl, title, pg + 1) for lvl, title, pg in toc_entries]
+
+    # --- Pass 2: Final render with real TOC ---
+    print("Pass 2: rendering final PDF...")
+    toc_entries_final = []
     pdf = WhitepaperPDF()
     pdf.alias_nb_pages()
     pdf.set_auto_page_break(auto=True, margin=20)
@@ -350,8 +524,11 @@ def main():
     pdf.add_page()
     render_title_page(pdf)
 
+    # Table of Contents
+    render_toc(pdf, toc_entries)
+
     # Content
-    render_blocks(pdf, blocks)
+    render_blocks(pdf, blocks, collect_toc=toc_entries_final)
 
     # Footer disclaimer
     pdf.ln(10)
