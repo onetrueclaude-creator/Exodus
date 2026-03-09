@@ -77,6 +77,31 @@
 
 ---
 
+## 2026-03-09 — Whitepaper v1.1 academic upgrade + companion documents
+
+**Changed:** `whitepaper.md` upgraded from v1.0 to v1.1 (1964 -> 2413 lines). Major additions:
+- Formal adversary model and 3 security properties (VER-INT, VER-PRIV, COM-UNBIAS)
+- PoAIV pseudocode (committee selection, attestation protocol)
+- Per-mechanism attack analysis (5 attack vectors with mitigations)
+- 6 ASCII diagrams (grid, block lifecycle, staking, subgrid, ZK pipeline, migration)
+- Competitor comparison table (vs Bitcoin, Ethereum, Solana, Zcash, Bittensor)
+- Limitations and Open Problems section (7 honest disclosures incl. ZKML gap)
+- VRF specification (Ed25519, RFC 9381), ZK circuit architecture overview
+- Completed APY table, fixed Gini coefficient formula, fixed VRF selection formula
+- CPU measurement trust assumptions and mitigation roadmap
+- 7 new references [29]-[35]
+
+**Added:**
+- `vault/poaiv-formal.md` — PoAIV formal paper (~20 pages, security games, proofs, anti-injection)
+- `vault/feasibility-report.md` — technology assessment, risk analysis, competitor positioning (~15 pages)
+- `vault/litepaper.md` — 6-page investor-friendly overview
+- `vault/whitepaper-v1-0.md` — backup of v1.0
+
+**Design:** `docs/plans/2026-03-09-whitepaper-v1-1-academic-upgrade-design.md`
+**Plan:** `docs/plans/2026-03-09-whitepaper-v1-1-academic-upgrade-impl.md`
+
+---
+
 ## Pending
 
 - [ ] Write Proof of Energy (PoE) whitepaper section in `engineering/`
