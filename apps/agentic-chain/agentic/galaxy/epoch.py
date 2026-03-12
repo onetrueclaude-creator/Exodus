@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import math
 
-from agentic.params import MAX_EPOCH_HARDNESS, GENESIS_EPOCH_RING, HOMENODE_BASE_ANGLE, GRID_MIN, GRID_MAX
+from agentic.params import GENESIS_EPOCH_RING, HOMENODE_BASE_ANGLE
 
 
 def _nth_prime(n: int) -> int:
@@ -44,8 +44,8 @@ class EpochTracker:
         return 4.0 * ring * (ring + 1)
 
     def hardness(self, ring: int) -> int:
-        """Mining difficulty multiplier at ring N. Caps at MAX_EPOCH_HARDNESS."""
-        return min(ring, MAX_EPOCH_HARDNESS)
+        """Mining difficulty multiplier at ring N. Uncapped: 16 * ring."""
+        return 16 * ring
 
     def record_mined(self, amount: float) -> list[int]:
         """Add amount to total_mined. Returns list of newly opened rings (usually [])."""
@@ -100,9 +100,5 @@ class EpochTracker:
             scale = ring_n / chebyshev
             x = round(raw_x * scale)
             y = round(raw_y * scale)
-
-        # Clamp to grid bounds
-        x = max(GRID_MIN, min(GRID_MAX, x))
-        y = max(GRID_MIN, min(GRID_MAX, y))
 
         return x, y
