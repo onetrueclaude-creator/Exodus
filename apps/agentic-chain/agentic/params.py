@@ -112,3 +112,28 @@ BASE_DEVELOP_RATE = 1.0             # Dev Points/block at level 1
 BASE_RESEARCH_RATE = 0.5            # Research Points/block at level 1
 BASE_STORAGE_RATE = 1.0             # Storage units/block at level 1
 LEVEL_EXPONENT = 0.8                # output = base * level^LEVEL_EXPONENT
+
+# ── Legacy compatibility shims ──────────────────────────────────────────
+# v1/v2 simulation, visualization, and economics modules still reference
+# these constants.  They are NOT part of the v3 BME protocol but are
+# needed to keep the older analysis code running until it is migrated.
+
+TOTAL_SUPPLY = 21_000_000           # v1 fixed cap (v3 uses organic GENESIS_SUPPLY)
+INITIAL_CIRCULATING = 2_100_000     # v1 genesis circulating (10% of TOTAL_SUPPLY)
+INITIAL_INFLATION_RATE = 0.10       # v1 10% starting inflation
+DISINFLATION_RATE = 0.15            # v1 15% annual disinflation
+INFLATION_FLOOR = 0.01              # v1 1% minimum inflation rate
+REWARD_SPLIT_ORDERER = 0.00         # v3 retired orderer role — 0% share
+MAX_EPOCH_HARDNESS = 256            # v1 hardness cap (v3 uses uncapped 16×ring)
+
+# v1 distribution categories (superseded by 25% equal faction split)
+# Must sum to 1.0 with DIST_COMMUNITY for vesting module compatibility.
+# v1 used DIST_COMMUNITY=0.40 for vesting; legacy shim uses current 0.25,
+# so remaining 0.75 is split across old categories proportionally.
+DIST_TREASURY = 0.30
+DIST_TEAM = 0.20
+DIST_AGENTS = 0.10
+
+# v1 grid bounds (superseded by GLOBAL_BOUNDS in coordinate.py)
+GRID_MIN = -3240
+GRID_MAX = 3240

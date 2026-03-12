@@ -5,7 +5,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from agentic.testnet.api import app
-from agentic.params import GRID_MIN, GRID_MAX
+from agentic.galaxy.coordinate import GLOBAL_BOUNDS
+GRID_MIN = GLOBAL_BOUNDS.min_val
+GRID_MAX = GLOBAL_BOUNDS.max_val
 
 
 @pytest.fixture(scope="module")
@@ -25,7 +27,6 @@ class TestStatus:
         assert "state_root" in data
         assert "record_count" in data
         assert "total_claims" in data
-        assert "community_pool_remaining" in data
         assert "blocks_processed" in data
         assert "total_mined" in data
         assert "next_block_in" in data

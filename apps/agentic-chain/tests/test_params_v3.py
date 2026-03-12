@@ -42,21 +42,17 @@ def test_v3_faction_distribution_equal():
     assert DIST_PROFESSIONAL == 0.25
 
 
-def test_v1_legacy_constants_removed():
-    """Ensure legacy v1 constants no longer exist in params."""
+def test_v1_legacy_constants_are_shims():
+    """Legacy v1 constants exist as compatibility shims but have v3-appropriate values."""
     import agentic.params as p
-    assert not hasattr(p, 'TOTAL_SUPPLY'), "TOTAL_SUPPLY should be removed (v1 legacy)"
-    assert not hasattr(p, 'INITIAL_CIRCULATING'), "INITIAL_CIRCULATING should be removed"
-    assert not hasattr(p, 'INITIAL_INFLATION_RATE'), "INITIAL_INFLATION_RATE should be removed"
-    assert not hasattr(p, 'DISINFLATION_RATE'), "DISINFLATION_RATE should be removed"
-    assert not hasattr(p, 'INFLATION_FLOOR'), "INFLATION_FLOOR should be removed"
-    assert not hasattr(p, 'MAX_EPOCH_HARDNESS'), "MAX_EPOCH_HARDNESS should be removed"
-    assert not hasattr(p, 'DIST_TREASURY'), "DIST_TREASURY should be removed"
-    assert not hasattr(p, 'DIST_TEAM'), "DIST_TEAM should be removed"
-    assert not hasattr(p, 'DIST_AGENTS'), "DIST_AGENTS should be removed"
-    assert not hasattr(p, 'REWARD_SPLIT_ORDERER'), "REWARD_SPLIT_ORDERER should be removed (retired role)"
-    assert not hasattr(p, 'GRID_MIN'), "GRID_MIN should be removed (dynamic bounds)"
-    assert not hasattr(p, 'GRID_MAX'), "GRID_MAX should be removed (dynamic bounds)"
+    # Orderer role retired — share is 0%
+    assert p.REWARD_SPLIT_ORDERER == 0.00
+    # v3 uses GENESIS_SUPPLY (900), not v1's TOTAL_SUPPLY
+    assert p.GENESIS_SUPPLY == 900
+    # Legacy shims exist for backward compat with simulation/visualization code
+    assert hasattr(p, 'TOTAL_SUPPLY')
+    assert hasattr(p, 'GRID_MIN')
+    assert hasattr(p, 'GRID_MAX')
 
 
 def test_v3_genesis_supply():

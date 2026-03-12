@@ -14,12 +14,12 @@ from agentic.galaxy.claims import ClaimRegistry
 from agentic.galaxy.coordinate import (
     GridCoordinate, GridBounds, resource_density, storage_slots,
 )
-from agentic.galaxy.mining import CommunityPool, MiningEngine
+from agentic.galaxy.mining import MiningEngine
 from agentic.galaxy.content import validate_storage, StorageTx, ContentType
 from agentic.economics.staking import StakeRegistry, StakeStatus, WARMUP_EPOCHS, COOLDOWN_EPOCHS
 from agentic.economics.epoch import EpochManager
 from agentic.consensus.validator import Validator
-from agentic.params import GRID_MIN, GRID_MAX, MAX_PLANETS_PER_SYSTEM
+from agentic.params import MAX_PLANETS_PER_SYSTEM
 
 
 # ── Birth pipeline: allocator → claim → registry ────────────────────
@@ -63,33 +63,30 @@ class TestBirthPipeline:
 
 # ── Mining → pool depletion ──────────────────────────────────────────
 
-class TestMiningPoolDepletion:
-    def test_yields_decrease_as_pool_depletes(self):
-        """Mining yields should decrease as the community pool depletes."""
-        pool = CommunityPool()
-        engine = MiningEngine(pool=pool)
+class TestMiningYields:
+    def test_mining_produces_yields(self):
+        """v3 MiningEngine (no pool) produces yields based on density and hardness."""
+        engine = MiningEngine()
         claims = [
             {"owner": b"\x01" * 32, "coordinate": GridCoordinate(x=100, y=100), "stake": 1000},
         ]
-        first_yield = sum(engine.compute_block_yields(claims).values())
-        # Mine many blocks to deplete pool
-        for _ in range(1000):
-            engine.compute_block_yields(claims)
-        later_yield = sum(engine.compute_block_yields(claims).values())
-        assert later_yield < first_yield
+        from agentic.galaxy.epoch import EpochTracker
+        tracker = EpochTracker()
+        yields = engine.compute_block_yields(claims, epoch_tracker=tracker)
+        total = sum(yields.values())
+        assert total > 0
 
-    def test_exhausted_pool_yields_zero(self):
-        """Once pool is empty, no more yields."""
-        pool = CommunityPool()
-        # Drain the pool
-        pool.withdraw(pool.remaining)
-        assert pool.is_exhausted
-        engine = MiningEngine(pool=pool)
+    def test_yields_consistent_across_blocks(self):
+        """Without pool depletion, yields are consistent for same inputs."""
+        engine = MiningEngine()
         claims = [
             {"owner": b"\x01" * 32, "coordinate": GridCoordinate(x=0, y=0), "stake": 1000},
         ]
-        yields = engine.compute_block_yields(claims)
-        assert len(yields) == 0
+        from agentic.galaxy.epoch import EpochTracker
+        tracker = EpochTracker()
+        y1 = sum(engine.compute_block_yields(claims, epoch_tracker=tracker).values())
+        y2 = sum(engine.compute_block_yields(claims, epoch_tracker=tracker).values())
+        assert y1 == y2
 
 
 # ── Staking → epoch rewards cycle ───────────────────────────────────
