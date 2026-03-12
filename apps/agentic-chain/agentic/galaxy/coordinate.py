@@ -88,3 +88,20 @@ def storage_slots(x: int, y: int) -> int:
     """Number of planet storage slots at (x, y). Range [1, MAX_PLANETS_PER_SYSTEM]."""
     density = resource_density(x, y)
     return max(1, round(density * MAX_PLANETS_PER_SYSTEM))
+
+
+def claim_cost(x: int, y: int, ring: int) -> dict[str, float]:
+    """Compute AGNTC and CPU cost to claim node at (x, y) in the given ring.
+
+    City real estate model: inner rings are expensive, outer rings are cheap.
+    Formula: base_cost * density * (1 / ring), floored at minimums.
+    """
+    from agentic.params import BASE_CLAIM_COST, BASE_CLAIM_CPU, MIN_CLAIM_COST, MIN_CLAIM_CPU
+
+    density = resource_density(x, y)
+    ring_factor = 1.0 / max(ring, 1)
+
+    agntc = max(BASE_CLAIM_COST * density * ring_factor, MIN_CLAIM_COST)
+    cpu = max(BASE_CLAIM_CPU * density * ring_factor, MIN_CLAIM_CPU)
+
+    return {"agntc": round(agntc, 6), "cpu": round(cpu, 6)}
