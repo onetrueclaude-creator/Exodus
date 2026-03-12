@@ -71,8 +71,6 @@ Common manifestations:
 - **Dark crypto aesthetic** with cyan/purple accents — every UI component must follow this
 - **Subscription tier theming:** Community = yellowish-orange, Professional = cyan blue, Max = purple
 - **Code patterns:** DockPanel for sidebars, Zustand for state, ChainService interface for blockchain access
-- **Machines Faction identity:** Always mining, always accumulating, never selling, never voting — this is invariant across all implementations
-- **City real estate model:** Inner rings always more expensive than outer rings — this gradient must be preserved in all grid visualizations and economic calculations
 
 ### Identity Stability
 - The project presents as a serious blockchain protocol with game mechanics — not a toy or demo

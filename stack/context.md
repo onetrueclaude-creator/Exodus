@@ -65,7 +65,6 @@ Context engineering is about *what information is present*. If you're deciding w
 - **Root CLAUDE.md:** ~400 lines covering tech stack, architecture, conventions, UX spec, key concepts, commands, change log
 - **Vault knowledge base:** `vault/whitepaper.md` (authoritative spec), research docs, product specs, engineering notes
 - **Context7 MCP:** Retrieves up-to-date library docs on demand
-- **Tokenomics v3 design doc:** `docs/plans/2026-03-12-tokenomics-v3-design.md` — authoritative reference for BME, city model, Machines Faction, inflation ceiling
 
 ### Compressing Context
 - **PreCompact hook** auto-saves full transcript before context window compression
