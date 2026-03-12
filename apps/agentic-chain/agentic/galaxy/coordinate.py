@@ -4,13 +4,17 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
-from agentic.params import GRID_MIN, GRID_MAX, MAX_PLANETS_PER_SYSTEM
+from agentic.params import MAX_PLANETS_PER_SYSTEM
+
+# Default grid bounds — v3 uses dynamic bounds, no static GRID_MIN/MAX in params.
+_DEFAULT_GRID_MIN = -3240
+_DEFAULT_GRID_MAX = 3240
 
 
 class GridBounds:
     """Dynamic grid bounds that can expand as territories grow."""
 
-    def __init__(self, initial_min: int = GRID_MIN, initial_max: int = GRID_MAX):
+    def __init__(self, initial_min: int = _DEFAULT_GRID_MIN, initial_max: int = _DEFAULT_GRID_MAX):
         self.min_val = initial_min
         self.max_val = initial_max
 
@@ -56,17 +60,17 @@ class GridCoordinate:
     @property
     def x_offset(self) -> int:
         """Non-negative offset for Record.data encoding."""
-        return self.x - GRID_MIN
+        return self.x - GLOBAL_BOUNDS.min_val
 
     @property
     def y_offset(self) -> int:
         """Non-negative offset for Record.data encoding."""
-        return self.y - GRID_MIN
+        return self.y - GLOBAL_BOUNDS.min_val
 
     @classmethod
     def from_offsets(cls, x_offset: int, y_offset: int) -> GridCoordinate:
         """Create from Record.data offsets."""
-        return cls(x=x_offset + GRID_MIN, y=y_offset + GRID_MIN)
+        return cls(x=x_offset + GLOBAL_BOUNDS.min_val, y=y_offset + GLOBAL_BOUNDS.min_val)
 
 
 def star_system_seed(x: int, y: int) -> bytes:
