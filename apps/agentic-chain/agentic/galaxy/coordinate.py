@@ -4,13 +4,17 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
-from agentic.params import GRID_MIN, GRID_MAX, MAX_PLANETS_PER_SYSTEM
+from agentic.params import MAX_PLANETS_PER_SYSTEM
+
+# Default grid bounds — v3 uses dynamic bounds, no static GRID_MIN/MAX in params.
+_DEFAULT_GRID_MIN = -3240
+_DEFAULT_GRID_MAX = 3240
 
 
 class GridBounds:
     """Dynamic grid bounds that can expand as territories grow."""
 
-    def __init__(self, initial_min: int = GRID_MIN, initial_max: int = GRID_MAX):
+    def __init__(self, initial_min: int = _DEFAULT_GRID_MIN, initial_max: int = _DEFAULT_GRID_MAX):
         self.min_val = initial_min
         self.max_val = initial_max
 
@@ -56,17 +60,17 @@ class GridCoordinate:
     @property
     def x_offset(self) -> int:
         """Non-negative offset for Record.data encoding."""
-        return self.x - GRID_MIN
+        return self.x - GLOBAL_BOUNDS.min_val
 
     @property
     def y_offset(self) -> int:
         """Non-negative offset for Record.data encoding."""
-        return self.y - GRID_MIN
+        return self.y - GLOBAL_BOUNDS.min_val
 
     @classmethod
     def from_offsets(cls, x_offset: int, y_offset: int) -> GridCoordinate:
         """Create from Record.data offsets."""
-        return cls(x=x_offset + GRID_MIN, y=y_offset + GRID_MIN)
+        return cls(x=x_offset + GLOBAL_BOUNDS.min_val, y=y_offset + GLOBAL_BOUNDS.min_val)
 
 
 def star_system_seed(x: int, y: int) -> bytes:
@@ -84,3 +88,20 @@ def storage_slots(x: int, y: int) -> int:
     """Number of planet storage slots at (x, y). Range [1, MAX_PLANETS_PER_SYSTEM]."""
     density = resource_density(x, y)
     return max(1, round(density * MAX_PLANETS_PER_SYSTEM))
+
+
+def claim_cost(x: int, y: int, ring: int) -> dict[str, float]:
+    """Compute AGNTC and CPU cost to claim node at (x, y) in the given ring.
+
+    City real estate model: inner rings are expensive, outer rings are cheap.
+    Formula: base_cost * density * (1 / ring), floored at minimums.
+    """
+    from agentic.params import BASE_CLAIM_COST, BASE_CLAIM_CPU, MIN_CLAIM_COST, MIN_CLAIM_CPU
+
+    density = resource_density(x, y)
+    ring_factor = 1.0 / max(ring, 1)
+
+    agntc = max(BASE_CLAIM_COST * density * ring_factor, MIN_CLAIM_COST)
+    cpu = max(BASE_CLAIM_CPU * density * ring_factor, MIN_CLAIM_CPU)
+
+    return {"agntc": round(agntc, 6), "cpu": round(cpu, 6)}

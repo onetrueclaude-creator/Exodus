@@ -11,24 +11,34 @@ SLOTS_PER_EPOCH = 100
 ALPHA = 0.40  # token weight in effective stake
 BETA = 0.60   # CPU weight — rewards computational contribution over capital
 
-# Rewards
-REWARD_SPLIT_ORDERER = 0.00
+# Rewards (Orderer role retired in v2 — only Verifier/Staker split)
 REWARD_SPLIT_VERIFIER = 0.60
 REWARD_SPLIT_STAKER = 0.40
 
-# Tokenomics
-TOTAL_SUPPLY = 42_000_000         # Genesis supply — inflationary, no fixed cap
-INITIAL_CIRCULATING = 42_000_000  # 42M AGNTC at genesis (genesis liquidity only)
-INITIAL_INFLATION_RATE = 0.10     # 10% — bootstrap incentive for ZK prover network
-DISINFLATION_RATE = 0.10          # 10%/yr — gradual decay rewards early adopters
-INFLATION_FLOOR = 0.01            # 1% — permanent minimal staking incentive at maturity
-FEE_BURN_RATE = 0.50              # 50% of fees burned, 50% to verifiers/treasury
+# Tokenomics v3 — BME City Economics
+GENESIS_SUPPLY = 900              # 9 genesis nodes × 100 coordinates each
+FEE_BURN_RATE = 0.50              # 50% of fees burned, 50% to verifiers/stakers
+ANNUAL_INFLATION_CEILING = 0.05   # 5% max annual supply growth (governance-adjustable)
+SIGNUP_BONUS_AGNTC = 1            # fresh mint per new user registration
 
-# Initial distribution (total allocation, vested over time — not all circulating at genesis)
-DIST_COMMUNITY = 0.40     # Community staking pool — emitted to free stakers based on compute delegation
-DIST_TREASURY = 0.30      # Foundation reserve (6mo cliff, 48mo vest)
-DIST_TEAM = 0.20          # Team & advisors (4yr vest, 12mo cliff)
-DIST_AGENTS = 0.10        # Governing agents — total cost of AI verification agents
+# Faction distribution (equal 25% each)
+DIST_COMMUNITY = 0.25
+DIST_MACHINES = 0.25
+DIST_FOUNDERS = 0.25
+DIST_PROFESSIONAL = 0.25
+
+# Node Claim Economics (City Real Estate Model)
+BASE_CLAIM_COST = 10        # AGNTC base cost for node claims
+BASE_CLAIM_CPU = 100        # CPU Energy base cost for node claims
+MIN_CLAIM_COST = 0.1        # AGNTC floor for outer-ring claims
+MIN_CLAIM_CPU = 10          # CPU floor for outer-ring claims
+CLAIM_REQUIRES_ACTIVE_STAKE = True
+
+# Machines Faction (Permanent Accumulator / Treasury)
+MACHINES_SELL_POLICY = "NEVER"
+MACHINES_VOTING_POWER = 0
+MACHINES_AUTO_MINE = True
+MACHINES_EMERGENCY_UNLOCK_THRESHOLD = 0.75  # 75% supermajority to unlock
 
 # Ledger
 MERKLE_TREE_DEPTH = 26
@@ -61,9 +71,7 @@ SAFE_MODE_RECOVERY = 0.80             # 80% online exits safe mode
 # Dispute Resolution
 DISPUTE_REVERIFY_MULTIPLIER = 2       # 2x verifiers for re-verification
 
-# Galaxy Grid — 42M coordinates matching TOTAL_SUPPLY (6481 × 6481 = 42,003,361)
-GRID_MIN = -3240
-GRID_MAX = 3240
+# Galaxy Grid — dynamic bounds via GridBounds (grows with epoch rings)
 MAX_PLANETS_PER_SYSTEM = 10
 CLAIM_PROGRAM_ID = b"agentic_claim"
 STORAGE_PROGRAM_ID = b"agentic_storage"
@@ -95,7 +103,6 @@ ENERGY_PER_CLAIM = 1.0               # VPU cost per active claim
 
 # Epoch system — mining-driven grid expansion (replaces dynamic block time + halving)
 GENESIS_EPOCH_RING = 1            # rings pre-revealed at genesis (ring 0 + ring 1)
-MAX_EPOCH_HARDNESS = 100          # hardness caps here; yield floor = 1% of base
 HOMENODE_BASE_ANGLE = 137.5       # golden-prime twist base angle (degrees)
 
 # Subgrid allocation — 4 autonomous sub-cell agent types (base output at level 1, full density)
@@ -105,3 +112,28 @@ BASE_DEVELOP_RATE = 1.0             # Dev Points/block at level 1
 BASE_RESEARCH_RATE = 0.5            # Research Points/block at level 1
 BASE_STORAGE_RATE = 1.0             # Storage units/block at level 1
 LEVEL_EXPONENT = 0.8                # output = base * level^LEVEL_EXPONENT
+
+# ── Legacy compatibility shims ──────────────────────────────────────────
+# v1/v2 simulation, visualization, and economics modules still reference
+# these constants.  They are NOT part of the v3 BME protocol but are
+# needed to keep the older analysis code running until it is migrated.
+
+TOTAL_SUPPLY = 21_000_000           # v1 fixed cap (v3 uses organic GENESIS_SUPPLY)
+INITIAL_CIRCULATING = 2_100_000     # v1 genesis circulating (10% of TOTAL_SUPPLY)
+INITIAL_INFLATION_RATE = 0.10       # v1 10% starting inflation
+DISINFLATION_RATE = 0.15            # v1 15% annual disinflation
+INFLATION_FLOOR = 0.01              # v1 1% minimum inflation rate
+REWARD_SPLIT_ORDERER = 0.00         # v3 retired orderer role — 0% share
+MAX_EPOCH_HARDNESS = 256            # v1 hardness cap (v3 uses uncapped 16×ring)
+
+# v1 distribution categories (superseded by 25% equal faction split)
+# Must sum to 1.0 with DIST_COMMUNITY for vesting module compatibility.
+# v1 used DIST_COMMUNITY=0.40 for vesting; legacy shim uses current 0.25,
+# so remaining 0.75 is split across old categories proportionally.
+DIST_TREASURY = 0.30
+DIST_TEAM = 0.20
+DIST_AGENTS = 0.10
+
+# v1 grid bounds (superseded by GLOBAL_BOUNDS in coordinate.py)
+GRID_MIN = -3240
+GRID_MAX = 3240

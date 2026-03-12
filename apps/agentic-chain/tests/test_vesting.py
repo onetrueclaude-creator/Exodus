@@ -4,7 +4,7 @@ from agentic.economics.vesting import (
     VestingSchedule, create_default_schedules,
     total_circulating_at_month, project_vesting,
 )
-from agentic.params import TOTAL_SUPPLY, INITIAL_CIRCULATING, DIST_AGENTS
+from agentic.params import TOTAL_SUPPLY, INITIAL_CIRCULATING, DIST_AGENTS, DIST_COMMUNITY, DIST_TREASURY, DIST_TEAM
 
 
 class TestVestingSchedule:
@@ -117,11 +117,9 @@ class TestTotalCirculatingAtMonth:
     def test_all_schedules_fully_vest(self):
         """After sufficient time, all tokens should be vested."""
         schedules = create_default_schedules()
-        # Maximum vest end: 12 cliff + 60 vesting = 72 for community pool
-        # But team is 12 + 48 = 60, community is 0 + 60 = 60
-        # All end by month 72 at most
         circulating = total_circulating_at_month(200)
-        assert circulating == TOTAL_SUPPLY
+        expected = int(TOTAL_SUPPLY * (DIST_COMMUNITY + DIST_TREASURY + DIST_TEAM + DIST_AGENTS))
+        assert circulating == expected
 
 
 class TestDefaultSchedules:
@@ -129,10 +127,11 @@ class TestDefaultSchedules:
         schedules = create_default_schedules()
         assert len(schedules) == 4
 
-    def test_total_allocation_matches_supply(self):
+    def test_total_allocation_matches_sum_of_shares(self):
         schedules = create_default_schedules()
         total = sum(s.total_allocation for s in schedules)
-        assert total == TOTAL_SUPPLY
+        expected = int(TOTAL_SUPPLY * (DIST_COMMUNITY + DIST_TREASURY + DIST_TEAM + DIST_AGENTS))
+        assert total == expected
 
     def test_schedule_names(self):
         schedules = create_default_schedules()

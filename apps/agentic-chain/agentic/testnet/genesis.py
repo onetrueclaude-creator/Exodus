@@ -10,7 +10,7 @@ from agentic.actions.pipeline import ActionPipeline
 from agentic.consensus.validator import Validator
 from agentic.galaxy.claims import ClaimRegistry
 from agentic.galaxy.coordinate import GridCoordinate, resource_density, storage_slots
-from agentic.galaxy.mining import CommunityPool, MiningEngine
+from agentic.galaxy.mining import MiningEngine
 from agentic.ledger.crypto import hash_tag
 from agentic.ledger.record import Record
 from agentic.ledger.state import LedgerState
@@ -20,7 +20,7 @@ from agentic.verification.pipeline import VerificationPipeline
 from agentic.galaxy.epoch import EpochTracker
 from agentic.galaxy.subgrid import SubgridAllocator
 from agentic.params import (
-    GENESIS_BALANCE, GRID_MIN, GRID_MAX, BIRTH_PROGRAM_ID,
+    GENESIS_BALANCE, BIRTH_PROGRAM_ID,
     GENESIS_ORIGIN, GENESIS_FACTION_MASTERS, GENESIS_HOMENODES,
 )
 
@@ -30,7 +30,6 @@ class GenesisState:
     ledger_state: LedgerState
     wallets: list[Wallet]
     claim_registry: ClaimRegistry
-    community_pool: CommunityPool
     mining_engine: MiningEngine
     pipeline: ActionPipeline
     verification_pipeline: VerificationPipeline = None
@@ -126,8 +125,7 @@ def create_genesis(
     viewing_keys = {w.public_key: w.viewing_key for w in wallets}
 
     # -- Mining & pipeline (no randomness needed) -----------------------------
-    pool = CommunityPool()
-    engine = MiningEngine(pool=pool)
+    engine = MiningEngine()
     pipeline = ActionPipeline(ledger_state=state, claim_registry=claim_registry)
 
     # -- Verification agents & validators (one per claim) -------------------
@@ -176,7 +174,6 @@ def create_genesis(
         ledger_state=state,
         wallets=wallets,
         claim_registry=claim_registry,
-        community_pool=pool,
         mining_engine=engine,
         pipeline=pipeline,
         verification_pipeline=verification_pipeline,
