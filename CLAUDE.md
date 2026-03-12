@@ -58,7 +58,7 @@ Stellaris-inspired gamified social media dApp where users explore a 2D galaxy gr
 - Star system = an individual agent (Opus/Sonnet/Haiku tier), base 10x10 coordinate blocks
 - CPU Energy = CPU deployed to maintaining the grid (yellow resource)
 - Secured Chains = blocks secured by the user (green resource with +/- deltas)
-- AGNTC = tradeable coins, each mapped to a grid coordinate
+- AGNTC = tradeable coins; supply grows via mining only (soft cap with 5% ceiling). Node claims cost AGNTC + CPU (city model: inner expensive, outer cheap)
 - Data Frags = compute production from mining
 - Planets = content storage (posts, chats, prompts) orbiting star systems
 - Jump points = nodes where new agents can be spawned
@@ -186,6 +186,14 @@ Sub-directory seeds have their own connector tables pointing up (parent), down (
 ---
 
 ## Change Log
+
+### 2026-03-12 — Tokenomics v3: BME City Economics
+
+**Design:** Node claims cost AGNTC + CPU (no longer mint tokens). Burn-Mint Equilibrium: claim burns flow to verifiers. City real estate model: inner rings expensive, outer cheap. Machines Faction as permanent accumulator (never sells, no voting power). Soft cap with 5% annual inflation ceiling. Human-only governance with 75% supermajority for emergency treasury unlock. 1 AGNTC fresh mint signup bonus.
+**Backend:** params.py (v3 constants + legacy shims), mining.py (no CommunityPool), rewards.py (ceiling enforcement + BME), epoch.py (uncapped 16×ring hardness), coordinate.py (claim_cost function), genesis.py (no pool), api.py (claim cost endpoint).
+**Stack:** All 4 layers updated (intent, judgement, coherence, context).
+**Docs:** Whitepaper sections rewritten, new governance section, website tokenomics page updated.
+**Design doc:** `docs/plans/2026-03-12-tokenomics-v3-design.md`
 
 ### 2026-02-25 — Tokenomics v2: organic growth model (commits `788b9cb38`..`764195e6b`)
 
