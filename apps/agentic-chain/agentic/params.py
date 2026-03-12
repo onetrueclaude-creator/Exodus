@@ -11,8 +11,7 @@ SLOTS_PER_EPOCH = 100
 ALPHA = 0.40  # token weight in effective stake
 BETA = 0.60   # CPU weight — rewards computational contribution over capital
 
-# Rewards
-REWARD_SPLIT_ORDERER = 0.00
+# Rewards (Orderer role retired in v2 — only Verifier/Staker split)
 REWARD_SPLIT_VERIFIER = 0.60
 REWARD_SPLIT_STAKER = 0.40
 
