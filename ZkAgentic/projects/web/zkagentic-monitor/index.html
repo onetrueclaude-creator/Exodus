@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>ZK Agentic Chain — Testnet Monitor</title>
+  <meta name="description" content="Live monitoring dashboard for the ZK Agentic Chain testnet. Block production, mining stats, epoch tracking."/>
+  <meta property="og:title" content="ZK Agentic Chain — Testnet Monitor"/>
+  <meta property="og:description" content="Live monitoring dashboard for the ZK Agentic Chain testnet. Block production, mining stats, epoch tracking."/>
+  <meta property="og:site_name" content="ZK Agentic Chain"/>
+  <meta property="og:type" content="website"/>
+  <meta name="twitter:card" content="summary"/>
+  <meta name="twitter:title" content="ZK Agentic Chain — Testnet Monitor"/>
+  <meta name="twitter:description" content="Live monitoring dashboard for the ZK Agentic Chain testnet."/>
+  <link rel="icon" href="/favicon.ico" sizes="256x256" type="image/x-icon"/>
+  <link rel="icon" href="/logos/logo-mini.svg" type="image/svg+xml"/>
+  <link rel="stylesheet" href="/styles.css"/>
+  <style>
+    body { background: #000; margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+    .hero-number { font-size: 5rem; font-family: 'Courier New', monospace; font-weight: 700; color: white; line-height: 1; }
+    .pill-header { display: inline-block; padding: 2px 12px; border: 1px solid #22d3ee; border-radius: 9999px; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: #22d3ee; margin-bottom: 0.75rem; }
+    .stat-value { font-size: 1.5rem; font-family: 'Courier New', monospace; font-weight: 600; color: white; }
+    .stat-label { font-size: 0.75rem; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.05em; }
+    .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .card-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    .stat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.75rem; padding: 1.25rem; }
+    .stat-card:hover { border-color: rgba(34,211,238,0.2); }
+    .tab-btn { background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s; }
+    .tab-active { border-bottom: 2px solid #22d3ee; color: #22d3ee; }
+    .tab-inactive { border-bottom: 2px solid transparent; color: #9ca3af; }
+    .tab-inactive:hover { color: #d1d5db; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .dot-live { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+    .dot-stale { background: #eab308; box-shadow: 0 0 6px #eab308; }
+    .dot-offline { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+    .simulator-frame { width: 100%; border: 0; height: 1200px; color-scheme: dark; }
+    @media (max-width: 768px) {
+      .card-grid, .card-grid-2 { grid-template-columns: 1fr; }
+      .hero-number { font-size: 3rem; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-card-border" style="background:rgba(0,0,0,0.85);">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <a class="flex items-center gap-2 font-bold text-lg" href="/" style="text-decoration:none;">
+        <img alt="" loading="lazy" width="28" height="28" decoding="async" src="/logos/icon.svg" style="color:transparent"/>
+        <span class="gradient-text">ZK Agentic Chain</span>
+        <span style="color:#9ca3af;font-size:0.875rem;font-weight:400;margin-left:0.25rem;">— Testnet Monitor</span>
+      </a>
+      <div class="flex items-center gap-2">
+        <span id="live-dot" class="dot dot-live"></span>
+        <span id="live-text" style="color:#22c55e;font-size:0.875rem;font-weight:600;font-family:'Courier New',monospace;">LIVE</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main class="flex-1" style="padding-top:5rem;">
+    <div style="max-width:1200px;margin:0 auto;padding:0 1.5rem 3rem;">
+
+      <!-- Hero section -->
+      <section style="text-align:center;padding:3rem 0 2.5rem;">
+        <div id="hero-block" class="hero-number">&mdash;</div>
+        <div id="hero-subtitle" style="color:#9ca3af;font-size:0.875rem;font-family:monospace;margin-top:0.5rem">
+          Loading...
+        </div>
+      </section>
+
+      <!-- Stat cards row 1: 3 columns -->
+      <div class="card-grid">
+
+        <!-- Mining -->
+        <div class="stat-card">
+          <div class="pill-header">Mining</div>
+          <div class="stat-value" id="mining-value">&mdash;</div>
+          <div class="stat-label">AGNTC Mined</div>
+        </div>
+
+        <!-- Network -->
+        <div class="stat-card">
+          <div class="pill-header">Network</div>
+          <div class="stat-value" id="network-agents">&mdash;</div>
+          <div class="stat-label">Deployed Agents</div>
+          <div class="stat-value" id="network-claims" style="margin-top:0.75rem;">&mdash;</div>
+          <div class="stat-label">Total Claims</div>
+        </div>
+
+        <!-- Block Production -->
+        <div class="stat-card">
+          <div class="pill-header">Block Production</div>
+          <div class="stat-value" id="blocks-next">&mdash;</div>
+          <div class="stat-label">Next Block</div>
+          <div class="stat-value" id="blocks-avg" style="margin-top:0.75rem;">&mdash;</div>
+          <div class="stat-label">Avg Block Time</div>
+        </div>
+
+      </div>
+
+      <!-- Stat cards row 2: 2 columns -->
+      <div class="card-grid-2" style="margin-top:1rem;">
+
+        <!-- Staking -->
+        <div class="stat-card">
+          <div class="pill-header">Staking</div>
+          <div class="stat-value" id="staking-cpu">&mdash;</div>
+          <div class="stat-label">Total CPU Staked</div>
+        </div>
+
+        <!-- Epoch -->
+        <div class="stat-card">
+          <div class="pill-header">Epoch</div>
+          <div class="stat-value" id="epoch-ring">&mdash;</div>
+          <div class="stat-label">Current Ring</div>
+          <div class="stat-value" id="epoch-hardness" style="margin-top:0.75rem;">&mdash;</div>
+          <div class="stat-label">Hardness</div>
+        </div>
+
+      </div>
+
+      <!-- Tab navigation -->
+      <div style="border-bottom:1px solid rgba(255,255,255,0.08);margin-top:2rem;display:flex;gap:0;">
+        <button class="tab-btn tab-active" id="tab-dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+        <button class="tab-btn tab-inactive" id="tab-simulator" onclick="switchTab('simulator')">Tokenomics Simulator</button>
+      </div>
+
+      <!-- Dashboard container (visible by default, placeholder for future charts) -->
+      <div id="dashboard-container" style="margin-top:1rem;">
+        <!-- Future: block history chart, mining rate graph, etc. -->
+      </div>
+
+      <!-- Simulator container (hidden by default) -->
+      <div id="simulator-container" style="display:none;margin-top:1rem;">
+        <iframe id="simulator-frame" class="simulator-frame" title="Agentic Chain Tokenomics Simulator"></iframe>
+      </div>
+
+      <!-- Footer status bar -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2.5rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.06);font-size:0.75rem;color:#6b7280;font-family:monospace;">
+        <span id="last-updated">Last updated: &mdash;</span>
+        <span id="testnet-status">Testnet: checking...</span>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/monitor.js"></script>
+
+</body>
+</html>
