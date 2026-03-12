@@ -56,8 +56,6 @@ A second characteristic failure is **decision paralysis at scale**: when an agen
 1. Build a Stellaris-inspired gamified social media dApp on the Agentic Chain
 2. Blockchain is source of truth for game state; PostgreSQL is auth cache only
 3. Ship a playable testnet experience — real economics, real consensus, real agent interactions
-4. Machines Faction operates as autonomous protocol treasury — never sells, no voting power, permanent accumulator
-5. Token economics self-balance via BME + fee burn + hardness curve — minimal governance intervention needed
 
 ### Priority Hierarchy (when goals conflict)
 1. **Whitepaper alignment** — protocol mechanics must match the spec
@@ -70,14 +68,11 @@ A second characteristic failure is **decision paralysis at scale**: when an agen
 - DB is a cache, not source of truth — accept eventual consistency with chain
 - Two-tier users (Hollow DB vs On-chain) — accept complexity for onboarding ease
 - Static HTML website (`zkagentic-deploy/`) — accept no build system for deployment simplicity
-- BME tokenomics with inflation ceiling — accept complexity for self-balancing economics
-- Machines Faction never sells — accept permanent supply lock for market stability
-- City real estate model (inner expensive, outer cheap) — accept early-adopter advantage for natural economic gravity
+- Organic tokenomics (no scheduled inflation) — accept slower growth for healthier economics
 
 ### Decision Boundaries
 - **Agent decides:** Code implementation, test structure, file organization, refactoring scope
 - **Human decides:** Feature prioritization, subscription pricing, tokenomics parameters, blockchain architecture, deployment targets
-- **Human decides (governance):** Inflation ceiling rate, emergency Machines treasury unlock, claim cost base parameters
 - **Never auto-decide:** Git push, PR creation, destructive operations, external API calls
 
 ### Escalation Logic

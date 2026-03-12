@@ -61,7 +61,7 @@ A second failure is **brittleness in novel situations**: the system encounters s
 
 ### Risk Categories
 - **Catastrophic:** Wallet key exposure, lost blockchain state, corrupted DB migrations, force-push to main
-- **High:** Breaking game economics (wrong fee burn %, wrong staking ratios, claim cost miscalculation, Machines sell policy override), UI showing incorrect chain data
+- **High:** Breaking game economics (wrong fee burn %, wrong staking ratios), UI showing incorrect chain data
 - **Medium:** Test regressions, CSS/layout breaks, stale context after compaction
 - **Low:** Code style inconsistencies, unused imports, minor refactoring opportunities
 
@@ -74,9 +74,7 @@ A second failure is **brittleness in novel situations**: the system encounters s
 - `@solana/wallet-adapter-react` must be mocked in any test rendering ResourceBar
 
 ### Confidence Calibration
-- Protocol parameters v3: fee burn 50%, staking alpha 40%/beta 60%, hardness 16×ring (uncapped), BASE_CLAIM_COST=10, ANNUAL_INFLATION_CEILING=5%, Machines NEVER sell — all verified in v3 design doc (`docs/plans/2026-03-12-tokenomics-v3-design.md`)
-- Claim cost formula: BASE_CLAIM_COST × density × (1/ring), floored at MIN_CLAIM_COST — verified
-- BME flow: claim burn → equivalent mint to verifiers (60/40 split) — verified
+- Protocol parameters (fee burn 50%, staking alpha 40%/beta 60%, hardness 16N) are verified facts — use with confidence
 - Faction corner placements (NW/NE/SE/SW) are verified — use with confidence
 - Anything from memory that contradicts current code should trigger re-verification
 
