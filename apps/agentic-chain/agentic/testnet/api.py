@@ -56,10 +56,11 @@ import random as _random
 from agentic.consensus.block import Block, BlockStatus
 from agentic.consensus.validator import Validator
 from agentic.galaxy.allocator import CoordinateAllocator
-from agentic.galaxy.coordinate import GridCoordinate, resource_density, storage_slots
+from agentic.galaxy.coordinate import GridCoordinate, GLOBAL_BOUNDS, resource_density, storage_slots
+from agentic.galaxy.coordinate import claim_cost as compute_claim_cost
 from agentic.ledger.transaction import BirthTx, validate_birth
 from agentic.params import (
-    BASE_BIRTH_COST, BLOCK_TIME_MS, GRID_MIN, GRID_MAX, NODE_GRID_SPACING,
+    BASE_BIRTH_COST, BLOCK_TIME_MS, NODE_GRID_SPACING,
 )
 from agentic.testnet.genesis import GenesisState, create_genesis
 from agentic.verification.agent import VerificationAgent, AgentState
@@ -100,7 +101,6 @@ class TestnetStatus(BaseModel):
     state_root: str
     record_count: int
     total_claims: int
-    community_pool_remaining: float
     blocks_processed: int
     total_mined: float
     next_block_in: float      # seconds until next block can be mined (-1 = chain idle)
@@ -130,6 +130,7 @@ class CoordinateInfo(BaseModel):
     claimed: bool
     owner: Optional[str] = None
     stake: Optional[int] = None
+    claim_cost: Optional[dict] = None
 
 
 class ClaimInfo(BaseModel):
@@ -438,7 +439,6 @@ def get_status() -> TestnetStatus:
         state_root=g.ledger_state.get_state_root().hex(),
         record_count=g.ledger_state.record_count,
         total_claims=len(g.claim_registry.all_active_claims()),
-        community_pool_remaining=g.community_pool.remaining,
         blocks_processed=g.mining_engine.total_blocks_processed,
         total_mined=g.mining_engine.total_rewards_distributed,
         next_block_in=_next_block_in(),
@@ -556,16 +556,18 @@ def assign_subgrid(wallet_index: int, req: SubgridAssignRequest) -> dict:
 
 @app.get("/api/coordinate/{x}/{y}", response_model=CoordinateInfo)
 def get_coordinate(x: int, y: int) -> CoordinateInfo:
-    if not (GRID_MIN <= x <= GRID_MAX) or not (GRID_MIN <= y <= GRID_MAX):
+    if not (GLOBAL_BOUNDS.min_val <= x <= GLOBAL_BOUNDS.max_val) or not (GLOBAL_BOUNDS.min_val <= y <= GLOBAL_BOUNDS.max_val):
         raise HTTPException(
             status_code=400,
-            detail=f"Coordinates out of range [{GRID_MIN}, {GRID_MAX}]",
+            detail=f"Coordinates out of range [{GLOBAL_BOUNDS.min_val}, {GLOBAL_BOUNDS.max_val}]",
         )
     g = _g()
     coord = GridCoordinate(x=x, y=y)
     density = round(resource_density(x, y), 6)
     slots = storage_slots(x, y)
     claim = g.claim_registry.get_claim_at(coord)
+    ring = g.epoch_tracker.current_ring
+    cost = compute_claim_cost(x, y, ring) if claim is None else None
     return CoordinateInfo(
         x=x,
         y=y,
@@ -574,6 +576,7 @@ def get_coordinate(x: int, y: int) -> CoordinateInfo:
         claimed=claim is not None,
         owner=claim.owner.hex() if claim else None,
         stake=claim.stake_amount if claim else None,
+        claim_cost=cost,
     )
 
 
@@ -604,10 +607,10 @@ def get_grid_region(
     y_max: int = Query(...),
 ) -> GridRegion:
     # Clamp to grid bounds
-    x_min = max(x_min, GRID_MIN)
-    x_max = min(x_max, GRID_MAX)
-    y_min = max(y_min, GRID_MIN)
-    y_max = min(y_max, GRID_MAX)
+    x_min = max(x_min, GLOBAL_BOUNDS.min_val)
+    x_max = min(x_max, GLOBAL_BOUNDS.max_val)
+    y_min = max(y_min, GLOBAL_BOUNDS.min_val)
+    y_max = min(y_max, GLOBAL_BOUNDS.max_val)
 
     width = x_max - x_min + 1
     height = y_max - y_min + 1
@@ -682,7 +685,7 @@ def claim_node(req: ClaimNodeRequest) -> ClaimNodeResult:
     # Determine coordinate — snap to nearest grid square centre
     if req.x is not None and req.y is not None:
         x, y = _snap_to_grid(req.x), _snap_to_grid(req.y)
-        if not (GRID_MIN <= x <= GRID_MAX and GRID_MIN <= y <= GRID_MAX):
+        if not (GLOBAL_BOUNDS.min_val <= x <= GLOBAL_BOUNDS.max_val and GLOBAL_BOUNDS.min_val <= y <= GLOBAL_BOUNDS.max_val):
             raise HTTPException(status_code=400, detail=f"Coordinate ({x},{y}) out of grid bounds")
         coord = GridCoordinate(x=x, y=y)
         if g.claim_registry.get_claim_at(coord) is not None:
@@ -691,8 +694,8 @@ def claim_node(req: ClaimNodeRequest) -> ClaimNodeResult:
         # Auto-assign: pick a random unclaimed coordinate
         rng = _random.Random(time.time_ns())
         for _ in range(1000):
-            x = rng.randint(GRID_MIN, GRID_MAX)
-            y = rng.randint(GRID_MIN, GRID_MAX)
+            x = rng.randint(GLOBAL_BOUNDS.min_val, GLOBAL_BOUNDS.max_val)
+            y = rng.randint(GLOBAL_BOUNDS.min_val, GLOBAL_BOUNDS.max_val)
             coord = GridCoordinate(x=x, y=y)
             if g.claim_registry.get_claim_at(coord) is None:
                 break
@@ -804,8 +807,8 @@ def get_nodes(
 
     while len(nodes) < count and attempts < max_attempts:
         attempts += 1
-        x = rng.randint(GRID_MIN, GRID_MAX)
-        y = rng.randint(GRID_MIN, GRID_MAX)
+        x = rng.randint(GLOBAL_BOUNDS.min_val, GLOBAL_BOUNDS.max_val)
+        y = rng.randint(GLOBAL_BOUNDS.min_val, GLOBAL_BOUNDS.max_val)
         if (x, y) in coords_seen:
             continue
         coords_seen.add((x, y))
@@ -952,7 +955,7 @@ def set_intro(req: IntroRequest) -> IntroResult:
     y = req.agent_coordinate.get("y")
     if x is None or y is None:
         raise HTTPException(status_code=400, detail="agent_coordinate must have x and y")
-    if not (GRID_MIN <= x <= GRID_MAX) or not (GRID_MIN <= y <= GRID_MAX):
+    if not (GLOBAL_BOUNDS.min_val <= x <= GLOBAL_BOUNDS.max_val) or not (GLOBAL_BOUNDS.min_val <= y <= GLOBAL_BOUNDS.max_val):
         raise HTTPException(status_code=400, detail="Coordinates out of range")
 
     text = req.message.strip()
@@ -1051,7 +1054,7 @@ def send_message(req: MessageRequest) -> MessageResult:
 @app.get("/api/messages/{x}/{y}", response_model=List[MessageInfo])
 def get_messages(x: int, y: int) -> List[MessageInfo]:
     """Fetch message history for agent at coordinate (max 50 most recent)."""
-    if not (GRID_MIN <= x <= GRID_MAX) or not (GRID_MIN <= y <= GRID_MAX):
+    if not (GLOBAL_BOUNDS.min_val <= x <= GLOBAL_BOUNDS.max_val) or not (GLOBAL_BOUNDS.min_val <= y <= GLOBAL_BOUNDS.max_val):
         raise HTTPException(status_code=400, detail="Coordinates out of range")
 
     g = _g()
