@@ -25,20 +25,22 @@ class TestThreshold:
 
 
 class TestHardness:
-    def test_ring_1_hardness_is_1(self):
+    def test_ring_1_hardness_is_16(self):
         t = EpochTracker()
-        assert t.hardness(1) == 1
+        assert t.hardness(1) == 16
 
-    def test_ring_n_hardness_is_n(self):
+    def test_ring_n_hardness_is_16n(self):
         t = EpochTracker()
         for n in range(1, 50):
-            assert t.hardness(n) == n
+            assert t.hardness(n) == 16 * n
 
-    def test_hardness_caps_at_100(self):
+    def test_hardness_uncapped_v3(self):
+        """Hardness = 16 * ring, uncapped (no MAX_EPOCH_HARDNESS)."""
         t = EpochTracker()
-        assert t.hardness(100) == 100
-        assert t.hardness(150) == 100
-        assert t.hardness(1000) == 100
+        assert t.hardness(1) == 16
+        assert t.hardness(10) == 160
+        assert t.hardness(100) == 1600
+        assert t.hardness(500) == 8000
 
 
 class TestRecordMined:
@@ -131,10 +133,12 @@ class TestHomenodeCoordinate:
         # Different rings = different coordinates
         assert r2 != r3
 
-    def test_coord_within_grid_bounds(self):
-        from agentic.params import GRID_MIN, GRID_MAX
+    def test_coords_scale_with_ring(self):
+        """Grid is dynamic — no GRID_MIN/MAX clamping. Coords grow with ring."""
         t = EpochTracker()
         for ring in [1, 2, 5, 10, 50]:
             x, y = t.homenode_coordinate('community', ring)
-            assert GRID_MIN <= x <= GRID_MAX
-            assert GRID_MIN <= y <= GRID_MAX
+            chebyshev = max(abs(x), abs(y))
+            # Chebyshev distance should be close to ring (rounding may shift ±1)
+            assert chebyshev >= ring - 1
+            assert chebyshev <= ring + 1
