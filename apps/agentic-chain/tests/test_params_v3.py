@@ -54,6 +54,9 @@ def test_v1_legacy_constants_removed():
     assert not hasattr(p, 'DIST_TREASURY'), "DIST_TREASURY should be removed"
     assert not hasattr(p, 'DIST_TEAM'), "DIST_TEAM should be removed"
     assert not hasattr(p, 'DIST_AGENTS'), "DIST_AGENTS should be removed"
+    assert not hasattr(p, 'REWARD_SPLIT_ORDERER'), "REWARD_SPLIT_ORDERER should be removed (retired role)"
+    assert not hasattr(p, 'GRID_MIN'), "GRID_MIN should be removed (dynamic bounds)"
+    assert not hasattr(p, 'GRID_MAX'), "GRID_MAX should be removed (dynamic bounds)"
 
 
 def test_v3_genesis_supply():

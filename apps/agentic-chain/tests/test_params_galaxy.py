@@ -7,16 +7,14 @@ class TestGalaxyParams:
         from agentic.params import BLOCK_TIME_MS
         assert BLOCK_TIME_MS == 60_000
 
-    def test_grid_bounds(self):
-        from agentic.params import GRID_MIN, GRID_MAX
-        assert GRID_MIN == -3240
-        assert GRID_MAX == 3240
-
-    def test_grid_covers_42m_coordinates(self):
-        from agentic.params import GRID_MIN, GRID_MAX, TOTAL_SUPPLY
-        size = GRID_MAX - GRID_MIN + 1
-        total_coords = size * size
-        assert total_coords >= TOTAL_SUPPLY  # 6481^2 = 42,003,361 >= 42,000,000
+    def test_dynamic_grid_bounds(self):
+        """Grid bounds are dynamic in v3 — no static GRID_MIN/MAX."""
+        from agentic.galaxy.coordinate import GridBounds
+        bounds = GridBounds(initial_min=-20, initial_max=20)
+        assert bounds.contains(0, 0)
+        assert not bounds.contains(100, 100)
+        bounds.expand_to_contain(100, 100)
+        assert bounds.contains(100, 100)
 
     def test_program_ids(self):
         from agentic.params import CLAIM_PROGRAM_ID, STORAGE_PROGRAM_ID
@@ -35,10 +33,8 @@ class TestGalaxyParams:
         from agentic.params import ENERGY_PER_CLAIM
         assert ENERGY_PER_CLAIM > 0
 
-    def test_merkle_depth_supports_42m(self):
-        from agentic.params import MERKLE_TREE_DEPTH, TOTAL_SUPPLY
+    def test_merkle_depth_sufficient(self):
+        """Merkle tree depth 26 supports 67M+ leaves — plenty for any grid size."""
+        from agentic.params import MERKLE_TREE_DEPTH
         capacity = 2 ** MERKLE_TREE_DEPTH
-        assert capacity >= TOTAL_SUPPLY, (
-            f"Merkle depth {MERKLE_TREE_DEPTH} only supports {capacity} leaves, "
-            f"need {TOTAL_SUPPLY}"
-        )
+        assert capacity >= 67_000_000
