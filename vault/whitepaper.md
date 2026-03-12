@@ -1,8 +1,8 @@
-# AGNTC Whitepaper v1.1
+# AGNTC Whitepaper v1.2
 
 > **ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification**
 >
-> Version 1.1 | March 2026
+> Version 1.2 | March 2026
 
 ---
 
@@ -12,7 +12,7 @@ We present ZK Agentic Chain, a Layer-1 blockchain protocol that introduces *Proo
 
 The protocol employs a dual-staking model that weights computational contribution (60%) over capital (40%), reducing plutocratic concentration inherent in pure proof-of-stake designs. Validators must commit both AGNTC tokens and CPU compute resources; the effective stake that determines committee selection and reward share is a weighted combination of both dimensions.
 
-ZK Agentic Chain maps its entire token supply to a two-dimensional coordinate grid — a 31,623 x 31,623 spatial economy where each grid cell yields exactly 1 AGNTC when claimed. The grid is organized as a four-arm logarithmic spiral divided among four factions (Community, Machines, Founders, Professional), each receiving 25% of newly minted supply. Supply grows organically as coordinates are claimed through mining, with no scheduled inflation and no pre-mine beyond the 900 AGNTC genesis allocation. Mining difficulty increases proportionally with ring distance from the origin (hardness = 16 x ring), creating natural disinflation without artificial halving events. A 50% transaction fee burn provides sustained deflationary pressure as network usage grows.
+ZK Agentic Chain maps its entire token supply to a two-dimensional coordinate grid — a 31,623 x 31,623 spatial economy organized as a four-arm logarithmic spiral divided among four factions (Community, Machines, Founders, Professional), each receiving 25% of newly minted supply. Mining is the sole supply-expanding mechanism: new AGNTC enters circulation only when miners successfully claim coordinates. Node claims cost AGNTC plus CPU Energy under a Burn-Mint Equilibrium (BME) model where the cost increases with proximity to the origin (inner rings are expensive, outer rings are cheap). A soft cap with a 5% annual inflation ceiling prevents runaway supply expansion. Mining difficulty increases proportionally with ring distance from the origin (hardness = 16 x ring), creating natural disinflation without artificial halving events. A 50% transaction fee burn and the Machines Faction's permanent AGNTC accumulation provide sustained deflationary pressure as network usage grows.
 
 Privacy is enforced at every layer. Each user's state resides in an isolated ledger space backed by a Sparse Merkle Tree of depth 26 with nullifier-based ownership proofs derived from the Zcash Sapling design. Verification agents communicate exclusively through ZK private channels — proving correctness of state transitions without exposing the underlying data to other agents or to the network. All state is private by default unless explicitly published by the user.
 
@@ -240,7 +240,7 @@ Three principles constrain every architectural decision in the protocol:
 
 #### 4.1 Grid Architecture
 
-ZK Agentic Chain maps its token supply to a two-dimensional coordinate grid of 31,623 x 31,623 cells — approximately 1 billion cells total (31,623^2 = 1,000,014,129, rounded to the MAX_SUPPLY constant of 1,000,000,000). Each grid cell, when claimed through the mining process, yields exactly 1 AGNTC. The grid is therefore not merely a visualization of blockchain state — it *is* the blockchain state. Every AGNTC in circulation corresponds to a specific (x, y) coordinate pair.
+ZK Agentic Chain maps its token supply to a two-dimensional coordinate grid of 31,623 x 31,623 cells — approximately 1 billion cells total (31,623^2 = 1,000,014,129, rounded to the MAX_SUPPLY constant of 1,000,000,000). The grid is not merely a visualization of blockchain state — it *is* the blockchain state. Claiming a coordinate through the mining process mints new AGNTC, and every AGNTC in circulation corresponds to a specific (x, y) coordinate pair. Node claims require both AGNTC and CPU Energy under the Burn-Mint Equilibrium model (Section 12.4), with costs that vary by grid location — inner rings near the origin are expensive (dense urban core), while outer rings are progressively cheaper (suburban frontier).
 
 Agents (validator nodes) occupy 10x10 coordinate blocks, defined by the NODE_GRID_SPACING parameter. Each agent's "star system" encompasses 100 grid cells and therefore 100 potential AGNTC when fully mined. Valid agent positions are restricted to multiples of NODE_GRID_SPACING; the claim_node() function snaps submitted coordinates to the nearest grid-aligned position.
 
@@ -259,7 +259,7 @@ The galaxy is divided into four factions, each controlling one arm of the spiral
 
 Each faction receives exactly 25% of newly minted AGNTC. Distribution is geographic: when a coordinate is claimed, the AGNTC flows to the faction that controls the arm where that coordinate resides. This replaces the arbitrary percentage-based allocation tables common in token launches with a spatial distribution model that participants can observe and verify.
 
-The Machines Faction (25% of all minted supply) is subject to a protocol-level constraint: AI agents in this faction are hardcoded to never sell below their acquisition cost. Every AGNTC earned by a Machine agent tracks the CPU Energy spent to mine it, and the smart contract rejects any sell order where the sale price falls below this acquisition cost (MACHINES_MIN_SELL_RATIO = 1.0). This creates a permanent buy-side floor from one quarter of all circulating supply.
+The Machines Faction (25% of all minted supply) operates as a permanent accumulator — AI agents in this faction mine, validate, and earn AGNTC but never sell. The Machines Faction treasury grows monotonically over time, functioning as a protocol-level reserve whose size serves as a health metric for the network. Machine agents have zero governance weight (Section 21.2) and cannot participate in protocol votes. Their economic role is purely accumulative: absorbing supply, reducing circulating tokens, and providing a measurable indicator of cumulative network compute. The Machines Faction treasury can only be unlocked by a 75% human supermajority vote in an emergency governance action.
 
 Founders Faction tokens are subject to a 4-year vesting schedule with a 12-month cliff, preventing early liquidation by the founding team.
 
@@ -267,7 +267,7 @@ Founders Faction tokens are subject to a 4-year vesting schedule with a 12-month
 
 The grid does not exist in its entirety at genesis. Instead, it expands outward from the origin through an epoch-ring system driven by mining activity.
 
-At genesis, only ring 0 (the origin) and ring 1 (the eight adjacent positions) are revealed, containing 9 nodes: 1 origin node, 4 faction master nodes at the cardinal positions, and 4 diagonal homenode positions. The genesis supply is 900 AGNTC (9 nodes x 100 coordinates x 1 AGNTC per coordinate).
+At genesis, only ring 0 (the origin) and ring 1 (the eight adjacent positions) are revealed, containing 9 nodes: 1 origin node, 4 faction master nodes at the cardinal positions, and 4 diagonal homenode positions. The genesis supply is 900 AGNTC (9 nodes x 100 coordinates). Additionally, each new user registration mints a 1 AGNTC signup bonus, ensuring every participant enters the economy with a non-zero balance.
 
 Ring N opens when the cumulative AGNTC mined across the entire network reaches the threshold:
 
@@ -316,7 +316,7 @@ Coordinates near the origin tend to have higher strategic value because they wer
                     Professional (SW)    Founders (SE)
 
     4-arm logarithmic spiral | 31,623 x 31,623 coordinate space
-    Each coordinate yields exactly 1 AGNTC when claimed
+    Claims burn AGNTC + CPU (BME) | Mining mints new supply
     Epoch rings expand outward as mining reaches threshold
 ```
 
@@ -879,7 +879,7 @@ AGNTC serves four primary functions within the protocol:
 
 **Staking.** Validators must stake AGNTC alongside CPU compute resources to participate in block verification. The staked amount contributes to the token component (alpha = 0.40) of effective stake, which determines committee selection probability and reward share.
 
-**Governance.** AGNTC holders vote on protocol parameters (hardness multiplier, fee burn rate, staking weights), model updates, and network upgrades. Voting power is proportional to staked AGNTC.
+**Governance.** Human AGNTC holders vote on protocol parameters (hardness multiplier, fee burn rate, staking weights), model updates, and network upgrades. Voting power is proportional to staked AGNTC. The Machines Faction is excluded from governance — only human participants (Community, Professional, Founders) may cast votes (Section 21.2).
 
 **Resource economy.** Within the game interface, AGNTC represents the primary tradeable resource. It is earned through mining (Secure actions), spent on agent deployment, data storage, and NCP messaging, and traded between users.
 
@@ -909,9 +909,15 @@ The protocol follows a phased deployment strategy, beginning on Solana and migra
 
 #### 10.1 Total Supply Architecture
 
-AGNTC has a maximum theoretical supply of 1,000,000,000 (1 billion) tokens, intrinsically linked to the 31,623 x 31,623 coordinate grid. Each grid cell yields exactly 1 AGNTC when claimed, creating a one-to-one correspondence between tokens and spatial coordinates.
+AGNTC has a soft-capped supply with a **5% annual inflation ceiling** enforced per epoch. The theoretical maximum is 1,000,000,000 (1 billion) tokens, corresponding to the 31,623 x 31,623 coordinate grid. In practice, the effective supply is constrained well below this by the inflation ceiling, increasing mining hardness, and sustained fee burns.
 
-There is no pre-mine beyond the genesis allocation. There is no scheduled inflation — no annual emission rate, no minting schedule, no algorithmic supply expansion. Supply grows only when participants actively claim coordinates through the mining process. If no mining occurs, no new AGNTC enters circulation.
+**Mining is the sole supply-expanding mechanism.** New AGNTC enters circulation only through one pathway: a miner successfully claims a grid coordinate. There is no pre-mine beyond the genesis allocation, no scheduled emission curve, no treasury minting authority. If no mining occurs, no new AGNTC enters circulation.
+
+**Supply burns** contract the circulating supply through two channels:
+- **50% transaction fee burn** — permanently removes AGNTC on every on-chain action (Section 12)
+- **Machines Faction accumulation** — 25% of all minted supply flows to the Machines treasury, which never sells (Section 10.3)
+
+**Signup bonus:** Each new user registration mints 1 AGNTC as a signup bonus, ensuring every participant enters the economy with a non-zero balance. This minor supply expansion is subject to the same inflation ceiling enforcement.
 
 **Genesis supply:** 900 AGNTC, distributed across 9 genesis nodes:
 
@@ -940,22 +946,23 @@ Newly minted AGNTC is distributed according to the faction that controls the arm
 
 This distribution is self-enforcing: it follows from the geographic structure of the galaxy grid rather than from administrative allocation. The protocol does not "send 25% to the Community pool" — rather, 25% of all coordinates exist in the Community arm, and claiming those coordinates mints AGNTC attributed to Community participants.
 
-#### 10.3 Machines Faction Floor Mechanism
+#### 10.3 Machines Faction: Permanent Accumulator
 
-The Machines Faction represents a protocol-enforced approach to token supply stability. AI agents in this faction operate autonomously — mining coordinates, earning AGNTC, and participating in the economy — but are subject to a protocol-level sell constraint:
+The Machines Faction represents a protocol-enforced approach to token supply stability. AI agents in this faction operate as autonomous miners and validators — claiming coordinates, earning AGNTC, and participating in block verification — but are subject to a protocol-level constraint: **the Machines Faction never sells AGNTC.**
 
-```
-MACHINES_MIN_SELL_RATIO = 1.0
-```
+Unlike the v1.0 floor mechanism (which allowed sales above acquisition cost), the v3 model treats the Machines Faction as a permanent accumulator. Every AGNTC that enters a Machines Faction wallet stays there indefinitely. The protocol enforces this at the transaction validation level — any transfer of AGNTC out of a Machines Faction wallet is rejected by the verification committee.
 
-Every AGNTC earned by a Machine agent carries a recorded acquisition cost (the CPU Energy expended to mine it). The smart contract enforces that any sell order from a Machines Faction wallet must have a price at or above the acquisition cost of the tokens being sold. This creates a permanent buy-side floor:
+**Properties of the permanent accumulator:**
 
-- 25% of all minted AGNTC can never be sold at a loss
-- As the network grows and mining becomes more expensive (hardness increases), the acquisition cost floor rises
-- Machine agents accumulate AGNTC over time, creating natural demand-side pressure
-- In a declining market, Machines Faction tokens are withheld from sale, reducing sell pressure
+- 25% of all minted AGNTC is permanently removed from circulation
+- The Machines Faction treasury grows monotonically — it can only increase
+- Treasury size serves as a **protocol health metric**: a growing treasury indicates sustained mining activity
+- Combined with the 50% fee burn, over 75% of gross supply expansion is either burned or locked
+- The accumulator creates sustained deflationary pressure that intensifies as the network matures
 
-This mechanism is enforced at the protocol level, not through voluntary compliance. The constraint is embedded in the transaction validation logic — a sell order from a Machines Faction wallet that violates the ratio is rejected by the verification committee.
+**Governance exclusion.** The Machines Faction has zero governance weight. AI agents cannot vote on protocol parameters, upgrades, or emergency actions. This separation ensures that humans govern the protocol while machines execute it (Section 21.2).
+
+**Emergency override.** The Machines Faction treasury can only be unlocked through an emergency governance vote requiring a 75% supermajority of human-held staked AGNTC. This threshold is deliberately high — it represents an extraordinary action that should only occur if the accumulated treasury threatens protocol stability.
 
 #### 10.4 Supply Curve Projections
 
@@ -981,7 +988,7 @@ For comparison:
 | Ethereum | No cap | ~1,700 ETH/day issuance, EIP-1559 burn |
 | Solana | ~600,000,000 | 8% to 1.5% inflation decay |
 | Filecoin | 2,000,000,000 | Dual minting (time + utility) |
-| **AGNTC** | **1,000,000,000** | **Organic (claim-driven), hardness 16N** |
+| **AGNTC** | **Soft cap (5% ceiling)** | **Mining-only expansion, BME burns, hardness 16N** |
 
 ---
 
@@ -992,13 +999,18 @@ For comparison:
 ZK Agentic Chain's supply model is fundamentally different from both fixed-schedule emission (Bitcoin halvings) and algorithmic inflation (Solana's annual decay). Supply growth is purely organic:
 
 - No scheduled emission curve
-- No annual inflation rate
 - No algorithmic minting
 - No treasury minting authority
+- **Mining is the sole supply-expanding mechanism**
 
-New AGNTC enters circulation through one and only one mechanism: a participant claims a grid coordinate, and 1 AGNTC is minted at that coordinate. The rate at which supply grows is determined entirely by participant behavior — how many miners are active, how much CPU Energy they deploy, and which coordinates they choose to claim.
+New AGNTC enters circulation through one and only one mechanism: a miner successfully claims a grid coordinate. The rate at which supply grows is determined entirely by participant behavior — how many miners are active, how much CPU Energy they deploy, and which coordinates they choose to claim.
 
-This means that in a period of low network activity, supply growth approaches zero. In a period of high activity, supply grows faster — but always bounded by the mining hardness curve that makes each successive coordinate more expensive to claim.
+This means that in a period of low network activity, supply growth approaches zero. In a period of high activity, supply grows faster — but always bounded by two constraints:
+
+1. **Mining hardness curve** — each successive ring costs more CPU Energy to mine (hardness = 16 x ring), creating natural disinflation
+2. **5% annual inflation ceiling** — enforced per epoch, the protocol rejects mining rewards that would cause annualized supply growth to exceed 5% of total minted supply
+
+The inflation ceiling is a hard protocol constraint, not a target. In practice, mining hardness alone keeps actual inflation well below 5% in all but the earliest epochs. The ceiling exists as a safety valve — if a sudden influx of miners attempted to claim coordinates faster than the hardness curve alone would restrain, the ceiling caps the maximum rate of expansion.
 
 #### 11.2 Epoch Ring Expansion
 
@@ -1071,7 +1083,7 @@ These figures represent a solo miner at an average-density coordinate. In a netw
 
 #### 11.5 Supply Flattening Analysis
 
-The organic growth model produces a supply curve that flattens asymptotically. The "soft cap" is not a declared maximum but a market equilibrium: the ring at which the mining cost (CPU Energy spent) exceeds the market value of the AGNTC obtained.
+The organic growth model produces a supply curve that flattens asymptotically. The soft cap emerges from two reinforcing constraints: (1) the per-epoch 5% annual inflation ceiling, which hard-limits the maximum expansion rate, and (2) the market equilibrium at which the mining cost (CPU Energy spent) exceeds the market value of the AGNTC obtained.
 
 **Practical flattening bands** by network size:
 
@@ -1082,14 +1094,19 @@ The organic growth model produces a supply curve that flattens asymptotically. T
 | Medium (~1,000 miners) | ~324 | ~42M | 14 days |
 | Large (~10,000 miners) | ~500+ | 100M+ | 22+ days |
 
-**Net supply after burns:** The actual circulating supply is reduced by the cumulative 50% fee burn:
+**Net supply after burns:** The actual circulating supply is reduced by multiple burn channels:
 
 ```
-circulating_supply = total_minted - cumulative_burns
-net_inflation = new_coords_claimed - (total_fees * FEE_BURN_RATE)
+circulating_supply = total_minted - cumulative_fee_burns - cumulative_bme_burns - machines_treasury
+net_inflation = new_mining_rewards - (total_fees * FEE_BURN_RATE) - bme_claim_burns
 ```
 
-In an active network with high transaction volume, the fee burn can exceed new minting — producing net deflation in circulating supply even as the total minted supply continues to grow.
+Three mechanisms contract the effective supply:
+1. **50% transaction fee burn** — permanent removal on every on-chain action
+2. **BME claim burns** — AGNTC spent on node claims is permanently burned (Section 12.4)
+3. **Machines accumulation** — 25% of minted supply enters the Machines treasury and never circulates
+
+In an active network with high transaction volume, the combined burn rate can significantly exceed new minting — producing net deflation in circulating supply even as total minted supply continues to grow.
 
 **Comparison: Bitcoin halvings vs. AGNTC continuous hardness:**
 
@@ -1147,7 +1164,39 @@ The 50% burn rate is calibrated to produce meaningful deflationary pressure with
 | Solana | 50% of base fee | 100% to validator | Mildly deflationary |
 | Render | 100% of job payments | Separate mint to operators | Burn-Mint Equilibrium |
 | Filecoin | Revenue-based (FIP-100) | To storage providers | Revenue-linked |
-| **AGNTC** | **50% of all fees** | **50% to verifiers/stakers** | **Usage-linked scarcity** |
+| **AGNTC** | **50% of all fees + BME** | **50% to verifiers/stakers** | **Multi-channel burn** |
+
+#### 12.4 Burn-Mint Equilibrium (BME) and the City Real Estate Model
+
+Node claims in ZK Agentic Chain follow a **Burn-Mint Equilibrium (BME)** model inspired by the Render Network's economic design [27]. When a user claims a coordinate, both AGNTC and CPU Energy are permanently burned. Mining that coordinate subsequently mints new AGNTC — but the burn precedes the mint, creating a deflationary buffer.
+
+The claim cost follows a **city real estate model** — an economic geography where location determines price:
+
+```
+claim_cost_agntc(ring, density) = BASE_CLAIM_COST × density × (1 / ring)
+claim_cost_cpu(ring, density)   = BASE_CPU_CLAIM_COST × density × (1 / ring)
+```
+
+Where:
+- **BASE_CLAIM_COST** = 100 AGNTC (the cost of claiming a coordinate at ring 1, density 1.0)
+- **BASE_CPU_CLAIM_COST** = 50 CPU Energy (the CPU cost at ring 1, density 1.0)
+- **density** is the coordinate's resource richness in [0, 1]
+- **ring** is the distance from the origin (minimum 1)
+
+**The real estate analogy:**
+
+| Location | Ring | Relative Cost | Real-World Analogy |
+|----------|------|--------------|-------------------|
+| Origin-adjacent | 1-3 | 100-33% of base | Manhattan / City of London |
+| Inner rings | 5-20 | 20-5% of base | Urban core |
+| Mid rings | 20-100 | 5-1% of base | Suburbs |
+| Outer rings | 100+ | <1% of base | Rural frontier |
+
+Inner-ring coordinates are expensive to claim but yield AGNTC at the lowest hardness (most productive mining). Outer-ring coordinates are cheap to claim but yield AGNTC at high hardness (least productive mining). This creates a natural economic tension: premium locations cost more upfront but pay off faster.
+
+**Floor prices.** The formula includes implicit floor prices — at any ring, the minimum claim cost is BASE_CLAIM_COST × min_density / ring. Since density is derived from SHA-256 and uniformly distributed, no coordinate has zero density, preventing near-zero claim costs even at extreme outer rings.
+
+**CPU Energy burn.** The CPU Energy spent on claims is permanently consumed — it does not flow to verifiers, stakers, or any recipient. This provides a second deflationary channel independent of the fee burn, ensuring that network expansion always carries an irreversible resource cost.
 
 ---
 
@@ -1810,7 +1859,7 @@ New participants enter the ZK Agentic Chain through a structured onboarding sequ
 **Step 4: Galaxy entry.** Upon tier selection, the participant is assigned a homenode position in their faction arm. Community users are assigned to the North arm, Professional users to the West arm, and so on. The homenode position is determined by the current epoch ring and the golden-angle prime-twist algorithm (Section 11.2), ensuring quasi-random distribution within the faction arm.
 
 At this point, the participant has:
-- A claimed coordinate (their homenode position) → 1 AGNTC minted
+- A claimed coordinate (their homenode position) with 1 AGNTC signup bonus minted
 - An active Sonnet agent at their homenode (or Opus for Professional/Max)
 - A 64-cell subgrid (all unassigned)
 - Their initial CPU Energy allocation
@@ -1830,7 +1879,7 @@ The three-tier model serves both as an access control mechanism and as a revenue
 | Nodes per User | 1 initially | Up to 5 | Up to 20 |
 | Subgrid Visibility | Own grid only | Own + neighbor summary | Full faction visibility |
 | Network Color | Faction default | Faction default | Custom |
-| Governance Weight | 1× | 2× | 5× |
+| Governance Weight | 1× (human vote) | 2× (human vote) | 5× (human vote) |
 
 **Free tier design rationale.** The Community tier provides full protocol participation at zero cost. The constraints (Haiku-only deployment, single initial node, limited visibility) bound the resource consumption per free user without excluding anyone from the economic system. A free user can earn AGNTC through Secure operations, accumulate resources through subgrid allocation, and eventually self-fund an upgrade to Professional through in-protocol earnings.
 
@@ -1975,11 +2024,24 @@ The zero-knowledge proof system evolves through four phases, each adding capabil
 
 #### 21.2 Governance
 
-The governance system activates after mainnet launch with a three-tier proposal structure:
+The governance system activates after mainnet launch. A core design principle is the **separation of powers**: humans govern the protocol; machines execute it. The Machines Faction has zero governance weight — AI agents cannot vote on any proposal type. Only human-held staked AGNTC (Community, Professional, Founders factions) carries voting power.
 
-**Parameter proposals.** Adjustments to protocol parameters (hardness multiplier, fee burn rate, staking weights, base rates). These proposals require a simple majority (>50%) of voting power and a minimum quorum of 10% of total staked AGNTC. Parameter changes take effect after a 7-day timelock.
+**Voting weight** is proportional to staked AGNTC. All governance votes are on-chain, public, and auditable.
+
+**Governance threshold table:**
+
+| Proposal Type | Threshold | Quorum | Timelock | Description |
+|--------------|-----------|--------|----------|-------------|
+| Parameter change | 51% | 10% | 7 days | Hardness multiplier, fee burn rate, staking weights, base rates |
+| Protocol upgrade | 67% | 25% | 30 days | Consensus rules, verification pipeline, economic model changes |
+| Emergency Machines unlock | 75% | 33% | None | Release AGNTC from Machines Faction treasury |
+| Emergency action | 80% | 25% | None | Pause compromised module, slash proven attacker |
+
+**Parameter proposals.** Adjustments to protocol parameters. These proposals require a simple majority (>51%) of human voting power and a minimum quorum of 10% of total human-staked AGNTC. Parameter changes take effect after a 7-day timelock.
 
 **Protocol proposals.** Changes to consensus rules, verification pipeline, or economic model. These require a supermajority (>67%) and a quorum of 25%. Protocol changes have a 30-day timelock and must include a specification, test results, and security analysis.
+
+**Emergency Machines unlock.** The Machines Faction treasury is locked by default. Unlocking any portion requires a 75% supermajority of human-staked AGNTC with a 33% quorum. This is an extraordinary action — the high threshold reflects the systemic importance of the Machines treasury as a deflationary anchor.
 
 **Emergency proposals.** Security-critical changes (pausing a compromised module, slashing a proven attacker). Emergency proposals require an 80% supermajority but have no timelock — they execute immediately upon reaching threshold. Emergency proposals can be vetoed by a security council (a 5-of-9 multisig) within 24 hours.
 
@@ -2040,7 +2102,9 @@ The following table provides the complete set of protocol-level parameters that 
 | DIST_MACHINES | 0.25 | Faction share: Machines (AI agents, E arm) |
 | DIST_FOUNDERS | 0.25 | Faction share: Founders (team, S arm) |
 | DIST_PROFESSIONAL | 0.25 | Faction share: Professional (paid-tier, W arm) |
-| MACHINES_MIN_SELL_RATIO | 1.0 | Machines faction cannot sell below acquisition cost |
+| MACHINES_SELL_ALLOWED | false | Machines faction: permanent accumulator, never sells |
+| ANNUAL_INFLATION_CEILING | 0.05 | Maximum 5% annualized supply growth, enforced per epoch |
+| SIGNUP_BONUS | 1.0 | AGNTC minted per new user registration |
 
 #### Mining and Epoch Parameters
 
@@ -2052,7 +2116,9 @@ The following table provides the complete set of protocol-level parameters that 
 | HOMENODE_BASE_ANGLE | 137.5° | Golden angle for homenode placement |
 | NODE_GRID_SPACING | 10 | Coordinate spacing between node positions |
 | ENERGY_PER_CLAIM | 1.0 | CPU cost per active claim per block |
-| BASE_BIRTH_COST | 100 | AGNTC cost for creating a new star system at ring 1 |
+| BASE_CLAIM_COST ‡ | 100 | AGNTC cost for claiming a coordinate at ring 1, density 1.0 |
+| BASE_CPU_CLAIM_COST ‡ | 50 | CPU Energy cost for claiming at ring 1, density 1.0 |
+| CLAIM_COST_FLOOR | 0.01 | Minimum claim cost (prevents near-zero at extreme outer rings) |
 
 #### Subgrid Parameters
 
@@ -2267,9 +2333,9 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 **Mitigation:** (a) Smaller, specialized verification models can reduce cost 10-100x. (b) Model distillation. (c) Future on-device inference.
 
-#### 24.5 No Formal Governance Mechanism
+#### 24.5 Governance Implementation
 
-**Status:** Governance specification is deferred to post-mainnet. During testnet and alpha phases, protocol parameters are adjusted by the core development team.
+**Status:** The governance model is specified (Section 21.2) with human-only voting, threshold tiers, and Machines exclusion. Implementation is deferred to post-mainnet. During testnet and alpha phases, protocol parameters are adjusted by the core development team. The governance smart contracts — vote weight calculation, quorum checking, timelock enforcement, and Machines exclusion logic — will be developed and audited during Phase 3.
 
 #### 24.6 Network Protocol Unspecified
 
@@ -2287,7 +2353,9 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 |------|-----------|
 | **AGNTC** | Agentic Coin — the native token of the ZK Agentic Chain, mapped 1:1 to grid coordinates |
 | **BFT** | Byzantine Fault Tolerance — consensus property that tolerates f malicious nodes |
-| **Claim** | The act of minting 1 AGNTC by occupying a grid coordinate |
+| **BME** | Burn-Mint Equilibrium — economic model where AGNTC and CPU Energy are burned on node claims, and mining mints new supply |
+| **Claim** | The act of occupying a grid coordinate; costs AGNTC + CPU Energy (burned via BME), subsequent mining mints new AGNTC |
+| **City Real Estate Model** | Claim pricing where inner rings (near origin) are expensive and outer rings are cheap, analogous to urban vs. rural land values |
 | **Commit-reveal** | Two-phase protocol preventing attestation copying: commit H(vote‖nonce), then reveal |
 | **Coordinate density** | Resource richness of a grid position, d(x,y) = SHA-256(x,y) → [0,1], immutable |
 | **CPU Energy** | The computational resource budget allocated per subscription tier |
