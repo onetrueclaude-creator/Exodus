@@ -4,7 +4,7 @@ NOT cryptographically secure -- prototype only.
 """
 from __future__ import annotations
 from dataclasses import dataclass, field
-from agentic.params import FEE_BURN_RATE, REWARD_SPLIT_ORDERER, REWARD_SPLIT_VERIFIER, REWARD_SPLIT_STAKER
+from agentic.params import FEE_BURN_RATE, REWARD_SPLIT_VERIFIER, REWARD_SPLIT_STAKER
 
 
 @dataclass
@@ -34,7 +34,6 @@ class FeeDistribution:
 
     total_fees: int
     burned: int
-    to_orderer: int
     to_verifiers: int
     to_stakers: int
 
@@ -50,8 +49,7 @@ class FeeEngine:
     def collect_and_distribute(self, fees: list[int]) -> FeeDistribution:
         """Collect fees from a block's transactions, burn portion, distribute rest.
 
-        Per whitepaper: 50% burned, remaining 50% split among orderer/verifiers/stakers
-        using the REWARD_SPLIT ratios.
+        Per whitepaper v3: 50% burned, remaining 50% split verifiers 60% / stakers 40%.
         """
         total = sum(fees)
         self.total_collected += total
@@ -60,15 +58,12 @@ class FeeEngine:
         self.total_burned += burned
 
         remainder = total - burned
-        split_total = REWARD_SPLIT_ORDERER + REWARD_SPLIT_VERIFIER + REWARD_SPLIT_STAKER
-        to_orderer = int(remainder * REWARD_SPLIT_ORDERER / split_total)
-        to_verifiers = int(remainder * REWARD_SPLIT_VERIFIER / split_total)
-        to_stakers = remainder - to_orderer - to_verifiers  # avoid rounding errors
+        to_verifiers = int(remainder * REWARD_SPLIT_VERIFIER)
+        to_stakers = remainder - to_verifiers  # avoid rounding errors
 
         return FeeDistribution(
             total_fees=total,
             burned=burned,
-            to_orderer=to_orderer,
             to_verifiers=to_verifiers,
             to_stakers=to_stakers,
         )

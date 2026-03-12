@@ -1,10 +1,9 @@
-"""Epoch-level reward distribution engine for AGNTC."""
+"""Epoch-level reward distribution engine for AGNTC — v3 (ceiling enforcement, BME)."""
 from __future__ import annotations
 from dataclasses import dataclass, field
 from agentic.params import (
-    INITIAL_INFLATION_RATE, DISINFLATION_RATE, INFLATION_FLOOR,
-    FEE_BURN_RATE, REWARD_SPLIT_ORDERER, REWARD_SPLIT_VERIFIER,
-    REWARD_SPLIT_STAKER, ALPHA, BETA,
+    FEE_BURN_RATE, REWARD_SPLIT_VERIFIER, REWARD_SPLIT_STAKER,
+    ALPHA, BETA, ANNUAL_INFLATION_CEILING,
 )
 
 
@@ -12,26 +11,31 @@ from agentic.params import (
 class EpochRewardReport:
     """Complete reward accounting for one epoch."""
     epoch: int
-    year: float
-    inflation_rate: float
-    inflation_minted: int
+    inflation_minted: int           # always 0 in v3 — mining handles supply
     fee_revenue: int
     fees_burned: int
-    total_rewards: int  # inflation + (fees - burned)
-    orderer_rewards: dict[int, int]     # validator_id -> reward
-    verifier_rewards: dict[int, int]    # validator_id -> reward
-    staker_rewards: dict[int, int]      # validator_id -> reward (delegator share)
+    total_rewards: int              # fee remainder distributed
+    verifier_rewards: dict[int, int]
+    staker_rewards: dict[int, int]
     total_burned: int
+    # BME fields
+    bme_claim_burns: int = 0
+    bme_verifier_rewards: dict[int, int] = field(default_factory=dict)
+    bme_staker_rewards: dict[int, int] = field(default_factory=dict)
+    # Inflation ceiling
+    mining_minted: int = 0
+    ceiling_exceeded: bool = False
+    compression_ratio: float = 1.0
 
 
 class RewardsEngine:
-    """Computes and distributes epoch rewards.
+    """Computes and distributes epoch rewards — v3.
 
-    Per whitepaper v0.2:
-    - Inflation minting based on disinflation curve
+    - No scheduled inflation (mining engine creates supply directly)
     - 50% of transaction fees burned
-    - Remaining fees + inflation split: Verifier 60%, Staker 40% (orderers fee-compensated)
-    - Distribution weighted by effective stake (40% token, 60% CPU)
+    - Remaining fees split: Verifier 60%, Staker 40%
+    - BME claim burns re-minted to verifiers/stakers at same 60/40 split
+    - Inflation ceiling enforcement: reports compression_ratio if exceeded
     """
 
     def __init__(self, epochs_per_year: int = 12):
@@ -39,57 +43,38 @@ class RewardsEngine:
         self.cumulative_burned: int = 0
         self.cumulative_minted: int = 0
 
-    def inflation_rate_at_epoch(self, epoch: int) -> float:
-        """Get annual inflation rate at a given epoch."""
-        year = epoch / self.epochs_per_year
-        rate = INITIAL_INFLATION_RATE * ((1 - DISINFLATION_RATE) ** year)
-        return max(rate, INFLATION_FLOOR)
-
     def compute_epoch_rewards(
         self,
         epoch: int,
         circulating_supply: int,
         fee_revenue: int,
-        validators: list,  # list of objects with .id, .token_stake, .cpu_vpu, .online
-        orderer_id: int | None = None,
+        mining_minted: int,
+        validators: list,
+        bme_claim_burns: int = 0,
     ) -> EpochRewardReport:
-        """Compute full reward distribution for one epoch.
-
-        Args:
-            epoch: Current epoch number
-            circulating_supply: Total circulating tokens
-            fee_revenue: Total fees collected this epoch
-            validators: List of Validator objects
-            orderer_id: ID of the block orderer (gets orderer share)
-        """
-        year = epoch / self.epochs_per_year
-        inflation_rate = self.inflation_rate_at_epoch(epoch)
-        epoch_rate = inflation_rate / self.epochs_per_year
-        inflation_minted = int(circulating_supply * epoch_rate)
-
         # Fee burn
         fees_burned = int(fee_revenue * FEE_BURN_RATE)
         fee_remainder = fee_revenue - fees_burned
 
-        # Total reward pool = inflation + remaining fees
-        total_pool = inflation_minted + fee_remainder
+        # Inflation ceiling check
+        epoch_ceiling = circulating_supply * (ANNUAL_INFLATION_CEILING / self.epochs_per_year)
+        ceiling_exceeded = mining_minted > epoch_ceiling
+        compression_ratio = (epoch_ceiling / mining_minted) if (ceiling_exceeded and mining_minted > 0) else 1.0
 
-        # Split into orderer/verifier/staker pools
-        orderer_pool = int(total_pool * REWARD_SPLIT_ORDERER)
-        verifier_pool = int(total_pool * REWARD_SPLIT_VERIFIER)
-        staker_pool = total_pool - orderer_pool - verifier_pool  # avoid rounding loss
-
-        # Calculate effective stakes for online validators
+        # Online validators
         online = [v for v in validators if v.online]
         if not online:
+            self.cumulative_burned += fees_burned
             return EpochRewardReport(
-                epoch=epoch, year=year, inflation_rate=inflation_rate,
-                inflation_minted=inflation_minted, fee_revenue=fee_revenue,
+                epoch=epoch, inflation_minted=0, fee_revenue=fee_revenue,
                 fees_burned=fees_burned, total_rewards=0,
-                orderer_rewards={}, verifier_rewards={}, staker_rewards={},
-                total_burned=fees_burned,
+                verifier_rewards={}, staker_rewards={},
+                total_burned=fees_burned, mining_minted=mining_minted,
+                ceiling_exceeded=ceiling_exceeded, compression_ratio=compression_ratio,
+                bme_claim_burns=bme_claim_burns,
             )
 
+        # Effective stakes
         total_token = sum(v.token_stake for v in online)
         total_cpu = sum(v.cpu_vpu for v in online)
 
@@ -100,62 +85,55 @@ class RewardsEngine:
             else:
                 es = 1.0 / len(online)
             effective_stakes[v.id] = es
-
         total_es = sum(effective_stakes.values())
 
-        # Distribute orderer rewards (all to the orderer, or equally if none specified)
-        orderer_rewards = {}
-        if orderer_id is not None and orderer_id in effective_stakes:
-            orderer_rewards[orderer_id] = orderer_pool
-        elif online:
-            # Spread orderer pool equally among all (no designated orderer)
-            per_validator = orderer_pool // len(online)
-            for v in online:
-                orderer_rewards[v.id] = per_validator
+        # Distribute fee remainder: 60% verifiers, 40% stakers
+        verifier_pool = int(fee_remainder * REWARD_SPLIT_VERIFIER)
+        staker_pool = fee_remainder - verifier_pool
 
-        # Distribute verifier rewards proportional to effective stake
-        verifier_rewards = {}
-        remaining = verifier_pool
-        for i, v in enumerate(online):
-            if total_es > 0:
-                share = effective_stakes[v.id] / total_es
-            else:
-                share = 1.0 / len(online)
-            reward = int(verifier_pool * share) if i < len(online) - 1 else remaining
-            verifier_rewards[v.id] = reward
-            remaining -= reward
+        verifier_rewards = self._distribute(online, verifier_pool, effective_stakes, total_es)
+        staker_rewards = self._distribute_by_token(online, staker_pool, total_token)
 
-        # Distribute staker rewards proportional to token stake (pure capital weight)
-        staker_rewards = {}
-        remaining = staker_pool
-        for i, v in enumerate(online):
-            if total_token > 0:
-                share = v.token_stake / total_token
-            else:
-                share = 1.0 / len(online)
-            reward = int(staker_pool * share) if i < len(online) - 1 else remaining
-            staker_rewards[v.id] = reward
-            remaining -= reward
+        # BME claim mints
+        bme_verifier_rewards = {}
+        bme_staker_rewards = {}
+        if bme_claim_burns > 0:
+            bme_v_pool = int(bme_claim_burns * REWARD_SPLIT_VERIFIER)
+            bme_s_pool = bme_claim_burns - bme_v_pool
+            bme_verifier_rewards = self._distribute(online, bme_v_pool, effective_stakes, total_es)
+            bme_staker_rewards = self._distribute_by_token(online, bme_s_pool, total_token)
 
-        total_distributed = (
-            sum(orderer_rewards.values())
-            + sum(verifier_rewards.values())
-            + sum(staker_rewards.values())
-        )
-
+        total_distributed = sum(verifier_rewards.values()) + sum(staker_rewards.values())
         self.cumulative_burned += fees_burned
-        self.cumulative_minted += inflation_minted
+        self.cumulative_minted += bme_claim_burns
 
         return EpochRewardReport(
-            epoch=epoch,
-            year=year,
-            inflation_rate=inflation_rate,
-            inflation_minted=inflation_minted,
-            fee_revenue=fee_revenue,
-            fees_burned=fees_burned,
-            total_rewards=total_distributed,
-            orderer_rewards=orderer_rewards,
-            verifier_rewards=verifier_rewards,
-            staker_rewards=staker_rewards,
-            total_burned=fees_burned,
+            epoch=epoch, inflation_minted=0, fee_revenue=fee_revenue,
+            fees_burned=fees_burned, total_rewards=total_distributed,
+            verifier_rewards=verifier_rewards, staker_rewards=staker_rewards,
+            total_burned=fees_burned, mining_minted=mining_minted,
+            ceiling_exceeded=ceiling_exceeded, compression_ratio=compression_ratio,
+            bme_claim_burns=bme_claim_burns,
+            bme_verifier_rewards=bme_verifier_rewards,
+            bme_staker_rewards=bme_staker_rewards,
         )
+
+    def _distribute(self, validators, pool, effective_stakes, total_es) -> dict[int, int]:
+        rewards = {}
+        remaining = pool
+        for i, v in enumerate(validators):
+            share = effective_stakes[v.id] / total_es if total_es > 0 else 1.0 / len(validators)
+            reward = int(pool * share) if i < len(validators) - 1 else remaining
+            rewards[v.id] = reward
+            remaining -= reward
+        return rewards
+
+    def _distribute_by_token(self, validators, pool, total_token) -> dict[int, int]:
+        rewards = {}
+        remaining = pool
+        for i, v in enumerate(validators):
+            share = v.token_stake / total_token if total_token > 0 else 1.0 / len(validators)
+            reward = int(pool * share) if i < len(validators) - 1 else remaining
+            rewards[v.id] = reward
+            remaining -= reward
+        return rewards
