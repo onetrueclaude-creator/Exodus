@@ -2,7 +2,7 @@
 from __future__ import annotations
 import pytest
 from agentic.economics.fees import FeeSchedule, FeeEngine, FeeDistribution
-from agentic.params import FEE_BURN_RATE, REWARD_SPLIT_ORDERER, REWARD_SPLIT_VERIFIER, REWARD_SPLIT_STAKER
+from agentic.params import FEE_BURN_RATE, REWARD_SPLIT_VERIFIER, REWARD_SPLIT_STAKER
 
 
 class TestFeeSchedule:
@@ -51,18 +51,15 @@ class TestFeeEngine:
         dist = engine.collect_and_distribute([1000])
         remainder = dist.total_fees - dist.burned
         assert remainder == 500
-        # Verify all remainder is accounted for
-        assert dist.to_orderer + dist.to_verifiers + dist.to_stakers == remainder
+        # v3: no orderer — all remainder split between verifiers and stakers
+        assert dist.to_verifiers + dist.to_stakers == remainder
 
     def test_split_ratios(self):
         engine = FeeEngine()
         dist = engine.collect_and_distribute([10000])
         remainder = dist.total_fees - dist.burned  # 5000
-        split_total = REWARD_SPLIT_ORDERER + REWARD_SPLIT_VERIFIER + REWARD_SPLIT_STAKER
-        expected_orderer = int(remainder * REWARD_SPLIT_ORDERER / split_total)
-        expected_verifiers = int(remainder * REWARD_SPLIT_VERIFIER / split_total)
-        expected_stakers = remainder - expected_orderer - expected_verifiers
-        assert dist.to_orderer == expected_orderer
+        expected_verifiers = int(remainder * REWARD_SPLIT_VERIFIER)
+        expected_stakers = remainder - expected_verifiers
         assert dist.to_verifiers == expected_verifiers
         assert dist.to_stakers == expected_stakers
 
@@ -84,7 +81,6 @@ class TestFeeEngine:
         dist = engine.collect_and_distribute([])
         assert dist.total_fees == 0
         assert dist.burned == 0
-        assert dist.to_orderer == 0
         assert dist.to_verifiers == 0
         assert dist.to_stakers == 0
 
