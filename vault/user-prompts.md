@@ -1735,3 +1735,11 @@ All prompts, numbered consecutively across sessions.
 532. [2026-03-13 08:32:51 UTC] the hamburger fix works though, are you sure we still have uncommited changes?
 [A] [2026-03-13 08:33:08 UTC] Thanks! The testnet pipeline is fully operational:
 533. [2026-03-13 08:33:22 UTC] yes
+[A] [2026-03-13 08:34:17 UTC] All staged. Git correctly detected the `ZKAGENTIC.md` → `vault/ZKAGENTIC.md` rename.
+534. [2026-03-13 08:36:40 UTC] lets update the zkagenticnetwork.com landing page, currently it is showing the under-development landing page
+[A] [2026-03-13 08:38:39 UTC] Deployed. Let me verify.
+535. [2026-03-13 08:39:12 UTC] no, keep the zkagenticnetwork.com as the under-development landing page
+[A] [2026-03-13 08:43:03 UTC] Done. **zkagenticnetwork.com** is now showing a clean "Under Development" landing page with:
+536. [2026-03-13 08:43:07 UTC] looking good thank you
+[A] [2026-03-13 08:43:15 UTC] Done. **zkagenticnetwork.com** is now showing a clean "Under Development" landing page with:
+537. [2026-03-13 08:43:16 UTC] save and commit everything
