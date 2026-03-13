@@ -4,14 +4,14 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="stylesheet" href="/_next/static/chunks/35eb57da504c74ac.css" data-precedence="next"/>
-  <title>AGNTC Whitepaper v1.1 - ZK Agentic Chain</title>
-  <meta name="description" content="ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification. AGNTC Whitepaper v1.1 — 26 sections, 80 pages, 45 references."/>
-  <meta property="og:title" content="AGNTC Whitepaper v1.1"/>
+  <title>AGNTC Whitepaper v1.2 - ZK Agentic Chain</title>
+  <meta name="description" content="ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification. AGNTC Whitepaper v1.2 — 26 sections, 80 pages, 45 references."/>
+  <meta property="og:title" content="AGNTC Whitepaper v1.2"/>
   <meta property="og:description" content="A Privacy-Preserving Blockchain with AI-Powered Verification. Peer-review-quality protocol specification with formal security proofs."/>
   <meta property="og:site_name" content="ZK Agentic Chain"/>
   <meta property="og:type" content="article"/>
   <meta name="twitter:card" content="summary"/>
-  <meta name="twitter:title" content="AGNTC Whitepaper v1.1"/>
+  <meta name="twitter:title" content="AGNTC Whitepaper v1.2"/>
   <meta name="twitter:description" content="A Privacy-Preserving Blockchain with AI-Powered Verification. Peer-review-quality protocol specification with formal security proofs."/>
   <link rel="icon" href="/favicon.ico?favicon.0b3bf435.ico" sizes="256x256" type="image/x-icon"/>
   <link rel="icon" href="/logos/logo-mini.svg" type="image/svg+xml"/>
@@ -23,7 +23,7 @@
 <header class="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-card-border">
   <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
     <a class="flex items-center gap-2 font-heading font-bold text-lg text-text-primary" href="/">
-      <img alt="" loading="lazy" width="28" height="28" decoding="async" style="color:transparent" src="/logos/logo-mini.svg"/>
+      <img alt="" loading="lazy" width="28" height="28" decoding="async" style="color:transparent" src="/logos/icon.svg"/>
       <span class="gradient-text">ZK Agentic Chain</span>
     </a>
     <nav class="hidden md:flex items-center gap-8">
@@ -36,12 +36,19 @@
     <div class="hidden md:block">
       <a class="inline-block px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 bg-gradient-to-r from-accent-cyan to-accent-purple text-white shadow-glow hover:shadow-glow-lg hover:scale-105" href="/staking">Join Testnet</a>
     </div>
-    <button class="md:hidden text-text-secondary hover:text-text-primary" aria-label="Toggle menu">
+    <button class="md:hidden text-text-secondary hover:text-text-primary" aria-label="Toggle menu" onclick="var m=document.getElementById('mobile-nav');m.style.display=m.style.display==='block'?'none':'block'">
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
       </svg>
     </button>
   </div>
+  <nav id="mobile-nav" class="md:hidden" style="display:none;padding:0.5rem 1.5rem 1rem;border-top:1px solid rgba(255,255,255,0.08)">
+    <a class="block py-2 text-sm text-text-secondary" href="/technology">Technology</a>
+    <a class="block py-2 text-sm text-text-secondary" href="/tokenomics">Tokenomics</a>
+    <a class="block py-2 text-sm text-text-secondary" href="/roadmap">Roadmap</a>
+    <a class="block py-2 text-sm text-text-secondary" href="/staking">Staking</a>
+    <a class="block py-2 text-sm text-text-secondary" href="/whitepaper">Whitepaper</a>
+  </nav>
 </header>
 
 <main class="flex-1 pt-16">
@@ -63,8 +70,8 @@
   <!-- Version + Download -->
   <section class="py-5 border-y border-card-border">
     <div class="max-w-3xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-      <p class="text-xs text-text-muted uppercase tracking-widest">Version 1.1 &middot; March 2026 &middot; 26 Sections &middot; 80 Pages &middot; 45 References</p>
-      <a href="/AGNTC-Whitepaper-v1.1.pdf" download class="inline-flex items-center gap-2 px-4 py-2 rounded-md text-xs font-medium transition-all duration-200 border border-accent-cyan/30 text-accent-cyan hover:bg-accent-cyan/10 hover:border-accent-cyan/60" style="white-space:nowrap">
+      <p class="text-xs text-text-muted uppercase tracking-widest">Version 1.2 &middot; March 2026 &middot; 26 Sections &middot; 71 Pages &middot; 45 References</p>
+      <a href="/AGNTC-Whitepaper-v1.2.pdf" download="AGNTC-Whitepaper-v1.2.pdf" class="inline-flex items-center gap-2 px-4 py-2 rounded-md text-xs font-medium transition-all duration-200 border border-accent-cyan/30 text-accent-cyan hover:bg-accent-cyan/10 hover:border-accent-cyan/60" style="white-space:nowrap">
         <svg style="width:14px;height:14px;flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
         Download PDF
       </a>

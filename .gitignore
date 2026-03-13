@@ -57,3 +57,12 @@ pnpm-lock.yaml
 
 # Node modules anywhere in tree
 **/node_modules/
+
+# Screenshots (development artifacts, not committed)
+screenshots/
+
+# Playwright MCP temp data
+.playwright-mcp/
+
+# Auto-generated TypeScript declarations
+next-env.d.ts

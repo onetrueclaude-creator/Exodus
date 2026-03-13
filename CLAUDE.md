@@ -66,7 +66,7 @@ Stellaris-inspired gamified social media dApp where users explore a 2D galaxy gr
 - Node density = resource richness (0-100%), multiplies CPU cost for Secure actions
 
 ## Subscription Tiers
-- **Community (free)**: Sonnet Homenode, 1000 CPU Energy, yellowish-orange theme, deploys Haiku only
+- **Community (free)**: Sonnet Homenode, 100 CPU Energy, yellowish-orange theme, deploys Haiku only
 - **Professional ($50/mo)**: Opus Homenode, 500 CPU Energy, cyan blue theme, deploys up to Opus
 - **Max ($200/mo)**: Opus Homenode, 2000 CPU Energy, purple theme, unlimited Opus deployment
 
