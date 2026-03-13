@@ -97,3 +97,5 @@ Common manifestations:
 
 - The fractal property applies here: the same stack structure could govern individual agent sessions, team workflows, and the overall project
 - Architectural drift risk: many small changes to the galaxy grid, game economics, and UI have accumulated — the Change Log helps but periodic coherence audits would help more
+- 2026-03-12: Website (`zkagentic-deploy/`) aligned to whitepaper v1.2 — tokenomics v3 (BME, city model, governance), 2-tier staking (Community/Professional, Max removed), 5-phase roadmap, dual staking formula, updated slashing
+- 2026-03-12: Two-website separation enforced — zkagentic.com (marketing, GitHub Pages) and zkagentic.ai (testnet monitor, Cloudflare Pages) are independent repos with independent deploy pipelines. Mobile hamburger menu + pointer-events fix applied to all 6 HTML pages. Waitlist switched from OAuth to email form for simplicity and mobile compatibility.

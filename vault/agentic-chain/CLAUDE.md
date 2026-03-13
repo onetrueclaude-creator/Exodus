@@ -63,6 +63,29 @@ Base URL: `http://localhost:8080` | Swagger: `/docs`
 
 ## Change Log
 
+### 2026-03-13 — Blockchain Operations Stack created
+
+**Added:** `stack/` directory with 5-layer operational model for running the testnet healthily.
+
+| Layer | File | Question |
+|-------|------|----------|
+| 1 | `stack/persistence.md` | Can we survive a restart? |
+| 2 | `stack/consensus.md` | Are blocks being produced correctly? |
+| 3 | `stack/network.md` | How do clients talk to the chain? |
+| 4 | `stack/monitoring.md` | Is the chain healthy right now? |
+| 5 | `stack/deployment.md` | Where does the chain live? |
+
+**Purpose:** Separate from the AI-Human Engineering Stack at `Exodus/stack/` (which governs how we *build* the chain). This stack governs how we *run* it.
+
+**Key findings documented:**
+- Layer 1 (Persistence): CRITICAL GAP — currently zero persistence, all state lost on restart. SQLite recommended.
+- Layer 2 (Consensus): Auto-miner functional but fragile (asyncio task, no crash recovery).
+- Layer 3 (Network): FastAPI + WebSocket working; Supabase sync is fire-and-forget.
+- Layer 4 (Monitoring): zkagentic.ai dashboard exists but no alerting, no structured logging.
+- Layer 5 (Deployment): Local-only — needs Dockerfile, Docker Compose, Hetzner CX33 (~5.49 EUR/mo).
+
+---
+
 ### 2026-02-25 — Tokenomics v2: organic growth model (commits `788b9cb38`..`764195e6b`)
 
 **Design:** `docs/plans/2026-02-25-tokenomics-v2-design.md` — remove scheduled inflation, organic growth, 25/25/25/25 faction split.

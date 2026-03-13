@@ -1,36 +1,36 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <defs>
-    <filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feComposite in="blur" in2="SourceGraphic" operator="over"/></filter>
+    <filter id="glow"><feGaussianBlur stdDeviation="2" result="blur"/><feComposite in="blur" in2="SourceGraphic" operator="over"/></filter>
     <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.4"/>
-      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.3"/>
-      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.4"/>
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.5"/>
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.5"/>
     </linearGradient>
     <radialGradient id="nc" cx="40%" cy="35%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#CBD5E1"/></radialGradient>
   </defs>
 
   <!-- Coin disc -->
   <circle cx="32" cy="32" r="31" fill="#0A0A0F"/>
-  <circle cx="32" cy="32" r="29" fill="none" stroke="url(#ring)" stroke-width="0.8"/>
+  <circle cx="32" cy="32" r="29" fill="none" stroke="url(#ring)" stroke-width="1.2"/>
 
   <!-- Faction-colored spokes -->
-  <line x1="32" y1="32" x2="14" y2="14" stroke="#0D9488" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
-  <line x1="32" y1="32" x2="50" y2="14" stroke="#DC2680" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
-  <line x1="32" y1="32" x2="50" y2="50" stroke="#F59E0B" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
-  <line x1="32" y1="32" x2="14" y2="50" stroke="#3B82F6" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
+  <line x1="32" y1="32" x2="14" y2="14" stroke="#0D9488" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <line x1="32" y1="32" x2="50" y2="14" stroke="#DC2680" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <line x1="32" y1="32" x2="50" y2="50" stroke="#F59E0B" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <line x1="32" y1="32" x2="14" y2="50" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
 
   <!-- Square frame -->
-  <line x1="14" y1="14" x2="50" y2="14" stroke="#667788" stroke-width="0.5" opacity="0.3"/>
-  <line x1="50" y1="14" x2="50" y2="50" stroke="#667788" stroke-width="0.5" opacity="0.3"/>
-  <line x1="50" y1="50" x2="14" y2="50" stroke="#667788" stroke-width="0.5" opacity="0.3"/>
-  <line x1="14" y1="50" x2="14" y2="14" stroke="#667788" stroke-width="0.5" opacity="0.3"/>
+  <line x1="14" y1="14" x2="50" y2="14" stroke="#667788" stroke-width="0.6" opacity="0.35"/>
+  <line x1="50" y1="14" x2="50" y2="50" stroke="#667788" stroke-width="0.6" opacity="0.35"/>
+  <line x1="50" y1="50" x2="14" y2="50" stroke="#667788" stroke-width="0.6" opacity="0.35"/>
+  <line x1="14" y1="50" x2="14" y2="14" stroke="#667788" stroke-width="0.6" opacity="0.35"/>
 
-  <!-- Nodes -->
+  <!-- Nodes — bigger dots -->
   <g filter="url(#glow)">
-    <circle cx="32" cy="32" r="3" fill="url(#nc)" opacity="0.95"/>
-    <circle cx="14" cy="14" r="2.5" fill="#0D9488" opacity="0.9"/>
-    <circle cx="50" cy="14" r="2.5" fill="#DC2680" opacity="0.9"/>
-    <circle cx="50" cy="50" r="2.5" fill="#F59E0B" opacity="0.85"/>
-    <circle cx="14" cy="50" r="2.5" fill="#3B82F6" opacity="0.9"/>
+    <circle cx="32" cy="32" r="5" fill="url(#nc)" opacity="0.95"/>
+    <circle cx="14" cy="14" r="4" fill="#0D9488" opacity="0.95"/>
+    <circle cx="50" cy="14" r="4" fill="#DC2680" opacity="0.95"/>
+    <circle cx="50" cy="50" r="4" fill="#F59E0B" opacity="0.9"/>
+    <circle cx="14" cy="50" r="4" fill="#3B82F6" opacity="0.95"/>
   </g>
 </svg>

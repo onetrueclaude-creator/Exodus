@@ -79,3 +79,5 @@ Context engineering is about *what information is present*. If you're deciding w
 
 - Stability-ordered: CLAUDE.md + memory load first (stable), task-specific files load last (changing) — aligns with the Manus Insight
 - The whitepaper (`vault/whitepaper.md`) is mandatory reading before any feature work — this is the single most important context document
+- 2026-03-12: Website aligned to whitepaper v1.2 — all pages (index, tokenomics, staking, roadmap, whitepaper, technology) verified against Section 22 protocol parameters. PDF download updated to v1.2
+- 2026-03-12: Critical Supabase project ref fix — wrong URL `inqwwaqiptrmpruxczyy` corrected to `inqwwaqiptrmpxruyczy` across all files (.env.local, waitlist.js, monitor.js, supabase-expert SKILL.md). Memory updated with correct ref. Two deploy repos documented in memory (zkagentic-website for .com, zkagentic-site for .ai).

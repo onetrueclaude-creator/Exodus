@@ -7,8 +7,8 @@ description: This skill should be used when working with Supabase in the ZK Agen
 
 ## Project Supabase Setup
 
-- **Project ref:** `inqwwaqiptrmpruxczyy`
-- **URL:** `https://inqwwaqiptrmpruxczyy.supabase.co`
+- **Project ref:** `inqwwaqiptrmpxruyczy`
+- **URL:** `https://inqwwaqiptrmpxruyczy.supabase.co`
 - **Auth:** Supabase Auth (Google OAuth via `@supabase/ssr`)
 - **Database:** Supabase Postgres (same project)
 - **Realtime:** `postgres_changes` on `agents`, `chain_status`, `haiku_messages`
@@ -25,7 +25,7 @@ description: This skill should be used when working with Supabase in the ZK Agen
 ### Env Vars
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://inqwwaqiptrmpruxczyy.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://inqwwaqiptrmpxruyczy.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
 SUPABASE_SERVICE_ROLE_KEY=<service role key — server/scripts only>
 ```
@@ -164,7 +164,7 @@ alter table public.my_table enable row level security;
 
 After writing the migration, regenerate TypeScript types:
 ```bash
-npx supabase gen types typescript --project-id inqwwaqiptrmpruxczyy > src/lib/supabase/types.ts
+npx supabase gen types typescript --project-id inqwwaqiptrmpxruyczy > src/lib/supabase/types.ts
 ```
 Or update `src/lib/supabase/types.ts` manually following the existing pattern.
 
@@ -213,5 +213,5 @@ await supabase.from('user_resources').update({ energy: newVal }).eq('user_id', u
 
 - **`references/schema.md`** — Full column definitions for all 9 tables
 - **`references/rls-patterns.md`** — Complete RLS policy patterns and security notes
-- **Supabase dashboard:** `https://supabase.com/dashboard/project/inqwwaqiptrmpruxczyy`
-- **Generate types:** `npx supabase gen types typescript --project-id inqwwaqiptrmpruxczyy`
+- **Supabase dashboard:** `https://supabase.com/dashboard/project/inqwwaqiptrmpxruyczy`
+- **Generate types:** `npx supabase gen types typescript --project-id inqwwaqiptrmpxruyczy`

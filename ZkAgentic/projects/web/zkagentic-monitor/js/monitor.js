@@ -1,16 +1,16 @@
 // Testnet Monitor — Supabase Realtime client for zkagentic.ai
 (function () {
-  var SUPABASE_URL = 'https://inqwwaqiptrmpruxczyy.supabase.co';
+  var SUPABASE_URL = 'https://inqwwaqiptrmpxruyczy.supabase.co';
   var SUPABASE_ANON_KEY =
-    '***REDACTED_JWT_HEADER***.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlucXd3YXFpcHRybXBydXhjenl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NTI2MTcsImV4cCI6MjA4NzMyODYxN30.***REDACTED***';
+    '***REDACTED_ANON_KEY***';
 
-  var SIMULATOR_URL = 'https://onetrueclaude-creator-agentic-chain-simulator.streamlit.app/?embedded=true';
   var STALE_THRESHOLD = 120;   // seconds before "STALE"
   var OFFLINE_THRESHOLD = 600; // seconds before "OFFLINE"
 
   // State
   var lastUpdateTime = null;
-  var simulatorLoaded = false;
+  var blockCountdownSec = null;  // client-side countdown between blocks
+  var countdownInterval = null;
 
   // Initialize Supabase
   if (!window.supabase || !window.supabase.createClient) {
@@ -48,6 +48,18 @@
     return Math.floor(diff / 3600) + 'h ago';
   }
 
+  // --- Block countdown timer ---
+
+  function startBlockCountdown(seconds) {
+    blockCountdownSec = Math.max(0, Math.round(seconds));
+    setText('blocks-next', blockCountdownSec + 's');
+    if (countdownInterval) clearInterval(countdownInterval);
+    countdownInterval = setInterval(function () {
+      blockCountdownSec = Math.max(0, blockCountdownSec - 1);
+      setText('blocks-next', blockCountdownSec + 's');
+    }, 1000);
+  }
+
   // --- Update DOM from chain_status ---
 
   function updateChainStatus(row) {
@@ -68,8 +80,8 @@
     // Network card (claims from chain_status)
     setText('network-claims', formatNumber(row.total_claims));
 
-    // Block Production card
-    setText('blocks-next', row.next_block_in != null ? row.next_block_in + 's' : '—');
+    // Block Production card — start client-side countdown
+    startBlockCountdown(row.next_block_in || 60);
     setText('blocks-avg', '~60s'); // target block time
 
     // Epoch card
@@ -179,34 +191,6 @@
         }
       });
   }
-
-  // --- Tab switching ---
-
-  window.switchTab = function (tab) {
-    var dashboardContainer = document.getElementById('dashboard-container');
-    var simulatorContainer = document.getElementById('simulator-container');
-    var tabDashboard = document.getElementById('tab-dashboard');
-    var tabSimulator = document.getElementById('tab-simulator');
-
-    if (tab === 'simulator') {
-      if (dashboardContainer) dashboardContainer.style.display = 'none';
-      if (simulatorContainer) simulatorContainer.style.display = 'block';
-      if (tabDashboard) { tabDashboard.className = 'tab-btn tab-inactive'; }
-      if (tabSimulator) { tabSimulator.className = 'tab-btn tab-active'; }
-
-      // Lazy-load simulator iframe on first click
-      if (!simulatorLoaded) {
-        var frame = document.getElementById('simulator-frame');
-        if (frame) frame.src = SIMULATOR_URL;
-        simulatorLoaded = true;
-      }
-    } else {
-      if (dashboardContainer) dashboardContainer.style.display = 'block';
-      if (simulatorContainer) simulatorContainer.style.display = 'none';
-      if (tabDashboard) { tabDashboard.className = 'tab-btn tab-active'; }
-      if (tabSimulator) { tabSimulator.className = 'tab-btn tab-inactive'; }
-    }
-  };
 
   // --- Initialize ---
 

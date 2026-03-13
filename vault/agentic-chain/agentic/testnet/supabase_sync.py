@@ -141,16 +141,22 @@ def _sync_chain_status(g: GenesisState, next_block_in: float) -> None:
     state_root = g.ledger_state.get_state_root().hex()
     claims = g.claim_registry.all_active_claims()
 
+    ring = g.epoch_tracker.current_ring
+    hardness = g.epoch_tracker.hardness(ring)
+
     row = {
         "id": 1,
         "blocks_processed": int(g.mining_engine.total_blocks_processed),
         "state_root": state_root,
-        # Live schema stores these as INTEGER — cast to int to avoid postgrest
-        # rejecting floats with "invalid input syntax for type integer".
-        "community_pool_remaining": int(g.community_pool.remaining),
-        "total_mined": int(g.mining_engine.total_rewards_distributed),
+        # CommunityPool was removed in Tokenomics v2 — send 0 for backwards compat.
+        "community_pool_remaining": 0,
+        "total_mined": round(float(g.mining_engine.total_rewards_distributed), 6),
         "total_claims": len(claims),
         "next_block_in": int(round(float(next_block_in))),
+        "epoch_ring": ring,
+        "hardness": float(hardness),
+        "circulating_supply": round(float(g.mining_engine.total_rewards_distributed), 6),
+        "burned_fees": int(g.fee_engine.total_burned),
         "synced_at": _iso_now(),
     }
 

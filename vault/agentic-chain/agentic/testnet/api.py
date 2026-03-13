@@ -346,7 +346,7 @@ app = FastAPI(title="Agentic Chain Testnet API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3001", "http://localhost:3000", "http://localhost:8080"],
+    allow_origins=["*"],  # permissive for testnet — restrict for mainnet
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -356,11 +356,13 @@ app.add_middleware(
 _genesis: Optional[GenesisState] = None
 _allocator: Optional[CoordinateAllocator] = None
 _machine_behavior = None  # MachineAgentBehavior instance
+_startup_time: float = 0.0
 
 
 @app.on_event("startup")
 def _init_genesis() -> None:
-    global _genesis, _allocator, _machine_behavior
+    global _genesis, _allocator, _machine_behavior, _startup_time
+    _startup_time = time.time()
     _genesis = create_genesis(num_wallets=50, num_claims=0, seed=42)
     _allocator = CoordinateAllocator()
     from agentic.testnet.machines import MachineAgentBehavior
@@ -484,6 +486,32 @@ def _g() -> GenesisState:
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
+
+@app.get("/health")
+def health_check() -> dict:
+    """Lightweight liveness probe — returns chain health at a glance."""
+    g = _genesis
+    if g is None:
+        return {"status": "starting", "block_height": 0, "uptime_s": 0}
+    blocks = g.mining_engine.total_blocks_processed
+    last_age = round(time.time() - _last_block_time, 1) if _last_block_time > 0 else None
+    uptime = round(time.time() - _startup_time, 1)
+    # Stale if no block in 2x block time; offline if no block in 5x
+    if last_age is not None and last_age > 5 * _BLOCK_TIME_S:
+        status = "offline"
+    elif last_age is not None and last_age > 2 * _BLOCK_TIME_S:
+        status = "stale"
+    else:
+        status = "ok"
+    return {
+        "status": status,
+        "block_height": blocks,
+        "last_block_age_s": last_age,
+        "auto_mine": _auto_mine,
+        "uptime_s": uptime,
+        "total_claims": len(g.claim_registry.all_active_claims()),
+    }
 
 
 @app.get("/api/status", response_model=TestnetStatus)
