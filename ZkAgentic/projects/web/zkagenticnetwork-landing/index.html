@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>ZK Agentic Network</title>
+  <meta name="description" content="AI agents reasoning about chain integrity across a zero-knowledge privacy-based CPU staking reward network."/>
+  <meta property="og:title" content="ZK Agentic Network"/>
+  <meta property="og:description" content="Privacy-preserving L1 blockchain with AI-powered verification and CPU staking."/>
+  <meta property="og:site_name" content="ZK Agentic Network"/>
+  <meta property="og:type" content="website"/>
+  <meta name="twitter:card" content="summary"/>
+  <meta name="twitter:title" content="ZK Agentic Network"/>
+  <meta name="twitter:description" content="Privacy-preserving L1 blockchain with AI-powered verification and CPU staking."/>
+  <link rel="icon" href="https://zkagentic.com/logos/icon.svg" type="image/svg+xml"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #e5e7eb;
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .bg-glow {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+    }
+    .bg-glow-cyan {
+      top: 20%;
+      left: -10%;
+      width: 400px;
+      height: 400px;
+      background: rgba(34, 211, 238, 0.06);
+    }
+    .bg-glow-purple {
+      bottom: 15%;
+      right: -10%;
+      width: 400px;
+      height: 400px;
+      background: rgba(168, 85, 247, 0.06);
+    }
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      text-align: center;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 14px;
+      border: 1px solid #22d3ee;
+      border-radius: 9999px;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #22d3ee;
+      margin-bottom: 2rem;
+    }
+    .subtitle {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #6b7280;
+      margin-bottom: 0.75rem;
+    }
+    h1 {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+    h1 .gradient {
+      background: linear-gradient(135deg, #22d3ee, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .tagline {
+      font-size: 1rem;
+      color: #9ca3af;
+      line-height: 1.6;
+      max-width: 480px;
+      margin: 0 auto 2.5rem;
+    }
+    .status-box {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .status-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #eab308;
+      margin-bottom: 0.75rem;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #eab308;
+      box-shadow: 0 0 6px #eab308;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .status-text {
+      font-size: 0.875rem;
+      color: #9ca3af;
+      line-height: 1.6;
+    }
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-top: 1.25rem;
+    }
+    .link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .link-primary {
+      background: linear-gradient(135deg, #22d3ee, #a855f7);
+      color: white;
+    }
+    .link-primary:hover { opacity: 0.9; transform: scale(1.03); }
+    .link-secondary {
+      border: 1px solid rgba(34, 211, 238, 0.4);
+      color: #22d3ee;
+    }
+    .link-secondary:hover { background: rgba(34, 211, 238, 0.08); }
+    .link svg { width: 14px; height: 14px; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-top: 2.5rem;
+    }
+    .stat {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 1rem 0.5rem;
+    }
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: white;
+      font-family: 'Courier New', monospace;
+    }
+    .stat-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+    .footer {
+      margin-top: 3rem;
+      font-size: 0.7rem;
+      color: #374151;
+    }
+    .footer a { color: #4b5563; text-decoration: none; }
+    .footer a:hover { color: #22d3ee; }
+    @media (max-width: 480px) {
+      .stats { grid-template-columns: 1fr; }
+      .links { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow bg-glow-cyan"></div>
+  <div class="bg-glow bg-glow-purple"></div>
+  <div class="container">
+    <div class="badge">TESTNET</div>
+    <div class="subtitle">Zero-Knowledge Privacy Chain</div>
+    <h1>ZK Agentic <span class="gradient">Network</span></h1>
+    <p class="tagline">AI agents reasoning about chain integrity across a zero-knowledge privacy-based CPU staking reward network.</p>
+    <div class="status-box">
+      <div class="status-label"><span class="status-dot"></span> Under Development</div>
+      <p class="status-text">We're running internal testnet dry-runs on the blockchain ledger. The network is being calibrated and audited before public launch.</p>
+      <div class="links">
+        <a class="link link-primary" href="https://zkagentic.ai">
+          Testnet Monitor
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+        </a>
+        <a class="link link-secondary" href="https://zkagentic.com/whitepaper">
+          Read the Whitepaper
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value">PoAIV</div>
+        <div class="stat-label">Consensus</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">ZK</div>
+        <div class="stat-label">Privacy Layer</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">CPU</div>
+        <div class="stat-label">Staking</div>
+      </div>
+    </div>
+    <div class="footer">
+      <p>Powered by <a href="https://zkagentic.com">zkagentic.com</a></p>
+      <p style="margin-top:0.5rem">&copy; 2026 ZK Agentic Network. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
