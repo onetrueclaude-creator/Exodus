@@ -15,10 +15,14 @@ export interface TestnetStatus {
   state_root: string;
   record_count: number;
   total_claims: number;
-  community_pool_remaining: number;
   blocks_processed: number;
   total_mined: number;
   next_block_in: number;
+  epoch_ring: number;
+  // Economics (v2)
+  hardness: number;
+  circulating_supply: number;
+  burned_fees: number;
 }
 
 // GET /api/coordinate/{x}/{y}

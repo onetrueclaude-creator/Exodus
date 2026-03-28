@@ -11,6 +11,12 @@
 
 ---
 
+## 2026-03-28 — Gameplay wiring + deployment plans
+
+**Added:** Design and implementation plans for gameplay wiring, public API deployment, and monitor enhancement session work.
+
+---
+
 ## Pending
 
 - [ ] Write deployment guide (Docker + Cloudflare)

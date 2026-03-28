@@ -86,7 +86,28 @@
 
     // Epoch card
     setText('epoch-ring', 'Ring ' + (row.epoch_ring || 0));
-    setText('epoch-hardness', (row.epoch_ring || 0) * 16 + 'x');
+
+    // Supply card
+    setText('supply-value', formatNumber(row.circulating_supply));
+
+    // Burned card
+    setText('burned-value', formatNumber(row.burned_fees));
+
+    // Epoch progress — threshold formula: threshold(N) = 4 * N * (N+1)
+    var ring = row.epoch_ring || 0;
+    var nextThreshold = 4 * (ring + 1) * (ring + 2);
+    var prevThreshold = 4 * ring * (ring + 1);
+    var mined = row.total_mined || 0;
+    var progress = 0;
+    if (nextThreshold > prevThreshold) {
+      progress = Math.min(100, Math.round(((mined - prevThreshold) / (nextThreshold - prevThreshold)) * 100));
+    }
+    setText('epoch-progress-value', progress + '%');
+    var bar = document.getElementById('epoch-progress-bar');
+    if (bar) bar.style.width = progress + '%';
+
+    // Use synced hardness value instead of client-side calculation
+    setText('epoch-hardness', formatNumber(row.hardness) + 'x');
 
     // Footer
     setText('last-updated', 'Last updated: just now');

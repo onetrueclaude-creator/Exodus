@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-03-28 — Game terminal wiring: Secure + Chain Stats
+
+**Changed:** Secure command in agent terminal redesigned from generation-based (block cycles + AGNTC) to cell allocation (8/16/32/48/64 cells via POST to public API at `api.zkagentic.ai`).
+**Changed:** Chain Stats panel now fetches live data from public API instead of reading from Zustand store.
+
+---
+
 ## 2026-02-25 — Tokenomics v2 frontend (commit `764195e6b`)
 
 **Changed:** `types/testnet.ts` — dynamic grid defaults (±20), removed `community_pool_remaining`, added `epoch_ring`.

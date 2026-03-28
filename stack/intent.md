@@ -84,3 +84,4 @@ A second characteristic failure is **decision paralysis at scale**: when an agen
 
 - The 4-faction model (Community NW, Machines NE, Founders SE, Professional SW) is a core design decision that permeates UI, tokenomics, and galaxy grid
 - Subscription tiers (Community/Pro/Max) map directly to agent capabilities — this is a monetization-gameplay coupling that must stay aligned
+- 2026-03-28: Secure action redesigned from one-shot generation-based (block cycles + AGNTC) to continuous cell allocation (8/16/32/48/64 cells via API). This aligns the game terminal with the subgrid allocation model defined in the whitepaper — staking is now spatial, not temporal.

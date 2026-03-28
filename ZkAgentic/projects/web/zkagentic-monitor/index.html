@@ -29,6 +29,10 @@
     .dot-live { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
     .dot-stale { background: #eab308; box-shadow: 0 0 6px #eab308; }
     .dot-offline { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+    .tab-btn:hover { color: #22d3ee !important; }
+    .tab-active { color: #22d3ee !important; border-bottom-color: #22d3ee !important; }
+    .sim-cell { width:100%; aspect-ratio:1; border-radius:4px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; transition:background 0.15s; }
+    .sim-cell:hover { opacity:0.8; }
     @media (max-width: 768px) {
       .card-grid, .card-grid-2 { grid-template-columns: 1fr; }
       .hero-number { font-size: 3rem; }
@@ -52,9 +56,19 @@
     </div>
   </header>
 
+  <!-- Tab bar -->
+  <nav style="position:fixed;top:64px;left:0;right:0;z-index:40;background:rgba(0,0,0,0.9);border-bottom:1px solid rgba(255,255,255,0.06);">
+    <div style="max-width:1200px;margin:0 auto;padding:0 1.5rem;display:flex;gap:1.5rem;">
+      <button id="tab-dashboard" onclick="switchTab('dashboard')" class="tab-btn tab-active" style="padding:0.75rem 0;font-size:0.8rem;font-family:'Courier New',monospace;text-transform:uppercase;letter-spacing:0.1em;color:#22d3ee;background:none;border:none;border-bottom:2px solid #22d3ee;cursor:pointer;">Dashboard</button>
+      <button id="tab-simulator" onclick="switchTab('simulator')" class="tab-btn" style="padding:0.75rem 0;font-size:0.8rem;font-family:'Courier New',monospace;text-transform:uppercase;letter-spacing:0.1em;color:#6b7280;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;">Subgrid Simulator</button>
+    </div>
+  </nav>
+
   <!-- Main content -->
-  <main class="flex-1" style="padding-top:5rem;">
+  <main class="flex-1" style="padding-top:7.5rem;">
     <div style="max-width:1200px;margin:0 auto;padding:0 1.5rem 3rem;">
+
+    <div id="view-dashboard">
 
       <!-- Hero section -->
       <section style="text-align:center;padding:3rem 0 2.5rem;">
@@ -115,11 +129,98 @@
 
       </div>
 
+      <!-- Stat cards row 3: 3 columns — Economics -->
+      <div class="card-grid" style="margin-top:1rem;">
+
+        <!-- Circulating Supply -->
+        <div class="stat-card">
+          <div class="pill-header">Supply</div>
+          <div class="stat-value" id="supply-value">&mdash;</div>
+          <div class="stat-label">Circulating AGNTC</div>
+        </div>
+
+        <!-- Burned Fees -->
+        <div class="stat-card">
+          <div class="pill-header">Burn</div>
+          <div class="stat-value" id="burned-value">&mdash;</div>
+          <div class="stat-label">AGNTC Burned</div>
+        </div>
+
+        <!-- Epoch Progress -->
+        <div class="stat-card">
+          <div class="pill-header">Ring Progress</div>
+          <div class="stat-value" id="epoch-progress-value">&mdash;</div>
+          <div class="stat-label">To Next Ring</div>
+          <div style="margin-top:0.5rem;background:rgba(255,255,255,0.1);border-radius:4px;height:8px;overflow:hidden;">
+            <div id="epoch-progress-bar" style="height:100%;background:#22d3ee;width:0%;transition:width 0.5s;"></div>
+          </div>
+        </div>
+
+      </div>
+
       <!-- Footer status bar -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2.5rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.06);font-size:0.75rem;color:#6b7280;font-family:monospace;">
         <span id="last-updated">Last updated: &mdash;</span>
         <span id="testnet-status">Testnet: checking...</span>
       </div>
+
+    </div><!-- /view-dashboard -->
+
+    <div id="view-simulator" style="display:none;">
+      <div style="max-width:1200px;margin:0 auto;padding:0 1.5rem 3rem;">
+
+        <section style="padding:2rem 0 1.5rem;">
+          <h2 style="color:white;font-size:1.5rem;font-family:'Courier New',monospace;font-weight:700;">Subgrid Simulator</h2>
+          <p style="color:#9ca3af;font-size:0.875rem;margin-top:0.5rem;">Allocate your 64 subgrid cells to resource types. Secure cells earn AGNTC every block.</p>
+        </section>
+
+        <!-- Wallet selector -->
+        <div style="margin-bottom:1.5rem;">
+          <label style="color:#9ca3af;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Wallet</label>
+          <select id="sim-wallet" style="display:block;margin-top:0.25rem;background:#111;color:white;border:1px solid rgba(255,255,255,0.15);border-radius:0.5rem;padding:0.5rem 1rem;font-family:'Courier New',monospace;font-size:0.875rem;width:200px;">
+          </select>
+        </div>
+
+        <!-- Cell counters -->
+        <div id="sim-counters" style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+          <span class="pill-header" style="border-color:#22c55e;color:#22c55e;">Secure: <span id="sim-count-secure">0</span></span>
+          <span class="pill-header" style="border-color:#6366f1;color:#6366f1;">Develop: <span id="sim-count-develop">0</span></span>
+          <span class="pill-header" style="border-color:#8b5cf6;color:#8b5cf6;">Research: <span id="sim-count-research">0</span></span>
+          <span class="pill-header" style="border-color:#14b8a6;color:#14b8a6;">Storage: <span id="sim-count-storage">0</span></span>
+        </div>
+
+        <!-- 8x8 Grid -->
+        <div id="sim-grid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-width:400px;margin-bottom:1.5rem;">
+        </div>
+
+        <!-- Apply button -->
+        <button id="sim-apply" onclick="applyAllocation()" style="background:#22d3ee;color:#000;font-weight:700;padding:0.5rem 1.5rem;border:none;border-radius:0.5rem;font-family:'Courier New',monospace;cursor:pointer;font-size:0.875rem;">Apply Allocation</button>
+        <span id="sim-status" style="color:#9ca3af;font-size:0.75rem;margin-left:1rem;"></span>
+
+        <!-- Yields display -->
+        <div class="card-grid-2" style="margin-top:2rem;">
+          <div class="stat-card">
+            <div class="pill-header">Per-Block Yields</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:0.5rem;">
+              <div><div class="stat-value" id="sim-yield-agntc">&mdash;</div><div class="stat-label">AGNTC</div></div>
+              <div><div class="stat-value" id="sim-yield-dev">&mdash;</div><div class="stat-label">Dev Points</div></div>
+              <div><div class="stat-value" id="sim-yield-research">&mdash;</div><div class="stat-label">Research</div></div>
+              <div><div class="stat-value" id="sim-yield-storage">&mdash;</div><div class="stat-label">Storage</div></div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="pill-header">On-Chain State</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:0.5rem;">
+              <div><div class="stat-value" id="sim-chain-secure">&mdash;</div><div class="stat-label">Secure Cells</div></div>
+              <div><div class="stat-value" id="sim-chain-develop">&mdash;</div><div class="stat-label">Develop Cells</div></div>
+              <div><div class="stat-value" id="sim-chain-research">&mdash;</div><div class="stat-label">Research Cells</div></div>
+              <div><div class="stat-value" id="sim-chain-storage">&mdash;</div><div class="stat-label">Storage Cells</div></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /view-simulator -->
 
     </div>
   </main>
@@ -127,6 +228,16 @@
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/monitor.js"></script>
+  <script>
+function switchTab(tab) {
+  document.getElementById('view-dashboard').style.display = tab === 'dashboard' ? '' : 'none';
+  document.getElementById('view-simulator').style.display = tab === 'simulator' ? '' : 'none';
+  document.getElementById('tab-dashboard').className = 'tab-btn' + (tab === 'dashboard' ? ' tab-active' : '');
+  document.getElementById('tab-simulator').className = 'tab-btn' + (tab === 'simulator' ? ' tab-active' : '');
+  if (tab === 'simulator' && typeof initSimulator === 'function') initSimulator();
+}
+  </script>
+  <script src="/js/simulator.js"></script>
 
 </body>
 </html>

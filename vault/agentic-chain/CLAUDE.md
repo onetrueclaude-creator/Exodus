@@ -63,6 +63,14 @@ Base URL: `http://localhost:8080` | Swagger: `/docs`
 
 ## Change Log
 
+### 2026-03-28 — API security hardening + deployment artifacts + new sync tables
+
+**Security:** Removed hardcoded Supabase service_role key from `supabase_sync.py`, moved to env vars (python-dotenv). CORS restricted to `zkagentic.ai`, `zkagenticnetwork.com`, `localhost:3000`. Admin-gated `/api/reset` and `/api/automine`. Rate limiting via SlowAPI. WebSocket cap at 50 connections.
+**Deployment:** Added `Dockerfile`, `requirements.txt`, `.dockerignore` for Railway deploy. Public endpoint: `api.zkagentic.ai`.
+**Supabase:** New tables `subgrid_allocations` (per-wallet cell counts) and `resource_rewards` (per-wallet yields), both with RLS + Realtime. New sync functions in `supabase_sync.py`.
+
+---
+
 ### 2026-03-13 — Blockchain Operations Stack created
 
 **Added:** `stack/` directory with 5-layer operational model for running the testnet healthily.
