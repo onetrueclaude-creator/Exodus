@@ -130,6 +130,34 @@ export function getNodes(count: number = 1000, seed: number = 42): Promise<NodeI
   return get<NodeInfo[]>(`/api/nodes?count=${count}&seed=${seed}`);
 }
 
+/** GET /api/rewards/{wallet_index} — cumulative rewards for a wallet */
+export function getRewards(walletIndex: number): Promise<{
+  agntc_earned: number; dev_points: number; research_points: number; secured_chains: number;
+}> {
+  return get<{
+    agntc_earned: number; dev_points: number; research_points: number; secured_chains: number;
+  }>(`/api/rewards/${walletIndex}`);
+}
+
+/** GET /api/staking/{wallet_index} — staking positions and effective stake */
+export function getStaking(walletIndex: number): Promise<{
+  token_staked: number; cpu_staked: number; effective_stake: number;
+}> {
+  return get<{
+    token_staked: number; cpu_staked: number; effective_stake: number;
+  }>(`/api/staking/${walletIndex}`);
+}
+
+/** POST /api/resources/{wallet_index}/assign — allocate subgrid cells */
+export function assignSubgrid(walletIndex: number, allocation: {
+  secure: number; develop: number; research: number; storage: number;
+}): Promise<{ status: string; free_cells: number }> {
+  return post<{ status: string; free_cells: number }>(
+    `/api/resources/${walletIndex}/assign`,
+    allocation,
+  );
+}
+
 /** Check if the testnet API is reachable */
 export async function isTestnetOnline(): Promise<boolean> {
   try {

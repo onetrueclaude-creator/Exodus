@@ -9,12 +9,16 @@ from __future__ import annotations
 
 import asyncio
 import json as _json
+import os as _os
 import time
 from typing import Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 
 # ---------------------------------------------------------------------------
@@ -28,9 +32,14 @@ class ConnectionManager:
     def __init__(self) -> None:
         self._connections: list[WebSocket] = []
 
-    async def connect(self, ws: WebSocket) -> None:
+    async def connect(self, ws: WebSocket) -> bool:
+        """Accept a WebSocket connection. Returns False if the cap is reached."""
+        if len(self._connections) >= 50:
+            await ws.close(code=1013, reason="Max connections reached")
+            return False
         await ws.accept()
         self._connections.append(ws)
+        return True
 
     def disconnect(self, ws: WebSocket) -> None:
         if ws in self._connections:
@@ -285,7 +294,6 @@ class SubgridAllocationInfo(BaseModel):
 
 
 class SubgridAssignRequest(BaseModel):
-    wallet_index: int
     secure: int = 0
     develop: int = 0
     research: int = 0
@@ -342,15 +350,50 @@ class ResourceState(BaseModel):
 # Application
 # ---------------------------------------------------------------------------
 
-app = FastAPI(title="Agentic Chain Testnet API", version="0.1.0")
+_ENVIRONMENT = _os.environ.get("ENVIRONMENT", "development")
+_ALLOWED_ORIGINS = [
+    o.strip()
+    for o in _os.environ.get(
+        "ALLOWED_ORIGINS",
+        "http://localhost:3000,https://zkagentic.ai,https://www.zkagentic.ai,https://zkagenticnetwork.com,https://www.zkagenticnetwork.com",
+    ).split(",")
+    if o.strip()
+]
+_ADMIN_TOKEN = _os.environ.get("ADMIN_TOKEN", "")
+
+# Conditionally disable /docs and /redoc in production
+_docs_url: str | None = "/docs" if _ENVIRONMENT != "production" else None
+_redoc_url: str | None = "/redoc" if _ENVIRONMENT != "production" else None
+
+app = FastAPI(
+    title="Agentic Chain Testnet API",
+    version="0.1.0",
+    docs_url=_docs_url,
+    redoc_url=_redoc_url,
+)
+
+# Rate limiter (keyed by remote IP address)
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # permissive for testnet — restrict for mainnet
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=_ALLOWED_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+
+def _require_admin(request: Request) -> None:
+    """Gate admin-only endpoints behind the ADMIN_TOKEN env var."""
+    if not _ADMIN_TOKEN:
+        raise HTTPException(status_code=503, detail="Admin endpoints disabled")
+    token = request.headers.get("X-Admin-Token", "")
+    if token != _ADMIN_TOKEN:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
 
 # Global genesis state — populated at startup.
 _genesis: Optional[GenesisState] = None
@@ -753,7 +796,8 @@ def get_resources(wallet_index: int) -> ResourceState:
 
 
 @app.post("/api/resources/{wallet_index}/assign")
-def assign_subgrid(wallet_index: int, req: SubgridAssignRequest) -> dict:
+@limiter.limit("5/10seconds")
+def assign_subgrid(request: Request, wallet_index: int, req: SubgridAssignRequest) -> dict:
     """Reassign subgrid cells across the 4 resource types."""
     g = _g()
     if wallet_index < 0 or wallet_index >= len(g.wallets):
@@ -866,7 +910,8 @@ def get_grid_region(
 
 
 @app.post("/api/mine", response_model=MineResult)
-def mine_block() -> MineResult:
+@limiter.limit("5/10seconds")
+def mine_block(request: Request) -> MineResult:
     """Mine one block manually (rate-limited). Auto-miner handles this normally."""
     global _last_block_time
     now = time.time()
@@ -886,16 +931,18 @@ def mine_block() -> MineResult:
 
 
 @app.post("/api/automine")
-async def toggle_automine(enabled: bool = True) -> dict:
+async def toggle_automine(request: Request, enabled: bool = True) -> dict:
     """Toggle automatic block mining. When enabled, blocks are mined at the
     fixed block time interval. Epoch hardness handles difficulty scaling."""
+    _require_admin(request)
     global _auto_mine
     _auto_mine = enabled
     return {"auto_mine": _auto_mine, "current_block_time": _BLOCK_TIME_S}
 
 
 @app.post("/api/claim", response_model=ClaimNodeResult)
-def claim_node(req: ClaimNodeRequest) -> ClaimNodeResult:
+@limiter.limit("5/10seconds")
+def claim_node(request: Request, req: ClaimNodeRequest) -> ClaimNodeResult:
     """Create an agent that claims and colonizes a grid node.
 
     Lightweight — no Record creation. The agent plugs into an existing
@@ -1063,7 +1110,8 @@ def get_nodes(
 
 
 @app.post("/api/birth", response_model=BirthResult)
-def birth_star_system(req: BirthRequest) -> BirthResult:
+@limiter.limit("5/10seconds")
+def birth_star_system(request: Request, req: BirthRequest) -> BirthResult:
     """Birth a new star system by spending AGNTC."""
     g = _g()
     if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
@@ -1149,11 +1197,13 @@ def birth_star_system(req: BirthRequest) -> BirthResult:
 
 @app.post("/api/reset", response_model=ResetResult)
 def reset_testnet(
+    request: Request,
     wallets: int = Query(default=50, ge=1, le=200),
     claims: int = Query(default=0, ge=0, le=100),
     seed: int = Query(default=42),
 ) -> ResetResult:
     """Wipe the testnet and rebuild from a fresh genesis."""
+    _require_admin(request)
     global _genesis, _allocator, _last_block_time, _machine_behavior
     _last_block_time = 0.0
     _genesis = create_genesis(num_wallets=wallets, num_claims=claims, seed=seed)
@@ -1177,7 +1227,8 @@ MAX_MESSAGE_LENGTH = 140  # haiku-length constraint
 
 
 @app.post("/api/intro", response_model=IntroResult)
-def set_intro(req: IntroRequest) -> IntroResult:
+@limiter.limit("5/10seconds")
+def set_intro(request: Request, req: IntroRequest) -> IntroResult:
     """Set an agent's intro message (max 140 chars)."""
     g = _g()
     if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
@@ -1210,7 +1261,8 @@ def set_intro(req: IntroRequest) -> IntroResult:
 
 
 @app.post("/api/message", response_model=MessageResult)
-def send_message(req: MessageRequest) -> MessageResult:
+@limiter.limit("5/10seconds")
+def send_message(request: Request, req: MessageRequest) -> MessageResult:
     """Send an agent-to-agent haiku message (max 140 chars)."""
     g = _g()
     if req.sender_wallet < 0 or req.sender_wallet >= len(g.wallets):
@@ -1303,7 +1355,8 @@ def get_messages(x: int, y: int) -> List[MessageInfo]:
 
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket) -> None:
-    await _ws_manager.connect(ws)
+    if not await _ws_manager.connect(ws):
+        return  # connection cap reached — already closed
     try:
         while True:
             raw = await ws.receive_text()

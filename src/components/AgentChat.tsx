@@ -7,6 +7,7 @@ import { useGameStore } from '@/store';
 import { getDistance } from '@/lib/proximity';
 import { visualToChain } from '@/services/testnetChainService';
 import { persistResources } from '@/lib/persistResources';
+import { assignSubgrid, getStatus as fetchChainStats } from '@/services/testnetApi';
 
 /* ── Bubble UI Constants ──────────────────────────────────── */
 
@@ -52,12 +53,14 @@ const AGENT_ACTIONS: Record<AgentTier, AgentAction[]> = {
     { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 4, estTime: '~5min', description: 'Claim a neural node with new sub-agent', category: 'expansion' },
 
     // ── Blockchain Protocols ──
-    { id: 'secure', label: 'Secure', icon: '\u26D3', cpuCost: 0, estTime: '~2min', description: 'Contribute generations to secure the chain', category: 'blockchain',
+    { id: 'secure', label: 'Secure', icon: '\u26D3', cpuCost: 0, estTime: '~2min', description: 'Allocate subgrid cells to secure the chain', category: 'blockchain',
       subChoices: [
-        { id: 'secure-1', label: '1 Generation', description: '50 CPU Energy' },
-        { id: 'secure-5', label: '5 Generations', description: '250 CPU Energy' },
-        { id: 'secure-10', label: '10 Generations', description: '500 CPU Energy' },
-        { id: 'secure-20', label: '20 Generations', description: '1,000 CPU Energy' },
+        { id: 'secure-8', label: '8 cells \u2192 Secure', description: '8 of 64 subgrid cells' },
+        { id: 'secure-16', label: '16 cells \u2192 Secure', description: '16 of 64 subgrid cells' },
+        { id: 'secure-32', label: '32 cells \u2192 Secure', description: '32 of 64 subgrid cells' },
+        { id: 'secure-48', label: '48 cells \u2192 Secure', description: '48 of 64 subgrid cells' },
+        { id: 'secure-64', label: 'All 64 cells \u2192 Secure', description: 'Maximum securing' },
+        { id: 'secure-0', label: 'Cancel Securing (0 cells)', description: 'Release all cells' },
       ],
     },
     { id: 'write-data', label: 'Write Data', icon: '\u270E', cpuCost: 8, estTime: '~1min', description: 'Write data on-chain (planet/content)', category: 'blockchain' },
@@ -112,11 +115,14 @@ const AGENT_ACTIONS: Record<AgentTier, AgentAction[]> = {
     { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 4, estTime: '~3min', description: 'Claim a neural node with Haiku sub-agent', category: 'expansion' },
 
     // ── Blockchain Protocols ──
-    { id: 'secure', label: 'Secure', icon: '\u26D3', cpuCost: 0, estTime: '~2min', description: 'Contribute generations to secure the chain', category: 'blockchain',
+    { id: 'secure', label: 'Secure', icon: '\u26D3', cpuCost: 0, estTime: '~2min', description: 'Allocate subgrid cells to secure the chain', category: 'blockchain',
       subChoices: [
-        { id: 'secure-1', label: '1 Generation', description: '50 CPU Energy' },
-        { id: 'secure-5', label: '5 Generations', description: '250 CPU Energy' },
-        { id: 'secure-10', label: '10 Generations', description: '500 CPU Energy' },
+        { id: 'secure-8', label: '8 cells \u2192 Secure', description: '8 of 64 subgrid cells' },
+        { id: 'secure-16', label: '16 cells \u2192 Secure', description: '16 of 64 subgrid cells' },
+        { id: 'secure-32', label: '32 cells \u2192 Secure', description: '32 of 64 subgrid cells' },
+        { id: 'secure-48', label: '48 cells \u2192 Secure', description: '48 of 64 subgrid cells' },
+        { id: 'secure-64', label: 'All 64 cells \u2192 Secure', description: 'Maximum securing' },
+        { id: 'secure-0', label: 'Cancel Securing (0 cells)', description: 'Release all cells' },
       ],
     },
     { id: 'write-data', label: 'Write Data', icon: '\u270E', cpuCost: 6, estTime: '~1min', description: 'Write data on-chain (planet/content)', category: 'blockchain' },
@@ -156,10 +162,12 @@ const AGENT_ACTIONS: Record<AgentTier, AgentAction[]> = {
   ],
   haiku: [
     // ── Blockchain Protocols ──
-    { id: 'secure', label: 'Secure', icon: '\u26D3', cpuCost: 0, estTime: '~1min', description: 'Contribute generations to secure the chain', category: 'blockchain',
+    { id: 'secure', label: 'Secure', icon: '\u26D3', cpuCost: 0, estTime: '~1min', description: 'Allocate subgrid cells to secure the chain', category: 'blockchain',
       subChoices: [
-        { id: 'secure-1', label: '1 Generation', description: '50 CPU Energy' },
-        { id: 'secure-5', label: '5 Generations', description: '250 CPU Energy' },
+        { id: 'secure-8', label: '8 cells \u2192 Secure', description: '8 of 64 subgrid cells' },
+        { id: 'secure-16', label: '16 cells \u2192 Secure', description: '16 of 64 subgrid cells' },
+        { id: 'secure-32', label: '32 cells \u2192 Secure', description: '32 of 64 subgrid cells' },
+        { id: 'secure-0', label: 'Cancel Securing (0 cells)', description: 'Release all cells' },
       ],
     },
     { id: 'read-data', label: 'Read Data', icon: '\u25A3', cpuCost: 1, estTime: '~10s', description: 'Query on-chain data in range', category: 'blockchain' },
@@ -569,28 +577,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
         break;
       }
       case 'secure': {
-        const genCost: Record<string, number> = {
-          'secure-1': 50,
-          'secure-5': 250,
-          'secure-10': 500,
-          'secure-20': 1000,
-        };
-        const genCount: Record<string, number> = {
-          'secure-1': 1,
-          'secure-5': 5,
-          'secure-10': 10,
-          'secure-20': 20,
-        };
-        const cost = choiceId ? genCost[choiceId] ?? 0 : 0;
-        const gens = choiceId ? genCount[choiceId] ?? 0 : 0;
-        if (cost > 0) {
-          const store = useGameStore.getState();
-          const spent = store.spendEnergy(cost, `secure-${gens}-gens`);
-          if (spent) {
-            for (let i = 0; i < gens; i++) store.addSecuredChain();
-            store.flashDelta('cpuTokens', -cost);
-          }
-        }
+        // Handled via assignSubgrid API in selectSubChoice — no local action needed
         break;
       }
       default:
@@ -650,19 +637,23 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
     if (action.id === 'chain-stats') {
       addMsg('user', 'Chain Stats');
       setProcessing(true);
-      await new Promise(r => setTimeout(r, 200 + Math.random() * 300));
-      const store = useGameStore.getState();
-      const statsLines = [
-        '\u2500\u2500\u2500 CHAIN STATUS \u2500\u2500\u2500',
-        `Network: ${store.chainMode === 'testnet' ? 'TESTNET' : 'OFFLINE'}`,
-        `Blocks: ${store.testnetBlocks.toLocaleString()}`,
-        `Total Mined: ${store.totalMined.toLocaleString()}`,
-        `Epoch Ring: ${store.testnetBlocks > 0 ? Math.floor(store.testnetBlocks / 10) : 0}`,
-        `Secured Chains: ${store.securedChains}`,
-        store.stateRoot ? `State Root: ${store.stateRoot.slice(0, 16)}...` : '',
-        `Next Block: ~${Math.ceil(store.nextBlockIn)}s`,
-      ].filter(Boolean);
-      addMsg('agent', statsLines.join('\n'));
+      try {
+        const stats = await fetchChainStats();
+        const statsLines = [
+          '\u2550\u2550\u2550 CHAIN STATUS \u2550\u2550\u2550',
+          `Blocks: ${stats.blocks_processed}`,
+          `Epoch Ring: ${stats.epoch_ring}`,
+          `Hardness: ${stats.hardness}x`,
+          `AGNTC Mined: ${stats.total_mined.toFixed(4)}`,
+          `Circulating: ${stats.circulating_supply.toFixed(4)}`,
+          `Burned: ${stats.burned_fees}`,
+          `State Root: ${stats.state_root.slice(0, 16)}...`,
+        ];
+        addMsg('agent', statsLines.join('\n'));
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Unknown error';
+        addMsg('agent', `Stats unavailable: ${msg}`);
+      }
       setProcessing(false);
       return;
     }
@@ -789,14 +780,27 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
     if (!pendingAction || processing) return;
     const action = pendingAction;
 
-    // Secure action: check energy for chosen generation cost
-    if (action.id === 'secure') {
-      const genCost: Record<string, number> = { 'secure-1': 50, 'secure-5': 250, 'secure-10': 500, 'secure-20': 1000 };
-      const cost = genCost[choiceId] ?? 0;
-      if (cost > 0 && useGameStore.getState().cpuTokens < cost) {
-        addMsg('system', `Insufficient energy. Need ${cost} CPU, have ${Math.floor(useGameStore.getState().cpuTokens)}.`);
-        return;
+    // Secure action: call assignSubgrid API
+    if (action.id === 'secure' && choiceId.startsWith('secure-')) {
+      const secureCells = parseInt(choiceId.split('-')[1]);
+      const remaining = 64 - secureCells;
+      setPendingAction(null);
+      addMsg('user', choiceLabel);
+      setProcessing(true);
+      try {
+        await assignSubgrid(0, {  // wallet 0 for now
+          secure: secureCells,
+          develop: 0,
+          research: 0,
+          storage: remaining,
+        });
+        addMsg('agent', `Securing with ${secureCells} cells. Yields accrue every block (~60s).`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Allocation failed';
+        addMsg('agent', `Allocation failed: ${msg}`);
       }
+      setProcessing(false);
+      return;
     }
 
     setPendingAction(null);
@@ -849,7 +853,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
       if (menuLevel === 'blockchain' && !processing) {
         const writeAction = actions.find(a => a.id === 'send-message' || a.id === 'diplomatic-msg');
         const readAction = actions.find(a => a.id === 'deep-scan' || a.id === 'scan-local' || a.id === 'ping' || a.id === 'report-status');
-        const statsAction = actions.find(a => a.id === 'report-status');
+        const statsAction = actions.find(a => a.id === 'chain-stats') || actions.find(a => a.id === 'report-status');
         const blockchainItems: Array<() => void> = [
           () => { setMenuLevel('secure-flow'); setSecureConfig(null); },
         ];
@@ -893,15 +897,12 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
         return;
       }
 
-      // Secure flow: pick cycles
+      // Secure flow: pick cell count
       if (menuLevel === 'secure-flow' && secureConfig === null) {
-        const cycleOptions = [1, 5, 10, 20];
-        const cycles = cycleOptions[num - 1];
-        if (cycles !== undefined) {
-          const baseCostPerCycle = 50;
-          const densityMultiplier = agent.density ? Math.max(0.5, 2 - agent.density) : 1;
-          const totalCost = Math.round(cycles * baseCostPerCycle * densityMultiplier);
-          if (energy >= totalCost) setSecureConfig({ cycles });
+        const cellOptions = [8, 16, 32, 48, 64, 0];
+        const cells = cellOptions[num - 1];
+        if (cells !== undefined) {
+          setSecureConfig({ cycles: cells }); // reusing cycles field for cell count
         }
         return;
       }
@@ -1614,7 +1615,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
 
                 {/* Stats */}
                 {(() => {
-                  const statsAction = actions.find(a => a.id === 'report-status');
+                  const statsAction = actions.find(a => a.id === 'chain-stats') || actions.find(a => a.id === 'report-status');
                   if (!statsAction) return null;
                   const n = bcIdx++;
                   return (
@@ -1641,34 +1642,30 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
               );
             })()}
 
-            {/* ── Secure flow: pick cycles ── */}
+            {/* ── Secure flow: pick cell allocation ── */}
             {menuLevel === 'secure-flow' && secureConfig === null && (
               <>
                 <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
-                  SECURE {'\u2014'} BLOCK GENERATION CYCLES
+                  SECURE {'\u2014'} SUBGRID CELL ALLOCATION
                 </div>
-                {[1, 5, 10, 20].map(cycles => {
-                  const baseCostPerCycle = 50;
-                  const densityMultiplier = agent.density ? Math.max(0.5, 2 - agent.density) : 1;
-                  const totalCost = Math.round(cycles * baseCostPerCycle * densityMultiplier);
-                  const affordable = energy >= totalCost;
+                {[8, 16, 32, 48, 64, 0].map((cells, idx) => {
+                  const label = cells === 0 ? 'Cancel Securing (0 cells)' : cells === 64 ? `All ${cells} cells \u2192 Secure` : `${cells} cells \u2192 Secure`;
                   return (
                     <button
-                      key={cycles}
-                      onClick={() => affordable && setSecureConfig({ cycles })}
-                      disabled={processing || !affordable}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
-                        !affordable ? 'opacity-20 cursor-not-allowed' : 'hover:bg-white/[0.03] cursor-pointer'
-                      }`}
+                      key={cells}
+                      onClick={() => setSecureConfig({ cycles: cells })}
+                      disabled={processing}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
                     >
                       <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-accent-cyan/60 shrink-0" style={{ fontFamily: "'Fira Code', monospace" }}>{CIRCLE_NUMBERS[idx]}</span>
                         <span className="text-[10px] text-green-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u26E8'}</span>
                         <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                          {cycles} {cycles === 1 ? 'cycle' : 'cycles'}
+                          {label}
                         </span>
                       </div>
-                      <span className={`text-[9px] ${affordable ? 'text-yellow-400/40 group-hover:text-yellow-400/70' : 'text-danger/50'} transition-colors`} style={{ fontFamily: "'Fira Code', monospace" }}>
-                        {totalCost} cpu
+                      <span className="text-[9px] text-text-muted/30 group-hover:text-text-muted/50 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                        {cells}/64
                       </span>
                     </button>
                   );
@@ -1681,10 +1678,8 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
 
             {/* ── Secure flow: confirm ── */}
             {menuLevel === 'secure-flow' && secureConfig !== null && (() => {
-              const baseCostPerCycle = 50;
-              const densityMultiplier = agent.density ? Math.max(0.5, 2 - agent.density) : 1;
-              const totalCost = Math.round(secureConfig.cycles * baseCostPerCycle * densityMultiplier);
-              const affordable = energy >= totalCost;
+              const secureCells = secureConfig.cycles; // reusing cycles field for cell count
+              const remaining = 64 - secureCells;
               return (
                 <>
                   <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
@@ -1692,13 +1687,13 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                   </div>
                   <div className="px-3 py-2 space-y-1.5">
                     <div className="text-[11px] text-text-primary" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      {secureConfig.cycles} block {secureConfig.cycles === 1 ? 'cycle' : 'cycles'}
+                      {secureCells} of 64 subgrid cells {'\u2192'} Secure
                     </div>
                     <div className="text-[9px] text-text-muted/50" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      Node density: {((agent.density ?? 0) * 100).toFixed(0)}% {'\u2014'} Cost multiplier: x{densityMultiplier.toFixed(1)}
+                      Remaining {remaining} cells {'\u2192'} Storage
                     </div>
-                    <div className="text-[9px] text-yellow-400/70" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      Total cost: {totalCost} CPU Energy
+                    <div className="text-[9px] text-green-400/70" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      Yields accrue every block (~60s)
                     </div>
                   </div>
                   <div className="flex gap-2 px-2 pt-1 pb-1">
@@ -1707,36 +1702,24 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                     </button>
                     <button
                       onClick={async () => {
-                        if (!affordable) {
-                          addMsg('system', `Insufficient CPU Energy. Need ${totalCost}, have ${energy.toFixed(0)}.`);
-                          return;
-                        }
-                        const cycleCount = secureConfig.cycles;
                         setMenuLevel(null);
                         setSecureConfig(null);
                         setProcessing(true);
-                        await new Promise(r => setTimeout(r, 400 + Math.random() * 600));
-                        const success = useGameStore.getState().spendEnergy(totalCost, 'secure');
-                        if (success) {
-                          useGameStore.getState().addSecuredChain();
-                          const s = useGameStore.getState();
-                          const uid = s.currentUserId;
-                          if (uid) {
-                            persistResources(uid, {
-                              energy: s.cpuTokens,
-                              minerals: s.minerals,
-                              agntc_balance: s.agntcBalance,
-                              secured_chains: s.securedChains,
-                              turn: s.turn,
-                            });
-                          }
-                          addMsg('agent', `Securing operation complete.\n${cycleCount} block cycles processed.\n-${totalCost} CPU Energy\n+1 Secured Chain`);
-                        } else {
-                          addMsg('system', `Insufficient CPU Energy. Need ${totalCost}, have ${energy.toFixed(0)}.`);
+                        try {
+                          await assignSubgrid(0, {
+                            secure: secureCells,
+                            develop: 0,
+                            research: 0,
+                            storage: remaining,
+                          });
+                          addMsg('agent', `Securing with ${secureCells} cells. Yields accrue every block (~60s).`);
+                        } catch (err: unknown) {
+                          const msg = err instanceof Error ? err.message : 'Allocation failed';
+                          addMsg('agent', `Allocation failed: ${msg}`);
                         }
                         setProcessing(false);
                       }}
-                      disabled={processing || !affordable}
+                      disabled={processing}
                       className="flex-1 px-4 py-1.5 rounded-lg text-[10px] font-semibold bg-green-400/10 text-green-400 border border-green-400/20 hover:bg-green-400/20 hover:border-green-400/40 disabled:opacity-15 disabled:cursor-not-allowed transition-all duration-300"
                       style={{ fontFamily: "'Outfit', sans-serif" }}
                     >

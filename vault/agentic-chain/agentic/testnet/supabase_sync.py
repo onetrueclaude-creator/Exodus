@@ -11,14 +11,25 @@ Usage:
 This is fire-and-forget: all errors are caught internally so the blockchain
 never crashes due to a Supabase connectivity issue.
 
-TODO: move SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to environment variables.
+Environment variables required:
+    SUPABASE_URL              — Supabase project URL
+    SUPABASE_SERVICE_ROLE_KEY — Service role JWT (never commit this)
 """
 from __future__ import annotations
 
+import os
 import time
+from pathlib import Path
 from typing import Optional
 
+from dotenv import load_dotenv
 from supabase import create_client, Client
+
+# Load .env from the agentic-chain root (two levels up from this file)
+_CHAIN_ROOT = Path(__file__).resolve().parent.parent.parent
+load_dotenv(_CHAIN_ROOT / ".env")
+# Also try the Exodus repo root .env.local as fallback
+load_dotenv(_CHAIN_ROOT.parent / ".env.local")
 
 from agentic.galaxy.coordinate import resource_density, storage_slots
 from agentic.params import GENESIS_FACTION_MASTERS, GENESIS_HOMENODES, GENESIS_ORIGIN
@@ -52,13 +63,8 @@ def chain_to_visual(cx: int, cy: int) -> tuple[float, float]:
 # Supabase client (singleton, lazy-initialized)
 # ---------------------------------------------------------------------------
 
-# TODO: load from environment variables (os.environ) instead of hardcoding.
-_SUPABASE_URL = "https://inqwwaqiptrmpxruyczy.supabase.co"
-_SUPABASE_SERVICE_ROLE_KEY = (
-    "***REDACTED_JWT_HEADER***"
-    ".***REDACTED***"
-    ".***REDACTED***"
-)
+_SUPABASE_URL = os.environ.get("SUPABASE_URL") or os.environ.get("NEXT_PUBLIC_SUPABASE_URL", "")
+_SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
 _client: Optional[Client] = None
 
@@ -67,6 +73,11 @@ def _get_client() -> Client:
     """Return (and lazily initialize) the Supabase service-role client."""
     global _client
     if _client is None:
+        if not _SUPABASE_URL or not _SUPABASE_SERVICE_ROLE_KEY:
+            raise RuntimeError(
+                "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set as environment variables. "
+                "Add them to vault/agentic-chain/.env or export them in your shell."
+            )
         _client = create_client(_SUPABASE_URL, _SUPABASE_SERVICE_ROLE_KEY)
     return _client
 
@@ -94,6 +105,16 @@ def sync_to_supabase(g: GenesisState, next_block_in: float = 60.0) -> None:
         _sync_agents(g)
     except Exception:
         pass  # never crash the miner
+
+    try:
+        _sync_subgrid_allocations(g)
+    except Exception:
+        pass
+
+    try:
+        _sync_resource_rewards(g)
+    except Exception:
+        pass
 
 
 def sync_message(
@@ -243,6 +264,70 @@ def _sync_agents(g: GenesisState) -> None:
         rows.append(row)
 
     client.table("agents").upsert(rows).execute()
+
+
+def _sync_subgrid_allocations(g: GenesisState) -> None:
+    """Upsert per-wallet subgrid cell counts to the subgrid_allocations table."""
+    client = _get_client()
+    from agentic.galaxy.subgrid import SubcellType
+
+    rows = []
+    for i, wallet in enumerate(g.wallets):
+        alloc = g.subgrid_allocators.get(wallet.public_key)
+        if alloc is None:
+            continue
+        rows.append({
+            "wallet_index": i,
+            "secure_cells": alloc.count(SubcellType.SECURE),
+            "develop_cells": alloc.count(SubcellType.DEVELOP),
+            "research_cells": alloc.count(SubcellType.RESEARCH),
+            "storage_cells": alloc.count(SubcellType.STORAGE),
+            "synced_at": _iso_now(),
+        })
+
+    if rows:
+        client.table("subgrid_allocations").upsert(rows).execute()
+
+
+def _sync_resource_rewards(g: GenesisState) -> None:
+    """Upsert per-wallet cumulative resource yields to the resource_rewards table."""
+    client = _get_client()
+    claims = g.claim_registry.all_active_claims()
+    if not claims:
+        return
+
+    owner_to_index: dict[str, int] = {}
+    for i, w in enumerate(g.wallets):
+        owner_to_index[w.public_key] = i
+
+    # Build owner → claim count for secured_chains (same proxy as /api/rewards)
+    owner_claim_count: dict[str, int] = {}
+    for c in claims:
+        owner_claim_count[c.owner] = owner_claim_count.get(c.owner, 0) + 1
+
+    rows = []
+    seen_owners: set[str] = set()
+    for c in claims:
+        if c.owner in seen_owners:
+            continue
+        seen_owners.add(c.owner)
+        idx = owner_to_index.get(c.owner)
+        if idx is None:
+            continue
+        totals = g.resource_totals.get(c.owner, {})
+        rows.append({
+            "wallet_index": idx,
+            # Per-wallet AGNTC tracking not yet implemented — 0.0 matches /api/rewards
+            "agntc_earned": 0.0,
+            "dev_points": round(float(totals.get("dev_points", 0.0)), 4),
+            "research_points": round(float(totals.get("research_points", 0.0)), 4),
+            "storage_size": round(float(totals.get("storage_units", 0.0)), 4),
+            "secured_chains": owner_claim_count.get(c.owner, 0),
+            "synced_at": _iso_now(),
+        })
+
+    if rows:
+        client.table("resource_rewards").upsert(rows).execute()
 
 
 def _iso_now() -> str:

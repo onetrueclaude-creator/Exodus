@@ -187,6 +187,14 @@ Sub-directory seeds have their own connector tables pointing up (parent), down (
 
 ## Change Log
 
+### 2026-03-28 — Gameplay Wiring + Public API Deployment + Monitor Enhancement
+
+**Security:** Removed hardcoded Supabase service_role key from `supabase_sync.py`, moved to env vars via python-dotenv. CORS restricted to specific origins. Admin-gated `/api/reset` and `/api/automine`. Rate limiting via SlowAPI. WebSocket cap at 50 connections.
+**Deployment:** Dockerfile, `requirements.txt`, `.dockerignore` for Railway. Public API at `api.zkagentic.ai` (pending deploy).
+**Backend:** New Supabase tables `subgrid_allocations` and `resource_rewards` (per-wallet, RLS + Realtime). Sync functions added to `supabase_sync.py`.
+**Monitor:** Circulating supply, burned fees, epoch progress bar cards added to zkagentic.ai. New Subgrid Simulator tab (wallet selector, 8x8 clickable grid, Apply via POST to API, live yields via Realtime).
+**Game terminal:** Secure command redesigned from generation-based to cell allocation (8/16/32/48/64 cells via API). Chain Stats fetches live from public API instead of Zustand store.
+
 ### 2026-03-12 — Tokenomics v3: BME City Economics
 
 **Design:** Node claims cost AGNTC + CPU (no longer mint tokens). Burn-Mint Equilibrium: claim burns flow to verifiers. City real estate model: inner rings expensive, outer cheap. Machines Faction as permanent accumulator (never sells, no voting power). Soft cap with 5% annual inflation ceiling. Human-only governance with 75% supermajority for emergency treasury unlock. 1 AGNTC fresh mint signup bonus.

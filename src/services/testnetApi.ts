@@ -162,6 +162,16 @@ export function getSafeMode(): Promise<SafeModeResponse> {
   return get<SafeModeResponse>('/api/safe-mode');
 }
 
+/** POST /api/resources/{wallet_index}/assign — allocate subgrid cells */
+export function assignSubgrid(walletIndex: number, allocation: {
+  secure: number; develop: number; research: number; storage: number;
+}): Promise<{ status: string; free_cells: number }> {
+  return post<{ status: string; free_cells: number }>(
+    `/api/resources/${walletIndex}/assign`,
+    allocation,
+  );
+}
+
 /** Check if the testnet API is reachable */
 export async function isTestnetOnline(): Promise<boolean> {
   try {

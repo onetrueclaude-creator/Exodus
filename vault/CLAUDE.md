@@ -6,6 +6,13 @@
 
 ---
 
+## 2026-03-28 — Security hardening + Supabase sync additions
+
+**Changed:** `agentic-chain/agentic/testnet/supabase_sync.py` — removed hardcoded service_role key, moved to env vars via python-dotenv. Added sync functions for new `subgrid_allocations` and `resource_rewards` tables.
+**Changed:** `agentic-chain/agentic/testnet/api.py` — CORS restricted to specific origins, admin-gated `/api/reset` and `/api/automine`, rate limiting via SlowAPI, WebSocket cap at 50.
+
+---
+
 ## 2026-02-25 — Hierarchical memory system initialized
 
 **Added:**
