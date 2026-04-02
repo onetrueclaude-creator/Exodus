@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Optional
 
 PROJECT_DIR = Path.home() / ".claude/projects/-Users-toyg-Exodus"
-LOG_FILE = Path("./ vault/user-prompts.md")
+LOG_FILE = Path("./ user-prompts.md")
 STATE_FILE = Path("/tmp/prompt-watcher-state.json")
 LOCK_FILE = Path("/tmp/user-prompts-watcher.lock")
 POLL_INTERVAL = 3  # seconds
