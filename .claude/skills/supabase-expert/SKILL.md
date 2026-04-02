@@ -1,6 +1,9 @@
 ---
 name: supabase-expert
 description: This skill should be used when working with Supabase in the ZK Agentic Network (Exodus) project — including "add a Supabase table", "write a migration", "fix a Supabase RLS policy", "add a Realtime subscription", "query Supabase from the frontend", "sync data from the Python backend to Supabase", "debug a Supabase auth error", or "update the Supabase schema". Provides project-specific Supabase expertise: schema, RLS patterns, Realtime subscriptions, and the Python→Supabase sync architecture.
+priority: 55
+last_read: 2026-04-01T18:36:00Z
+read_count: 0
 ---
 
 # Supabase Expert — ZK Agentic Network

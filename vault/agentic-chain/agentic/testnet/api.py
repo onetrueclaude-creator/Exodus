@@ -198,6 +198,7 @@ class AgentInfo(BaseModel):
     storage_slots: int
     mining_rate: float
     border_radius: int
+    staked_cpu: int = 0  # CPU staked by this agent (matches Supabase agents table shape)
 
 
 class ResetResult(BaseModel):
@@ -401,15 +402,29 @@ _allocator: Optional[CoordinateAllocator] = None
 _machine_behavior = None  # MachineAgentBehavior instance
 _startup_time: float = 0.0
 
+# SQLite persistence — path configurable via DB_PATH env var.
+# Local default: <repo-root>/testnet_state.db
+# Railway production: set DB_PATH=/app/data/testnet_state.db (backed by a Volume mount)
+from pathlib import Path as _Path
+_DB_PATH: _Path = _Path(
+    _os.environ.get("DB_PATH", str(_Path(__file__).resolve().parent.parent.parent / "testnet_state.db"))
+)
+
 
 @app.on_event("startup")
 def _init_genesis() -> None:
-    global _genesis, _allocator, _machine_behavior, _startup_time
+    global _genesis, _allocator, _machine_behavior, _startup_time, _last_block_time
     _startup_time = time.time()
     _genesis = create_genesis(num_wallets=50, num_claims=0, seed=42)
     _allocator = CoordinateAllocator()
     from agentic.testnet.machines import MachineAgentBehavior
     _machine_behavior = MachineAgentBehavior(state=_genesis)
+    # Restore persisted state (no-op if DB doesn't exist or is empty)
+    from agentic.testnet.persistence import init_db, load_state
+    init_db(_DB_PATH)
+    restored_lbt = load_state(_genesis, _DB_PATH)
+    if restored_lbt > 0.0:
+        _last_block_time = restored_lbt
 
 
 @app.on_event("startup")
@@ -511,6 +526,13 @@ def _do_mine(g: GenesisState) -> dict:
     try:
         from agentic.testnet.supabase_sync import sync_to_supabase
         sync_to_supabase(g, next_block_in=_next_block_in())
+    except Exception:
+        pass  # never crash the miner
+
+    # Persist state to SQLite so restarts don't wipe genesis.
+    try:
+        from agentic.testnet.persistence import save_state
+        save_state(g, _last_block_time, _DB_PATH)
     except Exception:
         pass  # never crash the miner
 
@@ -1037,6 +1059,10 @@ def get_agents(user_count: int = Query(default=3, ge=1, le=50)) -> List[AgentInf
         x, y = c.coordinate.x, c.coordinate.y
         density = resource_density(x, y)
         is_user = i < user_count
+        # Option A: staked_cpu = validator.cpu_vpu for this claim's validator.
+        # TODO(Option B): switch to subgrid_allocator.count(SECURE) × BASE_SECURE_RATE
+        #   once subgrid allocation is actively used by players.
+        staked_cpu = int(g.validators[i].cpu_vpu) if i < len(g.validators) else 0
         agents.append(AgentInfo(
             id=f"agent-{i:03d}" if is_user else f"slot-{i:04d}",
             owner=c.owner.hex(),
@@ -1049,6 +1075,7 @@ def get_agents(user_count: int = Query(default=3, ge=1, le=50)) -> List[AgentInf
             storage_slots=storage_slots(x, y),
             mining_rate=round(density * 5.0, 4) if is_user else 0.0,
             border_radius=90 if is_user else 30,
+            staked_cpu=staked_cpu,
         ))
     return agents
 
@@ -1206,6 +1233,9 @@ def reset_testnet(
     _require_admin(request)
     global _genesis, _allocator, _last_block_time, _machine_behavior
     _last_block_time = 0.0
+    # Clear persisted state so the fresh genesis isn't immediately overwritten
+    from agentic.testnet.persistence import clear_state
+    clear_state(_DB_PATH)
     _genesis = create_genesis(num_wallets=wallets, num_claims=claims, seed=seed)
     _allocator = CoordinateAllocator()
     from agentic.testnet.machines import MachineAgentBehavior

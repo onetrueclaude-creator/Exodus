@@ -3,6 +3,8 @@ import type { Agent, HaikuMessage, GridPosition, DiplomaticState, Planet } from 
 import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE, TIER_CLAIM_COST } from "@/types/agent";
 import type { AgentTier } from "@/types";
 import type { FactionId, BlockNode, GridNode } from "@/types";
+import type { ResearchProgress } from "@/types/research";
+import { RESEARCH_TREES } from "@/lib/research";
 import { buildBlocknodesForBlock, buildAllBlocknodes } from "@/lib/galaxy";
 
 /** CPU Energy deducted per turn for each owned blocknode (maintenance cost) */
@@ -76,6 +78,11 @@ interface GameState {
   // Subscription restriction
   maxDeployTier: AgentTier; // highest tier this user can deploy (from subscription)
 
+  // Research & Skills
+  researchProgress: Record<string, ResearchProgress>;
+  completedResearch: string[];
+  unlockedSkills: string[];
+
   // UI
   activeTab: GameTab;
   empireColor: number;
@@ -126,6 +133,8 @@ interface GameState {
   switchAgent: (agentId: string) => void;
   requestFocus: (nodeId: string) => void;
   clearFocusRequest: () => void;
+  allocateResearchEnergy: (researchId: string, amount: number) => boolean;
+  unlockSkill: (skillId: string) => void;
   setMaxDeployTier: (tier: AgentTier) => void;
   initGalaxy: (totalBlocks: number) => void;
   addBlocknodesForBlock: (blockIndex: number) => void;
@@ -172,6 +181,9 @@ const initialState = {
   totalBlocksMined: 0,
   devRevealAll: false,
   currentUserFaction: null as FactionId | null,
+  researchProgress: {} as Record<string, ResearchProgress>,
+  completedResearch: [] as string[],
+  unlockedSkills: [] as string[],
   maxDeployTier: "haiku" as AgentTier, // default: Community tier (haiku only)
   activeTab: "network" as GameTab,
   empireColor: 0xd946ef, // default: Max tier fuchsia (matches SUBSCRIPTION_EMPIRE_COLOR.MAX)
@@ -543,6 +555,50 @@ export const useGameStore = create<GameState>((set) => ({
   requestFocus: (nodeId) => set({ focusRequest: { nodeId, ts: Date.now() } }),
 
   clearFocusRequest: () => set({ focusRequest: null }),
+
+  allocateResearchEnergy: (researchId, amount) => {
+    const s = useGameStore.getState();
+    if (s.energy < amount) return false;
+    const allItems = Object.values(RESEARCH_TREES).flat();
+    const item = allItems.find((r) => r.id === researchId);
+    if (!item) return false;
+
+    const existing = s.researchProgress[researchId];
+    const currentInvested = existing?.energyInvested ?? 0;
+    // Cap investment at the research cost
+    const remaining = item.energyCost - currentInvested;
+    if (remaining <= 0) return false;
+    const actualAmount = Math.min(amount, remaining);
+    const newInvested = currentInvested + actualAmount;
+    const completed = newInvested >= item.energyCost;
+
+    set({
+      energy: s.energy - actualAmount,
+      researchProgress: {
+        ...s.researchProgress,
+        [researchId]: {
+          researchId,
+          energyInvested: newInvested,
+          completed,
+        },
+      },
+      completedResearch: completed && !s.completedResearch.includes(researchId)
+        ? [...s.completedResearch, researchId]
+        : s.completedResearch,
+      resourceDeltas: {
+        ...s.resourceDeltas,
+        energy: { value: -actualAmount, ts: Date.now() },
+      },
+    });
+    return true;
+  },
+
+  unlockSkill: (skillId) =>
+    set((s) => ({
+      unlockedSkills: s.unlockedSkills.includes(skillId)
+        ? s.unlockedSkills
+        : [...s.unlockedSkills, skillId],
+    })),
 
   setMaxDeployTier: (tier) => set({ maxDeployTier: tier }),
 

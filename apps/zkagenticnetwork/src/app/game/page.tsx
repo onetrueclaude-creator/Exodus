@@ -113,7 +113,7 @@ export default function GamePage() {
         // Capture prev count BEFORE setChainStatus updates totalBlocksMined
         const prevBlocknodeMined = store.totalBlocksMined;
         store.setChainStatus({
-          poolRemaining: status.community_pool_remaining,
+          poolRemaining: status.circulating_supply,
           totalMined: status.total_mined,
           stateRoot: status.state_root,
           nextBlockIn: status.next_block_in,
@@ -427,16 +427,7 @@ export default function GamePage() {
         {activeTab === "account" && <AccountView />}
 
         {/* Researches tab */}
-        {activeTab === "researches" && (
-          <ResearchPanel
-            energy={energy}
-            progress={{}}
-            completedIds={[]}
-            onAllocateEnergy={() => {
-              // TODO: Wire up research energy allocation
-            }}
-          />
-        )}
+        {activeTab === "researches" && <ResearchPanel />}
 
         {/* Skills tab */}
         {activeTab === "skills" && <SkillsPanel />}
