@@ -3,8 +3,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from agentic.params import BASE_MINING_RATE_PER_BLOCK
+from agentic.params import (
+    BASE_MINING_RATE_PER_BLOCK,
+    ANNUAL_INFLATION_CEILING,
+    BLOCK_TIME_MS,
+    GENESIS_SUPPLY,
+)
 from agentic.galaxy.coordinate import resource_density
+
+# Blocks per year at current block time (used for ceiling enforcement)
+_BLOCKS_PER_YEAR = (365.25 * 24 * 3600 * 1000) / BLOCK_TIME_MS
 
 
 @dataclass
@@ -56,6 +64,17 @@ class MiningEngine:
             raw_yields[owner] = raw_yields.get(owner, 0.0) + raw
 
         total_minted = sum(raw_yields.values())
+
+        # Enforce annual inflation ceiling (whitepaper Section 10.3)
+        # current_supply grows as rewards are distributed; ceiling is 5% of
+        # current supply annualized across _BLOCKS_PER_YEAR.
+        current_supply = GENESIS_SUPPLY + self.total_rewards_distributed
+        max_annual = current_supply * ANNUAL_INFLATION_CEILING
+        max_per_block = max_annual / _BLOCKS_PER_YEAR
+        if total_minted > max_per_block:
+            scale = max_per_block / total_minted
+            raw_yields = {k: v * scale for k, v in raw_yields.items()}
+            total_minted = sum(raw_yields.values())
 
         # Notify epoch tracker of mined amount — may trigger ring expansion
         if epoch_tracker is not None:

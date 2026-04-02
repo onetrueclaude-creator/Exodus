@@ -24,6 +24,8 @@ GRID_SIDE = 31_623                # ~31,623 × 31,623 coordinate grid (~1B cells
 MAX_SUPPLY = 1_000_000_000       # 1 billion AGNTC
 GENESIS_SUPPLY = 900              # 9 genesis nodes × 100 coords × 1 AGNTC
 FEE_BURN_RATE = 0.50              # 50% of fees burned, 50% to verifiers/stakers
+ANNUAL_INFLATION_CEILING = 0.05   # 5% max annualized supply growth (soft cap, governance-adjustable)
+SIGNUP_BONUS = 1.0                # 1 AGNTC fresh-minted per new user registration
 
 # Faction distribution — equal 25% per faction (applies to newly minted AGNTC)
 DIST_COMMUNITY    = 0.25   # Free Community (N arm, white)
@@ -86,9 +88,14 @@ GENESIS_ORIGIN = (0, 0)
 GENESIS_FACTION_MASTERS = [(0, 10), (10, 0), (0, -10), (-10, 0)]   # N E S W
 GENESIS_HOMENODES      = [(10, 10), (10, -10), (-10, -10), (-10, 10)]  # NE SE SW NW
 
-# Birth (star system creation via minting)
+# Birth / Claims — city model (inner rings expensive, outer cheap)
+# cost = BASE_CLAIM_COST × density / ring, floored at CLAIM_COST_FLOOR
 BIRTH_PROGRAM_ID = b"agentic_birth"
-BASE_BIRTH_COST = 100  # AGNTC cost for ring-1 star system
+BASE_CLAIM_COST = 100             # AGNTC cost at ring 1, density 1.0
+BASE_BIRTH_COST = BASE_CLAIM_COST # Legacy alias — use BASE_CLAIM_COST in new code
+BASE_CPU_CLAIM_COST = 50          # CPU Energy cost at ring 1, density 1.0
+CLAIM_COST_FLOOR = 0.01           # Minimum claim cost at extreme outer rings
+CLAIM_REQUIRES_ACTIVE_STAKE = True  # Must have active stake to claim nodes
 
 # Mining (per-block = per-turn = ~1 minute)
 BASE_MINING_RATE_PER_BLOCK = 0.5     # AGNTC/block at hardness=1, full density (tune in testing)

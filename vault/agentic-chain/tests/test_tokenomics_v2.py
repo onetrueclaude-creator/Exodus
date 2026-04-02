@@ -127,12 +127,16 @@ def test_mining_no_pool_exhaustion():
 
 
 def test_mining_yield_formula_v2():
-    """yield = BASE_RATE * density * stake_weight / hardness (no pool fraction)."""
+    """yield = BASE_RATE * density * stake_weight / hardness, capped by inflation ceiling.
+
+    Pre-seeds total_rewards_distributed high so the inflation ceiling is above
+    raw yield and doesn't interfere with the formula test.
+    """
     from agentic.galaxy.mining import MiningEngine
     from agentic.galaxy.epoch import EpochTracker
     from agentic.galaxy.coordinate import GridCoordinate, resource_density
     from agentic.params import BASE_MINING_RATE_PER_BLOCK
-    engine = MiningEngine()
+    engine = MiningEngine(total_rewards_distributed=500_000.0)
     et = EpochTracker()
     coord = GridCoordinate(x=0, y=0)
     density = resource_density(0, 0)

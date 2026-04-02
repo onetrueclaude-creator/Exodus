@@ -1,8 +1,16 @@
-"""Inflation and supply model for AGNTC token.
+"""DEPRECATED: Legacy v1 inflation model — DO NOT USE IN NEW CODE.
 
-# TODO(v2): redesign for organic growth model — no scheduled inflation.
-# Supply grows only when coordinates are claimed (1 AGNTC each).
-# Legacy inflation logic retained for backward compatibility.
+v2 architecture (organic growth) removed scheduled inflation entirely.
+Supply grows only when coordinates are claimed (1 AGNTC each).
+
+These classes are retained ONLY for:
+  - Historical projection/comparison (dashboard, research)
+  - Backward-compat testnet analytics
+
+For v2 economics, see:
+  - agentic/galaxy/mining.py (MiningEngine — organic growth yields)
+  - agentic/economics/fees.py (FeeEngine — fee collection + burn)
+  - agentic/params.py (canonical protocol parameters)
 """
 from __future__ import annotations
 from agentic.params import (
