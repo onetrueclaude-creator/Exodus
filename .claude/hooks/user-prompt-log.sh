@@ -113,6 +113,13 @@ with open(lock_file, 'w') as lf:
     if not content:
         content = "# User Prompts\n\nAll prompts, numbered consecutively across sessions.\n\n"
 
+    # Dedup: Claude Code fires the hook twice — first with a partial (first word),
+    # then with the full prompt. The partial is always a single word with no spaces.
+    # Skip single-word prompts — real user input is always multi-word or a command.
+    current_text = display_prompt.strip()
+    if ' ' not in current_text and len(current_text) < 30:
+        sys.exit(0)
+
     nums = re.findall(r'^(\d+)\. ', content, re.MULTILINE)
     next_num = int(nums[-1]) + 1 if nums else 1
 
