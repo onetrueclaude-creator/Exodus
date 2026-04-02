@@ -55,3 +55,4 @@ chain/.streamlit/
 
 # pnpm workspace lock
 pnpm-lock.yaml
+user-prompts.md

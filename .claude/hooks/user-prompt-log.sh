@@ -10,8 +10,8 @@ echo "HOOK_CALLED $(date -u +"%H:%M:%S")" >> /tmp/hook-trace.log
 
 HOOK_INPUT=$(cat)
 
-# Vault path — always fixed, independent of cwd
-LOG_FILE="./ vault/user-prompts.md"
+# Root path — always fixed, independent of cwd
+LOG_FILE="./ user-prompts.md"
 LOCK_FILE="/tmp/user-prompts.lock"
 
 # Extract prompt and transcript path from hook input
