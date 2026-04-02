@@ -20,8 +20,8 @@ Check inbox.md for origin messages. Poll children outboxes. Act on everything.
 
 ### 2. Poll children outboxes
 
-- Read last 20 lines of `apps/zkagenticnetwork/outbox.md`
-- Read last 20 lines of `vault/agentic-chain/outbox.md`
+- Read last 20 lines of `apps/game/outbox.md`
+- Read last 20 lines of `chain/outbox.md`
 - Flag any escalations (Type: escalation) for immediate attention
 - Note any reports for context
 
