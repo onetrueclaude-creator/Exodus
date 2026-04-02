@@ -27,7 +27,7 @@ ZK Agentic Network — Stellaris-inspired gamified social media dApp. Primary pr
 |--------|-----|--------|-------|
 | Marketing | zkagentic.com | `ZkAgentic/projects/web/zkagentic-deploy/` | Static HTML, GitHub Pages |
 | Monitor | zkagentic.ai | `ZkAgentic/projects/web/zkagentic-monitor/` | Static HTML + JS, Cloudflare Pages |
-| API | api.zkagentic.ai | `vault/agentic-chain/` | Python FastAPI, Railway |
+| Testnet API | (local miner) | `vault/agentic-chain/` | Python FastAPI, Supabase write-through |
 | Game | zkagenticnetwork.com | `apps/zkagenticnetwork/` + `src/` | Next.js 16, React 19, PixiJS 8 |
 
 ## Children
