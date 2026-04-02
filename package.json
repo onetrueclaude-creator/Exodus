@@ -3,50 +3,21 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "test": "vitest",
-    "test:run": "vitest run",
+    "dev": "cd apps/game && npm run dev",
+    "build": "cd apps/game && npm run build",
+    "test": "cd apps/game && npm test",
+    "test:run": "cd apps/game && npm run test:run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
-    "e2e:seed": "NODE_TLS_REJECT_UNAUTHORIZED=0 tsx tests/scripts/seed-test-user.ts",
-    "e2e:gaps": "tsx tests/scripts/report-gaps.ts",
     "test:e2e:watch": "playwright test --watch",
-    "test:e2e:beta": "playwright test 05-beta-testers --workers=4"
-  },
-  "dependencies": {
-    "@solana/wallet-adapter-base": "^0.9.27",
-    "@solana/wallet-adapter-react": "^0.15.39",
-    "@solana/wallet-adapter-react-ui": "^0.9.39",
-    "@solana/wallet-adapter-wallets": "^0.19.37",
-    "@solana/web3.js": "^1.98.4",
-    "@supabase/ssr": "^0.8.0",
-    "@supabase/supabase-js": "^2.97.0",
-    "dotenv": "^17.3.1",
-    "next": "16.1.6",
-    "pixi.js": "^8.16.0",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "zustand": "^5.0.11"
+    "test:e2e:beta": "playwright test 05-beta-testers --workers=4",
+    "test:chain": "cd chain && python3 -m pytest tests/ -v",
+    "lint": "cd apps/game && npm run lint"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
-    "@tailwindcss/postcss": "^4",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^5.1.4",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.6",
-    "jsdom": "^28.1.0",
-    "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5",
-    "vitest": "^4.0.18"
+    "typescript": "^5"
   }
 }
