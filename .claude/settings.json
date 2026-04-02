@@ -3,43 +3,24 @@
     "allow": [
       "Read(**/seed.md)",
       "Read(**/CLAUDE.md)",
+      "Read(.claude/**)",
+      "Read(inbox.md)",
+      "Read(outbox.md)",
+
       "Write(**/seed.md)",
       "Write(**/CLAUDE.md)",
-
-      "Bash(ls:*)",
-      "Bash(pwd:*)",
-      "Bash(which:*)",
-      "Bash(env:*)",
-      "Bash(stat:*)",
-      "Bash(lsof:*)",
-      "Bash(wc:*)",
-      "Bash(find:*)",
-
-      "Bash(cat:*)",
-      "Bash(head:*)",
-      "Bash(tail:*)",
-      "Bash(echo:*)",
-      "Bash(printf:*)",
-
-      "Bash(grep:*)",
-      "Bash(rg:*)",
-
-      "Bash(sort:*)",
-      "Bash(uniq:*)",
-      "Bash(cut:*)",
-      "Bash(tr:*)",
-      "Bash(sed:*)",
-      "Bash(awk:*)",
-      "Bash(jq:*)",
-
-      "Bash(mkdir:*)",
-      "Bash(open:*)",
-      "Bash(curl:*)",
-      "Bash(ps:*)",
-      "Bash(launchctl:*)",
+      "Write(.claude/journal.md)",
+      "Write(.claude/internals/*.md)",
+      "Write(.claude/priorities.md)",
+      "Write(outbox.md)",
 
       "Bash(git:*)",
       "Bash(gh:*)",
+      "Bash(ls:*)",
+      "Bash(pwd:*)",
+      "Bash(mkdir:*)",
+      "Bash(find:*)",
+      "Bash(wc:*)",
 
       "Bash(npm run:*)",
       "Bash(npm install:*)",
@@ -52,24 +33,18 @@
       "Bash(uvicorn:*)",
 
       "Bash(docker:*)",
-      "Bash(docker compose:*)",
-
-      "Skill(skills:competitor-expert)"
+      "Bash(docker compose:*)"
     ]
   },
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true,
     "ralph-loop@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
     "feature-dev@claude-plugins-official": true,
     "code-review@claude-plugins-official": true,
-    "playwright@claude-plugins-official": true,
     "context7@claude-plugins-official": true,
     "code-simplifier@claude-plugins-official": true,
-    "claude-md-management@claude-plugins-official": true,
-    "greptile@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true
+    "claude-md-management@claude-plugins-official": true
   },
   "hooks": {
     "Stop": [

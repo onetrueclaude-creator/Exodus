@@ -26,7 +26,7 @@
     for (var i = 0; i < 50; i++) {
       var opt = document.createElement('option');
       opt.value = i;
-      opt.textContent = 'Wallet ' + i;
+      opt.textContent = 'Wallet ' + i + (i <= 8 ? ' (genesis)' : ' (empty)');
       select.appendChild(opt);
     }
     select.addEventListener('change', function () {
@@ -84,6 +84,7 @@
       setText('sim-yield-storage', (data.storage_per_block || 0).toFixed(2));
     } catch (e) {
       console.error('fetch allocation error:', e);
+      setText('sim-status', 'API offline — deploy pending. Realtime updates still active.');
     }
   }
 

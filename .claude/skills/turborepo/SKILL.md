@@ -3,6 +3,9 @@ name: turborepo
 description: Guide for implementing Turborepo - a high-performance build system for JavaScript and TypeScript monorepos. Use when setting up monorepos, optimizing build performance, implementing task pipelines, configuring caching strategies, or orchestrating tasks across multiple packages.
 license: MIT
 version: 1.0.0
+priority: 50
+last_read: 2026-04-01T18:36:00Z
+read_count: 0
 ---
 
 # Turborepo Skill

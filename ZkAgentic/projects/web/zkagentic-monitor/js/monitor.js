@@ -122,10 +122,26 @@
     setText('network-agents', formatNumber(agents.length));
 
     var totalCpu = 0;
+    var tierCpu = { opus: 0, sonnet: 0, haiku: 0 };
+    var tierCount = { opus: 0, sonnet: 0, haiku: 0 };
     for (var i = 0; i < agents.length; i++) {
-      totalCpu += (agents[i].staked_cpu || 0);
+      var cpu = agents[i].staked_cpu || 0;
+      var tier = (agents[i].tier || '').toLowerCase();
+      totalCpu += cpu;
+      if (tier in tierCpu) {
+        tierCpu[tier] += cpu;
+        tierCount[tier]++;
+      }
     }
     setText('staking-cpu', formatNumber(totalCpu) + ' CPU');
+
+    // Tier breakdown (only show tiers that have agents)
+    var opusEl = document.getElementById('staking-opus');
+    var sonnetEl = document.getElementById('staking-sonnet');
+    var haikuEl = document.getElementById('staking-haiku');
+    if (opusEl) opusEl.textContent = 'Opus ' + tierCount.opus + ' (' + formatNumber(tierCpu.opus) + ')';
+    if (sonnetEl) sonnetEl.textContent = 'Sonnet ' + tierCount.sonnet + ' (' + formatNumber(tierCpu.sonnet) + ')';
+    if (haikuEl) haikuEl.textContent = 'Haiku ' + tierCount.haiku + ' (' + formatNumber(tierCpu.haiku) + ')';
   }
 
   // --- Live/Stale/Offline indicator ---
@@ -187,7 +203,7 @@
   }
 
   async function fetchAgents() {
-    var result = await sb.from('agents').select('staked_cpu');
+    var result = await sb.from('agents').select('staked_cpu, tier');
     if (result.error) {
       console.error('agents fetch error:', result.error);
       return;
@@ -209,6 +225,19 @@
         } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
           console.warn('Realtime: connection lost, status =', status);
           updateLiveStatus('offline');
+        }
+      });
+
+    // Subscribe to agents table so staked_cpu total updates live when
+    // new claims are registered (without requiring a page reload).
+    sb.channel('monitor-agents')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'agents' }, function () {
+        // Re-fetch full agents list on any change — keeps staking total current
+        fetchAgents();
+      })
+      .subscribe(function (status) {
+        if (status === 'SUBSCRIBED') {
+          console.log('Realtime: subscribed to agents');
         }
       });
   }

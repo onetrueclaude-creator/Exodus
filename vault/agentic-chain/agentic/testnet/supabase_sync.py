@@ -256,8 +256,11 @@ def _sync_agents(g: GenesisState) -> None:
             "mining_rate": round(float(mining_rate), 6),
             # cpu_per_turn and staked_cpu are NUMERIC in Postgres — pass as int
             # to avoid "invalid input syntax for type integer" from postgrest.
+            # Option A: staked_cpu = validator.cpu_vpu for this claim's validator.
+            # TODO(Option B): switch to subgrid_allocator.count(SECURE) × BASE_SECURE_RATE
+            #   once subgrid allocation is actively used by players.
             "cpu_per_turn": 1,
-            "staked_cpu": 0,
+            "staked_cpu": int(g.validators[i].cpu_vpu) if i < len(g.validators) else 0,
             "parent_agent_id": None,
             "synced_at": _iso_now(),
         }
