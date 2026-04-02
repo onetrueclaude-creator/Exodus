@@ -1,7 +1,10 @@
-"""Epoch-level reward distribution engine for AGNTC.
+"""DEPRECATED: Legacy v1 epoch reward distribution engine.
 
-# TODO(v2): redesign for organic growth model — no scheduled inflation.
-# Reward distribution will be based on mining yields, not inflation minting.
+v2 uses organic growth via MiningEngine (agentic/galaxy/mining.py).
+Reward distribution is now based on mining yields + fee collection,
+not inflation minting. See agentic/economics/fees.py for fee splits.
+
+Retained ONLY for backward-compat test coverage and projections.
 """
 from __future__ import annotations
 from dataclasses import dataclass, field
@@ -35,7 +38,7 @@ class EpochRewardReport:
 class RewardsEngine:
     """Computes and distributes epoch rewards.
 
-    Per whitepaper v0.2:
+    Per whitepaper v1.3 (legacy v1 formula — see module deprecation notice):
     - Inflation minting based on disinflation curve
     - 50% of transaction fees burned
     - Remaining fees + inflation split: Verifier 60%, Staker 40% (orderers fee-compensated)

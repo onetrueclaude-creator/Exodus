@@ -65,6 +65,7 @@ import random as _random
 from agentic.consensus.block import Block, BlockStatus
 from agentic.consensus.validator import Validator
 from agentic.galaxy.allocator import CoordinateAllocator
+from agentic.galaxy.claims import claim_cost
 from agentic.galaxy.coordinate import GridCoordinate, resource_density, storage_slots
 from agentic.ledger.transaction import BirthTx, validate_birth
 from agentic.params import (
@@ -469,6 +470,13 @@ def _do_mine(g: GenesisState) -> dict:
         if yields:
             g.mining_engine.mint_block_rewards(yields, g.ledger_state, g.viewing_keys)
         hex_yields = {k.hex(): round(v, 6) for k, v in yields.items()}
+
+        # Collect and distribute fees for this block (T-004)
+        # Testnet: estimate fees from verification proofs processed.
+        # Production: sum actual tx fees from the block's transaction list.
+        block_fees = [g.fee_engine.schedule.base_fee] * vresult.valid_proof_count
+        if block_fees:
+            g.fee_engine.collect_and_distribute(block_fees)
 
         # Distribute subgrid outputs for all allocators
         for owner, alloc in g.subgrid_allocators.items():
@@ -1000,6 +1008,23 @@ def claim_node(request: Request, req: ClaimNodeRequest) -> ClaimNodeResult:
         else:
             raise HTTPException(status_code=503, detail="No unclaimed coordinates available")
 
+    # Ring-gating (G-002): reject claims beyond the currently revealed ring
+    current_ring = g.epoch_tracker.current_ring
+    coord_ring = max(abs(coord.x), abs(coord.y)) // NODE_GRID_SPACING
+    if coord_ring > current_ring:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Coordinate ({coord.x},{coord.y}) is in ring {coord_ring}, "
+                   f"but only ring {current_ring} is currently open",
+        )
+
+    # BME claim cost (T-002): charge AGNTC + CPU per whitepaper city model
+    density = resource_density(coord.x, coord.y)
+    agntc_cost, cpu_cost = claim_cost(current_ring, density)
+    # NOTE: In testnet, we log the cost but don't block — wallets don't hold
+    # real balances yet.  The cost is recorded for auditing/display purposes.
+    # Phase 2 will wire balance deduction + BME burn/redistribute.
+
     # Register claim (lightweight — no Record creation)
     stake = max(1, req.stake)
     slot = g.mining_engine.total_blocks_processed
@@ -1042,7 +1067,8 @@ def claim_node(request: Request, req: ClaimNodeRequest) -> ClaimNodeResult:
         coordinate={"x": x, "y": y}, stake=stake,
         density=round(density, 6), storage_slots=slots,
         validator_id=vid,
-        message=f"Agent created at ({x},{y}). Node colonized. Validator #{vid} active. Auto-mining enabled.")
+        message=f"Agent created at ({x},{y}). Cost: {agntc_cost:.2f} AGNTC + {cpu_cost:.2f} CPU. "
+                f"Validator #{vid} active. Auto-mining enabled.")
 
 
 @app.get("/api/agents", response_model=List[AgentInfo])
