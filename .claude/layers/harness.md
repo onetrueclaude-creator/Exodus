@@ -24,8 +24,8 @@ read_count: 0
 ### Deploy Targets
 - **GitHub Pages** — zkagentic.com (marketing, static HTML)
 - **Cloudflare Pages** — zkagentic.ai (monitor, static HTML + JS)
-- **Railway** — api.zkagentic.ai (Docker, Python FastAPI, SQLite volume)
-- **TBD** — zkagenticnetwork.com (Next.js standalone)
+- **Cloudflare Pages** — zkagenticnetwork.com (game UI, Next.js standalone, Phase 3)
+- **Local only** — Testnet miner runs on dev machine, syncs to Supabase (no Railway)
 
 ### External Services
 - **Supabase** — `inqwwaqiptrmpxruyczy.supabase.co` (Realtime sync, waitlist, RLS)

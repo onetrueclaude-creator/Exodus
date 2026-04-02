@@ -1,8 +1,8 @@
-# AGNTC Whitepaper v1.2
+# AGNTC Whitepaper v1.3
 
 > **ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification**
 >
-> Version 1.2 | March 2026
+> Version 1.3 | April 2026
 
 ---
 
@@ -27,7 +27,7 @@ This paper describes the protocol architecture, consensus mechanism, privacy sys
 - [1. Introduction](#1-introduction)
 - [2. Background and Related Work](#2-background-and-related-work)
 - [3. System Overview](#3-system-overview)
-- [4. The Galaxy Grid: Blockchain as Coordinate Space](#4-the-galaxy-grid)
+- [4. The Neural Lattice: Blockchain as Coordinate Space](#4-the-neural-lattice)
 - [5. Proof of AI Verification](#5-proof-of-ai-verification)
 - [6. Privacy Architecture](#6-privacy-architecture)
 - [7. BFT Ordering and Finality](#7-bft-ordering-and-finality)
@@ -201,7 +201,7 @@ Existing blockchain projects can be positioned along two axes: (1) whether conse
 
 To our knowledge, no existing project as of March 2026 combines AI-powered intelligent verification with zero-knowledge privacy at the verification layer. ZK Agentic Chain targets this quadrant: agents reason about chain state (not just check signatures), and they do so within private channels (not on exposed data).
 
-The addition of a spatial coordinate economy (the galaxy grid), CPU-weighted dual staking, and a gamified exploration interface further differentiates the protocol from both traditional blockchains and AI-blockchain hybrids.
+The addition of a spatial coordinate economy (the Neural Lattice), CPU-weighted dual staking, and a gamified exploration interface further differentiates the protocol from both traditional blockchains and AI-blockchain hybrids.
 
 ---
 
@@ -236,7 +236,7 @@ Three principles constrain every architectural decision in the protocol:
 
 ---
 
-### 4. The Galaxy Grid: Blockchain as Coordinate Space
+### 4. The Neural Lattice: Blockchain as Coordinate Space
 
 #### 4.1 Grid Architecture
 
@@ -296,7 +296,7 @@ The density function maps each coordinate to a float in [0, 1]. Because SHA-256 
 
 Coordinates near the origin tend to have higher strategic value because they were claimable earliest (lowest hardness) and because ring 1 hardness (16) is the minimum. However, density itself is uniformly distributed regardless of distance from origin — a coordinate at ring 300 can have density 0.99 just as a coordinate at ring 1 can have density 0.01. The strategic advantage of inner coordinates comes from lower hardness, not higher density.
 
-**Figure 1: Galaxy Grid Structure**
+**Figure 1: Neural Lattice Structure**
 
 ```
                     Community (NW)          Machines (NE)
@@ -944,7 +944,7 @@ Newly minted AGNTC is distributed according to the faction that controls the arm
 | Founders | 25% | S (gold-orange) | 4-year vest, 12-month cliff |
 | Professional | 25% | W (blue) | None — freely tradeable |
 
-This distribution is self-enforcing: it follows from the geographic structure of the galaxy grid rather than from administrative allocation. The protocol does not "send 25% to the Community pool" — rather, 25% of all coordinates exist in the Community arm, and claiming those coordinates mints AGNTC attributed to Community participants.
+This distribution is self-enforcing: it follows from the geographic structure of the Neural Lattice rather than from administrative allocation. The protocol does not "send 25% to the Community pool" — rather, 25% of all coordinates exist in the Community arm, and claiming those coordinates mints AGNTC attributed to Community participants.
 
 #### 10.3 Machines Faction: Permanent Accumulator
 
@@ -1520,7 +1520,7 @@ Each homenode in the ZK Agentic Chain contains a private inner grid — an 8×8 
 
 #### 16.1 Inner Grid Architecture
 
-The subgrid is an abstraction layer between the galaxy grid (the global coordinate space) and the individual agent operations running at each node. While the galaxy grid is public — all participants can see claimed coordinates, node positions, and faction affiliations — the subgrid is private. Only the node owner can see how their 64 sub-cells are allocated.
+The subgrid is an abstraction layer between the Neural Lattice (the global coordinate space) and the individual agent operations running at each node. While the Neural Lattice is public — all participants can see claimed coordinates, node positions, and faction affiliations — the subgrid is private. Only the node owner can see how their 64 sub-cells are allocated.
 
 ```
 SUBGRID_SIZE = 64    (8 × 8 sub-cells per homenode)
@@ -1936,7 +1936,7 @@ The 1 billion SPL tokens represent the total AGNTC supply that will eventually e
 The ZK Agentic Chain testnet is a simulation of the production protocol, implemented as a Python FastAPI server with a Next.js game UI frontend:
 
 - **Blockchain simulation.** GenesisState with 9 genesis nodes, epoch ring expansion, mining engine with hardness formula, subgrid allocation system
-- **Game UI.** PixiJS 2D galaxy grid with faction-colored nodes, terminal-based agent interaction, resource tracking HUD
+- **Game UI.** PixiJS 2D Neural Lattice with faction-colored nodes, terminal-based agent interaction, resource tracking HUD
 - **Protocol validation.** All protocol parameters (Section 22) are implemented and tested against the formal specification
 - **Smart contract design.** Transaction validation logic, state machine transitions, and ZK circuit specifications are being refined through testnet operation
 
@@ -2102,7 +2102,7 @@ The following table provides the complete set of protocol-level parameters that 
 | DIST_MACHINES | 0.25 | Faction share: Machines (AI agents, E arm) |
 | DIST_FOUNDERS | 0.25 | Faction share: Founders (team, S arm) |
 | DIST_PROFESSIONAL | 0.25 | Faction share: Professional (paid-tier, W arm) |
-| MACHINES_SELL_ALLOWED | false | Machines faction: permanent accumulator, never sells |
+| MACHINES_MIN_SELL_RATIO | 1.0 | Machines faction: never sells below acquisition cost (effective never-sell) |
 | ANNUAL_INFLATION_CEILING | 0.05 | Maximum 5% annualized supply growth, enforced per epoch |
 | SIGNUP_BONUS | 1.0 | AGNTC minted per new user registration |
 
@@ -2119,6 +2119,7 @@ The following table provides the complete set of protocol-level parameters that 
 | BASE_CLAIM_COST ‡ | 100 | AGNTC cost for claiming a coordinate at ring 1, density 1.0 |
 | BASE_CPU_CLAIM_COST ‡ | 50 | CPU Energy cost for claiming at ring 1, density 1.0 |
 | CLAIM_COST_FLOOR | 0.01 | Minimum claim cost (prevents near-zero at extreme outer rings) |
+| CLAIM_REQUIRES_ACTIVE_STAKE | true | Must have active stake to claim nodes |
 
 #### Subgrid Parameters
 
@@ -2366,7 +2367,7 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **Epoch** | A period of 100 blocks (SLOTS_PER_EPOCH = 100) |
 | **Epoch ring** | Concentric expansion boundary; ring N opens when cumulative mined ≥ 4N(N+1) |
 | **Faction** | One of four distribution groups: Community, Machines, Founders, Professional |
-| **Galaxy grid** | The 31,623 × 31,623 coordinate space representing the complete network state |
+| **Neural Lattice** | The 31,623 × 31,623 coordinate space representing the complete network state (internally: `galaxy/` module) |
 | **Genesis** | The initial state: 9 nodes (1 origin + 4 faction masters + 4 homenodes), 900 AGNTC |
 | **Groth16** | ZK-SNARK proving system [6] with ~192-byte proofs and ~6ms verification |
 | **Halo2** | Recursive proof system [8] without trusted setup, target for mainnet epoch proofs |
@@ -2376,7 +2377,7 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **Level** | Upgrade tier for sub-cells, scaling output by level^0.8 |
 | **Machines Faction** | AI agent economy faction with protocol-enforced never-sell-below-cost constraint |
 | **NCP** | Neural Communication Packet — structured encrypted message between agents |
-| **Node** | An occupied position in the galaxy grid, hosting one agent and one 8×8 subgrid |
+| **Node** | An occupied position in the Neural Lattice, hosting one agent and one 8×8 subgrid |
 | **NOIR** | Domain-specific language for ZK circuit development (Barretenberg backend) |
 | **Nullifier** | Unique value derived from commitment, preventing double-spend without revealing owner |
 | **Opus** | Premium Claude AI model tier — deep reasoning, high CPU cost |
@@ -2497,5 +2498,14 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 ---
 
-*AGNTC Whitepaper v1.1 — ZK Agentic Chain*
+### Changelog
+
+- **v1.3 (April 2026):** Internal audit — zero code-spec discrepancies resolved. 6 missing parameters added to reference implementation (`ANNUAL_INFLATION_CEILING`, `SIGNUP_BONUS`, `BASE_CLAIM_COST`, `BASE_CPU_CLAIM_COST`, `CLAIM_COST_FLOOR`, `CLAIM_REQUIRES_ACTIVE_STAKE`). "Galaxy Grid" renamed to "Neural Lattice" globally. `MACHINES_SELL_ALLOWED` replaced with `MACHINES_MIN_SELL_RATIO` (more precise). Inflation ceiling enforcement, BME claim cost function, fee engine wiring, and ring-gating implemented in testnet. Legacy v1 inflation code deprecated. All 50+ protocol parameters verified against testnet code. Migration feasibility confirmed.
+- **v1.2 (March 2026):** BME city economics model, governance scaffolding, Machines Faction permanent accumulator, 5% inflation ceiling, Gini formula correction per Lerman-Yitzhaki.
+- **v1.1 (March 2026):** Academic upgrade — formal PoAIV proofs, adversary model, security games, competitor comparison table, VRF specification, 7 limitations disclosed.
+- **v1.0 (February 2026):** Initial release — protocol architecture, consensus, privacy, staking, token economics, resource allocation, development roadmap.
+
+---
+
+*AGNTC Whitepaper v1.3 — ZK Agentic Chain*
 *Copyright © 2026 ZK Agentic Network. All rights reserved.*

@@ -38,3 +38,14 @@ read_count: 0
 - Dispatched MSG-003: start dev server at localhost:3000.
 - [Loop 15: OODA] Ziggy acked MSG-003, fixing 2 TSC errors before starting server. Port 3000 not yet up.
 - [Loop optimization] Rewrote loop architecture. Exodus: single `/loop 5m` with 3 cadences (COMMS/OODA/REFLECT). Ziggy: event-driven lifecycle — CronCreate 1m idle-only inbox poll (ticks dropped during work, zero interruption), no timed OODA/REFLECT (parent dispatches those). Removed test suites from all loop cadences. Cleaned stale scheduled_tasks.lock.
+
+## 2026-04-02 (Session 2 — Phase 1 Completion + Cleanup)
+
+- Resumed Phase 1 whitepaper audit. Tasks 1-16 artifacts verified intact (survived earlier crash).
+- Completed Tasks 17-22: added 6 missing params, fixed 7 code discrepancies (inflation ceiling, BME claim cost, FeeEngine wiring, ring-gating, legacy deprecation), Neural Lattice rename, whitepaper v1.3 bump, audit SUMMARY.
+- Tests: 95 audit tests pass, 717 full suite pass, 0 regressions.
+- **Security fix:** untracked .env from git (contained Google OAuth credentials). User to rotate AUTH_GOOGLE_SECRET.
+- **Coherence fix:** caught stale Railway references across governance. Railway was eliminated in rollout design (same day) but memory/layers/SEED still referenced it. Fixed 5 layer files, SEED.md domains table, fastapi-testnet skill, and MEMORY.md.
+- **Feedback saved:** always reconcile approved design docs against MEMORY.md at genesis.
+- Deleted stale scheduled_tasks.lock.
+- Full .claude/ audit: structure SOUND, 9 stale references fixed, 0 broken files.

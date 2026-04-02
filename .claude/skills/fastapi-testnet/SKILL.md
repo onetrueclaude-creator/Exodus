@@ -86,7 +86,7 @@ Test `test_monitor_formula_matches_api_progress` asserts they match within 0.01.
 ## SQLite Persistence
 
 **File**: `agentic/testnet/persistence.py`
-**DB path**: `vault/agentic-chain/testnet_state.db` (gitignored); Railway: `/app/data/testnet_state.db`
+**DB path**: `vault/agentic-chain/testnet_state.db` (gitignored)
 
 ### What is persisted vs reconstructed
 
@@ -119,7 +119,7 @@ Two endpoints require `X-Admin-Token` header:
 
 If `ADMIN_TOKEN` env var is unset → 503 (disabled). Wrong token → 403.
 
-**Railway deploy prerequisite**: set `ADMIN_TOKEN` in Railway env vars panel using `openssl rand -hex 32` before `railway up`. Do NOT commit to repo.
+**Admin gate**: `ADMIN_TOKEN` env var required for `/api/reset` and `/api/automine`. Generate with `openssl rand -hex 32`. Do NOT commit to repo.
 
 Tests patch `_ADMIN_TOKEN` via `conftest.py` session fixture; test code passes `{"X-Admin-Token": TEST_ADMIN_TOKEN}` header.
 
@@ -187,24 +187,12 @@ Tests bypass rate limiting through TestClient's in-process routing, but the slow
 
 ---
 
-## Railway Deployment
+## Deployment
 
-Full runbook: `vault/agentic-chain/docs/railway-deploy-runbook.md`
+**Railway was eliminated** (2026-04-02 rollout design). The testnet miner runs locally and syncs to Supabase. Phase 2 adds Supabase write-through so the game UI and monitor can submit transactions without a public API.
 
-Required env vars:
+Local run: `uvicorn agentic.testnet.api:app --port 8080 --reload`
+
+Required env vars (in `vault/agentic-chain/.env`):
 - `SUPABASE_URL` — `https://inqwwaqiptrmpxruyczy.supabase.co`
-- `SUPABASE_SERVICE_ROLE_KEY` — from vault `.env`
-- `ADMIN_TOKEN` — `openssl rand -hex 32` (never commit)
-- `DB_PATH` — `/app/data/testnet_state.db`
-- `ALLOWED_ORIGINS` — comma-separated CORS origins
-- `ENVIRONMENT` — `production` (disables `/docs`)
-
-Railway Volume: mount at `/app/data/` — without this, SQLite is wiped on every restart.
-
-Deploy: `railway up` from `vault/agentic-chain/`
-
-Post-deploy verification:
-```bash
-curl https://api.zkagentic.ai/health        # {"status":"ok"}
-curl -X POST https://api.zkagentic.ai/api/reset  # expect 503 (admin gate works)
-```
+- `SUPABASE_SERVICE_ROLE_KEY` — from Supabase dashboard (never commit)

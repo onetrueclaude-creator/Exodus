@@ -14,7 +14,7 @@ read_count: 0
 - **Cross-domain changes** — anything touching more than one of the 4 domains → escalate
 - **Tokenomics changes** — any modification to supply, burn rate, staking, rewards → escalate
 - **Security implications** — credential exposure, permission changes, CORS modifications → escalate
-- **Deploy decisions** — pushing to any live domain (Railway, Cloudflare, GitHub Pages) → escalate
+- **Deploy decisions** — pushing to any live domain (Cloudflare, GitHub Pages) → escalate
 - **Whitepaper deviation** — implementation that would conflict with protocol spec → escalate
 - **Database schema** — Supabase table changes, RLS policy modifications → escalate
 - **Unclear requirements** — ambiguous dispatch from origin → ask for clarification

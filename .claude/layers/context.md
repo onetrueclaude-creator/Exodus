@@ -13,7 +13,7 @@ read_count: 0
 ### Domains (4 separate deploys)
 - **zkagentic.com** — Marketing site (GitHub Pages, static HTML, waitlist)
 - **zkagentic.ai** — Testnet monitor (Cloudflare Pages, live chain stats, subgrid simulator)
-- **api.zkagentic.ai** — Public API (Railway, Python FastAPI, SQLite + Supabase sync)
+- **Testnet API** — Local Python FastAPI miner, Supabase write-through (no public hosting)
 - **zkagenticnetwork.com** — Game UI (Next.js 16, React 19, PixiJS 8, Zustand 5)
 
 ### Tech Stack

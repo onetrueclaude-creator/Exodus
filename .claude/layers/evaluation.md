@@ -29,4 +29,4 @@ read_count: 0
 - **387+** Python tests (testnet API)
 - **22+** Playwright E2E specs
 - **82** monitor crosscheck tests
-- **4** domains, **1** Supabase project, **1** Railway deploy target
+- **3** live domains (marketing, monitor, game placeholder), **1** Supabase project, testnet miner runs locally

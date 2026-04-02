@@ -10,7 +10,7 @@ read_count: 0
 
 ## Current Configuration
 
-ZK Agentic Network: a Stellaris-inspired gamified social media dApp where users explore a 2D galaxy grid, communicate via AI agents, develop star systems, and build diplomatic relationships on the Agentic Chain testnet blockchain.
+ZK Agentic Network: a gamified social media dApp where users explore a 2D Neural Lattice, communicate via AI agents, develop star systems, and build diplomatic relationships on the Agentic Chain testnet blockchain.
 
 Core activities:
 
@@ -24,7 +24,7 @@ Core activities:
 - Origin dispatches work → check inbox → ack → execute → report completion
 - Feature request → brainstorm → design → TDD → review → ship (7-phase workflow)
 - Monitor discrepancy → cross-check API vs Supabase vs frontend → fix at source
-- Deploy change → patch static HTML or push to Railway → verify live
+- Deploy change → patch static HTML, deploy via Cloudflare/GitHub Pages → verify live
 
 ### Constraints
 - Follow all rules in `~/.claude/rules/` — they are organizational law
