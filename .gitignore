@@ -4,10 +4,7 @@ dist
 .next
 out
 
-# pnpm
-pnpm-lock.yaml
-
-# env files
+# env files — NEVER commit
 .env
 .env.local
 .env.*.local
@@ -18,19 +15,13 @@ pnpm-lock.yaml
 # TypeScript
 *.tsbuildinfo
 
-# Build artifacts / deploy dirs
-ZkAgentic/projects/web/zkagentic-deploy/_next/
-ZkAgentic/projects/web/company-site/node_modules/
-ZkAgentic/projects/web/company-site/.next/
-
 # local dev artifacts
 debug.log
 dev.db
 
 # Obsidian
-vault/.obsidian/workspace.json
-vault/.obsidian/workspace-mobile.json
-vault/.trash/
+spec/.obsidian/
+spec/.trash/
 
 # Compaction memory (local only — never commit)
 compacted.md
@@ -40,25 +31,9 @@ prompts.md
 # Git worktrees
 .worktrees/
 
-# Playwright
+# Test artifacts
 playwright-report/
 test-results/
-
-# External project trees (legacy codebases, not part of this repo)
-ZkAgentic/
-apps/
-vault/agentic-chain/
-
-# pnpm workspace lock (managed at monorepo root)
-pnpm-lock.yaml
-
-# Claude dispatch state (session-local, not committed)
-.claude/dispatch-state.json
-
-# Node modules anywhere in tree
-**/node_modules/
-
-# Screenshots (development artifacts, not committed)
 screenshots/
 
 # Playwright MCP temp data
@@ -66,3 +41,16 @@ screenshots/
 
 # Auto-generated TypeScript declarations
 next-env.d.ts
+
+# Claude dispatch state (session-local)
+.claude/dispatch-state.json
+.claude/scheduled_tasks.lock
+
+# Chain testnet local state
+chain/testnet_state.db
+chain/testnet_state.db-*
+chain/.chain_auth
+chain/.streamlit/
+
+# pnpm workspace lock
+pnpm-lock.yaml

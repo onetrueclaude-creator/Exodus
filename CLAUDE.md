@@ -1,10 +1,10 @@
 # ZK Agentic Network
 
 ## Required Reading
-**Before working on any feature, read `vault/whitepaper.md`** — the v1.0 whitepaper (21K words) is the authoritative specification for all protocol mechanics: PoAIV consensus, dual staking, tokenomics, subgrid resources, privacy architecture, and the SOL→L1 migration path. All implementation must align with the whitepaper.
+**Before working on any feature, read `spec/whitepaper.md`** — the v1.3 whitepaper is the authoritative specification for all protocol mechanics: PoAIV consensus, dual staking, tokenomics, subgrid resources, privacy architecture, and the SOL→L1 migration path. All implementation must align with the whitepaper.
 
 ## Project Overview
-Stellaris-inspired gamified social media dApp where users explore a 2D galaxy grid, communicate via haiku through AI agents, develop star systems with planets (content storage), research technologies, and build diplomatic relationships. All state is backed by the Agentic Chain testnet blockchain ledger.
+Gamified social media dApp where users explore a 2D Neural Lattice, communicate via haiku through AI agents, develop star systems with planets (content storage), research technologies, and build diplomatic relationships. All state is backed by the Agentic Chain testnet blockchain ledger.
 
 ## Tech Stack
 - **Framework:** Next.js 16 (App Router, server mode with `output: 'standalone'`)
@@ -177,8 +177,10 @@ When working in a directory, read `seed.md` first (purpose), then `CLAUDE.md` (h
 |-----------|---------|
 | `seed.md` | **Root** — project tree map, architecture table, navigation connector index |
 | `src/seed.md` → `src/CLAUDE.md` | Next.js source — components, store, services, hooks, types |
-| `vault/seed.md` → `vault/CLAUDE.md` | Knowledge base — design, product, research, engineering |
-| `playwright/seed.md` → `playwright/CLAUDE.md` | E2E test suite |
+| `spec/seed.md` → `spec/CLAUDE.md` | Knowledge base — whitepaper, research, product, audit |
+| `tests/seed.md` → `tests/CLAUDE.md` | E2E test suite |
+| `chain/seed.md` → `chain/CLAUDE.md` | Testnet API — protocol, consensus, mining |
+| `apps/game/CLAUDE.md` | Game UI — components, store, services |
 | `docs/seed.md` → `docs/CLAUDE.md` | Public documentation |
 
 Sub-directory seeds have their own connector tables pointing up (parent), down (children), and sideways (related).
@@ -226,7 +228,7 @@ Sub-directory seeds have their own connector tables pointing up (parent), down (
 
 **Added:** 4 parallel Playwright faction beta-tester agents; fresh testnet setup per run.
 
-**Design:** Galaxy grid redesign golden prompt captured in `vault/seed.md`; approved design doc at `vault/seed.md#approved-design-summary`.
+**Design:** Galaxy grid redesign golden prompt captured in `spec/seed.md`; approved design doc at `spec/seed.md#approved-design-summary`.
 
 ### 2026-02-23 — Loading fix, energy tick guard, Playwright green (commits `~62aff06`, `~e87a349`)
 

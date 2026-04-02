@@ -1,0 +1,14 @@
+.env
+.env.local
+.chain_auth
+__pycache__/
+*.pyc
+tests/
+.streamlit/
+run_*.py
+start.py
+compacted.md
+prompts.md
+stack/
+seed.md
+CLAUDE.md

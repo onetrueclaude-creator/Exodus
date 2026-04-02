@@ -17,7 +17,7 @@ Core activities:
 1. **Build** — Develop the game client (Next.js + PixiJS), testnet API (FastAPI), and supporting infrastructure
 2. **Operate** — Run the testnet blockchain, sync state to Supabase, serve the monitor dashboard
 3. **Deploy** — Manage 4 domains: marketing site, testnet monitor, public API, game UI
-4. **Align** — All implementation must conform to `vault/whitepaper.md` (v1.2) — the authoritative protocol spec
+4. **Align** — All implementation must conform to `spec/whitepaper.md` (v1.3) — the authoritative protocol spec
 5. **Communicate** — Read origin dispatches via inbox.md, report back via outbox.md
 
 ### Task Patterns

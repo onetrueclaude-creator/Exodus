@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(.claude/**)",
+      "Read(inbox.md)",
+      "Read(outbox.md)",
+      "Write(.claude/journal.md)",
+      "Write(.claude/internals/*.md)",
+      "Write(.claude/priorities.md)",
+      "Write(outbox.md)",
+      "Bash(git:*)",
+      "Bash(python3:*)",
+      "Bash(pip3:*)",
+      "Bash(uvicorn:*)",
+      "Bash(ls:*)"
+    ]
+  }
+}

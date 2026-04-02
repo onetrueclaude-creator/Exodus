@@ -10,11 +10,11 @@ read_count: 0
 
 ## Current Configuration
 
-### Domains (4 separate deploys)
-- **zkagentic.com** — Marketing site (GitHub Pages, static HTML, waitlist)
-- **zkagentic.ai** — Testnet monitor (Cloudflare Pages, live chain stats, subgrid simulator)
-- **Testnet API** — Local Python FastAPI miner, Supabase write-through (no public hosting)
-- **zkagenticnetwork.com** — Game UI (Next.js 16, React 19, PixiJS 8, Zustand 5)
+### Domains (3 deploys + local miner)
+- **zkagentic.com** — Marketing site (GitHub Pages, `web/marketing/`)
+- **zkagentic.ai** — Testnet monitor (Cloudflare Pages, `web/monitor/`)
+- **zkagenticnetwork.com** — Game UI (Cloudflare Pages, `apps/game/`)
+- **Testnet API** — Local miner, Supabase write-through (`chain/`)
 
 ### Tech Stack
 - **Frontend:** TypeScript 5, React 19, Next.js 16 (App Router), PixiJS 8, Tailwind CSS 4, Zustand 5
