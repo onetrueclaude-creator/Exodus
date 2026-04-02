@@ -82,6 +82,18 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ./ .claude/hooks/user-prompt-log.sh",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }
