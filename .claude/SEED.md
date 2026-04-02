@@ -19,7 +19,7 @@ ZK Agentic Network — Stellaris-inspired gamified social media dApp. Primary pr
 - **ID:** exodus
 - **Role:** blockchain dApp (4-domain platform: marketing, monitor, API, game)
 - **Parent:** origin orchestrator (`~/.claude/`)
-- **Authoritative spec:** `vault/whitepaper.md` (v1.2)
+- **Authoritative spec:** `spec/whitepaper.md` (v1.3)
 
 ## Domains
 
@@ -34,8 +34,8 @@ ZK Agentic Network — Stellaris-inspired gamified social media dApp. Primary pr
 
 | Child | Path | Bootstrapped | Inbox | Outbox |
 |-------|------|-------------|-------|--------|
-| zkagenticnetwork | `apps/zkagenticnetwork/` | 2026-04-01 | `apps/zkagenticnetwork/inbox.md` | `apps/zkagenticnetwork/outbox.md` |
-| agentic-chain | `vault/agentic-chain/` | 2026-04-01 | `vault/agentic-chain/inbox.md` | `vault/agentic-chain/outbox.md` |
+| game | `apps/game/` | 2026-04-01 | `apps/game/inbox.md` | `apps/game/outbox.md` |
+| chain | `chain/` | 2026-04-01 | `chain/inbox.md` | `chain/outbox.md` |
 
 ## Hash Computation
 

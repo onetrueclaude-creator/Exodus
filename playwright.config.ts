@@ -1,8 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
-  testDir: './playwright/tests',
-  globalSetup: './playwright/globalSetup.ts',
+  testDir: './tests/tests',
+  globalSetup: './tests/globalSetup.ts',
   fullyParallel: false,
   workers: 4,
   retries: 1,
@@ -13,7 +13,7 @@ export default defineConfig({
   ],
   use: {
     baseURL: 'http://localhost:3000',
-    storageState: 'playwright/.auth/user.json',
+    storageState: 'tests/.auth/user.json',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     ignoreHTTPSErrors: true,  // allow Supabase in dev without system CA
