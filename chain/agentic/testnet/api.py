@@ -435,13 +435,25 @@ async def _start_auto_miner() -> None:
 
 
 async def _auto_mine_loop() -> None:
-    """Mine a block at the fixed block time when there are active claims."""
+    """Mine a block at the fixed block time when there are active claims.
+
+    Phase 2: polls pending_transactions from Supabase before each block,
+    so write-through transactions are included in the next block.
+    """
     global _last_block_time
     while True:
         await asyncio.sleep(_BLOCK_TIME_S)
         if not _auto_mine or _genesis is None:
             continue
         g = _genesis
+
+        # Phase 2: process write-through transactions before mining
+        try:
+            from agentic.testnet.pending import process_pending_transactions
+            process_pending_transactions(g, db_path=_DB_PATH)
+        except Exception:
+            pass  # never crash the miner
+
         claims = g.claim_registry.all_active_claims()
         if not claims:
             continue
