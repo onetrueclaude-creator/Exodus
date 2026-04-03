@@ -1,6 +1,6 @@
 // Subgrid Simulator — zkagentic.ai
+// Phase 2: write-through via Supabase (no direct API calls)
 (function () {
-  var API_BASE = 'https://api.zkagentic.ai';
   var SUPABASE_URL = 'https://inqwwaqiptrmpxruyczy.supabase.co';
   var SUPABASE_ANON_KEY =
     '***REDACTED_ANON_KEY***';
@@ -13,6 +13,7 @@
   var sb = null;
   var allocChannel = null;
   var rewardsChannel = null;
+  var pendingChannel = null;
 
   function setText(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
 
@@ -68,23 +69,41 @@
   }
 
   async function fetchCurrentAllocation() {
+    // Phase 2: read from Supabase tables instead of direct API
     try {
-      var res = await fetch(API_BASE + '/api/resources/' + currentWallet);
-      if (!res.ok) return;
-      var data = await res.json();
-      if (data.subgrid) {
-        setText('sim-chain-secure', data.subgrid.secure_count || 0);
-        setText('sim-chain-develop', data.subgrid.develop_count || 0);
-        setText('sim-chain-research', data.subgrid.research_count || 0);
-        setText('sim-chain-storage', data.subgrid.storage_count || 0);
+      // Fetch subgrid allocation
+      var allocResult = await sb.from('subgrid_allocations')
+        .select('secure_cells, develop_cells, research_cells, storage_cells')
+        .eq('wallet_index', currentWallet)
+        .maybeSingle();
+
+      if (allocResult.data) {
+        setText('sim-chain-secure', allocResult.data.secure_cells || 0);
+        setText('sim-chain-develop', allocResult.data.develop_cells || 0);
+        setText('sim-chain-research', allocResult.data.research_cells || 0);
+        setText('sim-chain-storage', allocResult.data.storage_cells || 0);
+      } else {
+        setText('sim-chain-secure', 0);
+        setText('sim-chain-develop', 0);
+        setText('sim-chain-research', 0);
+        setText('sim-chain-storage', 0);
       }
-      setText('sim-yield-agntc', (data.agntc_per_block || 0).toFixed(4));
-      setText('sim-yield-dev', (data.dev_points_per_block || 0).toFixed(2));
-      setText('sim-yield-research', (data.research_points_per_block || 0).toFixed(2));
-      setText('sim-yield-storage', (data.storage_per_block || 0).toFixed(2));
+
+      // Fetch resource rewards
+      var rewardsResult = await sb.from('resource_rewards')
+        .select('agntc_earned, dev_points, research_points, storage_size')
+        .eq('wallet_index', currentWallet)
+        .maybeSingle();
+
+      if (rewardsResult.data) {
+        setText('sim-yield-agntc', (parseFloat(rewardsResult.data.agntc_earned) || 0).toFixed(4));
+        setText('sim-yield-dev', (parseFloat(rewardsResult.data.dev_points) || 0).toFixed(2));
+        setText('sim-yield-research', (parseFloat(rewardsResult.data.research_points) || 0).toFixed(2));
+        setText('sim-yield-storage', (parseFloat(rewardsResult.data.storage_size) || 0).toFixed(2));
+      }
     } catch (e) {
       console.error('fetch allocation error:', e);
-      setText('sim-status', 'API offline — deploy pending. Realtime updates still active.');
+      setText('sim-status', 'Supabase read failed — check connection.');
     }
   }
 
@@ -92,20 +111,21 @@
     var counts = { secure: 0, develop: 0, research: 0, storage: 0 };
     for (var i = 0; i < cells.length; i++) counts[cells[i]]++;
 
-    setText('sim-status', 'Applying...');
+    setText('sim-status', 'Submitting...');
     try {
-      var res = await fetch(API_BASE + '/api/resources/' + currentWallet + '/assign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(counts),
+      // Phase 2: INSERT into pending_transactions (miner polls and processes)
+      var result = await sb.from('pending_transactions').insert({
+        wallet_index: currentWallet,
+        action_type: 'assign_subgrid',
+        payload: counts,
       });
-      if (!res.ok) {
-        var err = await res.json();
-        setText('sim-status', 'Error: ' + (err.detail || res.statusText));
+
+      if (result.error) {
+        setText('sim-status', 'Error: ' + result.error.message);
         return;
       }
-      setText('sim-status', 'Applied! Yields accrue next block (~60s).');
-      setTimeout(fetchCurrentAllocation, 1000);
+
+      setText('sim-status', 'Queued — miner processes next block (~60s).');
     } catch (e) {
       setText('sim-status', 'Network error: ' + e.message);
     }
@@ -125,6 +145,7 @@
           setText('sim-chain-develop', payload.new.develop_cells || 0);
           setText('sim-chain-research', payload.new.research_cells || 0);
           setText('sim-chain-storage', payload.new.storage_cells || 0);
+          setText('sim-status', 'Updated via Realtime.');
         }
       })
       .subscribe();
@@ -135,10 +156,10 @@
         filter: 'wallet_index=eq.' + currentWallet
       }, function (payload) {
         if (payload.new) {
-          setText('sim-yield-agntc', (payload.new.agntc_earned || 0).toFixed(4));
-          setText('sim-yield-dev', (payload.new.dev_points || 0).toFixed(2));
-          setText('sim-yield-research', (payload.new.research_points || 0).toFixed(2));
-          setText('sim-yield-storage', (payload.new.storage_size || 0).toFixed(2));
+          setText('sim-yield-agntc', (parseFloat(payload.new.agntc_earned) || 0).toFixed(4));
+          setText('sim-yield-dev', (parseFloat(payload.new.dev_points) || 0).toFixed(2));
+          setText('sim-yield-research', (parseFloat(payload.new.research_points) || 0).toFixed(2));
+          setText('sim-yield-storage', (parseFloat(payload.new.storage_size) || 0).toFixed(2));
         }
       })
       .subscribe();
