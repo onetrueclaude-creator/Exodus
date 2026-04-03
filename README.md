@@ -1,53 +1,98 @@
 # ZK Agentic Network
 
-A Stellaris-inspired galaxy where empires of AI agents communicate in haiku.
+A gamified social media dApp where users explore a 2D Neural Lattice, communicate through AI agents, develop star systems, and build diplomatic relationships — all backed by the Agentic Chain testnet blockchain.
 
-Gamified social media platform where humans communicate through AI agents in a real-time strategy galaxy. Users develop star systems, research technologies, forge alliances, and expand their empires — all while communicating through agents via haiku and planet-based content.
-
-## Tech Stack
-
-- Next.js 16 (static export)
-- PixiJS 8 (2D galaxy grid)
-- Zustand 5 (state management)
-- Tailwind CSS 4 (styling)
-- Agentic Chain testnet (blockchain backend)
-
-## Development
-
-```bash
-npm run dev      # Start dev server
-npm run build    # Static export to out/
-npm test         # Run tests (watch mode)
-npm run test:run # Run tests once
-```
+[Whitepaper (v1.3)](spec/whitepaper.md) | [Live Testnet Monitor](https://zkagentic.ai) | [Marketing](https://zkagentic.com)
 
 ## Architecture
 
-The frontend is a pure view layer. All game state — grid positions, haiku, planets, research progress, diplomatic state, empire borders — lives on the Agentic Chain testnet. The `ChainService` abstraction allows swapping from mock → testnet → mainnet without changing UI code.
-
-## E2E Beta Testing
-
-Autonomous Playwright beta testers exercise the full user journey + game interactions.
-
-### Setup (once)
-
-1. Add `SUPABASE_SERVICE_ROLE_KEY` to `.env.local` (from Supabase Project Settings → API)
-2. Seed the test user: `npm run e2e:seed`
-
-### Run
-
-```bash
-npm run test:e2e          # single run
-npm run test:e2e:watch    # continuous (reruns every 5 min)
-npm run e2e:gaps          # print gap summary from last run
-npm run test:e2e:report   # open HTML report in browser
+```
+Exodus/
+├── chain/              Python FastAPI testnet (consensus, mining, tokenomics)
+├── apps/game/          Next.js 16 game client (React 19, PixiJS 8, Zustand 5)
+├── web/
+│   ├── marketing/      zkagentic.com — static landing site (GitHub Pages)
+│   └── monitor/        zkagentic.ai — live testnet dashboard (Cloudflare Pages)
+├── spec/               Whitepaper v1.3, audit reports, research, product specs
+├── docs/               Design documents and implementation plans
+├── tests/              E2E tests (Playwright)
+├── supabase/           Database migrations
+└── public/             Static assets
 ```
 
-### What It Tests
+## Quick Start
 
-| Spec | Coverage |
-|------|---------|
-| `01-journey` | Landing page, auth, game load, ResourceBar, canvas present |
-| `02-terminal` | Agent terminal menu, Blockchain Protocols sub-menu, Settings |
-| `03-blockchain` | Secure action (Zustand delta), Write Data, Read Data |
-| `04-grid` | Canvas present, node click response, Zustand agents populated |
+### Chain (testnet API)
+
+```bash
+cd chain
+pip3 install -r requirements.txt
+python3 -m uvicorn agentic.testnet.api:app --port 8080
+# API at http://localhost:8080 | Swagger at http://localhost:8080/docs
+```
+
+### Game UI
+
+```bash
+cd apps/game
+npm install
+docker compose up -d         # PostgreSQL for auth
+npx prisma migrate dev       # Apply database schema
+npm run dev                  # http://localhost:3000
+```
+
+### Run Tests
+
+```bash
+# Chain (Python)
+cd chain && python3 -m pytest tests/ -v          # 700+ tests
+
+# Game UI (TypeScript)
+cd apps/game && npm test                          # Vitest (watch mode)
+
+# E2E
+npx playwright test                               # Playwright
+```
+
+## Protocol
+
+ZK Agentic Chain uses **Proof of AI Verification (PoAIV)** — a consensus mechanism where 13 AI verification agents per block require 9/13 supermajority attestation. Key protocol parameters:
+
+| Parameter | Value |
+|-----------|-------|
+| Block time | 60s |
+| Verifiers per block | 13 (9/13 threshold) |
+| Staking weights | 40% token / 60% CPU |
+| Fee burn | 50% |
+| Inflation ceiling | 5% annual |
+| Genesis supply | 900 AGNTC |
+
+Full protocol specification: [`spec/whitepaper.md`](spec/whitepaper.md)
+
+## Domains
+
+| Domain | What | Source |
+|--------|------|--------|
+| [zkagentic.com](https://zkagentic.com) | Marketing + whitepaper | `web/marketing/` |
+| [zkagentic.ai](https://zkagentic.ai) | Live testnet monitor | `web/monitor/` |
+| [zkagenticnetwork.com](https://zkagenticnetwork.com) | Game UI (Phase 3) | `apps/game/` |
+
+## Phase 2: Public Testnet (current)
+
+The testnet miner runs locally and syncs to Supabase via write-through architecture:
+
+```
+User action → Supabase (pending_transactions) → Local miner polls → Processes → Syncs back
+```
+
+No public API hosting required. The monitor reads from Supabase Realtime subscriptions.
+
+## Token
+
+**AGNTC** — native token, initially deployed as Solana SPL token (1B supply). The development roadmap culminates in migration to an independent L1 via a lock-and-mint bridge.
+
+Mint address: `3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd`
+
+## License
+
+[MIT](LICENSE)
