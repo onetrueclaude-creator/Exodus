@@ -49,3 +49,10 @@ read_count: 0
 - **Feedback saved:** always reconcile approved design docs against MEMORY.md at genesis.
 - Deleted stale scheduled_tasks.lock.
 - Full .claude/ audit: structure SOUND, 9 stale references fixed, 0 broken files.
+- Monorepo reorganization: 17+ dirs → 9 (chain/, apps/game/, web/, spec/, tests/). 769 files moved. Industry-aligned (Solana/Ethereum/Cosmos/Polkadot research).
+- Removed orphaned root configs (next.config, vitest, prisma, postcss, eslint, tsconfig). Root is workspace-only.
+- Deleted stale node_modules (2.7GB), compaction files, lockfiles. Killed stale watch-prompts.py daemon.
+- Hook cleanup: deleted watch-prompts.py (redundant), fixed user-prompt-log.sh paths, added dedup for double-fire bug, registered UserPromptSubmit in settings.json.
+- Git history scrubbed (.env removed via filter-repo). Main fast-forwarded. Both branches pushed clean.
+- Google OAuth credentials rotated (new client ID created, old deleted).
+- Phase 2 plan researched and documented at .claude/plans/recursive-tumbling-waffle.md (7 work packages, write-through architecture).
