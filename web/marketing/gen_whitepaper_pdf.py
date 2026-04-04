@@ -488,8 +488,11 @@ def render_blocks(pdf, blocks, collect_toc=None):
 
 
 def main():
-    whitepaper_path = "./ vault/whitepaper.md"
-    output_path = "./ ZkAgentic/projects/web/zkagentic-deploy/AGNTC-Whitepaper-v1.2.pdf"
+    # Paths relative to repo root — run from repo root: python web/marketing/gen_whitepaper_pdf.py
+    import pathlib
+    repo_root = pathlib.Path(__file__).resolve().parent.parent.parent
+    whitepaper_path = str(repo_root / "spec" / "whitepaper.md")
+    output_path = str(repo_root / "web" / "marketing" / "AGNTC-Whitepaper-v1.3.pdf")
 
     print("Parsing whitepaper markdown...")
     blocks = parse_markdown(whitepaper_path)

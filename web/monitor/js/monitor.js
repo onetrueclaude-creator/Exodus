@@ -1,8 +1,7 @@
 // Testnet Monitor — Supabase Realtime client for zkagentic.ai
 (function () {
   var SUPABASE_URL = 'https://inqwwaqiptrmpxruyczy.supabase.co';
-  var SUPABASE_ANON_KEY =
-    '***REDACTED_ANON_KEY***';
+  var SUPABASE_ANON_KEY = 'sb_publishable_Bf4rObV5_-SYcTZKytbL2g_YYjRKNRp';
 
   var STALE_THRESHOLD = 120;   // seconds before "STALE"
   var OFFLINE_THRESHOLD = 600; // seconds before "OFFLINE"

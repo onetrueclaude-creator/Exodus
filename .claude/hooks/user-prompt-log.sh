@@ -10,8 +10,9 @@ echo "HOOK_CALLED $(date -u +"%H:%M:%S")" >> /tmp/hook-trace.log
 
 HOOK_INPUT=$(cat)
 
-# Root path — always fixed, independent of cwd
-LOG_FILE="./ user-prompts.md"
+# Root path — derived from git repo root, independent of cwd
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo ".")"
+LOG_FILE="${REPO_ROOT}/user-prompts.md"
 LOCK_FILE="/tmp/user-prompts.lock"
 
 # Extract prompt and transcript path from hook input

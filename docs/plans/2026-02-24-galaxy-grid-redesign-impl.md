@@ -587,7 +587,7 @@ Map `slot_fill`, `has_data`, `max_capacity` from the API response.
 
 ```bash
 cd vault/agentic-chain && git add . && git commit -m "feat(api): grid/region returns per-coordinate slot fill + capacity"
-cd .  && git add src/services/ && git commit -m "feat(chain): ChainService grid cells include slot fill data"
+cd . && git add src/services/ && git commit -m "feat(chain): ChainService grid cells include slot fill data"
 ```
 
 ---

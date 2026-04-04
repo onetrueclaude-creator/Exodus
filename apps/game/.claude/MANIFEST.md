@@ -60,7 +60,7 @@ Blueprint for this child's `.claude/` folder. Used for audits and structural ver
 
 ```bash
 # Quick check — .claude/ required files
-cd ./ apps/zkagenticnetwork
+cd apps/game
 for f in SEED.md MANIFEST.md settings.json journal.md priorities.md; do
   [ -f ".claude/$f" ] && echo "OK: .claude/$f" || echo "MISSING: .claude/$f"
 done

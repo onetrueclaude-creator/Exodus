@@ -19,7 +19,7 @@ Game UI child of Exodus — the Next.js 16 + React 19 + PixiJS 8 client for the 
 
 - **ID:** zkagenticnetwork
 - **Role:** game-ui (Stellaris-inspired blockchain game client)
-- **Parent:** exodus (`./ .claude/`)
+- **Parent:** exodus (`.claude/` at repo root)
 - **Parent hash:** `ddcbc4e1b22bb1f06644e2fe55bdcd1f175c28517a611cd980a725d0a92dcddd`
 - **Authoritative spec:** `vault/whitepaper.md` (v1.2, inherited from parent)
 - **Source:** `apps/zkagenticnetwork/`
@@ -52,5 +52,5 @@ None. This is a leaf node.
 ## Hash Computation
 
 ```bash
-cat ./ apps/zkagenticnetwork/.claude/SEED.md ./ apps/zkagenticnetwork/CLAUDE.md ./ apps/zkagenticnetwork/.claude/settings.json | shasum -a 256
+cat apps/game/.claude/SEED.md apps/game/CLAUDE.md apps/game/.claude/settings.json | shasum -a 256
 ```

@@ -2,8 +2,7 @@
 // Phase 2: write-through via Supabase (no direct API calls)
 (function () {
   var SUPABASE_URL = 'https://inqwwaqiptrmpxruyczy.supabase.co';
-  var SUPABASE_ANON_KEY =
-    '***REDACTED_ANON_KEY***';
+  var SUPABASE_ANON_KEY = 'sb_publishable_Bf4rObV5_-SYcTZKytbL2g_YYjRKNRp';
 
   var CELL_TYPES = ['secure', 'develop', 'research', 'storage'];
   var CELL_COLORS = { secure: '#22c55e', develop: '#6366f1', research: '#8b5cf6', storage: '#14b8a6' };

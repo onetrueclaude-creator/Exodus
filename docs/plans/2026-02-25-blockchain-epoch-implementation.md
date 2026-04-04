@@ -8,8 +8,8 @@
 
 **Tech Stack:** Python 3.11, FastAPI, pytest, TypeScript/React, PixiJS 8, Zustand 5.
 
-**Working directory (blockchain):** `./ apps/agentic-chain/`
-**Working directory (frontend):** `./ `
+**Working directory (blockchain):** `apps/agentic-chain/`
+**Working directory (frontend):** ``
 
 ---
 
@@ -45,7 +45,7 @@ Replace the existing `BASE_MINING_RATE_PER_BLOCK = 1.0` line with the new value 
 **Step 2: Verify no import errors**
 
 ```bash
-cd ./ apps/agentic-chain
+cd apps/agentic-chain
 python3 -c "from agentic.params import GENESIS_EPOCH_RING, MAX_EPOCH_HARDNESS, HOMENODE_BASE_ANGLE, BASE_MINING_RATE_PER_BLOCK; print('OK')"
 ```
 
@@ -218,7 +218,7 @@ class TestHomenodeCoordinate:
 **Step 2: Run tests to verify they fail**
 
 ```bash
-cd ./ apps/agentic-chain
+cd apps/agentic-chain
 python3 -m pytest tests/test_galaxy_epoch.py -v 2>&1 | head -20
 ```
 
@@ -340,7 +340,7 @@ class EpochTracker:
 **Step 4: Run tests to verify they pass**
 
 ```bash
-cd ./ apps/agentic-chain
+cd apps/agentic-chain
 python3 -m pytest tests/test_galaxy_epoch.py -v
 ```
 
@@ -690,7 +690,7 @@ Find and remove/comment the `_current_block_time_s()` function if it exists. Ens
 
 ```bash
 # Start the server
-cd ./ apps/agentic-chain
+cd apps/agentic-chain
 uvicorn agentic.testnet.api:app --port 8080 --reload &
 sleep 2
 
@@ -727,7 +727,7 @@ git commit -m "feat(epoch): expose epoch state in API, broadcast epoch_advance W
 - Modify: `src/store/gameStore.ts`
 - Modify: `src/components/GalaxyGrid.tsx`
 
-**Working directory:** `./ `
+**Working directory:** ``
 
 **Step 1: Add `epochRing` to Zustand store**
 
@@ -821,11 +821,11 @@ git commit -m "feat(epoch): frontend reads epoch_ring from chain, renders only r
 
 ```bash
 # Terminal 1: blockchain
-cd ./ apps/agentic-chain
+cd apps/agentic-chain
 uvicorn agentic.testnet.api:app --port 8080 --reload
 
 # Terminal 2: frontend
-cd . 
+cd .
 npm run dev
 ```
 

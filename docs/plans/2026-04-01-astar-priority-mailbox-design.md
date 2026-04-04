@@ -108,8 +108,8 @@ Stale: 3 files (turborepo, evaluation, manifest). New: 0.
 ### Before → After
 
 ```
-.claude/prompt-inbox.md     →  inbox.md   (project root: ./ )
-.claude/prompt-outbox.md    →  outbox.md  (project root: ./ )
+.claude/prompt-inbox.md     →  inbox.md   (project root: )
+.claude/prompt-outbox.md    →  outbox.md  (project root: )
 ```
 
 ### Rationale
