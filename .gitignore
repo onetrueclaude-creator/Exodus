@@ -47,6 +47,7 @@ next-env.d.ts
 .claude/dispatch-state.json
 .claude/scheduled_tasks.lock
 .claude/journal.md
+.claude/skills/security-hardening/
 **/inbox.md
 **/outbox.md
 **/.claude/journal.md
