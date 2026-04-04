@@ -43,9 +43,13 @@ screenshots/
 # Auto-generated TypeScript declarations
 next-env.d.ts
 
-# Claude dispatch state (session-local)
+# Claude session-local state (never commit)
 .claude/dispatch-state.json
 .claude/scheduled_tasks.lock
+.claude/journal.md
+**/inbox.md
+**/outbox.md
+**/.claude/journal.md
 
 # Chain testnet local state
 chain/testnet_state.db
