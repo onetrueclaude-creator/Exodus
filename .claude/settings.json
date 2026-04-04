@@ -53,7 +53,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ./ .claude/hooks/stop-log.sh",
+            "command": "bash .claude/hooks/stop-log.sh",
             "timeout": 10
           }
         ]
@@ -65,7 +65,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ./ .claude/hooks/precompact.sh",
+            "command": "bash .claude/hooks/precompact.sh",
             "timeout": 30
           }
         ]
@@ -77,7 +77,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ./ .claude/hooks/session-start-compact.sh",
+            "command": "bash .claude/hooks/session-start-compact.sh",
             "timeout": 10
           }
         ]
@@ -89,7 +89,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ./ .claude/hooks/user-prompt-log.sh",
+            "command": "bash .claude/hooks/user-prompt-log.sh",
             "timeout": 10
           }
         ]

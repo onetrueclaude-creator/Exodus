@@ -40,5 +40,5 @@ ZK Agentic Network — Stellaris-inspired gamified social media dApp. Primary pr
 ## Hash Computation
 
 ```bash
-cat ./ .claude/SEED.md ./ CLAUDE.md ./ .claude/settings.json | shasum -a 256
+cat .claude/SEED.md CLAUDE.md .claude/settings.json | shasum -a 256
 ```

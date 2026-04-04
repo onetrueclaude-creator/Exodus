@@ -28,7 +28,7 @@ The protocol engine is responsible for:
 
 ## Lineage
 
-- **Parent:** Exodus (`./ .claude/`)
+- **Parent:** Exodus (`.claude/` at repo root)
 - **Parent hash:** `ddcbc4e1b22bb1f06644e2fe55bdcd1f175c28517a611cd980a725d0a92dcddd`
 - **Children:** None (leaf node)
 

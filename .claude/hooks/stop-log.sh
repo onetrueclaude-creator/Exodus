@@ -9,7 +9,8 @@ HOOK_INPUT=$(cat)
 # Debug: log every invocation so we can confirm the hook fires
 echo "[$(date -u +%H:%M:%S)] stop-log invoked" >> /tmp/stop-hook-debug.log 2>/dev/null || true
 
-LOG_FILE="./ user-prompts.md"
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo ".")"
+LOG_FILE="${REPO_ROOT}/user-prompts.md"
 LOCK_FILE="/tmp/user-prompts-stop.lock"
 
 TRANSCRIPT_PATH=$(echo "$HOOK_INPUT" | python3 -c \

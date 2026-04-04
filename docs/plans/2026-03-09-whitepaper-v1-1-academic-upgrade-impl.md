@@ -53,7 +53,7 @@ And update the footer disclaimer similarly.
 
 **Step 3: Test by generating PDF**
 
-Run: `cd ./ ZkAgentic/projects/web/zkagentic-deploy && python gen_whitepaper_pdf.py`
+Run: `cd ZkAgentic/projects/web/zkagentic-deploy && python gen_whitepaper_pdf.py`
 Expected: PDF generates without errors, header line sits below text on page 2+
 
 **Step 4: Commit**
@@ -937,7 +937,7 @@ git commit -m "docs: litepaper — 6-page investor-friendly overview"
 
 **Step 1: Generate the v1.1 PDF**
 
-Run: `cd ./ ZkAgentic/projects/web/zkagentic-deploy && python gen_whitepaper_pdf.py`
+Run: `cd ZkAgentic/projects/web/zkagentic-deploy && python gen_whitepaper_pdf.py`
 
 Expected: PDF generates without errors, header line sits below text, version shows v1.1.
 
