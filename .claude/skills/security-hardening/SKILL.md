@@ -196,17 +196,171 @@ Run the full audit checklist again after every scrubbing pass. Pay special atten
 
 ---
 
+## .claude/ Folder — What to Commit vs Gitignore
+
+Industry standard (Facebook/Meta, Ethereum Foundation, Vercel, Grafana, Solana Foundation): `.claude/` IS committed to public repos. It defines project context for all contributors.
+
+### Commit (shared project context)
+
+| Path | Purpose |
+|------|---------|
+| `CLAUDE.md` (root + subdirs) | Project instructions, conventions, architecture |
+| `.claude/settings.json` | Permissions, hooks, plugins |
+| `.claude/skills/` | Domain knowledge, capabilities, procedures |
+| `.claude/layers/` | Orchestrator identity stack |
+| `.claude/SEED.md` | Project identity and lineage |
+| `.claude/MANIFEST.md` | Canonical structure blueprint |
+| `.claude/commands/` | Slash command definitions |
+| `.claude/rules/` | Behavioral governance |
+| `.claude/agents/` | Role definitions and dispatch templates |
+| `.claude/internals/comms-cursor.md` | Communication sync state |
+| `.claude/priorities.md` | File priority registry |
+| `.claude/hooks/*.sh` | Hook scripts (automation) |
+
+### Gitignore (session-local, conversation content)
+
+```gitignore
+# Claude session-local state (never commit)
+.claude/dispatch-state.json
+.claude/scheduled_tasks.lock
+.claude/journal.md
+**/.claude/journal.md
+**/inbox.md
+**/outbox.md
+
+# Session transcripts and prompt logs
+user-prompts.md
+prompts.md
+compacted.md
+compacted-summary.md
+
+# Personal overrides (auto-gitignored by Claude Code)
+.claude/settings.local.json
+CLAUDE.local.md
+```
+
+### Why This Split
+
+- **Committed files** = capability definitions, permissions, project knowledge. Static. Safe. Like `.eslintrc` or `.editorconfig`.
+- **Gitignored files** = conversation content, dispatch messages, work logs, session state. Dynamic. Potentially sensitive. Like `.bash_history`.
+
+### Red Flags in Public Repos
+
+Before making public, verify no session content leaked into tracked files:
+
+```bash
+# Check for dispatch messages or conversation content
+git ls-files | xargs grep -l "MSG-\|DISPATCH-\|[A] \[20" 2>/dev/null
+# Check for journal entries with session timestamps
+git grep "Session started\|Session ended\|What was accomplished" -- "*.md"
+```
+
+---
+
+## .gitignore Completeness Checklist
+
+Every professional project commits `.gitignore`. Verify these categories are covered:
+
+### Environment & Secrets
+```gitignore
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+```
+
+### Build Artifacts & Dependencies
+```gitignore
+node_modules/
+.next/
+.turbo/
+.wrangler/
+dist/
+out/
+__pycache__/
+*.pyc
+```
+
+### Database & State Files
+```gitignore
+*.db
+*.sqlite
+*.db-journal
+*.db-wal
+.chain_auth
+```
+
+### IDE & OS
+```gitignore
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+```
+
+### AI Tool Session State
+```gitignore
+# Claude Code
+.claude/dispatch-state.json
+.claude/scheduled_tasks.lock
+.claude/journal.md
+**/.claude/journal.md
+**/inbox.md
+**/outbox.md
+user-prompts.md
+prompts.md
+compacted.md
+compacted-summary.md
+
+# Cursor (session state only — .cursor/rules/ is committed)
+.cursorignore
+
+# Aider
+.aider.chat.history.md
+.aider.tags.cache.v3/
+```
+
+### Verification
+```bash
+# Nothing sensitive tracked
+git ls-files "*.env" "*/.env" "*.pem" "*.key" "*.db" "*.sqlite"
+# Should return empty
+```
+
+---
+
 ## Professional Repo Standards (Ethereum/Solana Grade)
 
-Based on research of go-ethereum, Solana/Agave, Cosmos SDK, Bitcoin Core:
+Based on research of go-ethereum, Solana/Agave, Cosmos SDK, Bitcoin Core, Facebook/React:
 
-- **No `.mailmap` in final repo** unless you have 100+ contributors (most blockchain repos don't use one)
-- **Author identity:** Individual names, not org names (unconventional for blockchain projects but acceptable for solo)
-- **GitHub noreply** as canonical email is uncommon but acceptable for privacy
+### Repository Hygiene
+- **No `.mailmap` in final repo** unless you have 100+ contributors
+- **Author identity:** Use GitHub noreply or consistent email across all commits
 - **No hardcoded paths** — all paths relative to repo root
 - **No provider-specific secrets** in any tracked file, ever
-- **`.gitignore` must be comprehensive** — no accidental tracking of env files, node_modules, build artifacts
+- **`.gitignore` comprehensive** — covers env, deps, build, IDE, OS, AI state
 - **Stale branches deleted** — only main + active development branches
+- **`.claude/` committed** — skills, settings, rules (industry standard as of 2026)
+- **Session state gitignored** — journals, mailboxes, dispatches, transcripts
+
+### Credential Management
+- Secrets in `.env` files only (never in code)
+- `.env` files in `.gitignore` (never tracked)
+- Environment variables read via `os.environ.get()` or `process.env.`
+- Public keys (anon, publishable) OK in client-side code if RLS protects data
+- Secret keys (service_role, admin) ONLY in server-side env vars
+
+### Pre-Public Checklist (Executive Summary)
+1. `git grep` for secrets in tracked files → must be zero
+2. `git log --all -S` for secrets in history → must be zero (use filter-repo)
+3. `git log --format="%ae" --all | sort -u` → only canonical identities
+4. `git branch -a` → only main + active dev branches
+5. `git ls-files "*.env"` → must be empty
+6. `.gitignore` covers all categories above
+7. Session state (journals, mailboxes, transcripts) gitignored
+8. README, LICENSE, CONTRIBUTING present
 
 ---
 
@@ -220,3 +374,4 @@ Based on research of go-ethereum, Solana/Agave, Cosmos SDK, Bitcoin Core:
 | Git filter-repo stale marker | `.git/filter-repo/already_ran` (delete before re-run) |
 | Cloudflare deploy (monitor) | `wrangler pages deploy . --project-name=zkagentic-site --branch=main` |
 | Force push after rewrite | `git push --force origin exodus-dev main` |
+| Industry .claude/ reference | Meta, Ethereum, Vercel, Grafana, Solana all commit `.claude/` |
