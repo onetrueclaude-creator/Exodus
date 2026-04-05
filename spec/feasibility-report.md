@@ -17,7 +17,7 @@ ZK Agentic Chain (AGNTC) is a Layer-1 blockchain protocol that introduces Proof 
 
 **What is theoretical.** The Solana-to-L1 bridge (lock-and-mint), governance voting system, TEE key storage, heterogeneous model enforcement, and real ZKML integration remain at the design stage.
 
-**Competitive position.** Research across 35+ projects confirms that PoAIV is genuinely novel -- no competitor embeds AI into the consensus mechanism itself. The coordinate-based token mapping, organic growth tokenomics, and Stellaris-depth game interface have zero direct competitors. The primary threat is prompt injection (scored 25/25 on the threat matrix), which must be fully mitigated before any mainnet launch.
+**Competitive position.** Research across 35+ projects confirms that PoAIV is genuinely novel -- no competitor embeds AI into the consensus mechanism itself. The coordinate-based token mapping, organic growth tokenomics, and Neural Lattice game interface have zero direct competitors. The primary threat is prompt injection (scored 25/25 on the threat matrix), which must be fully mitigated before any mainnet launch.
 
 **Assessment.** The protocol design is technically sound, well-documented, and backed by a substantial test suite. The gap between the current simulation and a production blockchain is significant but clearly scoped. The primary risks are (1) proving that PoAIV consensus works at scale with real AI providers, (2) implementing production-grade ZK circuits within acceptable proving times, and (3) managing dependency on a single AI provider (Anthropic). The organic growth tokenomics model and dual-staking design are economically defensible and differentiated from all analyzed competitors.
 
@@ -138,7 +138,7 @@ Based on analysis of 35+ projects across blockchain tokenomics, ZK systems, agen
 | Supply model | **Organic (claim-driven)** | Fixed 21M, halving | Inflationary + burn | 8% to 1.5% decay | Fixed 21M, halving | Fixed 21M, halving | Bonding curves |
 | Block time | 60s | ~10 min | ~12s | ~400ms | ~75s | ~12s | N/A |
 | Market cap | Pre-market | $1.8T | $400B | $80B | $600M | $3.9B | $500M+ |
-| Game layer | **Stellaris-depth strategy** | None | None | None | None | Subnet competition | Agent speculation |
+| Game layer | **Real-time agent orchestration** | None | None | None | None | Subnet competition | Agent speculation |
 
 **AI-Blockchain Positioning:**
 
@@ -160,7 +160,7 @@ Based on analysis of 35+ projects across blockchain tokenomics, ZK systems, agen
 | Dual staking reduces plutocratic concentration | **Supported.** Mathematical analysis shows Gini reduction of ~35-43% vs pure PoS. Comparable to Bittensor's token+compute model but formalized with explicit S_eff formula. | High |
 | Coordinate-based token mapping is unique | **Confirmed.** Zero competitors map tokens to spatial coordinates with economic properties (density, hardness, faction). | High |
 | Organic growth tokenomics is distinct | **Confirmed.** No analyzed competitor uses mining-driven supply with no scheduled inflation, no pre-mine, and hardness = 16N. Closest analog is Filecoin's utility-gated emissions, which still has time-based components. | High |
-| Game interface provides competitive moat | **Supported.** No blockchain project offers Stellaris-depth strategy gameplay. Virtuals and ElizaOS have gaming tracks emerging but focus on agent speculation, not territory strategy. | Medium-High |
+| Game interface provides competitive moat | **Supported.** No blockchain project offers real-time agent orchestration gameplay. Virtuals and ElizaOS have gaming tracks emerging but focus on agent speculation, not territory strategy. | Medium-High |
 
 ### 3.3 Market Gap Analysis
 
@@ -543,7 +543,7 @@ ZK Agentic Chain occupies a previously empty quadrant in the blockchain design s
 
 The primary risk is execution: converting a well-designed simulation into a production blockchain with real ZK proofs, real AI verification, and real economic activity. The 22-31 month timeline to mainnet is aggressive but achievable with appropriate resourcing (8-11 engineers).
 
-The project's "fail-safe" position is also strong: even if the full PoAIV vision takes longer than expected, the Stellaris-depth game interface running on the testnet with Solana SPL token integration provides a functional product that can generate subscription revenue ($50-$200/month per paid user) and community growth while the production chain is developed.
+The project's "fail-safe" position is also strong: even if the full PoAIV vision takes longer than expected, the Neural Lattice game interface running on the testnet with Solana SPL token integration provides a functional product that can generate subscription revenue ($50-$200/month per paid user) and community growth while the production chain is developed.
 
 ---
 

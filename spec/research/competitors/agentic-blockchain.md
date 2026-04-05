@@ -66,7 +66,7 @@ Fetch.ai uses **Useful Proof-of-Work (UPoW)** — a hybrid of PoW, PoS, and a DA
 | Agent model | Off-chain Python AEAs | On-chain Claude LLM agents (Haiku/Sonnet/Opus) |
 | Consensus role | UPoW (useful computation) | PoAIV — 13 AI verifiers check each block |
 | Token drives agents? | Yes (FET for service fees) | Yes (AGNTC maps to grid coordinates) |
-| Gamification | None | Stellaris-inspired galaxy grid |
+| Gamification | None | Neural Lattice network grid |
 | Agent tiers | None (capability-based) | Haiku/Sonnet/Opus (subscription gated) |
 | User relationship | Agents work for users | Users ARE agents (star system owners) |
 
@@ -135,7 +135,7 @@ The network's first TAO halving occurred December 2025 (mirroring Bitcoin's supp
 | User role | Miner, validator, or passive staker | Active player managing a star system empire |
 | Spatial metaphor | None (abstract subnets) | 2D galaxy grid, 6481x6481 coordinate space |
 | Token allocation | Subnet-specific + TAO | AGNTC maps to specific grid coordinates |
-| Gamification | None | Full Stellaris-inspired game layer |
+| Gamification | None | Full Neural Lattice game layer |
 
 **Key difference:** Bittensor optimizes for raw AI output quality via market competition. ZK Agentic Network uses AI agents as the *actors* performing blockchain state transitions within a game world — the "intelligence" is the decision-making within game actions, not a scored output.
 
@@ -367,7 +367,7 @@ No novel consensus mechanism. Morpheus runs on Arbitrum mainnet for token settle
 | Privacy | Local-first | Cloud-based, subscription |
 | Token launch | Fair launch, no VCs | TBD |
 | User relationship | Agent works for user | User IS the agent (empire metaphor) |
-| Gamification | None | Stellaris-inspired galaxy |
+| Gamification | None | Neural Lattice network |
 | Agent autonomy | Execute contracts for user | Autonomous game actions + block verification |
 
 **Key difference:** Morpheus is private, local, and financially-focused (smart contract execution, DeFi agents). ZK Agentic Network is public, cloud-based, and game-world-focused. Morpheus democratizes AI through open-source; ZK Agentic differentiates through frontier model quality (Anthropic's Claude).
@@ -426,7 +426,7 @@ Virtuals Protocol is the largest **AI agent tokenization platform** as of early 
 | Agent ownership | Community-owned via agent tokens | User-owned (subscription tier) |
 | Token model | Per-agent token + VIRTUAL base | AGNTC (coordinate-mapped) |
 | AI backend | Open-source LLMs (Llama, DeepSeek) | Anthropic Claude (Haiku/Sonnet/Opus) |
-| Gamification | Limited (gaming NPC use cases) | Full Stellaris-inspired game world |
+| Gamification | Limited (gaming NPC use cases) | Full Neural Lattice game world |
 | Blockchain role | Settlement + agent identity | Proof-of-existence + game state |
 | Consensus | ERC-20 smart contracts (Base) | PoAIV — 13 AI verifiers |
 
@@ -568,7 +568,7 @@ No novel consensus for block production. Uses Ethereum for settlement. Consensus
 | Domain | DeFi (yield, liquidity) | Gamified blockchain (mining, diplomacy) |
 | Agent model | LLM-powered DeFi agents | Claude models (tiered by subscription) |
 | Swarm concept | Dynamic task-specific swarms | Static 13-verifier committee (PoAIV) |
-| User interface | DeFi dashboard | Stellaris-inspired galaxy game |
+| User interface | DeFi dashboard | Neural Lattice network game |
 | Token | THQ governance + access | AGNTC coordinate-mapped |
 | Real capital at stake | Yes (AlphaVault) | No (game resources) |
 | Consumer appeal | DeFi users | Gamers + crypto enthusiasts |
@@ -639,7 +639,7 @@ The GameFi sector (projected $80B by 2025) is actively integrating AI agents:
 
 AI activity on blockchains surged 86% in 2025, driven by AI agent projects.
 
-**Relevance to ZK Agentic:** Smolworld / Mage is the most direct analog — autonomous on-chain agents in a game world. ZK Agentic's Stellaris metaphor, Claude model tiers, and PoAIV consensus are meaningful differentiators.
+**Relevance to ZK Agentic:** Smolworld / Mage is the most direct analog — autonomous on-chain agents in a game world. ZK Agentic's Neural Lattice design, Claude model tiers, and PoAIV consensus are meaningful differentiators.
 
 Sources: [Gaming x AI Agents — OAK Research](https://oakresearch.io/en/analyses/innovations/gaming-x-ai-agents-emerging-trend-for-2025), [AI in GameFi — Agility Portal](https://agilityportal.io/blog/ai-agents-in-gamefi-decentralized-gaming-2025)
 
@@ -711,7 +711,7 @@ DEVELOPER-FACING
 
 ZK Agentic Network occupies a position that no current competitor holds:
 
-1. **Game-first engagement** — Stellaris metaphor makes blockchain abstract concepts tangible. No competitor has a comparable game world.
+1. **Game-first engagement** — Neural Lattice design makes blockchain abstract concepts tangible. No competitor has a comparable game world.
 2. **Frontier model agents** — Claude Haiku/Sonnet/Opus as tiered agent types, not open-source approximations. Real intelligence quality differences between subscription tiers.
 3. **PoAIV (Proof of Agentic Verification)** — 13 AI verifiers checking each block is a genuinely novel consensus contribution. Closest analog is Bittensor's Yuma Consensus (human-designed scoring by validators), but PoAIV uses the *same AI systems* as the agents themselves to verify blocks — a recursive trust model.
 4. **Spatial token economics** — AGNTC tokens map to specific grid coordinates. This creates territorial scarcity and strategic value that pure token metrics cannot replicate.
@@ -723,7 +723,7 @@ ZK Agentic Network occupies a position that no current competitor holds:
 |---|---|---|
 | AI agent + blockchain | Everyone | Game world + Claude frontier models |
 | Claude / Anthropic models | None (ElizaOS supports Claude as option) | Only platform where Claude tiers ARE the product |
-| Gamification | Smolworld (ElizaOS), GameFi broadly | Most sophisticated (Stellaris-class) |
+| Gamification | Smolworld (ElizaOS), GameFi broadly | Most sophisticated (Neural Lattice-class) |
 | Multi-AI block verification | None (novel) | PoAIV is a whitepaper-ready innovation |
 | Coordinate-based token | None | Spatial scarcity drives strategic play |
 | Subscription-gated agent tiers | None | Creates aspirational upgrade path |
