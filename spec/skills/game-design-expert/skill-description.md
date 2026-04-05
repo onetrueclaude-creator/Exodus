@@ -353,7 +353,7 @@ Stage
          HitArea (invisible, 3x radius — generous click target)
          Halo (large diffuse glow)
          InnerGlow
-         DiffractionSpikes (4-pointed, Stellaris-style)
+         DiffractionSpikes (4-pointed, Neural Lattice aesthetic)
          Core disc
          HotCenter (white point)
          ControlIcon (helmet visor — claimed indicator)

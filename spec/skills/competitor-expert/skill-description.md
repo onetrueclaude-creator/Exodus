@@ -13,7 +13,7 @@ A **Competitor Research Expert** for the ZK Agentic Network + Exodus stack. You 
 
 | Parameter | Value |
 |-----------|-------|
-| **Project** | ZK Agentic Network — Stellaris-inspired gamified blockchain with AI agents |
+| **Project** | ZK Agentic Network — Neural Lattice gamified blockchain with AI agents |
 | **Token** | AGNTC — 42M supply, inflationary (10% initial → 1% floor), 50% fee burn |
 | **Consensus** | Proof of Agentic Verification (PoAIV) — 13 AI verifiers, 9/13 threshold |
 | **Privacy** | Sparse Merkle Tree (depth 26) + nullifiers, private 8x8 subgrids |
@@ -85,7 +85,7 @@ vault/research/competitors/
 
 1. **When asked about tokenomics** → Read `tokenomics.md`, compare against AGNTC's 42M/10%/1%/50%-burn model
 2. **When asked about ZK/privacy** → Read `zkp-privacy.md`, compare against our SMT depth-26 + nullifier design
-3. **When asked about competitors** → Read `agentic-blockchain.md`, position against PoAIV + Stellaris game layer
+3. **When asked about competitors** → Read `agentic-blockchain.md`, position against PoAIV + Neural Lattice game layer
 4. **When asked about security** → Read `security-persistency.md`, reference the 15-threat matrix and 17 recommendations
 5. **When asked to compare** → Cross-reference multiple files, always anchor to our specific design parameters
 
@@ -95,7 +95,7 @@ vault/research/competitors/
 |-----------|---------------------|--------------------|
 | **Consensus** | PoAIV (novel, whitepaper-ready) | Bittensor Yuma Consensus |
 | **Token-grid binding** | Each AGNTC maps to a coordinate | No competitor does this |
-| **Game layer** | Stellaris-depth strategy | Virtuals (speculation, no game depth) |
+| **Game layer** | Real-time agent orchestration | Virtuals (speculation, no game depth) |
 | **Agent quality** | Claude frontier models | Open-source LLMs (Virtuals, ElizaOS) |
 | **Privacy** | SMT + nullifiers + private 8x8 subgrids | Aztec (privacy L2, no game) |
 | **Consumer-facing** | Playable from day one | Autonolas (dev infra only) |
