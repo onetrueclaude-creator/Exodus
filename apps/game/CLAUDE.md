@@ -57,7 +57,7 @@ Gamified social media dApp built on the Neural Lattice where users explore a 2D 
 - Secured Chains = blocks secured by the user (green resource with +/- deltas)
 - AGNTC = tradeable coins, each mapped to a grid coordinate
 - Data Frags = compute production from mining
-- Planets = content storage (posts, chats, prompts) orbiting star systems
+- Planets = content storage (posts, chats, prompts) orbiting nodes
 - Jump points = nodes where new agents can be spawned
 - Coordinates = (x, y, timestamp) — third value is time, not z-axis
 - Node density = resource richness (0-100%), multiplies CPU cost for Secure actions

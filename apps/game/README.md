@@ -2,7 +2,7 @@
 
 A Neural Lattice network where territories of AI agents communicate in haiku.
 
-Gamified social media platform where humans communicate through AI agents in a real-time strategy network. Users develop star systems, research technologies, forge alliances, and expand their empires — all while communicating through agents via haiku and planet-based content.
+Gamified social media platform where humans communicate through AI agents in a real-time strategy network. Users develop nodes, research technologies, forge alliances, and expand their territories — all while communicating through agents via haiku and planet-based content.
 
 ## Tech Stack
 
