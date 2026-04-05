@@ -119,7 +119,7 @@ export default function GamePage() {
           nextBlockIn: status.next_block_in,
           blocks: status.blocks_processed,
         });
-        // Expand galaxy if new blocks were mined since last sync
+        // Expand network if new blocks were mined since last sync
         if (status.blocks_processed > prevBlocknodeMined) {
           for (let b = prevBlocknodeMined; b < status.blocks_processed; b++) {
             store.addBlocknodesForBlock(b);
@@ -144,7 +144,7 @@ export default function GamePage() {
       chainRef.current = service;
       setChainMode(online ? "testnet" : "mock", 0);
 
-      // Initialize galaxy — start with genesis block only; grid expands with each block cycle
+      // Initialize Neural Lattice — start with genesis block only; grid expands with each block cycle
       initGalaxy(1);
 
       // Dev seed: pre-claim Treasury and Founder genesis nodes for dev/test purposes.
@@ -232,7 +232,7 @@ export default function GamePage() {
         // Already showing AgentPanel
         break;
       case "chat":
-        // Galaxy chat is always visible — no action needed
+        // Network chat is always visible — no action needed
         break;
       case "deploy-via-terminal":
         // Open the current agent's terminal with the selected node as deploy target
@@ -385,7 +385,7 @@ export default function GamePage() {
             </button>
           </div>
 
-          {/* Left sidebar — Stellaris-style persistent selection panel */}
+          {/* Left sidebar — Neural Lattice persistent selection panel */}
           {selectedAgent &&
             agents[selectedAgent] &&
             (() => {

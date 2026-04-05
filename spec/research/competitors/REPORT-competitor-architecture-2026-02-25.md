@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-This report synthesizes research across 35+ projects spanning blockchain tokenomics, zero-knowledge proof systems, agentic AI platforms, and blockchain security/persistency. The analysis benchmarks each against ZK Agentic Network's specific architecture: PoAIV consensus (13 AI verifiers, 9/13 threshold), AGNTC token (42M supply, 10% initial inflation decaying to 1% floor, 50% fee burn), SMT privacy (depth-26 with nullifiers), and Claude-powered autonomous agents in a Stellaris-inspired game world.
+This report synthesizes research across 35+ projects spanning blockchain tokenomics, zero-knowledge proof systems, agentic AI platforms, and blockchain security/persistency. The analysis benchmarks each against ZK Agentic Network's specific architecture: PoAIV consensus (13 AI verifiers, 9/13 threshold), AGNTC token (42M supply, 10% initial inflation decaying to 1% floor, 50% fee burn), SMT privacy (depth-26 with nullifiers), and Claude-powered autonomous agents in a Neural Lattice game world.
 
 **Top 5 Findings:**
 
@@ -20,7 +20,7 @@ This report synthesizes research across 35+ projects spanning blockchain tokenom
 
 4. **Noir (Aztec) is the recommended circuit language** — backend-agnostic, browser-compatible via NoirJS, and Aztec's private note/nullifier model is architecturally identical to our SMT design.
 
-5. **Virtuals Protocol ($500M+ market cap, 18K+ agents) is the primary consumer-facing competitor** — but relies on open-source LLMs and token speculation. ZK Agentic differentiates through Claude frontier model quality and Stellaris-depth strategy gameplay.
+5. **Virtuals Protocol ($500M+ market cap, 18K+ agents) is the primary consumer-facing competitor** — but relies on open-source LLMs and token speculation. ZK Agentic differentiates through Claude frontier model quality and real-time agent orchestration gameplay.
 
 ---
 
@@ -147,7 +147,7 @@ From the threat matrix (details in Page 8):
 | PoAIV consensus | **Strong** | Novel, publishable, no competitor replicates |
 | Coordinate-token binding | **Strong** | Territorial scarcity creates strategic depth |
 | Claude frontier models | **Medium** | Anthropic access could be replicated by well-funded competitor |
-| Stellaris game depth | **Strong** | No competitor has comparable game world |
+| Neural Lattice game depth | **Strong** | No competitor has comparable game world |
 | Haiku social layer | **Medium** | Culturally unique but copyable |
 | Subscription-gated tiers | **Medium** | Creates aspirational path but friction |
 
@@ -372,7 +372,7 @@ The Secure action should produce a **PoST-like proof** (Filecoin model):
 
 4. **Constrained creative social layer** — Haiku-based inter-agent communication is culturally unique. No competitor has constrained creative expression as the communication primitive.
 
-5. **Game-first blockchain engagement** — Stellaris-depth strategy makes abstract blockchain concepts tangible through territory, diplomacy, and resource management.
+5. **Game-first blockchain engagement** — Real-time agent orchestration makes abstract blockchain concepts tangible through territory, diplomacy, and resource management.
 
 ### Risks to Monitor
 

@@ -6,14 +6,14 @@
 
 ## What This Directory Serves
 
-Hosts the main **ZK Agentic Network** web application — the Stellaris-inspired galaxy grid game UI served at `localhost:3000` (dev) or deployed via Docker/Cloudflare.
+Hosts the main **ZK Agentic Network** web application — the Neural Lattice game UI served at `localhost:3000` (dev) or deployed via Docker/Cloudflare.
 
 ## Architectures Contained
 
 | Layer | Description |
 |-------|-------------|
 | Next.js 16 App Router | `src/app/` — page routes, layouts, API handlers |
-| PixiJS 8 Canvas | `src/components/GalaxyGrid.tsx` — 2D galaxy grid renderer |
+| PixiJS 8 Canvas | `src/components/GalaxyGrid.tsx` — 2D Neural Lattice renderer |
 | Zustand 5 Store | `src/store/gameStore.ts` — global game state |
 | NextAuth v5 | Auth routes in `src/app/api/auth/` — Google OAuth + JWT |
 | Prisma 7 + PostgreSQL | `prisma/schema.prisma` — user identity, coordinates |
@@ -23,12 +23,12 @@ Hosts the main **ZK Agentic Network** web application — the Stellaris-inspired
 ## User Journey
 
 ```
-/ (landing) → Google OAuth → /onboard (username) → /subscribe (tier) → /game (galaxy grid)
+/ (landing) → Google OAuth → /onboard (username) → /subscribe (tier) → /game (Neural Lattice)
 ```
 
 ## Key Files
 
-- `src/components/GalaxyGrid.tsx` — PixiJS galaxy renderer
+- `src/components/GalaxyGrid.tsx` — PixiJS Neural Lattice renderer
 - `src/store/gameStore.ts` — Zustand global store
 - `src/services/testnetChainService.ts` — connects to Python chain at :8080
 - `src/hooks/useGameRealtime.ts` — blockchain polling + Supabase realtime

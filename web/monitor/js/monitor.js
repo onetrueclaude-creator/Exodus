@@ -1,8 +1,7 @@
 // Testnet Monitor — Supabase Realtime client for zkagentic.ai
 (function () {
   var SUPABASE_URL = 'https://inqwwaqiptrmpxruyczy.supabase.co';
-  var SUPABASE_ANON_KEY =
-    '***REDACTED_ANON_KEY***';
+  var SUPABASE_ANON_KEY = 'sb_publishable_Bf4rObV5_-SYcTZKytbL2g_YYjRKNRp';
 
   var STALE_THRESHOLD = 120;   // seconds before "STALE"
   var OFFLINE_THRESHOLD = 600; // seconds before "OFFLINE"
@@ -64,7 +63,12 @@
 
   function updateChainStatus(row) {
     if (!row) return;
-    lastUpdateTime = new Date();
+    // Use synced_at from the chain (not client time) to detect staleness
+    if (row.synced_at) {
+      lastUpdateTime = new Date(row.synced_at);
+    } else {
+      lastUpdateTime = new Date();
+    }
 
     // Hero
     setText('hero-block', formatNumber(row.blocks_processed));
@@ -109,9 +113,16 @@
     // Use synced hardness value instead of client-side calculation
     setText('epoch-hardness', formatNumber(row.hardness) + 'x');
 
-    // Footer
-    setText('last-updated', 'Last updated: just now');
-    updateLiveStatus('live');
+    // Footer — derive live/stale/offline from synced_at, not from fetch time
+    var diffSec = Math.floor((Date.now() - lastUpdateTime.getTime()) / 1000);
+    setText('last-updated', 'Last updated: ' + timeAgo(lastUpdateTime));
+    if (diffSec < STALE_THRESHOLD) {
+      updateLiveStatus('live');
+    } else if (diffSec < OFFLINE_THRESHOLD) {
+      updateLiveStatus('stale');
+    } else {
+      updateLiveStatus('offline');
+    }
   }
 
   // --- Update DOM from agents aggregate ---

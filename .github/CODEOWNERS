@@ -1,0 +1,9 @@
+# Protocol-critical paths -- require owner review
+/chain/agentic/params.py          @onetrueclaude-creator
+/chain/agentic/consensus/         @onetrueclaude-creator
+/chain/agentic/privacy/           @onetrueclaude-creator
+/chain/agentic/economics/         @onetrueclaude-creator
+/spec/whitepaper.md               @onetrueclaude-creator
+
+# Default -- all other files
+*                                 @onetrueclaude-creator

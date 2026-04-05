@@ -11,8 +11,8 @@
 **Prerequisite:** `docs/plans/2026-02-25-blockchain-epoch-implementation.md` Tasks 1–5 must be complete first (EpochTracker in params + genesis + mining + API).
 
 **Working directories:**
-- Blockchain: `./ apps/agentic-chain/`
-- Frontend: `./ `
+- Blockchain: `apps/agentic-chain/`
+- Frontend: ``
 
 ---
 
@@ -36,7 +36,7 @@ LEVEL_EXPONENT = 0.8                # output = base × level^LEVEL_EXPONENT
 **Step 2: Verify import works**
 
 ```bash
-cd ./ apps/agentic-chain
+cd apps/agentic-chain
 python3 -c "from agentic.params import SUBGRID_SIZE, BASE_SECURE_RATE, BASE_DEVELOP_RATE, BASE_RESEARCH_RATE, BASE_STORAGE_RATE, LEVEL_EXPONENT; print('OK')"
 ```
 
@@ -226,7 +226,7 @@ class TestSubgridOutput:
 **Step 2: Run tests to verify they fail**
 
 ```bash
-cd ./ apps/agentic-chain
+cd apps/agentic-chain
 python3 -m pytest tests/test_galaxy_subgrid.py -v 2>&1 | head -10
 ```
 
@@ -379,7 +379,7 @@ class SubgridAllocator:
 **Step 4: Run tests to verify they pass**
 
 ```bash
-cd ./ apps/agentic-chain
+cd apps/agentic-chain
 python3 -m pytest tests/test_galaxy_subgrid.py -v
 ```
 
@@ -645,7 +645,7 @@ for owner, alloc in g.subgrid_allocators.items():
 **Step 6: Smoke test**
 
 ```bash
-cd ./ apps/agentic-chain
+cd apps/agentic-chain
 uvicorn agentic.testnet.api:app --port 8080 --reload &
 sleep 2
 
@@ -774,7 +774,7 @@ Also update `ResourceBarProps` in `ResourceBar.tsx`: rename `energyDelta` → `c
 **Step 6: Build check**
 
 ```bash
-cd . 
+cd .
 npm run build 2>&1 | grep -E "(error|Error)" | head -20
 ```
 
@@ -872,7 +872,7 @@ Remove the old `energy` subscription.
 **Step 5: Build check**
 
 ```bash
-cd . 
+cd .
 npm run build 2>&1 | grep -E "(error|Error)" | head -20
 ```
 
@@ -940,11 +940,11 @@ git commit -m "feat(hooks): fetch subgrid resource state from API, update store 
 
 ```bash
 # Terminal 1
-cd ./ apps/agentic-chain
+cd apps/agentic-chain
 uvicorn agentic.testnet.api:app --port 8080 --reload
 
 # Terminal 2
-cd . 
+cd .
 npm run dev
 ```
 
@@ -996,7 +996,7 @@ Verify:
 **Step 6: Run full test suite**
 
 ```bash
-cd ./ apps/agentic-chain
+cd apps/agentic-chain
 python3 -m pytest tests/ -v --tb=short 2>&1 | tail -20
 ```
 
@@ -1005,7 +1005,7 @@ Expected: all PASS
 **Step 7: Commit**
 
 ```bash
-cd . 
+cd .
 git add -A
 git commit -m "feat(integration): resource system complete — CPU Tokens, CPU Staked, subgrid allocation live"
 ```
