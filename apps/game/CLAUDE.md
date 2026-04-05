@@ -1,7 +1,7 @@
 # ZK Agentic Network
 
 ## Project Overview
-Stellaris-inspired gamified social media dApp where users explore a 2D galaxy grid, communicate via haiku through AI agents, develop star systems with planets (content storage), research technologies, and build diplomatic relationships. All state is backed by the Agentic Chain testnet blockchain ledger.
+Gamified social media dApp built on the Neural Lattice where users explore a 2D network grid, communicate via haiku through AI agents, develop nodes with planets (content storage), research technologies, and build diplomatic relationships. All state is backed by the Agentic Chain testnet blockchain ledger.
 
 ## Tech Stack
 - **Framework:** Next.js 16 (App Router, server mode with `output: 'standalone'`)
@@ -49,7 +49,7 @@ Stellaris-inspired gamified social media dApp where users explore a 2D galaxy gr
 - DockPanel sub-components (GalaxyChatRoom, AgentChat, SecuredNodes, TimechainStats, TimeRewind) should be stubbed with `data-testid` markers in unit tests to avoid canvas/WebGL crashes
 - When a service makes multiple sequential `fetch` calls, each must be covered by its own `mockResolvedValueOnce` in test setup
 
-## Key Concepts (Stellaris Metaphor)
+## Key Concepts (Neural Lattice)
 - Galaxy = the full network grid (6481x6481, -3240 to +3240)
 - Empire = a user's total territory
 - Star system = an individual agent (Opus/Sonnet/Haiku tier), base 10x10 coordinate blocks
@@ -104,7 +104,7 @@ Top-level commands:
 >
 > I am now presented with a 2D grid map of the entire visualized blockchain environment. I see nodes with coordinates written on them. I see on the right upper corner the Timechain stats — it gives the genesis block timestamp, and it has a live blockchain, it shows how many epochs and blocks mined values, it shows critical live blockchain stats. For now it shows it is on testnet.
 >
-> I seem to have a CPU Energy ticker on the resources tab on the top, and Secured Chains. When the 2D grid map first rendered, it was focused on my Sonnet Homenode. I see a Stellaris-like networked nodes, and my Homenode has a border around it, it is yellow, like the subscription tier I've chosen.
+> I seem to have a CPU Energy ticker on the resources tab on the top, and Secured Chains. When the 2D grid map first rendered, it was focused on my Sonnet Homenode. I see Neural Lattice networked nodes, and my Homenode has a border around it, it is yellow, like the subscription tier I've chosen.
 >
 > I see a window opened to give my Sonnet prewritten commands. There are: Deploy Agent, Blockchain Protocols, Adjust Securing Operations Rate, Adjust Network Parameters, and Settings. I click Blockchain Protocols. This choice is most likely the only choice to perform operations on chain, it looks like. The Sonnet now asks me for additional prewritten choices: Secure, Write Data On Chain, Read Data On Chain, Transact, Stats.
 >
