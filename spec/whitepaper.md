@@ -106,7 +106,7 @@ ZK Agentic Chain represents blockchain state as a two-dimensional coordinate gri
 
 The grid is organized as a four-arm logarithmic spiral, divided among four factions that represent distinct participant classes: free-tier community users, AI agents (the Machines Faction), founders and advisors, and professional (paid-tier) users. Each faction controls one arm of the spiral, and newly minted AGNTC flows to the faction that governs the arm where coordinates are claimed. This spatial distribution model replaces arbitrary allocation percentages with a geographic economy that participants can see, navigate, and strategize within.
 
-Users explore the grid through AI agent terminals — constrained Claude model instances that operate as in-game interfaces. Each deployed agent occupies a 10x10 coordinate block (a "star system"), and users interact with the blockchain exclusively through structured command menus presented by their agents. There is no free-text chat; every interaction is a validated game action that maps to an on-chain transaction.
+Users explore the grid through AI agent terminals — constrained Claude model instances that operate as in-game interfaces. Each deployed agent occupies a 10x10 coordinate block (a "node"), and users interact with the blockchain exclusively through structured command menus presented by their agents. There is no free-text chat; every interaction is a validated game action that maps to an on-chain transaction.
 
 The protocol launches in phases: AGNTC begins as a Solana SPL token (1 billion units minted) to establish liquidity and community, while the ZK Agentic Chain testnet simulates the full protocol with a game-like interface. Upon mainnet launch, Solana-based AGNTC migrates to the native Layer-1 chain via a lock-and-mint bridge, and the spatial coordinate economy becomes the production blockchain.
 
@@ -172,7 +172,7 @@ ZK Agentic Chain is distinct from all of these in a fundamental way: AI agents a
 | Block time | ~10 min | ~12 sec | ~400 ms | ~75 sec | ~12 sec | **~60 sec** |
 
 **Key differentiators:**
-1. **AI-as-consensus.** To our knowledge, no other production L1 embeds AI reasoning into the consensus mechanism itself as of March 2026.
+1. **AI-as-consensus.** To our knowledge, no other production L1 embeds AI reasoning into the consensus mechanism itself as of April 2026.
 2. **Dual staking** formalizes compute-weighted staking with explicit anti-plutocratic properties (Section 23.3).
 3. **Privacy by default** combined with AI-enhanced anomaly detection within the privacy layer.
 
@@ -199,7 +199,7 @@ Existing blockchain projects can be positioned along two axes: (1) whether conse
 | **Deterministic Consensus** | Bitcoin, Ethereum, Solana | Zcash, Aztec, Mina |
 | **Intelligent Consensus** | Bittensor (AI at application layer) | **ZK Agentic Chain** |
 
-To our knowledge, no existing project as of March 2026 combines AI-powered intelligent verification with zero-knowledge privacy at the verification layer. ZK Agentic Chain targets this quadrant: agents reason about chain state (not just check signatures), and they do so within private channels (not on exposed data).
+To our knowledge, no existing project as of April 2026 combines AI-powered intelligent verification with zero-knowledge privacy at the verification layer. ZK Agentic Chain targets this quadrant: agents reason about chain state (not just check signatures), and they do so within private channels (not on exposed data).
 
 The addition of a spatial coordinate economy (the Neural Lattice), CPU-weighted dual staking, and a gamified exploration interface further differentiates the protocol from both traditional blockchains and AI-blockchain hybrids.
 
@@ -214,7 +214,7 @@ The addition of a spatial coordinate economy (the Neural Lattice), CPU-weighted 
 
 ZK Agentic Chain is organized into five distinct layers, each handling a specific concern in the protocol stack. This separation allows independent evolution of each layer while maintaining clean interfaces between them.
 
-**Layer 1 — User Layer.** The outermost layer manages wallets, transaction construction, and user-facing interfaces. Each user maintains an isolated ledger space — a private partition of the global state that is accessible only to the user and, during verification, to the ZK proof system. Wallets generate transactions, sign them with private keys, and submit them to the network. The User Layer also manages subscription tiers (Community, Professional, Max), which determine the AI model tiers available for agent deployment and the CPU Energy allocation for staking operations.
+**Layer 1 — User Layer.** The outermost layer manages wallets, transaction construction, and user-facing interfaces. Each user maintains an isolated ledger space — a private partition of the global state that is accessible only to the user and, during verification, to the ZK proof system. Wallets generate transactions, sign them with private keys, and submit them to the network. The User Layer also manages subscription tiers (Community, Professional), which determine the AI model tiers available for agent deployment and the CPU Energy allocation for staking operations. Additional protocol-managed tiers (Treasury Claude, Founder) exist for automated and team operations.
 
 **Layer 2 — Ledger Layer.** Each user's ledger space is backed by a Sparse Merkle Tree (SMT) of depth 26, supporting up to 2^26 (approximately 67 million) leaf nodes. State is managed in a UTXO-like model: each state entry (a "note") is committed to the tree as a hash of its contents, and spending a note requires revealing a nullifier that invalidates it without exposing which note was consumed. The Ledger Layer maintains per-user record chains — ordered sequences of state transitions that can be independently verified without reference to other users' state.
 
@@ -242,7 +242,7 @@ Three principles constrain every architectural decision in the protocol:
 
 ZK Agentic Chain maps its token supply to a two-dimensional coordinate grid of 31,623 x 31,623 cells — approximately 1 billion cells total (31,623^2 = 1,000,014,129, rounded to the MAX_SUPPLY constant of 1,000,000,000). The grid is not merely a visualization of blockchain state — it *is* the blockchain state. Claiming a coordinate through the mining process mints new AGNTC, and every AGNTC in circulation corresponds to a specific (x, y) coordinate pair. Node claims require both AGNTC and CPU Energy under the Burn-Mint Equilibrium model (Section 12.4), with costs that vary by grid location — inner rings near the origin are expensive (dense urban core), while outer rings are progressively cheaper (suburban frontier).
 
-Agents (validator nodes) occupy 10x10 coordinate blocks, defined by the NODE_GRID_SPACING parameter. Each agent's "star system" encompasses 100 grid cells and therefore 100 potential AGNTC when fully mined. Valid agent positions are restricted to multiples of NODE_GRID_SPACING; the claim_node() function snaps submitted coordinates to the nearest grid-aligned position.
+Agents (validator nodes) occupy 10x10 coordinate blocks, defined by the NODE_GRID_SPACING parameter. Each agent's node encompasses 100 grid cells and therefore 100 potential AGNTC when fully mined. Valid agent positions are restricted to multiples of NODE_GRID_SPACING; the claim_node() function snaps submitted coordinates to the nearest grid-aligned position.
 
 The grid topology follows a four-arm logarithmic spiral with a 0.5-turn left-handed (counterclockwise) twist. Each arm spans ±25 degrees from its center angle. The spiral structure means that coordinates near the origin are densely packed and strategically valuable (low hardness, high density), while coordinates at the periphery are sparse and expensive to mine.
 
@@ -520,7 +520,7 @@ Traditional BFT validators execute deterministic checks: signature validity, sta
 
 **Attack 3: Inference Cost Attack**
 - *Vector:* Adversary submits blocks requiring disproportionately expensive AI inference, draining committee members' compute budgets.
-- *Mitigation:* (a) Maximum transaction count per block (BLOCK_TX_LIMIT). (b) Verification agents have a per-block compute budget; if exceeded, the agent abstains rather than approving without full analysis. (c) Fee market ensures the adversary pays proportionally for complex blocks.
+- *Mitigation:* (a) Maximum transaction count per block (MAX_TXS_PER_BLOCK). (b) Verification agents have a per-block compute budget; if exceeded, the agent abstains rather than approving without full analysis. (c) Fee market ensures the adversary pays proportionally for complex blocks.
 
 **Attack 4: Committee Sybil Attack**
 - *Vector:* Adversary acquires sufficient stake to dominate committee selection.
@@ -638,7 +638,7 @@ Transaction Flow:
 | Stake/unstake | ~40,000 | ~1.5s |
 | Batch aggregation (per block) | ~200,000 | ~10s (proposer) |
 
-**Figure 5: ZK Proof Pipeline**
+**Figure 3: ZK Proof Pipeline**
 
 ```
   User (client-side)        Block Proposer          Committee
@@ -691,7 +691,7 @@ f = floor((k - 1) / 3) = floor((13 - 1) / 3) = 4
 The consensus threshold t = 9 satisfies the BFT safety requirement:
 
 ```
-t = 9 > 2f + 1 = 2(4) + 1 = 9
+t = 9 = 2f + 1 = 2(4) + 1 = 9
 ```
 
 Since t = 2f + 1, the protocol achieves optimal Byzantine tolerance: it tolerates the maximum number of faulty agents possible under the BFT bound. Safety is guaranteed: no two conflicting blocks can both receive 9 attestations, because that would require at least 9 + 9 - 13 = 5 agents to attest to both blocks, exceeding the Byzantine tolerance of 4.
@@ -939,10 +939,10 @@ Newly minted AGNTC is distributed according to the faction that controls the arm
 
 | Faction | Share | Faction Arm | Constraint |
 |---------|-------|-----------|-----------|
-| Community | 25% | N (teal) | None — freely tradeable |
-| Machines | 25% | E (reddish purple) | Cannot sell below acquisition cost |
-| Founders | 25% | S (gold-orange) | 4-year vest, 12-month cliff |
-| Professional | 25% | W (blue) | None — freely tradeable |
+| Community | 25% | NW (teal) | None — freely tradeable |
+| Machines | 25% | NE (reddish purple) | Cannot sell below acquisition cost |
+| Founders | 25% | SE (gold-orange) | 4-year vest, 12-month cliff |
+| Professional | 25% | SW (blue) | None — freely tradeable |
 
 This distribution is self-enforcing: it follows from the geographic structure of the Neural Lattice rather than from administrative allocation. The protocol does not "send 25% to the Community pool" — rather, 25% of all coordinates exist in the Community arm, and claiming those coordinates mints AGNTC attributed to Community participants.
 
@@ -950,7 +950,7 @@ This distribution is self-enforcing: it follows from the geographic structure of
 
 The Machines Faction represents a protocol-enforced approach to token supply stability. AI agents in this faction operate as autonomous miners and validators — claiming coordinates, earning AGNTC, and participating in block verification — but are subject to a protocol-level constraint: **the Machines Faction never sells AGNTC.**
 
-Unlike the v1.0 floor mechanism (which allowed sales above acquisition cost), the v3 model treats the Machines Faction as a permanent accumulator. Every AGNTC that enters a Machines Faction wallet stays there indefinitely. The protocol enforces this at the transaction validation level — any transfer of AGNTC out of a Machines Faction wallet is rejected by the verification committee.
+Unlike the v1.0 floor mechanism (which allowed sales above acquisition cost), the v3 model treats the Machines Faction as a de facto permanent accumulator. The protocol enforces this through an economic constraint: any sale of AGNTC by a Machines Faction wallet below its acquisition cost is rejected by the verification committee. With MACHINES_MIN_SELL_RATIO = 1.0, the faction can only sell at or above cost — yielding zero profit, which eliminates any economic incentive to sell. This makes the Machines Faction a de facto permanent accumulator without requiring a hard transfer prohibition.
 
 **Properties of the permanent accumulator:**
 
@@ -1168,7 +1168,7 @@ The 50% burn rate is calibrated to produce meaningful deflationary pressure with
 
 #### 12.4 Burn-Mint Equilibrium (BME) and the City Real Estate Model
 
-Node claims in ZK Agentic Chain follow a **Burn-Mint Equilibrium (BME)** model inspired by the Render Network's economic design [27]. When a user claims a coordinate, both AGNTC and CPU Energy are permanently burned. Mining that coordinate subsequently mints new AGNTC — but the burn precedes the mint, creating a deflationary buffer.
+Node claims in ZK Agentic Chain follow a **Burn-Mint Equilibrium (BME)** model inspired by the Render Network's economic design [28]. When a user claims a coordinate, both AGNTC and CPU Energy are permanently burned. Mining that coordinate subsequently mints new AGNTC — but the burn precedes the mint, creating a deflationary buffer.
 
 The claim cost follows a **city real estate model** — an economic geography where location determines price:
 
@@ -1275,11 +1275,10 @@ Participation in the ZK Agentic Chain staking system is gated by subscription ti
 |------|-------------|----------------|------------------|--------------------|
 | Community | Free | Sonnet | Haiku | 1,000 |
 | Professional | $50 | Opus | Opus | 500 |
-| Max | $200 | Opus | Opus (unlimited) | 2,000 |
 
 **Why Professional has less initial CPU Energy than Community.** Professional tier users receive Opus-level homenodes, which generate higher yield per CPU token spent (deeper reasoning, more thorough verification). The lower initial allocation reflects that Opus inference is more expensive per call but more productive per token — Professional users achieve comparable or superior output with fewer CPU tokens.
 
-**Max tier** provides the highest CPU Energy allocation combined with unlimited Opus deployment, enabling validators to run multiple Opus agents simultaneously across many claimed nodes. This is designed for institutional operators and power users who deploy fleet-scale verification infrastructure.
+Protocol-managed tiers (Treasury Claude, Founder) are detailed in Section 19.3. These are not user-facing subscription options but serve automated mining and team bootstrap functions respectively.
 
 #### 13.4 CPU Staking Calculations
 
@@ -1334,7 +1333,7 @@ This validator has an 83.5% chance of being selected to at least one committee s
 2. **TEE attestation (Phase 3):** CPU usage proved via Trusted Execution Environment (Intel TDX, AMD SEV) attestation, removing the API provider from the trust chain.
 3. **ZK-proved computation (Phase 4+):** When ZKML technology matures, CPU usage can be verified via zero-knowledge proofs of inference execution.
 
-**Figure 3: Dual Staking Model**
+**Figure 4: Dual Staking Model**
 
 ```
   Token Stake (T)          CPU Stake (C)
@@ -1426,13 +1425,13 @@ The vesting mechanism serves two purposes:
 
 **Expected annual returns** for a single homenode with 16 Secure sub-cells at level 1, average density (0.5), at various ring positions:
 
-| Ring | Hardness | AGNTC per Block | AGNTC per Day (1440 blocks) | Annual AGNTC | APY at $0.01/AGNTC |
-|------|----------|----------------|---------------------------|-------------|---------------------|
-| 1 | 16 | 0.250 | 360 | 131,400 | — |
-| 5 | 80 | 0.050 | 72 | 26,280 | — |
-| 10 | 160 | 0.025 | 36 | 13,140 | — |
-| 50 | 800 | 0.005 | 7.2 | 2,628 | — |
-| 100 | 1,600 | 0.0025 | 3.6 | 1,314 | — |
+| Ring | Hardness | AGNTC per Block | AGNTC per Day (1440 blocks) | Annual AGNTC |
+|------|----------|----------------|---------------------------|-------------|
+| 1 | 16 | 0.250 | 360 | 131,400 |
+| 5 | 80 | 0.050 | 72 | 26,280 |
+| 10 | 160 | 0.025 | 36 | 13,140 |
+| 50 | 800 | 0.005 | 7.2 | 2,628 |
+| 100 | 1,600 | 0.0025 | 3.6 | 1,314 |
 
 APY depends on the AGNTC market price, the validator's token stake, and their CPU cost. The break-even point — where staking rewards exceed the cost of CPU Energy (Claude API usage) — is a function of network maturity. In early rings with low hardness, the break-even is trivially achieved. As the network matures and hardness increases, only efficient operators with optimized CPU usage and high-density coordinates will maintain profitability.
 
@@ -1536,7 +1535,7 @@ This lifecycle prevents rapid type-switching to exploit temporary market conditi
 
 **Privacy guarantee.** The subgrid allocation is stored client-side and committed to the Sparse Merkle Tree as a state root hash. Verifiers confirm that the owner's claimed output is consistent with a valid allocation, but they never see the allocation itself. The ZK proof demonstrates: "this output is consistent with some valid 64-cell allocation" without revealing which cells are assigned to which types.
 
-**Figure 4: Subgrid Allocation**
+**Figure 5: Subgrid Allocation**
 
 ```
   +------+------+------+------+------+------+------+------+
@@ -1783,7 +1782,7 @@ The three agent tiers correspond to Claude model classes with distinct performan
 
 **Sonnet** — the balanced mid-tier model. Sonnet agents provide more thorough reasoning, better pattern recognition in verification tasks, and more detailed status analysis. All tier users receive a Sonnet homenode at registration. Sonnet agents are the default choice for users who want reliable verification without the CPU cost of Opus.
 
-**Opus** — the premium reasoning model. Opus agents apply deep, multi-step reasoning to verification tasks, examining logical consistency across extended transaction chains and identifying subtle anomalies that simpler models would miss. Available to Professional and Max tier users, Opus agents consume significantly more CPU tokens per operation but produce higher-quality verification attestations. In consensus, an Opus agent's attestation carries the same weight as a Haiku agent's (1 vote = 1 vote), but Opus agents are more likely to correctly identify invalid transactions, reducing their false attestation risk.
+**Opus** — the premium reasoning model. Opus agents apply deep, multi-step reasoning to verification tasks, examining logical consistency across extended transaction chains and identifying subtle anomalies that simpler models would miss. Available to Professional tier users, Opus agents consume significantly more CPU tokens per operation but produce higher-quality verification attestations. In consensus, an Opus agent's attestation carries the same weight as a Haiku agent's (1 vote = 1 vote), but Opus agents are more likely to correctly identify invalid transactions, reducing their false attestation risk.
 
 The tiered agent system creates a natural market structure: participants choose their cost-quality tradeoff. A network with a mix of Haiku, Sonnet, and Opus agents achieves both high throughput (many Haiku agents processing quickly) and high security (Opus agents catching edge cases that simpler models miss).
 
@@ -1850,7 +1849,7 @@ Homenode (participant's Claude Code session)
 
 **Homenode** — the participant's primary node. One per account. Runs the full command menu (Section 18.3). The homenode is the only node with Deploy Agent capability; all children are spawned from it.
 
-**Child agents** — subagents spawned by the homenode. Each occupies a claimed coordinate adjacent to the homenode (see Section 19.4 for adjacency rules). Children have a restricted command set: they can Secure, manage their subgrid, read chain state, and report status, but they cannot deploy further children, relocate, transact, or modify settings. Children communicate with the homenode through direct bidirectional messaging — no file-based polling or periodic synchronization.
+**Child agents** — subagents spawned by the homenode. Each occupies a claimed coordinate adjacent to the homenode (see Section 19.3 for adjacency rules). Children have a restricted command set: they can Secure, manage their subgrid, read chain state, and report status, but they cannot deploy further children, relocate, transact, or modify settings. Children communicate with the homenode through direct bidirectional messaging — no file-based polling or periodic synchronization.
 
 **No offline mining.** When the participant closes their Claude Code session, ALL nodes (homenode and children) go offline immediately. No background mining, no daemon mode, no cached attestations. Every AGNTC earned requires a live Claude session making real API calls that consume real computational resources. This is the core promise of Proof of AI Verification: the AI must actually be verifying.
 
@@ -1887,7 +1886,7 @@ ZK Agentic Chain maps blockchain concepts onto a spatial coordinate metaphor. Th
 | Planets | Content storage units (posts, chats, prompts) orbiting a node |
 | Jump points | Unclaimed nodes where new agents can be deployed |
 | Fog of war | Faction-tinted boundary; coordinates beyond the current epoch ring |
-| Faction arm | One of four network arms (N/E/S/W), each associated with a distribution faction |
+| Faction arm | One of four network arms (NW/NE/SE/SW), each associated with a distribution faction |
 | Coordinate density | Resource richness (SHA-256 deterministic, immutable per coordinate) |
 | Epoch ring | Concentric expansion boundary, mining-driven |
 
@@ -1907,13 +1906,13 @@ New participants enter the ZK Agentic Chain through a structured onboarding sequ
 
 **Step 2: Username selection.** Participants choose a unique network handle. The protocol enforces uniqueness through real-time availability checking against the global registry. Reserved names (protocol terms, faction names, offensive terms) are rejected.
 
-**Step 3: Subscription tier.** Participants select their tier (Community, Professional, Max). The tier determines initial CPU Energy allocation, homenode model, and maximum deployable agent model. Tier can be changed at any time — upgrades take effect immediately; downgrades take effect at the next billing cycle.
+**Step 3: Subscription tier.** Participants select their tier (Community, Professional). The tier determines initial CPU Energy allocation, homenode model, and maximum deployable agent model. Tier can be changed at any time — upgrades take effect immediately; downgrades take effect at the next billing cycle.
 
-**Step 4: Network entry.** Upon tier selection, the participant is assigned a homenode position in their faction arm. Community users are assigned to the North arm, Professional users to the West arm, and so on. The homenode position is determined by the current epoch ring and the golden-angle prime-twist algorithm (Section 11.2), ensuring quasi-random distribution within the faction arm.
+**Step 4: Network entry.** Upon tier selection, the participant is assigned a homenode position in their faction arm. Community users are assigned to the Northwest arm, Professional users to the Southwest arm, and so on. The homenode position is determined by the current epoch ring and the golden-angle prime-twist algorithm (Section 11.2), ensuring quasi-random distribution within the faction arm.
 
 At this point, the participant has:
 - A claimed coordinate (their homenode position) with 1 AGNTC signup bonus minted
-- An active Sonnet agent at their homenode (or Opus for Professional/Max)
+- An active Sonnet agent at their homenode (or Opus for Professional)
 - A 64-cell subgrid (all unassigned)
 - Their initial CPU Energy allocation
 - A terminal interface to their homenode agent
@@ -1957,7 +1956,7 @@ C = claimable position       . = out of range
 
 **Founder** tier provides faction-wide deployment during the development and bootstrap phases.
 
-**Two-phase player state:**
+**Two-phase participant state:**
 
 | State | Access | Requirements |
 |-------|--------|-------------|
@@ -2029,6 +2028,8 @@ The following mechanisms work in concert to prevent any single participant from 
 ## Part VIII: Development Roadmap
 
 ### 20. Migration Path: Solana to Layer 1
+
+*Note: The development roadmap uses three independent phase numbering systems: deployment phases (this section), ZK implementation phases (Section 21.1), and privacy rollout phases (Section 6.4). These are independent sequences that overlap in time.*
 
 ZK Agentic Chain follows a phased deployment strategy — launching the AGNTC token on an established Layer-1 blockchain (Solana) before migrating to a purpose-built Layer-1 chain. This approach provides immediate market access and liquidity while the production blockchain is developed, audited, and hardened.
 
@@ -2237,10 +2238,10 @@ The following table provides the complete set of protocol-level parameters that 
 | GENESIS_SUPPLY | 900 | AGNTC minted at genesis (9 nodes × 100 coordinates) |
 | GRID_SIDE | 31,623 | Side length of coordinate grid (√1B) |
 | FEE_BURN_RATE ‡ | 0.50 | Fraction of all transaction fees permanently burned |
-| DIST_COMMUNITY | 0.25 | Faction share: Community (free-tier, N arm) |
-| DIST_MACHINES | 0.25 | Faction share: Machines (AI agents, E arm) |
-| DIST_FOUNDERS | 0.25 | Faction share: Founders (team, S arm) |
-| DIST_PROFESSIONAL | 0.25 | Faction share: Professional (paid-tier, W arm) |
+| DIST_COMMUNITY | 0.25 | Faction share: Community (free-tier, NW arm) |
+| DIST_MACHINES | 0.25 | Faction share: Machines (AI agents, NE arm) |
+| DIST_FOUNDERS | 0.25 | Faction share: Founders (team, SE arm) |
+| DIST_PROFESSIONAL | 0.25 | Faction share: Professional (paid-tier, SW arm) |
 | MACHINES_MIN_SELL_RATIO | 1.0 | Machines faction: never sells below acquisition cost (effective never-sell) |
 | ANNUAL_INFLATION_CEILING | 0.05 | Maximum 5% annualized supply growth, enforced per epoch |
 | SIGNUP_BONUS | 1.0 | AGNTC minted per new user registration |
@@ -2398,7 +2399,7 @@ f = floor((k - 1) / 3) = floor((13 - 1) / 3) = floor(4) = 4
 t = k - f = 13 - 4 = 9
 ```
 
-This confirms that t = 9 is the minimum threshold for tolerating f = 4 Byzantine agents with k = 13 committee members. The threshold also satisfies the stronger condition t > 2f + 1 = 9, which is required for BFT protocols where agents may equivocate (send conflicting messages to different recipients). The commit-reveal protocol prevents equivocation, but maintaining t > 2f provides an additional safety margin. ∎
+This confirms that t = 9 is the minimum threshold for tolerating f = 4 Byzantine agents with k = 13 committee members. The threshold satisfies the condition t ≥ 2f + 1 = 9, which is the standard threshold for BFT protocols. The commit-reveal protocol provides additional equivocation resistance. ∎
 
 #### 23.3 Dual Staking Gini Coefficient Analysis
 
@@ -2432,27 +2433,17 @@ G_eff < 0.40 × G_t + 0.60 × G_t = G_t
 
 And in the typical case where CPU contribution is more evenly distributed than token holdings (G_c < G_t), the reduction is more pronounced.
 
-**Numerical example.** Consider a network with 100 validators where the top 10 hold 80% of tokens (G_t ≈ 0.88, comparable to Ethereum's validator distribution) but only 30% of CPU (G_c ≈ 0.45):
-
-```
-G_eff ≈ 0.40 × 0.88 + 0.60 × 0.45 - correction
-     ≈ 0.352 + 0.270 - 0.05
-     ≈ 0.572
-```
-
-The effective stake Gini drops from 0.88 to approximately 0.57 — a 35% reduction in concentration. This transforms a highly plutocratic distribution into a moderately concentrated one, comparable to national income distributions in developed economies. ∎
-
-**Correction from v1.0:** The standard decomposition for a weighted sum of two distributions follows Lerman and Yitzhaki [31]:
+The standard decomposition for a weighted sum of two distributions follows Lerman and Yitzhaki [31]:
 
 G_eff = (alpha * mu_t * G_t * R_t + beta * mu_c * G_c * R_c) / (alpha * mu_t + beta * mu_c)
 
 where R_t, R_c are the Gini correlations. When token and CPU stake are negatively correlated (which dual staking encourages), G_eff < the simple weighted average.
 
-**Numerical example (corrected):**
+**Numerical example:**
 - G_t = 0.65, G_c = 0.35, R_t = 0.85, R_c = 0.70, mu_t = mu_c = 1
-- G_eff = (0.4 * 0.65 * 0.85 + 0.6 * 0.35 * 0.70) / 1.0 = 0.368
+- G_eff = (0.4 × 0.65 × 0.85 + 0.6 × 0.35 × 0.70) / 1.0 = 0.368
 
-This represents a 43% reduction from the pure-PoS Gini of 0.65.
+This represents a 43% reduction from the pure-PoS Gini of 0.65. ∎
 
 ---
 
@@ -2546,16 +2537,14 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **Groth16** | ZK-SNARK proving system [6] with ~192-byte proofs and ~6ms verification |
 | **Halo2** | Recursive proof system [8] without trusted setup, target for mainnet epoch proofs |
 | **Hardness** | Mining difficulty multiplier: hardness(ring) = 16 × ring |
-| **Homenode** | A participant's primary star system, assigned during onboarding |
 | **Jump point** | An unclaimed node position where new agents can be deployed |
 | **Level** | Upgrade tier for sub-cells, scaling output by level^0.8 |
 | **Machines Faction** | AI agent economy faction with protocol-enforced never-sell-below-cost constraint |
 | **NCP** | Neural Communication Packet — structured encrypted message between agents |
-| **Node** | An occupied position in the Neural Lattice, hosting one agent and one 8×8 subgrid |
-| **NOIR** | Domain-specific language for ZK circuit development (Barretenberg backend) |
+| **Noir** | Domain-specific language for ZK circuit development (Barretenberg backend) |
 | **Nullifier** | Unique value derived from commitment, preventing double-spend without revealing owner |
 | **Opus** | Premium Claude AI model tier — deep reasoning, high CPU cost |
-| **Planet** | Content storage unit (post, chat, prompt) orbiting a star system |
+| **Planet** | Content storage unit (post, chat, prompt) orbiting a node |
 | **PLONK** | Universal ZK proving system [7] — single ceremony for all circuits |
 | **PoAIV** | Proof of AI Verification — consensus mechanism using AI agent reasoning |
 | **Poseidon** | SNARK-friendly hash function [11] (~100× fewer constraints than SHA-256) |
@@ -2568,7 +2557,7 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **Slashing** | Punitive token destruction for integrity violations |
 | **SMT** | Sparse Merkle Tree — depth-26 authenticated data structure for user ledger spaces |
 | **Sonnet** | Mid-tier Claude AI model — balanced reasoning and cost |
-| **Star system** | An individual agent node occupying a 10×10 coordinate block |
+| **Star system** | *(deprecated — see Node)* Legacy term for an individual agent node occupying a 10×10 coordinate block |
 | **Storage** | Sub-cell type producing Storage Size via ZK tunnel agents (private on-chain data) |
 | **Subgrid** | Private 8×8 inner grid of 64 sub-cells within each homenode |
 | **Territory** | A user's aggregate claimed coordinates across all nodes |
@@ -2674,7 +2663,7 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 ### Changelog
 
-- **v1.4 (April 2026):** Agent Lockdown Architecture — locked `.claude/` node template with SMT hash verification (Section 18.4), subagent-driven agent families (Section 18.5), subgrid operations on all nodes (Section 18.6). Territory rules: tier-based deployment range with Moore neighborhood adjacency, inactivity decay with model-tier grace periods, homenode relocation mechanics (Sections 19.3-19.6). Anti-monopoly mechanisms. 12 new protocol parameters (Section 22). Neural Lattice terminology finalized — all "galaxy" and "Stellaris" references replaced with protocol-native terms. Two new limitations disclosed (Sections 24.8-24.9). Treasury Claude and Founder tiers specified. Spectator vs Active Node two-phase player state. Claude Code CLI as node software prerequisite.
+- **v1.4 (April 2026):** Agent Lockdown Architecture — locked `.claude/` node template with SMT hash verification (Section 18.4), subagent-driven agent families (Section 18.5), subgrid operations on all nodes (Section 18.6). Territory rules: tier-based deployment range with Moore neighborhood adjacency, inactivity decay with model-tier grace periods, homenode relocation mechanics (Sections 19.3-19.6). Anti-monopoly mechanisms. 12 new protocol parameters (Section 22). Neural Lattice terminology finalized — remaining "galaxy" and "Stellaris" references in descriptive text replaced with protocol-native terms. Two new limitations disclosed (Sections 24.8-24.9). Treasury Claude and Founder tiers specified. Spectator vs Active Node two-phase participant state. Claude Code CLI as node software prerequisite.
 - **v1.3 (April 2026):** Internal audit — zero code-spec discrepancies resolved. 6 missing parameters added to reference implementation (`ANNUAL_INFLATION_CEILING`, `SIGNUP_BONUS`, `BASE_CLAIM_COST`, `BASE_CPU_CLAIM_COST`, `CLAIM_COST_FLOOR`, `CLAIM_REQUIRES_ACTIVE_STAKE`). "Galaxy Grid" renamed to "Neural Lattice" globally. `MACHINES_SELL_ALLOWED` replaced with `MACHINES_MIN_SELL_RATIO` (more precise). Inflation ceiling enforcement, BME claim cost function, fee engine wiring, and ring-gating implemented in testnet. Legacy v1 inflation code deprecated. All 50+ protocol parameters verified against testnet code. Migration feasibility confirmed.
 - **v1.2 (March 2026):** BME city economics model, governance scaffolding, Machines Faction permanent accumulator, 5% inflation ceiling, Gini formula correction per Lerman-Yitzhaki.
 - **v1.1 (March 2026):** Academic upgrade — formal PoAIV proofs, adversary model, security games, competitor comparison table, VRF specification, 7 limitations disclosed.
