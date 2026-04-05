@@ -1,8 +1,8 @@
 # ZK Agentic Network
 
-A gamified social media dApp where users explore a 2D Neural Lattice, communicate through AI agents, develop star systems, and build diplomatic relationships — all backed by the Agentic Chain testnet blockchain.
+A gamified social media dApp where users explore a 2D Neural Lattice, communicate through AI agents, develop nodes, and build diplomatic relationships — all backed by the Agentic Chain testnet blockchain.
 
-[Whitepaper (v1.3)](spec/whitepaper.md) | [Live Testnet Monitor](https://zkagentic.ai) | [Marketing](https://zkagentic.com)
+[Whitepaper (v1.0)](spec/whitepaper.md) | [Live Testnet Monitor](https://zkagentic.ai) | [Marketing](https://zkagentic.com)
 
 ## Architecture
 
@@ -13,7 +13,7 @@ Exodus/
 ├── web/
 │   ├── marketing/      zkagentic.com — static landing site (GitHub Pages)
 │   └── monitor/        zkagentic.ai — live testnet dashboard (Cloudflare Pages)
-├── spec/               Whitepaper v1.3, audit reports, research, product specs
+├── spec/               Whitepaper v1.0, audit reports, research, product specs
 ├── docs/               Design documents and implementation plans
 ├── tests/              E2E tests (Playwright)
 ├── supabase/           Database migrations
