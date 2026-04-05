@@ -10,7 +10,7 @@ read_count: 0
 
 ZkAgenticNetwork is the player's window into the blockchain. It translates raw chain state — blocks, transactions, stakes, claims — into a living galaxy that players can explore, command, and grow.
 
-The game client does not own the truth. The blockchain owns the truth. This child renders the truth as an interactive, Stellaris-inspired experience.
+The game client does not own the truth. The blockchain owns the truth. This child renders the truth as an interactive Neural Lattice experience.
 
 ## Relationships
 
