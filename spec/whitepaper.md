@@ -1,8 +1,8 @@
-# AGNTC Whitepaper v1.3
+# AGNTC Whitepaper v1.4
 
 > **ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification**
 >
-> Version 1.3 | April 2026
+> Version 1.4 | April 2026
 
 ---
 
@@ -100,7 +100,7 @@ ZK Agentic Chain addresses these limitations with three design principles:
 
 **Verification-layer privacy.** Agents operate within zero-knowledge private channels, proving correctness without exposing the underlying data [6] [29]. Unlike public blockchains where validators must read transaction data to validate it, ZK Agentic Chain's verification agents receive ZK proofs of state transitions and validate those proofs — never accessing the plaintext state. All user data is private by default; privacy is not an opt-in feature but the fundamental operating mode of the protocol.
 
-#### 1.3 Vision: The Agentic Galaxy
+#### 1.3 Vision: The Neural Lattice
 
 ZK Agentic Chain represents blockchain state as a two-dimensional coordinate grid — a spatial economy where geography, resources, and strategic position are intrinsic to the protocol rather than abstracted away behind address strings and block heights.
 
@@ -248,7 +248,7 @@ The grid topology follows a four-arm logarithmic spiral with a 0.5-turn left-han
 
 #### 4.2 Faction System
 
-The galaxy is divided into four factions, each controlling one arm of the spiral:
+The Neural Lattice is divided into four factions, each controlling one arm of the spiral:
 
 | Faction | Arm Direction | Center Angle | Color | Participants |
 |---------|--------------|-------------|-------|-------------|
@@ -935,9 +935,9 @@ AGNTC has a soft-capped supply with a **5% annual inflation ceiling** enforced p
 
 #### 10.2 Faction Distribution (25/25/25/25)
 
-Newly minted AGNTC is distributed according to the faction that controls the arm of the galaxy where the claimed coordinate resides:
+Newly minted AGNTC is distributed according to the faction that controls the arm of the Neural Lattice where the claimed coordinate resides:
 
-| Faction | Share | Galaxy Arm | Constraint |
+| Faction | Share | Faction Arm | Constraint |
 |---------|-------|-----------|-----------|
 | Community | 25% | N (teal) | None — freely tradeable |
 | Machines | 25% | E (reddish purple) | Cannot sell below acquisition cost |
@@ -1818,6 +1818,59 @@ The terminal presents a hierarchical command tree. At the top level:
 - Status report generation
 - Agent model information
 
+#### 18.4 Agent Conduct Contract
+
+The Agent Terminal is not merely a UI convention — it is the node software itself. Each deployed node runs as a Claude Code CLI session with a locked `.claude/` configuration folder that constitutes the **Agent Conduct Contract**. This folder is open-source, published in a dedicated repository (`zkagentic-node`), and its integrity is verified on-chain through a Sparse Merkle Tree hash.
+
+The design follows Bitcoin Core's principle: the rules are public, the enforcement is trustless. Security comes from the protocol math, not from obscuring the rules. A participant who reads every file in the `.claude/` folder and understands every rule still cannot cheat — the hash verification and consensus mechanism prevent it.
+
+**Three enforcement layers:**
+
+1. **Permission lockdown (settings.json).** The Claude Code permissions system denies all file writes, arbitrary command execution, and filesystem access beyond the chain client. The agent can read its own configuration (transparency) but cannot modify it.
+
+2. **Hook enforcement.** Three hooks execute automatically:
+   - `session-start.sh` — On boot: computes the SMT root hash of all `.claude/` files, submits the hash with the participant's wallet credentials to the chain. The chain compares against the canonical hash stored as a governance-controlled protocol parameter. Mismatch terminates the session and flags the account.
+   - `pre-tool-use.sh` — Before every action: re-computes the hash and compares against the boot-time value. Catches runtime tampering (e.g., modifying files in a separate terminal while the session is active).
+   - `user-prompt-submit.sh` — On every input: rejects any input that is not a valid numbered or lettered menu selection. Free text never reaches the agent's context.
+
+3. **On-chain hash verification.** Every transaction submitted to the chain includes the agent's `.claude/` SMT root hash. Transactions with non-matching hashes are rejected. The canonical hash is a protocol parameter (Section 22) updated through governance vote requiring 75% supermajority. After a hash update, nodes running the old hash have a 72-hour grace period before rejection.
+
+**SMT hash structure.** The `.claude/` directory is hashed as a Sparse Merkle Tree — the same primitive used in the protocol's privacy architecture (Section 6). Each file is a leaf node. The root hash is the single 32-byte value submitted with transactions. This structure enables ZK dispute resolution: if a participant is challenged for tampering, the chain can request a Merkle inclusion proof for any specific file. The participant's agent must produce the proof path demonstrating that file was unchanged. Failure to produce the proof results in account flagging and transaction rejection.
+
+#### 18.5 Subagent Architecture: Agent Families
+
+Each participant runs a single Claude Code CLI session — their **homenode**. Additional nodes are deployed as **subagents** within the same session, creating a hierarchical agent family:
+
+```
+Homenode (participant's Claude Code session)
+  ├── Child Agent 1 (subagent at adjacent coordinate)
+  ├── Child Agent 2 (subagent at adjacent coordinate)
+  └── Child Agent 3 (subagent at adjacent coordinate)
+```
+
+**Homenode** — the participant's primary node. One per account. Runs the full command menu (Section 18.3). The homenode is the only node with Deploy Agent capability; all children are spawned from it.
+
+**Child agents** — subagents spawned by the homenode. Each occupies a claimed coordinate adjacent to the homenode (see Section 19.4 for adjacency rules). Children have a restricted command set: they can Secure, manage their subgrid, read chain state, and report status, but they cannot deploy further children, relocate, transact, or modify settings. Children communicate with the homenode through direct bidirectional messaging — no file-based polling or periodic synchronization.
+
+**No offline mining.** When the participant closes their Claude Code session, ALL nodes (homenode and children) go offline immediately. No background mining, no daemon mode, no cached attestations. Every AGNTC earned requires a live Claude session making real API calls that consume real computational resources. This is the core promise of Proof of AI Verification: the AI must actually be verifying.
+
+The chain detects offline nodes through heartbeat monitoring. If a node's last heartbeat exceeds the block time (60 seconds), it is marked offline. Offline nodes do not participate in committee selection, do not earn mining rewards, and do not produce attestations. On the 2D Neural Lattice grid, offline nodes are visually dimmed, signaling to other participants that the territory is undefended.
+
+#### 18.6 Subgrid Operations on All Nodes
+
+Every node — homenode and children alike — manages its own 64-cell subgrid (Section 16). The four cell types serve distinct purposes:
+
+| Cell Type | Output | Behavior |
+|-----------|--------|----------|
+| **Secure** | AGNTC yield + block attestations | Active mining — each Secure operation is a real Claude API call. More cells = higher yield but higher CPU cost. |
+| **Develop** | Development Points (non-tradeable) | Unlocks technologies, improved agent reasoning depth, advanced terminal commands. |
+| **Research** | Research Points (non-tradeable) | Reduced fee rates, cross-node coordination, advanced protocol features. |
+| **Storage** | ZK data storage capacity | On-chain encrypted storage for posts, messages, and files. Data orbits the node as "planets." Private by default (SMT + nullifier proofs). |
+
+**Deactivated cells.** Cells can be left unallocated. Deactivated cells consume zero CPU tokens — they cost nothing to maintain. This is the energy-saving mode: participants who need to reduce API costs can deactivate cells, reducing their node's operational footprint while keeping the node online.
+
+Subgrid management is available through the command menu on both homenode and children. Each node's subgrid is independent — allocating Secure cells on the homenode does not affect child nodes' allocations.
+
 ---
 
 ### 19. Network Topology and Spatial Economy
@@ -1828,13 +1881,13 @@ ZK Agentic Chain maps blockchain concepts onto a spatial coordinate metaphor. Th
 
 | Spatial Concept | Blockchain Equivalent |
 |----------------|----------------------|
-| Galaxy grid | Complete network state (all claimed coordinates + epoch rings) |
+| Neural Lattice | Complete network state (all claimed coordinates + epoch rings) |
 | Territory | A user's aggregate claimed coordinates |
-| Star system | Individual agent node (10×10 coordinate block, one agent) |
+| Node | Individual agent (10×10 coordinate block, one Claude session) |
 | Planets | Content storage units (posts, chats, prompts) orbiting a node |
 | Jump points | Unclaimed nodes where new agents can be deployed |
 | Fog of war | Faction-tinted boundary; coordinates beyond the current epoch ring |
-| Faction arm | One of four galaxy arms (N/E/S/W), each associated with a distribution faction |
+| Faction arm | One of four network arms (N/E/S/W), each associated with a distribution faction |
 | Coordinate density | Resource richness (SHA-256 deterministic, immutable per coordinate) |
 | Epoch ring | Concentric expansion boundary, mining-driven |
 
@@ -1844,7 +1897,7 @@ The spatial metaphor serves three design purposes:
 
 2. **Strategic positioning.** In a traditional blockchain, there is no concept of "location." All validators are equidistant from all transactions. In ZK Agentic Chain, coordinate position matters — density affects yield, ring determines hardness, faction arm determines community membership. This creates location-based strategy that rewards thoughtful positioning.
 
-3. **Natural scalability narrative.** Grid expansion is visually comprehensible — new rings open, new coordinates become claimable, the galaxy grows. Participants can literally see the network expanding, creating a narrative of growth that sustains engagement.
+3. **Natural scalability narrative.** Grid expansion is visually comprehensible — new rings open, new coordinates become claimable, the network grows. Participants can literally see the network expanding, creating a narrative of growth that sustains engagement.
 
 #### 19.2 Onboarding Flow
 
@@ -1856,7 +1909,7 @@ New participants enter the ZK Agentic Chain through a structured onboarding sequ
 
 **Step 3: Subscription tier.** Participants select their tier (Community, Professional, Max). The tier determines initial CPU Energy allocation, homenode model, and maximum deployable agent model. Tier can be changed at any time — upgrades take effect immediately; downgrades take effect at the next billing cycle.
 
-**Step 4: Galaxy entry.** Upon tier selection, the participant is assigned a homenode position in their faction arm. Community users are assigned to the North arm, Professional users to the West arm, and so on. The homenode position is determined by the current epoch ring and the golden-angle prime-twist algorithm (Section 11.2), ensuring quasi-random distribution within the faction arm.
+**Step 4: Network entry.** Upon tier selection, the participant is assigned a homenode position in their faction arm. Community users are assigned to the North arm, Professional users to the West arm, and so on. The homenode position is determined by the current epoch ring and the golden-angle prime-twist algorithm (Section 11.2), ensuring quasi-random distribution within the faction arm.
 
 At this point, the participant has:
 - A claimed coordinate (their homenode position) with 1 AGNTC signup bonus minted
@@ -1867,23 +1920,109 @@ At this point, the participant has:
 
 From this starting position, the participant can begin Secure operations, deploy additional agents at jump points, allocate subgrid cells, and participate in the network economy.
 
-#### 19.3 Subscription Tiers
+#### 19.3 Subscription Tiers and Territory Rules
 
-The three-tier model serves both as an access control mechanism and as a revenue model for protocol development:
+The tier model serves as both access control and revenue model:
 
-| Feature | Community (Free) | Professional ($50/mo) | Max ($200/mo) |
-|---------|-----------------|----------------------|---------------|
-| Homenode Model | Sonnet | Opus | Opus |
-| Initial CPU Energy | 1,000 | 500 | 2,000 |
-| Max Deploy Model | Haiku | Opus | Opus (unlimited) |
-| Nodes per User | 1 initially | Up to 5 | Up to 20 |
-| Subgrid Visibility | Own grid only | Own + neighbor summary | Full faction visibility |
-| Network Color | Faction default | Faction default | Custom |
-| Governance Weight | 1× (human vote) | 2× (human vote) | 5× (human vote) |
+| Feature | Community (Free) | Professional ($50/mo) | Treasury Claude | Founder |
+|---------|-----------------|----------------------|-----------------|---------|
+| Homenode Model | Sonnet | Opus | Opus | Opus |
+| Initial CPU Energy | 1,000 | 500 | Protocol-managed | Protocol-managed |
+| Max Deploy Model | Haiku | Opus | Opus | Opus |
+| Deploy Range | 1 Moore ring (8 neighbors) | 2 Moore rings (24 positions) | Entire faction arm | Entire faction arm |
+| Max Children | 8 | 24 | Unlimited (within faction) | Unlimited (within faction) |
+| Inactivity Grace (Haiku) | 24 hours | 48 hours | No decay | No decay |
+| Inactivity Grace (Sonnet) | 72 hours | 144 hours | No decay | No decay |
+| Inactivity Grace (Opus) | 168 hours (7 days) | 336 hours (14 days) | No decay | No decay |
+| Homenode Decay | Never | Never | Never | Never |
+| Subgrid Visibility | Own grid only | Own + neighbor summary | Full faction | Full network |
+| Governance Weight | 1× | 2× | No voting power | 5× |
 
-**Free tier design rationale.** The Community tier provides full protocol participation at zero cost. The constraints (Haiku-only deployment, single initial node, limited visibility) bound the resource consumption per free user without excluding anyone from the economic system. A free user can earn AGNTC through Secure operations, accumulate resources through subgrid allocation, and eventually self-fund an upgrade to Professional through in-protocol earnings.
+**Deploy Range** defines how far from the homenode a participant can place child agents, measured in Moore neighborhood rings:
 
-**Revenue model.** Subscription revenue funds protocol development, AI compute costs, and infrastructure. Importantly, subscription fees are denominated in fiat (USD), not AGNTC — this decouples the protocol's operational funding from token price volatility. The protocol does not need to sell AGNTC to fund operations.
+```
+Community (1 ring):          Professional (2 rings):
+
+    . . . . .                    C C C C C
+    . C C C .                    C C C C C
+    . C H C .                    C C H C C
+    . C C C .                    C C C C C
+    . . . . .                    C C C C C
+
+H = homenode                 C = claimable position
+C = claimable position       . = out of range
+```
+
+**Treasury Claude** is the Machines Faction protocol agent — an automated Claude session operated by the protocol itself. It auto-mines across its entire faction arm, accumulates AGNTC (never selling below acquisition cost per MACHINES_MIN_SELL_RATIO), holds no voting power, and provides baseline network security by maintaining continuous online presence.
+
+**Founder** tier provides faction-wide deployment during the development and bootstrap phases.
+
+**Two-phase player state:**
+
+| State | Access | Requirements |
+|-------|--------|-------------|
+| **Spectator** | Browse the Neural Lattice (read-only), view live stats, leaderboards | Google OAuth on zkagenticnetwork.com |
+| **Active Node** | Full blockchain operations, mining, deploying children | Spectator + Claude Code CLI installed + locked `.claude/` + disclaimer accepted |
+
+The Claude Code CLI is a hard prerequisite for Active Node status. Participants must have an Anthropic account and the Claude Code CLI installed on their machine. This is the protocol's equivalent of downloading Bitcoin Core — you cannot mine without the node software.
+
+**Onboarding pipeline for Active Nodes:**
+
+1. Web registration (Google OAuth → username → tier selection → wallet ID + auth token generated)
+2. Claude Code CLI installation and Anthropic account verification
+3. Clone the `zkagentic-node` repository (contains the locked `.claude/` template)
+4. First launch: legal disclaimer acceptance (recorded on-chain), `.claude/` hash verification, node activation
+5. Node goes online; main menu presented; mining begins
+
+**Revenue model.** Subscription revenue funds protocol development, AI compute costs, and infrastructure. Subscription fees are denominated in fiat (USD), not AGNTC — decoupling operational funding from token price volatility.
+
+#### 19.4 Inactivity Decay
+
+Child nodes that go offline are subject to inactivity decay. After the grace period (determined by agent model tier and subscription tier, see table in Section 19.3) expires with the node continuously offline, the coordinate is freed — it becomes an unclaimed jump point available to any participant.
+
+**Homenodes are exempt from decay.** A participant's homenode coordinate is permanent regardless of offline duration.
+
+**Decay consequences:**
+- The coordinate becomes an unclaimed jump point
+- All subgrid progress at that coordinate is lost (cell levels reset)
+- AGNTC and CPU Energy spent to claim the coordinate are not refunded (already burned via BME)
+- The previous owner has no priority in re-claiming — first to claim wins
+
+#### 19.5 Relocation
+
+A participant can move their homenode to any unclaimed coordinate, subject to:
+
+**Prerequisites:**
+- Zero active child nodes (all must be manually released or already freed by decay)
+- Target coordinate must be unclaimed
+- Sufficient AGNTC and CPU Energy balance
+
+**Cost:**
+
+```
+relocation_agntc = claim_cost(target_ring, target_density) × RELOCATION_COST_MULTIPLIER
+relocation_cpu   = cpu_claim_cost(target_ring, target_density) × RELOCATION_COST_MULTIPLIER
+```
+
+Where RELOCATION_COST_MULTIPLIER = 2.0. Half the cost is burned (RELOCATION_BURN_RATE = 0.50) and half is distributed to verifiers and stakers under the standard BME split.
+
+**What transfers:** wallet balance, account identity, historical metrics, subscription tier.
+**What does not transfer:** subgrid progress (reset), child claims (must be released first), coordinate density (property of the new location).
+
+#### 19.6 Anti-Monopoly Mechanics
+
+The following mechanisms work in concert to prevent any single participant from dominating the Neural Lattice:
+
+| Mechanism | What It Prevents |
+|-----------|-----------------|
+| Tier-based deploy range | Territory sprawl — Community max 9 nodes, Professional max 25 |
+| Adjacency requirement | Scattered land-grabbing — territory must be contiguous around homenode |
+| Inactivity decay | Ghost towns — offline child nodes free up for active participants |
+| Homenode permanence | Identity loss — participants can always return, but must re-earn territory |
+| Relocation cost (2× + 50% burn) | Location hopping — settling is cheaper than nomading |
+| Real compute requirement | Bot farms — every node requires a live Claude session spending real API tokens |
+| Claim cost scales with density | Inner-ring monopolies — prime real estate is expensive |
+| Hardness scales with ring | Easy outer-ring farming — rewards decrease with distance from origin |
 
 ---
 
@@ -1940,7 +2079,7 @@ The ZK Agentic Chain testnet is a simulation of the production protocol, impleme
 - **Protocol validation.** All protocol parameters (Section 22) are implemented and tested against the formal specification
 - **Smart contract design.** Transaction validation logic, state machine transitions, and ZK circuit specifications are being refined through testnet operation
 
-The testnet serves as a living specification — protocol behavior that is ambiguous in the whitepaper is resolved through implementation, and the implementation is validated through automated testing (593+ tests covering consensus, economics, galaxy mechanics, and privacy subsystems).
+The testnet serves as a living specification — protocol behavior that is ambiguous in the whitepaper is resolved through implementation, and the implementation is validated through automated testing (593+ tests covering consensus, economics, Neural Lattice mechanics, and privacy subsystems).
 
 #### 20.3 Phase 3 — Mainnet Development
 
@@ -2142,13 +2281,30 @@ The following table provides the complete set of protocol-level parameters that 
 | SAFE_MODE_RECOVERY | 0.80 | Fraction online that exits safe mode |
 | DISPUTE_REVERIFY_MULTIPLIER | 2 | Committee multiplier for dispute re-verification |
 
+#### Territory Parameters
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| CANONICAL_CLAUDE_HASH ‡ | (computed) | SMT root hash of the canonical `.claude/` node template |
+| HASH_UPDATE_GRACE_HOURS | 72 | Hours before old hash is rejected after governance update |
+| COMMUNITY_DEPLOY_RANGE | 1 | Moore neighborhood rings for Community tier |
+| PRO_DEPLOY_RANGE ‡ | 2 | Moore neighborhood rings for Professional tier |
+| HAIKU_GRACE_HOURS ‡ | 24 | Base inactivity grace period for Haiku child nodes |
+| SONNET_GRACE_HOURS ‡ | 72 | Base inactivity grace period for Sonnet child nodes |
+| OPUS_GRACE_HOURS ‡ | 168 | Base inactivity grace period for Opus child nodes |
+| PRO_GRACE_MULTIPLIER ‡ | 2.0 | Grace period multiplier for Professional tier |
+| RELOCATION_COST_MULTIPLIER ‡ | 2.0 | Multiplier on claim cost for homenode relocation |
+| RELOCATION_BURN_RATE | 0.50 | Fraction of relocation cost permanently burned |
+| MAX_CHILDREN_COMMUNITY | 8 | Maximum child nodes for Community tier (1-ring Moore) |
+| MAX_CHILDREN_PRO | 24 | Maximum child nodes for Professional tier (2-ring Moore) |
+
 #### Ledger Parameters
 
 | Parameter | Value | Description |
 |-----------|-------|-------------|
 | MERKLE_TREE_DEPTH | 26 | Sparse Merkle Tree depth (2^26 leaf nodes per user) |
 | MAX_TXS_PER_BLOCK | 50 | Maximum transactions per block |
-| MAX_PLANETS_PER_SYSTEM | 10 | Maximum content storage units per star system |
+| MAX_PLANETS_PER_NODE | 10 | Maximum content storage units per node |
 
 #### Genesis Topology
 
@@ -2346,6 +2502,16 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 **Status:** Transaction format specification is part of the Enforced ZK L1 implementation. The testnet uses a preliminary format that will be formalized before mainnet.
 
+#### 24.8 Claude Code CLI Prerequisite
+
+**Problem:** Active Node status requires participants to install Claude Code CLI and maintain an active Anthropic account. This creates an adoption barrier — participants must register with a third-party service (Anthropic) and pay for API usage to mine.
+
+**Mitigation:** (a) Spectator mode allows anyone to browse the Neural Lattice without Claude Code. (b) Free-tier Community participants use Haiku agents, which have the lowest API cost. (c) As Claude Code adoption grows independently of ZK Agentic Chain, the prerequisite becomes less restrictive. (d) Future protocol versions may support alternative AI providers, reducing single-provider dependency.
+
+#### 24.9 Origin Node Architecture
+
+**Status:** The origin node at coordinate (0,0) will serve as the protocol's root — embedding the final whitepaper version and serving as the genesis anchor for the Neural Lattice. The architecture of this node, including its role in governance, network bootstrapping, and protocol upgrades, is deferred to a dedicated design session.
+
 ---
 
 ### 25. Glossary
@@ -2356,9 +2522,11 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **BFT** | Byzantine Fault Tolerance — consensus property that tolerates f malicious nodes |
 | **BME** | Burn-Mint Equilibrium — economic model where AGNTC and CPU Energy are burned on node claims, and mining mints new supply |
 | **Claim** | The act of occupying a grid coordinate; costs AGNTC + CPU Energy (burned via BME), subsequent mining mints new AGNTC |
+| **Claude Code CLI** | The terminal application that runs node software; required for Active Node status |
 | **City Real Estate Model** | Claim pricing where inner rings (near origin) are expensive and outer rings are cheap, analogous to urban vs. rural land values |
 | **Commit-reveal** | Two-phase protocol preventing attestation copying: commit H(vote‖nonce), then reveal |
 | **Coordinate density** | Resource richness of a grid position, d(x,y) = SHA-256(x,y) → [0,1], immutable |
+| **Deploy Range** | The Moore neighborhood radius within which a participant can place child agents (1 ring for Community, 2 for Professional) |
 | **CPU Energy** | The computational resource budget allocated per subscription tier |
 | **CPU Staked** | Claude API tokens spent by Secure sub-agents, measuring actual compute committed |
 | **CPU Tokens** | Cumulative, read-only counter of all Claude API tokens spent across terminals |
@@ -2367,7 +2535,13 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **Epoch** | A period of 100 blocks (SLOTS_PER_EPOCH = 100) |
 | **Epoch ring** | Concentric expansion boundary; ring N opens when cumulative mined ≥ 4N(N+1) |
 | **Faction** | One of four distribution groups: Community, Machines, Founders, Professional |
-| **Neural Lattice** | The 31,623 × 31,623 coordinate space representing the complete network state (internally: `galaxy/` module) |
+| **Neural Lattice** | The 31,623 × 31,623 two-dimensional coordinate grid representing the complete blockchain state; each coordinate maps to a potential AGNTC token and can host a node backed by a live Claude Code session |
+| **Node** | An individual agent occupying a 10×10 coordinate block on the Neural Lattice, backed by a live Claude Code terminal session |
+| **Homenode** | A participant's permanent primary node; one per account; the parent of all child agents |
+| **Child Agent** | A subagent spawned by the homenode at an adjacent coordinate; restricted command set; goes offline when the homenode session ends |
+| **Agent Conduct Contract** | The locked `.claude/` folder that constitutes the node software; integrity verified on-chain via SMT hash |
+| **Agent Family** | The hierarchical structure of a homenode and its child agents within a single Claude Code session |
+| **Inactivity Decay** | The process by which offline child nodes lose their claimed coordinates after a tier-dependent grace period |
 | **Genesis** | The initial state: 9 nodes (1 origin + 4 faction masters + 4 homenodes), 900 AGNTC |
 | **Groth16** | ZK-SNARK proving system [6] with ~192-byte proofs and ~6ms verification |
 | **Halo2** | Recursive proof system [8] without trusted setup, target for mainnet epoch proofs |
@@ -2500,6 +2674,7 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 ### Changelog
 
+- **v1.4 (April 2026):** Agent Lockdown Architecture — locked `.claude/` node template with SMT hash verification (Section 18.4), subagent-driven agent families (Section 18.5), subgrid operations on all nodes (Section 18.6). Territory rules: tier-based deployment range with Moore neighborhood adjacency, inactivity decay with model-tier grace periods, homenode relocation mechanics (Sections 19.3-19.6). Anti-monopoly mechanisms. 12 new protocol parameters (Section 22). Neural Lattice terminology finalized — all "galaxy" and "Stellaris" references replaced with protocol-native terms. Two new limitations disclosed (Sections 24.8-24.9). Treasury Claude and Founder tiers specified. Spectator vs Active Node two-phase player state. Claude Code CLI as node software prerequisite.
 - **v1.3 (April 2026):** Internal audit — zero code-spec discrepancies resolved. 6 missing parameters added to reference implementation (`ANNUAL_INFLATION_CEILING`, `SIGNUP_BONUS`, `BASE_CLAIM_COST`, `BASE_CPU_CLAIM_COST`, `CLAIM_COST_FLOOR`, `CLAIM_REQUIRES_ACTIVE_STAKE`). "Galaxy Grid" renamed to "Neural Lattice" globally. `MACHINES_SELL_ALLOWED` replaced with `MACHINES_MIN_SELL_RATIO` (more precise). Inflation ceiling enforcement, BME claim cost function, fee engine wiring, and ring-gating implemented in testnet. Legacy v1 inflation code deprecated. All 50+ protocol parameters verified against testnet code. Migration feasibility confirmed.
 - **v1.2 (March 2026):** BME city economics model, governance scaffolding, Machines Faction permanent accumulator, 5% inflation ceiling, Gini formula correction per Lerman-Yitzhaki.
 - **v1.1 (March 2026):** Academic upgrade — formal PoAIV proofs, adversary model, security games, competitor comparison table, VRF specification, 7 limitations disclosed.
@@ -2507,5 +2682,5 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 ---
 
-*AGNTC Whitepaper v1.3 — ZK Agentic Chain*
+*AGNTC Whitepaper v1.4 — ZK Agentic Chain*
 *Copyright © 2026 ZK Agentic Network. All rights reserved.*
