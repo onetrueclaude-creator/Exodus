@@ -27,7 +27,7 @@ vault/research/competitors/
 ```
 
 ## Operating Constraints
-- **Our project**: ZK Agentic Network — Stellaris-inspired gamified blockchain with AI agents
+- **Our project**: ZK Agentic Network — Neural Lattice gamified blockchain with AI agents
 - **Our token**: AGNTC — 42M supply, inflationary (10% initial, 1% floor), 50% fee burn
 - **Our consensus**: Proof of Agentic Verification (PoAIV) — 13 AI verifiers, 9/13 threshold
 - **Our privacy**: Sparse Merkle Tree (depth 26) with nullifiers, private 8x8 subgrids

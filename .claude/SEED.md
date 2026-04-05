@@ -12,7 +12,7 @@ read_count: 0
 
 # Exodus Seed
 
-ZK Agentic Network — Stellaris-inspired gamified social media dApp. Primary project of the origin orchestrator.
+ZK Agentic Network — gamified social media dApp built on the Neural Lattice. Primary project of the origin orchestrator.
 
 ## Identity
 
