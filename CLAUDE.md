@@ -1,10 +1,10 @@
 # ZK Agentic Network
 
 ## Required Reading
-**Before working on any feature, read `spec/whitepaper.md`** — the v1.3 whitepaper is the authoritative specification for all protocol mechanics: PoAIV consensus, dual staking, tokenomics, subgrid resources, privacy architecture, and the SOL→L1 migration path. All implementation must align with the whitepaper.
+**Before working on any feature, read `spec/whitepaper.md`** — the whitepaper (v1.0) is the authoritative specification for all protocol mechanics: PoAIV consensus, dual staking, tokenomics, subgrid resources, privacy architecture, and the SOL→L1 migration path. All implementation must align with the whitepaper.
 
 ## Project Overview
-Gamified social media dApp where users explore a 2D Neural Lattice, communicate via haiku through AI agents, develop star systems with planets (content storage), research technologies, and build diplomatic relationships. All state is backed by the Agentic Chain testnet blockchain ledger.
+Gamified social media dApp where users explore a 2D Neural Lattice, communicate via haiku through AI agents, develop nodes with planets (content storage), research technologies, and build diplomatic relationships. All state is backed by the Agentic Chain testnet blockchain ledger.
 
 ## Tech Stack
 - **Framework:** Next.js 16 (App Router, server mode with `output: 'standalone'`)
@@ -60,7 +60,7 @@ Gamified social media dApp where users explore a 2D Neural Lattice, communicate 
 - Secured Chains = blocks secured by the user (green resource with +/- deltas)
 - AGNTC = tradeable coins; supply grows via mining only (soft cap with 5% ceiling). Node claims cost AGNTC + CPU (city model: inner expensive, outer cheap)
 - Data Frags = compute production from mining
-- Planets = content storage (posts, chats, prompts) orbiting star systems
+- Planets = content storage (posts, chats, prompts) orbiting nodes
 - Jump points = nodes where new agents can be spawned
 - Coordinates = (x, y, timestamp) — third value is time, not z-axis
 - Node density = resource richness (0-100%), multiplies CPU cost for Secure actions
