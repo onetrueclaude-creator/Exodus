@@ -30,5 +30,5 @@
 ## Architecture
 
 - `chain/agentic/params.py` is the source of truth for all protocol parameters
-- `spec/whitepaper.md` (v1.3) is the authoritative protocol specification
+- `spec/whitepaper.md` (v1.0) is the authoritative protocol specification
 - Code must align with the whitepaper — if they disagree, the whitepaper wins
