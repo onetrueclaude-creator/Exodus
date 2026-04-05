@@ -385,7 +385,7 @@ export default function GamePage() {
             </button>
           </div>
 
-          {/* Left sidebar — Stellaris-style persistent selection panel */}
+          {/* Left sidebar — Neural Lattice persistent selection panel */}
           {selectedAgent &&
             agents[selectedAgent] &&
             (() => {

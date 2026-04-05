@@ -6,7 +6,7 @@
 
 ## What This Directory Serves
 
-Hosts the main **ZK Agentic Network** web application — the Stellaris-inspired galaxy grid game UI served at `localhost:3000` (dev) or deployed via Docker/Cloudflare.
+Hosts the main **ZK Agentic Network** web application — the Neural Lattice game UI served at `localhost:3000` (dev) or deployed via Docker/Cloudflare.
 
 ## Architectures Contained
 
