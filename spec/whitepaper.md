@@ -1,8 +1,8 @@
-# AGNTC Whitepaper v1.4
+# AGNTC Whitepaper v1.0
 
 > **ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification**
 >
-> Version 1.4 | April 2026
+> Version 1.0 | April 2026
 
 ---
 
@@ -2661,15 +2661,5 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 ---
 
-### Changelog
-
-- **v1.4 (April 2026):** Agent Lockdown Architecture — locked `.claude/` node template with SMT hash verification (Section 18.4), subagent-driven agent families (Section 18.5), subgrid operations on all nodes (Section 18.6). Territory rules: tier-based deployment range with Moore neighborhood adjacency, inactivity decay with model-tier grace periods, homenode relocation mechanics (Sections 19.3-19.6). Anti-monopoly mechanisms. 12 new protocol parameters (Section 22). Neural Lattice terminology finalized — remaining "galaxy" and "Stellaris" references in descriptive text replaced with protocol-native terms. Two new limitations disclosed (Sections 24.8-24.9). Treasury Claude and Founder tiers specified. Spectator vs Active Node two-phase participant state. Claude Code CLI as node software prerequisite.
-- **v1.3 (April 2026):** Internal audit — zero code-spec discrepancies resolved. 6 missing parameters added to reference implementation (`ANNUAL_INFLATION_CEILING`, `SIGNUP_BONUS`, `BASE_CLAIM_COST`, `BASE_CPU_CLAIM_COST`, `CLAIM_COST_FLOOR`, `CLAIM_REQUIRES_ACTIVE_STAKE`). "Galaxy Grid" renamed to "Neural Lattice" globally. `MACHINES_SELL_ALLOWED` replaced with `MACHINES_MIN_SELL_RATIO` (more precise). Inflation ceiling enforcement, BME claim cost function, fee engine wiring, and ring-gating implemented in testnet. Legacy v1 inflation code deprecated. All 50+ protocol parameters verified against testnet code. Migration feasibility confirmed.
-- **v1.2 (March 2026):** BME city economics model, governance scaffolding, Machines Faction permanent accumulator, 5% inflation ceiling, Gini formula correction per Lerman-Yitzhaki.
-- **v1.1 (March 2026):** Academic upgrade — formal PoAIV proofs, adversary model, security games, competitor comparison table, VRF specification, 7 limitations disclosed.
-- **v1.0 (February 2026):** Initial release — protocol architecture, consensus, privacy, staking, token economics, resource allocation, development roadmap.
-
----
-
-*AGNTC Whitepaper v1.4 — ZK Agentic Chain*
+*AGNTC Whitepaper v1.0 — ZK Agentic Chain*
 *Copyright © 2026 ZK Agentic Network. All rights reserved.*
