@@ -18,7 +18,7 @@
 **Step 1: Create the directory**
 
 ```bash
-mkdir -p ./ .claude/hooks
+mkdir -p .claude/hooks
 ```
 
 Expected: no output, directory created.
@@ -183,7 +183,7 @@ exit 0
 **Step 3: Make executable**
 
 ```bash
-chmod +x ./ .claude/hooks/precompact.sh
+chmod +x .claude/hooks/precompact.sh
 ```
 
 Expected: no output.
@@ -221,7 +221,7 @@ echo '{
   "session_id": "test-session-001",
   "transcript_path": "/tmp/mock-transcript.jsonl",
   "cwd": "/tmp"
-}' | bash ./ .claude/hooks/precompact.sh
+}' | bash .claude/hooks/precompact.sh
 ```
 
 Expected output (JSON):
@@ -252,7 +252,7 @@ echo '{
   "session_id": "test-session-002",
   "transcript_path": "/tmp/mock-transcript.jsonl",
   "cwd": "/tmp"
-}' | bash ./ .claude/hooks/precompact.sh
+}' | bash .claude/hooks/precompact.sh
 cat /tmp/prompts.md | grep "prompts-block" | wc -l
 ```
 
@@ -330,7 +330,7 @@ exit 0
 **Step 2: Make executable**
 
 ```bash
-chmod +x ./ .claude/hooks/session-start-compact.sh
+chmod +x .claude/hooks/session-start-compact.sh
 ```
 
 **Step 3: Commit**
@@ -347,7 +347,7 @@ git commit -m "feat(hooks): add SessionStart(compact) hook — injects compacted
 **Step 1: Test with no summary file**
 
 ```bash
-echo '{"cwd": "/tmp"}' | bash ./ .claude/hooks/session-start-compact.sh
+echo '{"cwd": "/tmp"}' | bash .claude/hooks/session-start-compact.sh
 ```
 
 Expected: valid JSON containing `"additional_context"` with fallback message mentioning `compacted.md`.
@@ -367,7 +367,7 @@ We designed the compaction-proof memory mechanism with three files:
 <!-- /summary-block -->
 EOF
 
-echo '{"cwd": "/tmp"}' | bash ./ .claude/hooks/session-start-compact.sh
+echo '{"cwd": "/tmp"}' | bash .claude/hooks/session-start-compact.sh
 ```
 
 Expected: valid JSON with `"additionalContext"` containing the summary content and a note about `compacted.md` and `prompts.md`.
@@ -375,7 +375,7 @@ Expected: valid JSON with `"additionalContext"` containing the summary content a
 **Step 3: Verify JSON is valid**
 
 ```bash
-echo '{"cwd": "/tmp"}' | bash ./ .claude/hooks/session-start-compact.sh | python3 -m json.tool > /dev/null && echo "VALID JSON" || echo "INVALID JSON"
+echo '{"cwd": "/tmp"}' | bash .claude/hooks/session-start-compact.sh | python3 -m json.tool > /dev/null && echo "VALID JSON" || echo "INVALID JSON"
 ```
 
 Expected: `VALID JSON`
@@ -415,7 +415,7 @@ Add a `"hooks"` top-level key to `.claude/settings.json`. The final file should 
         "hooks": [
           {
             "type": "command",
-            "command": "bash ./ .claude/hooks/precompact.sh",
+            "command": "bash .claude/hooks/precompact.sh",
             "timeout": 30
           }
         ]
@@ -427,7 +427,7 @@ Add a `"hooks"` top-level key to `.claude/settings.json`. The final file should 
         "hooks": [
           {
             "type": "command",
-            "command": "bash ./ .claude/hooks/session-start-compact.sh",
+            "command": "bash .claude/hooks/session-start-compact.sh",
             "timeout": 10
           }
         ]
@@ -440,7 +440,7 @@ Add a `"hooks"` top-level key to `.claude/settings.json`. The final file should 
 **Step 3: Verify the JSON is valid**
 
 ```bash
-python3 -m json.tool ./ .claude/settings.json > /dev/null && echo "VALID" || echo "INVALID"
+python3 -m json.tool .claude/settings.json > /dev/null && echo "VALID" || echo "INVALID"
 ```
 
 Expected: `VALID`
@@ -461,7 +461,7 @@ git commit -m "feat(hooks): register PreCompact and SessionStart(compact) hooks 
 
 **Step 1: Append the three memory files**
 
-Add to the end of `./ .gitignore`:
+Add to the end of `.gitignore`:
 
 ```
 # Compaction memory (local only — never commit)
@@ -473,9 +473,9 @@ prompts.md
 **Step 2: Verify they are now ignored**
 
 ```bash
-echo "test" > ./ compacted.md
-git -C .  status --short | grep compacted.md || echo "CORRECTLY IGNORED"
-rm ./ compacted.md
+echo "test" > compacted.md
+git -C . status --short | grep compacted.md || echo "CORRECTLY IGNORED"
+rm compacted.md
 ```
 
 Expected: `CORRECTLY IGNORED`
@@ -496,7 +496,7 @@ git commit -m "chore: gitignore compacted.md, compacted-summary.md, prompts.md"
 
 **Step 1: Read current CLAUDE.md**
 
-Read `./ CLAUDE.md` to find the best insertion point (after Workflow section, before Skills).
+Read `CLAUDE.md` to find the best insertion point (after Workflow section, before Skills).
 
 **Step 2: Add Compaction Memory section**
 
@@ -576,10 +576,10 @@ echo '{
   "session_id": "e2e-test-001",
   "transcript_path": "/tmp/e2e-transcript.jsonl",
   "cwd": "/tmp"
-}' | bash ./ .claude/hooks/precompact.sh
+}' | bash .claude/hooks/precompact.sh
 
 # Run SessionStart hook
-echo '{"cwd": "/tmp"}' | bash ./ .claude/hooks/session-start-compact.sh
+echo '{"cwd": "/tmp"}' | bash .claude/hooks/session-start-compact.sh
 ```
 
 **Step 2: Verify all three outputs**
@@ -587,7 +587,7 @@ echo '{"cwd": "/tmp"}' | bash ./ .claude/hooks/session-start-compact.sh
 ```bash
 echo "=== compacted.md ===" && cat /tmp/compacted.md
 echo "=== prompts.md ===" && cat /tmp/prompts.md
-echo "=== SessionStart output ===" && echo '{"cwd": "/tmp"}' | bash ./ .claude/hooks/session-start-compact.sh | python3 -m json.tool
+echo "=== SessionStart output ===" && echo '{"cwd": "/tmp"}' | bash .claude/hooks/session-start-compact.sh | python3 -m json.tool
 ```
 
 Expected:
@@ -604,7 +604,7 @@ rm /tmp/e2e-transcript.jsonl /tmp/compacted.md /tmp/prompts.md /tmp/compacted-su
 **Step 4: Final commit check**
 
 ```bash
-git -C .  log --oneline -6
+git -C . log --oneline -6
 ```
 
 Expected: 4-5 new commits visible (hooks, settings, gitignore, CLAUDE.md).

@@ -117,7 +117,7 @@ Add a top-level `"hooks"` key alongside existing `"permissions"` and `"enabledPl
       "hooks": [
         {
           "type": "command",
-          "command": "bash ./ .claude/hooks/precompact.sh",
+          "command": "bash .claude/hooks/precompact.sh",
           "timeout": 30
         }
       ]
@@ -129,7 +129,7 @@ Add a top-level `"hooks"` key alongside existing `"permissions"` and `"enabledPl
       "hooks": [
         {
           "type": "command",
-          "command": "bash ./ .claude/hooks/session-start-compact.sh",
+          "command": "bash .claude/hooks/session-start-compact.sh",
           "timeout": 10
         }
       ]

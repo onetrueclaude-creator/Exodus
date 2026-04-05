@@ -973,7 +973,7 @@ And remove the `MacroCellRenderData` import if it was used only for minigrid.
 ### Step 2: Verify the app compiles
 
 ```bash
-cd .  && npx next build 2>&1 | head -30
+cd . && npx next build 2>&1 | head -30
 ```
 
 Or just check the dev server at `http://localhost:8080/game` for errors.

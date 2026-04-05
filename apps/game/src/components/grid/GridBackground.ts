@@ -44,7 +44,7 @@ function buildCellFactionMap(range: number, nodes: BlockNode[]): Record<string, 
 }
 
 /**
- * Draws the background for the galaxy grid.
+ * Draws the background for the Neural Lattice grid.
  *
  * Every cell is Voronoi-assigned to the nearest faction arm node.
  * - Arm-path cells for visible factions: faction color tint + bright dot

@@ -5,7 +5,7 @@ export interface GridPosition {
 
 export type FogLevel = "clear" | "hazy" | "fogged" | "hidden";
 
-/** Cell coordinate in the galaxy grid (integer units, origin at genesis center) */
+/** Cell coordinate in the Neural Lattice grid (integer units, origin at genesis center) */
 export interface CellCoord {
   cx: number;
   cy: number;
@@ -39,7 +39,7 @@ export interface BlockNode {
 }
 
 /**
- * A grid node is any cell on the galaxy grid that is not on a faction arm.
+ * A grid node is any cell on the Neural Lattice that is not on a faction arm.
  * Users mine these cells (costs CPU) then claim them (costs AGNTC) to build territory.
  * Territory must be adjacent to the user's faction arm or an already-owned grid node.
  */
@@ -53,7 +53,7 @@ export interface GridNode {
   mineCpuCost: number; // CPU energy spent to mine this node
 }
 
-/** Full galaxy state — snapshot of all blocknodes, grid nodes, and visible factions */
+/** Full network state — snapshot of all blocknodes, grid nodes, and visible factions */
 export interface GalaxyState {
   blocknodes: Record<string, BlockNode>; // keyed by blocknode id (arm nodes)
   gridNodes: Record<string, GridNode>; // keyed by "grid-{cx}-{cy}" (territory nodes)

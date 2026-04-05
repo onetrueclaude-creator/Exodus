@@ -1,12 +1,12 @@
 /**
- * Smart Empire Placement — Stellaris/Civ5-inspired starting position selection.
+ * Smart Empire Placement — Neural Lattice-style starting position selection.
  *
  * Scores unclaimed nodes by density, volume, and neighborhood quality.
  * Returns the best candidates for the user's homenode.
  *
  * Algorithm based on:
  *   - Civ5: composite fertility score per tile (density + volume + connectivity)
- *   - Stellaris: avoid edges, prefer nodes with 2-4 connections, guarantee resources nearby
+ *   - Neural Lattice: avoid edges, prefer nodes with 2-4 connections, guarantee resources nearby
  *   - Both: pick highest-scoring node in a well-distributed region
  */
 
@@ -59,7 +59,7 @@ function scoreNode(
     ? neighbors.reduce((sum, n) => sum + (n.density ?? 0), 0) / neighborCount
     : 0;
 
-  // Connectivity bonus: 2-6 neighbors is ideal (like Stellaris hyperlane balance)
+  // Connectivity bonus: 2-6 neighbors is ideal for Neural Lattice node connectivity
   const connectBonus = neighborCount >= 2 && neighborCount <= 6 ? 1.0
     : neighborCount > 6 ? 0.8
     : 0.5; // isolated

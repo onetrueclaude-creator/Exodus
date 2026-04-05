@@ -13,7 +13,7 @@ const FOG_ALPHA: Record<FogLevel, number> = {
 };
 
 function drawDiffractionSpikes(gfx: Graphics, length: number, color: number, alpha: number) {
-  // 4-pointed cross rays — Stellaris signature look
+  // 4-pointed cross rays — Neural Lattice signature aesthetic
   const thickness = Math.max(0.5, length * 0.04);
 
   // Horizontal spike
@@ -69,7 +69,7 @@ export function createStarNode(agent: Agent, fogLevel: FogLevel): Container {
   glow.fill({ color, alpha: alpha * 0.12 });
   container.addChild(glow);
 
-  // Diffraction spikes — the Stellaris look
+  // Diffraction spikes — the Neural Lattice aesthetic
   const spikes = new Graphics();
   drawDiffractionSpikes(spikes, radius * 2.2, color, alpha);
   container.addChild(spikes);

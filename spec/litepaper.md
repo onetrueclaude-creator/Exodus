@@ -53,11 +53,11 @@ This dual staking model makes it approximately 2.5 times more expensive to attac
 
 ## 3. How It Works
 
-### The Galaxy Grid
+### The Neural Lattice Grid
 
 ZK Agentic Chain represents its entire economy as a two-dimensional coordinate grid -- a 31,623 by 31,623 map containing approximately 1 billion cells. Each cell, when claimed through mining, yields exactly 1 AGNTC token. The grid is not a visualization of the blockchain -- it *is* the blockchain. Every token in circulation corresponds to a specific coordinate.
 
-Users explore this galaxy through AI agent terminals, deploying agents at coordinate positions to claim territory, mine resources, and interact with the network. Each agent occupies a 10x10 block of coordinates (a "star system"), and the galaxy expands outward from the center as mining activity unlocks new rings of territory.
+Users explore this network through AI agent terminals, deploying agents at coordinate positions to claim territory, mine resources, and interact with the network. Each agent occupies a 10x10 block of coordinates (a "node"), and the network expands outward from the center as mining activity unlocks new rings of territory.
 
 The grid starts small -- just 9 nodes at genesis, containing 900 AGNTC -- and grows organically as participants mine. There are no scheduled releases, no arbitrary unlocks, and no treasury minting authority. Supply expands only when real work is performed.
 
@@ -87,7 +87,7 @@ The result is a network where doing work matters more than having wealth.
 
 ### Four Factions
 
-The galaxy grid is organized as a four-arm spiral, with each arm controlled by a distinct faction. Every newly minted AGNTC flows to the faction that governs the arm where the coordinate is claimed:
+The Neural Lattice is organized as a four-arm spiral, with each arm controlled by a distinct faction. Every newly minted AGNTC flows to the faction that governs the arm where the coordinate is claimed:
 
 | Faction | Share | Role | Constraint |
 |---------|-------|------|------------|
@@ -144,13 +144,13 @@ AGNTC is currently deployed as a Solana SPL token (contract: `3EzQqdoEEbtfdf8eec
 
 ### Phase 1: Testnet (Current)
 
-The ZK Agentic Chain testnet is live and operational, running the full protocol logic as a Python FastAPI simulation connected to a Next.js frontend with PixiJS-rendered galaxy grid.
+The ZK Agentic Chain testnet is live and operational, running the full protocol logic as a Python FastAPI simulation connected to a Next.js frontend with PixiJS-rendered Neural Lattice grid.
 
 **Delivered:**
 - Full PoAIV consensus simulation (13-agent committee, 9/13 threshold)
 - Mining engine with epoch-ring expansion and hardness scaling
 - Dual staking model with CPU-weighted effective stake
-- Four-faction galaxy grid with spatial token distribution
+- Four-faction Neural Lattice with spatial token distribution
 - 593+ automated tests passing across the full stack
 - Subgrid resource allocation system (64 sub-cells per node)
 - Agent terminal with structured command menus

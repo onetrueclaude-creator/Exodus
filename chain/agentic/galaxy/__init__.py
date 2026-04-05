@@ -1,1 +1,1 @@
-"""Galaxy grid layer — Stellaris-style 2D map with star system mining."""
+"""Neural Lattice layer — 2D coordinate grid with node-based mining."""
