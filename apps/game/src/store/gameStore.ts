@@ -65,7 +65,7 @@ interface GameState {
   stateRoot: string;
   nextBlockIn: number;
 
-  // Galaxy / blocknode state (arm nodes — faction infrastructure)
+  // Neural Lattice / blocknode state (arm nodes — faction infrastructure)
   blocknodes: Record<string, BlockNode>;
   // Grid node territory (user-claimable cells off the arm)
   gridNodes: Record<string, GridNode>;
