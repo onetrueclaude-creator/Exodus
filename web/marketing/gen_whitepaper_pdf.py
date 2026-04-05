@@ -1,4 +1,4 @@
-"""Generate v1.2 whitepaper PDF from vault/whitepaper.md (markdown → PDF)."""
+"""Generate v1.4 whitepaper PDF from spec/whitepaper.md (markdown → PDF)."""
 import re
 from fpdf import FPDF
 
@@ -171,7 +171,7 @@ def render_title_page(pdf):
     pdf.ln(15)
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(120, 120, 120)
-    pdf.cell(0, 7, "Version 1.2  |  March 2026", align="C")
+    pdf.cell(0, 7, "Version 1.4  |  April 2026", align="C")
     pdf.ln(7)
     pdf.cell(0, 7, "zkagentic.ai", align="C")
 
@@ -492,7 +492,7 @@ def main():
     import pathlib
     repo_root = pathlib.Path(__file__).resolve().parent.parent.parent
     whitepaper_path = str(repo_root / "spec" / "whitepaper.md")
-    output_path = str(repo_root / "web" / "marketing" / "AGNTC-Whitepaper-v1.3.pdf")
+    output_path = str(repo_root / "web" / "marketing" / "AGNTC-Whitepaper-v1.4.pdf")
 
     print("Parsing whitepaper markdown...")
     blocks = parse_markdown(whitepaper_path)
@@ -540,7 +540,7 @@ def main():
     pdf.ln(5)
     pdf.set_font("Helvetica", "I", 8)
     pdf.set_text_color(150, 150, 150)
-    pdf.cell(0, 5, "AGNTC Whitepaper v1.2  |  March 2026", align="C")
+    pdf.cell(0, 5, "AGNTC Whitepaper v1.4  |  April 2026", align="C")
     pdf.ln(5)
     pdf.cell(0, 5, "Copyright 2026 ZK Agentic Chain. All rights reserved.", align="C")
 
