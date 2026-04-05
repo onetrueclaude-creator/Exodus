@@ -19,7 +19,7 @@ read_count: 0
 
 | Check | Method | Pass Criteria |
 |-------|--------|--------------|
-| PixiJS canvas | Manual or Playwright screenshot | Galaxy grid renders, nodes visible, no blank canvas |
+| PixiJS canvas | Manual or Playwright screenshot | Neural Lattice renders, nodes visible, no blank canvas |
 | 60fps target | Chrome DevTools Performance tab | No frame drops below 30fps on mid-range hardware |
 | Hydration | Browser console | Zero hydration mismatch warnings |
 | Memory | Chrome DevTools Memory tab | No unbounded growth over 5-minute session |

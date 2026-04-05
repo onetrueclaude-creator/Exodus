@@ -12,7 +12,7 @@ All source lives under `apps/zkagenticnetwork/`:
 
 | Path | Contents |
 |------|----------|
-| `src/components/` | React components (galaxy grid, terminal, dock panels, resource bar, onboarding) |
+| `src/components/` | React components (Neural Lattice grid, terminal, dock panels, resource bar, onboarding) |
 | `src/store/` | Zustand stores (game state, UI state, chain state) |
 | `src/services/` | ChainService interface + implementations (TestnetChainService, MockChainService) |
 | `src/hooks/` | Custom React hooks (game realtime, wallet, auth) |

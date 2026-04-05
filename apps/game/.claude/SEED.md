@@ -30,7 +30,7 @@ Game UI child of Exodus — the Next.js 16 + React 19 + PixiJS 8 client for the 
 |-------|-----------|
 | Framework | Next.js 16 (App Router, standalone output) |
 | Language | TypeScript 5, React 19 |
-| Rendering | PixiJS 8 (2D galaxy grid canvas) |
+| Rendering | PixiJS 8 (2D Neural Lattice canvas) |
 | State | Zustand 5 |
 | Auth | NextAuth v5 (Google OAuth, JWT, Prisma adapter) |
 | DB | PostgreSQL 16 via Prisma 7 (auth cache only) |
