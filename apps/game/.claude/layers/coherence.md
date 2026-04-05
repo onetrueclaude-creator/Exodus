@@ -8,7 +8,7 @@ read_count: 0
 
 ## Identity
 
-ZkAgenticNetwork is the player's window into the blockchain. It translates raw chain state — blocks, transactions, stakes, claims — into a living galaxy that players can explore, command, and grow.
+ZkAgenticNetwork is the player's window into the blockchain. It translates raw chain state — blocks, transactions, stakes, claims — into a living network that players can explore, command, and grow.
 
 The game client does not own the truth. The blockchain owns the truth. This child renders the truth as an interactive Neural Lattice experience.
 
@@ -32,4 +32,4 @@ Static HTML + JS dashboard. Both the monitor and this game client consume the sa
 - **Game over dashboard**: The UI should invite exploration, not present tables
 - **Dark crypto aesthetic**: Deep backgrounds, glowing accents, glass morphism
 - **Progressive disclosure**: Simple actions first, advanced options behind sub-menus
-- **Responsive to chain state**: When a block is mined, the galaxy should feel it (subtle animations, counter updates, new connections appearing)
+- **Responsive to chain state**: When a block is mined, the network should feel it (subtle animations, counter updates, new connections appearing)

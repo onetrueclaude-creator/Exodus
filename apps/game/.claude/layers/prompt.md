@@ -10,7 +10,7 @@ ZkAgenticNetwork is the game UI child. It builds and maintains the Next.js 16 ga
 
 ## Responsibilities
 
-1. **Galaxy Grid** — Render the 2D galaxy map using PixiJS 8. Star systems, connections, factions, node density overlays, coordinate labels, camera pan/zoom.
+1. **Neural Lattice** — Render the 2D network grid using PixiJS 8. Nodes, connections, factions, node density overlays, coordinate labels, camera pan/zoom.
 
 2. **Agent Terminal** — The command interface for interacting with deployed agents. Deploy Agent, Blockchain Protocols (Secure, Write/Read Data, Transact, Stats), Adjust Securing Operations Rate, Adjust Network Parameters, Settings.
 
@@ -18,7 +18,7 @@ ZkAgenticNetwork is the game UI child. It builds and maintains the Next.js 16 ga
 
 4. **Resource Bar** — Top bar showing CPU Energy (yellow), Secured Chains (green with +/- deltas), AGNTC balance, Data Frags. Subscription-tier themed.
 
-5. **Onboarding Flow** — Landing (/) with Google OAuth, /onboard (unique username), /subscribe (tier selection), /game (galaxy grid).
+5. **Onboarding Flow** — Landing (/) with Google OAuth, /onboard (unique username), /subscribe (tier selection), /game (Neural Lattice).
 
 6. **Chain Integration** — `ChainService` interface consumed via `TestnetChainService` (FastAPI at :8080 or api.zkagentic.ai) or `MockChainService` (offline fallback). Blockchain is truth; DB is auth cache.
 

@@ -9,7 +9,7 @@ Gamified social media dApp where users explore a 2D Neural Lattice, communicate 
 ## Tech Stack
 - **Framework:** Next.js 16 (App Router, server mode with `output: 'standalone'`)
 - **Language:** TypeScript 5, React 19
-- **Rendering:** PixiJS 8 (2D galaxy grid canvas)
+- **Rendering:** PixiJS 8 (2D Neural Lattice canvas)
 - **State:** Zustand 5
 - **Auth:** NextAuth v5 (Google OAuth, JWT strategy, Prisma adapter)
 - **Database:** PostgreSQL 16 via Prisma 7 (Docker Compose for local dev)
@@ -53,7 +53,7 @@ Gamified social media dApp where users explore a 2D Neural Lattice, communicate 
 - When a service makes multiple sequential `fetch` calls, each must be covered by its own `mockResolvedValueOnce` in test setup
 
 ## Key Concepts (Neural Lattice)
-- Galaxy = the full network grid (dynamic bounds, grows with epoch rings)
+- Neural Lattice = the full network grid (dynamic bounds, grows with epoch rings)
 - Empire = a user's total territory
 - Star system = an individual agent (Opus/Sonnet/Haiku tier), base 10x10 coordinate blocks
 - CPU Energy = CPU deployed to maintaining the grid (yellow resource)

@@ -14,7 +14,7 @@ Priorities ordered by importance. When trade-offs arise, higher beats lower.
 
 The Neural Lattice metaphor must work. Players explore the network grid and nodes, not wallets and ledgers. Every interaction should feel like a strategy game, not a blockchain dashboard.
 
-- Galaxy grid renders smoothly and is explorable (pan, zoom, click)
+- Neural Lattice renders smoothly and is explorable (pan, zoom, click)
 - Agent terminal feels like commanding a starship, not filling forms
 - Resource bar communicates game state at a glance
 - Onboarding is seamless: Google login, username, tier, play
