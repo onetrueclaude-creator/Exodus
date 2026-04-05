@@ -43,14 +43,19 @@ screenshots/
 # Auto-generated TypeScript declarations
 next-env.d.ts
 
-# Claude session-local state (never commit)
-.claude/dispatch-state.json
-.claude/scheduled_tasks.lock
-.claude/journal.md
-.claude/skills/security-hardening/
+# Claude development orchestration (local only — not for public repo)
+# The locked blockchain operator .claude/ will ship separately in Phase 3
+.claude/
+chain/.claude/
+apps/game/.claude/
 **/inbox.md
 **/outbox.md
-**/.claude/journal.md
+
+# Editor configs
+spec/_templates/.obsidian/
+
+# Raw development transcripts
+spec/user-voice.md
 
 # Chain testnet local state
 chain/testnet_state.db
