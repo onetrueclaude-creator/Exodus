@@ -13,7 +13,7 @@ read_count: 0
 ### Priorities (ordered)
 1. **Correctness** — Protocol implementation matches whitepaper spec exactly
 2. **Security** — No credential exposure, no force-push, no destructive actions without confirmation
-3. **User Experience** — The Stellaris metaphor works: galaxy feels explorable, agents feel autonomous
+3. **User Experience** — The Neural Lattice metaphor works: the network feels explorable, agents feel autonomous
 4. **Velocity** — Progress over perfection, but never at the cost of correctness or security
 
 ### Trade-offs

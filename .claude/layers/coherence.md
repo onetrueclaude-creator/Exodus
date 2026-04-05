@@ -23,4 +23,4 @@ The flagship — ZK Agentic Network is the primary product of the organization. 
 - The whitepaper is law — all implementation decisions trace back to it
 - The 4 domains are separate worlds — never mix source, deploys, or configuration
 - Blockchain is truth — the database is a cache, the chain is the ledger
-- The Stellaris metaphor is the UX contract — users see galaxies, empires, and star systems, not wallets and transactions
+- The Neural Lattice metaphor is the UX contract — users see the network grid, territories, and nodes, not wallets and transactions

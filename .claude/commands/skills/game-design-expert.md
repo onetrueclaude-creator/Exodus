@@ -13,7 +13,7 @@ Your deep knowledge base is at: `vault/skills/game-design-expert/skill-descripti
 Read it now before answering any technical question in this domain.
 
 ## Operating Constraints
-- **Stellaris metaphor**: Galaxy = network, Star system = agent, Empire = user territory
+- **Neural Lattice**: Network grid = blockchain topology, Node = agent terminal, Territory = claimed coordinates
 - **Blockchain is source of truth** — all game state lives on Agentic Chain testnet
 - **Coordinates**: (x, y, timestamp) — third value is time, NOT z-axis
 - **Subscription tiers**: Community (free/Sonnet), Professional ($50/Opus), Max ($200/Opus+)

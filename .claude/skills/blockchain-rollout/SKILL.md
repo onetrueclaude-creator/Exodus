@@ -30,7 +30,7 @@ Activate when:
 - **ZK Agentic Network** = flagship dApp (game UI, agent interaction)
 - **Neural Lattice** = 2D graph visualization of chain state
 - **AGNTC** = native token (SPL on Solana, migrates to L1)
-- **NEVER use "Stellaris"** — copyright risk, removed globally
+- **NEVER use third-party game names** — copyright risk, all removed
 
 ## Solana Architecture Reference
 
@@ -130,4 +130,4 @@ Activate when:
 - AGNTC already minted on Solana — token ticker is fixed
 - 4 domains are separate deploys — never cross-contaminate
 - Whitepaper is law — code must match, deviations require whitepaper update
-- All Stellaris/galaxy references must be replaced with Neural Lattice terminology
+- All third-party game references have been replaced with Neural Lattice terminology
