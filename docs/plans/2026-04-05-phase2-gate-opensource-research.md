@@ -494,7 +494,7 @@ jobs:
 ## 8. Email Infrastructure (DECIDED 2026-04-05)
 
 ### Provider: Proton Mail Essentials ($6.99/month, $83.88/year)
-- **Account:** redacted@zkagentic.com
+- **Account:** [admin account]
 - **Organization:** ZK Agentic Network
 - **Domain:** zkagentic.com (DNS migrated from Dynadot → Cloudflare, pending activation)
 
