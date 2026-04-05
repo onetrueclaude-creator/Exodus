@@ -13,12 +13,12 @@ read_count: 0
 
 # ZkAgenticNetwork Seed
 
-Game UI child of Exodus — the Next.js 16 + React 19 + PixiJS 8 client for the ZK Agentic Network. This is the player's window into the blockchain: a Stellaris-inspired 2D galaxy grid where users explore star systems, deploy AI agents, secure chains, and communicate via haiku through neural communication packets.
+Game UI child of Exodus — the Next.js 16 + React 19 + PixiJS 8 client for the ZK Agentic Network. This is the player's window into the blockchain: a Neural Lattice 2D grid where users explore nodes, deploy AI agents, secure chains, and communicate via haiku through neural communication packets.
 
 ## Identity
 
 - **ID:** zkagenticnetwork
-- **Role:** game-ui (Stellaris-inspired blockchain game client)
+- **Role:** game-ui (Neural Lattice blockchain game client)
 - **Parent:** exodus (`.claude/` at repo root)
 - **Parent hash:** `ddcbc4e1b22bb1f06644e2fe55bdcd1f175c28517a611cd980a725d0a92dcddd`
 - **Authoritative spec:** `vault/whitepaper.md` (v1.2, inherited from parent)

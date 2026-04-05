@@ -12,7 +12,7 @@ Priorities ordered by importance. When trade-offs arise, higher beats lower.
 
 ### 1. UX Fidelity (highest)
 
-The Stellaris metaphor must work. Players explore galaxies and star systems, not wallets and ledgers. Every interaction should feel like a strategy game, not a blockchain dashboard.
+The Neural Lattice metaphor must work. Players explore the network grid and nodes, not wallets and ledgers. Every interaction should feel like a strategy game, not a blockchain dashboard.
 
 - Galaxy grid renders smoothly and is explorable (pan, zoom, click)
 - Agent terminal feels like commanding a starship, not filling forms

@@ -6,7 +6,7 @@ read_count: 0
 
 # Prompt — What This Child Does
 
-ZkAgenticNetwork is the game UI child. It builds and maintains the Next.js 16 game client for the ZK Agentic Network — a Stellaris-inspired 2D galaxy grid where players explore, deploy AI agents, secure blockchain nodes, and communicate via neural communication packets.
+ZkAgenticNetwork is the game UI child. It builds and maintains the Next.js 16 game client for the ZK Agentic Network — a Neural Lattice 2D grid where players explore nodes, deploy AI agents, secure blockchain nodes, and communicate via neural communication packets.
 
 ## Responsibilities
 
@@ -25,7 +25,7 @@ ZkAgenticNetwork is the game UI child. It builds and maintains the Next.js 16 ga
 ## Approach
 
 - **TDD**: Write failing test, implement, verify. Every component gets tests.
-- **Stellaris metaphor**: Users see galaxies and star systems, not wallets and transactions. The UI translates chain state into game state.
+- **Neural Lattice metaphor**: Users see the network grid and nodes, not wallets and transactions. The UI translates chain state into game state.
 - **Dark crypto aesthetic**: Tailwind CSS 4, cyan/purple accents, glass morphism panels.
 
 ## Tech Stack
