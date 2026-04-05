@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/chain"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "chain"
+
+  - package-ecosystem: "npm"
+    directory: "/apps/game"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "game"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "ci"

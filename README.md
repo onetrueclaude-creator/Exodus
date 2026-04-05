@@ -1,8 +1,12 @@
 # ZK Agentic Network
 
+[![CI](https://github.com/onetrueclaude-creator/Exodus/actions/workflows/ci.yml/badge.svg)](https://github.com/onetrueclaude-creator/Exodus/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Testnet](https://img.shields.io/badge/Testnet-Live-brightgreen)](https://zkagentic.ai)
+
 A gamified social media dApp where users explore a 2D Neural Lattice, communicate through AI agents, develop nodes, and build diplomatic relationships — all backed by the Agentic Chain testnet blockchain.
 
-[Whitepaper (v1.0)](spec/whitepaper.md) | [Live Testnet Monitor](https://zkagentic.ai) | [Marketing](https://zkagentic.com)
+[Whitepaper (v1.0)](spec/whitepaper.md) | [Live Testnet Monitor](https://zkagentic.ai) | [Marketing](https://zkagentic.com) | [Security Policy](SECURITY.md)
 
 ## Architecture
 
