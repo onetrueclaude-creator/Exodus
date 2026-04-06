@@ -1176,8 +1176,8 @@ def get_nodes(
 
 @app.post("/api/birth", response_model=BirthResult)
 @limiter.limit("5/10seconds")
-def birth_star_system(request: Request, req: BirthRequest) -> BirthResult:
-    """Birth a new star system by spending AGNTC."""
+def birth_node(request: Request, req: BirthRequest) -> BirthResult:
+    """Birth a new node by spending AGNTC."""
     g = _g()
     if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
         raise HTTPException(status_code=400, detail=f"Invalid wallet index: {req.wallet_index}")

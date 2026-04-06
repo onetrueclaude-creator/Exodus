@@ -1,4 +1,4 @@
-"""Mining engine for galaxy grid — organic growth model (v2)."""
+"""Mining engine for Neural Lattice grid — organic growth model (v2)."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field

@@ -343,8 +343,8 @@ class TestWhitepaperLedgerParams:
         )
 
     def test_max_planets_per_system(self):
-        assert params.MAX_PLANETS_PER_SYSTEM == 10, (
-            "Whitepaper: MAX_PLANETS_PER_SYSTEM = 10"
+        assert params.MAX_PLANETS_PER_NODE == 10, (
+            "Whitepaper: MAX_PLANETS_PER_NODE = 10"
         )
 
 

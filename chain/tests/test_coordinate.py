@@ -1,4 +1,4 @@
-"""Tests for galaxy coordinate model and star system generation."""
+"""Tests for lattice coordinate model and node generation."""
 import pytest
 
 
@@ -61,18 +61,18 @@ class TestGridCoordinate:
         assert len({a, b}) == 1
 
 
-class TestStarSystem:
+class TestNode:
     def test_seed_deterministic(self):
-        from agentic.lattice.coordinate import star_system_seed
-        s1 = star_system_seed(0, 0)
-        s2 = star_system_seed(0, 0)
+        from agentic.lattice.coordinate import node_seed
+        s1 = node_seed(0, 0)
+        s2 = node_seed(0, 0)
         assert s1 == s2
 
     def test_seed_varies_by_coordinate(self):
-        from agentic.lattice.coordinate import star_system_seed
-        s1 = star_system_seed(0, 0)
-        s2 = star_system_seed(1, 0)
-        s3 = star_system_seed(0, 1)
+        from agentic.lattice.coordinate import node_seed
+        s1 = node_seed(0, 0)
+        s2 = node_seed(1, 0)
+        s3 = node_seed(0, 1)
         assert s1 != s2
         assert s1 != s3
 

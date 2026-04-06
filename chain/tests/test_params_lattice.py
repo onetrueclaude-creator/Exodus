@@ -1,8 +1,8 @@
-"""Tests for galaxy grid parameters — v2 organic growth model."""
+"""Tests for Neural Lattice grid parameters — v2 organic growth model."""
 import pytest
 
 
-class TestGalaxyParams:
+class TestLatticeParams:
     def test_block_time_one_minute(self):
         from agentic.params import BLOCK_TIME_MS
         assert BLOCK_TIME_MS == 60_000
@@ -23,8 +23,8 @@ class TestGalaxyParams:
         assert BASE_MINING_RATE_PER_BLOCK > 0
 
     def test_planets(self):
-        from agentic.params import MAX_PLANETS_PER_SYSTEM
-        assert MAX_PLANETS_PER_SYSTEM == 10
+        from agentic.params import MAX_PLANETS_PER_NODE
+        assert MAX_PLANETS_PER_NODE == 10
 
     def test_energy_cost(self):
         from agentic.params import ENERGY_PER_CLAIM

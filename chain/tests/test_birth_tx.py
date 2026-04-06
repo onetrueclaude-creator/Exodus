@@ -1,4 +1,4 @@
-"""Tests for BirthTx — star system creation transaction."""
+"""Tests for BirthTx — node creation transaction."""
 import pytest
 from agentic.ledger.state import LedgerState
 from agentic.ledger.transaction import validate_mint, MintTx
@@ -162,7 +162,7 @@ class TestBirthTx:
             slot=1,
         )
         result = validate_birth(tx, state, registry, allocator)
-        assert result.records_created == 2  # star system + change
+        assert result.records_created == 2  # node + change
 
         change_found = False
         for i in range(initial_count, state.record_count):

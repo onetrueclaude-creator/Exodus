@@ -1,4 +1,4 @@
-"""Tests for galaxy storage content types."""
+"""Tests for lattice storage content types."""
 import pytest
 
 

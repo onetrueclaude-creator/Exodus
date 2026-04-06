@@ -1,4 +1,4 @@
-"""Tests for galaxy claim transactions and registry."""
+"""Tests for lattice node claim transactions and registry."""
 import pytest
 
 
