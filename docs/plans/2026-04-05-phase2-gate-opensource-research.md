@@ -516,7 +516,7 @@ jobs:
 
 ### DNS Setup (in progress)
 1. [x] Proton account created
-2. [x] Domain verification TXT record: `protonmail-verification=d0a6b1cbc6979de3237deb157ffd940673248b64`
+2. [x] Domain verification TXT record: `protonmail-verification=[redacted]`
 3. [x] zkagentic.com DNS migrated from Dynadot to Cloudflare (nameserver propagation pending)
 4. [ ] Add TXT record in Cloudflare → verify in Proton
 5. [ ] Add MX records (Proton's mail servers)
