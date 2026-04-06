@@ -64,7 +64,7 @@ class TestOwnershipProof:
 class TestReadRequest:
     def test_public_read_no_proof(self):
         from agentic.actions.types import ReadRequest, ReadTarget
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         req = ReadRequest(
             coordinate=GridCoordinate(x=0, y=0),
             slot=1,
@@ -78,7 +78,7 @@ class TestReadRequest:
 class TestEditRequest:
     def test_requires_proof(self):
         from agentic.actions.types import EditRequest, EditTarget, OwnershipProof
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         proof = OwnershipProof(
             claim_commitment=b"\x01" * 32,
             claim_position=0,
@@ -102,8 +102,8 @@ class TestEditRequest:
 class TestStoreRequest:
     def test_create(self):
         from agentic.actions.types import StoreRequest, OwnershipProof
-        from agentic.galaxy.content import ContentType
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.content import ContentType
+        from agentic.lattice.coordinate import GridCoordinate
         proof = OwnershipProof(
             claim_commitment=b"\x01" * 32,
             claim_position=0,
@@ -126,7 +126,7 @@ class TestStoreRequest:
 class TestVerifyRequest:
     def test_create(self):
         from agentic.actions.types import VerifyRequest, VerifyTarget, OwnershipProof
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         proof = OwnershipProof(
             claim_commitment=b"\x01" * 32,
             claim_position=0,
@@ -149,7 +149,7 @@ class TestVerifyRequest:
 class TestVoteRequest:
     def test_create(self):
         from agentic.actions.types import VoteRequest, VoteChoice, OwnershipProof
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         proof = OwnershipProof(
             claim_commitment=b"\x01" * 32,
             claim_position=0,
@@ -171,7 +171,7 @@ class TestVoteRequest:
 class TestSecureRequest:
     def test_create(self):
         from agentic.actions.types import SecureRequest, SecurityAction, OwnershipProof
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         proof = OwnershipProof(
             claim_commitment=b"\x01" * 32,
             claim_position=0,
@@ -195,7 +195,7 @@ class TestActionRequest:
         from agentic.actions.types import (
             ActionType, CallerType, ActionRequest, ReadRequest, ReadTarget,
         )
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         read_req = ReadRequest(
             coordinate=GridCoordinate(x=0, y=0),
             slot=1,

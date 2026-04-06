@@ -343,8 +343,8 @@ class TestWhitepaperLedgerParams:
         )
 
     def test_max_planets_per_system(self):
-        assert params.MAX_PLANETS_PER_SYSTEM == 10, (
-            "Whitepaper: MAX_PLANETS_PER_SYSTEM = 10"
+        assert params.MAX_PLANETS_PER_NODE == 10, (
+            "Whitepaper: MAX_PLANETS_PER_NODE = 10"
         )
 
 
@@ -473,14 +473,14 @@ class TestMathHardnessCurve:
 
     def test_hardness_formula(self):
         """H(N) = 16 * N for rings 1-100."""
-        from agentic.galaxy.epoch import EpochTracker
+        from agentic.lattice.epoch import EpochTracker
         tracker = EpochTracker()
         for n in [1, 5, 10, 50, 100]:
             assert tracker.hardness(n) == 16 * n
 
     def test_hardness_at_ring_zero(self):
         """Ring 0 → hardness = 16 (floor at max(ring, 1))."""
-        from agentic.galaxy.epoch import EpochTracker
+        from agentic.lattice.epoch import EpochTracker
         tracker = EpochTracker()
         assert tracker.hardness(0) == 16  # max(0, 1) * 16
 
@@ -510,7 +510,7 @@ class TestMathHardnessCurve:
 
     def test_epoch_threshold_matches(self):
         """EpochTracker.threshold(N) = 4N(N+1)."""
-        from agentic.galaxy.epoch import EpochTracker
+        from agentic.lattice.epoch import EpochTracker
         tracker = EpochTracker()
         for n in [1, 5, 10, 50]:
             assert tracker.threshold(n) == 4.0 * n * (n + 1)
@@ -688,8 +688,8 @@ class TestFixT001InflationCeiling:
 
     def test_ceiling_caps_yields(self):
         """Yields are scaled down when they would exceed the per-block ceiling."""
-        from agentic.galaxy.mining import MiningEngine, _BLOCKS_PER_YEAR
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.mining import MiningEngine, _BLOCKS_PER_YEAR
+        from agentic.lattice.coordinate import GridCoordinate
 
         engine = MiningEngine()
         # Create a claim with maximum density at ring 1 (hardness=16)
@@ -699,7 +699,7 @@ class TestFixT001InflationCeiling:
         # Compute ceiling: (900 + 0) * 0.05 / blocks_per_year
         max_per_block = (params.GENESIS_SUPPLY * params.ANNUAL_INFLATION_CEILING) / _BLOCKS_PER_YEAR
 
-        from agentic.galaxy.epoch import EpochTracker
+        from agentic.lattice.epoch import EpochTracker
         tracker = EpochTracker()
 
         yields = engine.compute_block_yields(claims, epoch_tracker=tracker)
@@ -712,9 +712,9 @@ class TestFixT001InflationCeiling:
 
     def test_ceiling_allows_small_yields(self):
         """Yields below the ceiling pass through unscaled."""
-        from agentic.galaxy.mining import MiningEngine, _BLOCKS_PER_YEAR
-        from agentic.galaxy.coordinate import GridCoordinate
-        from agentic.galaxy.epoch import EpochTracker
+        from agentic.lattice.mining import MiningEngine, _BLOCKS_PER_YEAR
+        from agentic.lattice.coordinate import GridCoordinate
+        from agentic.lattice.epoch import EpochTracker
 
         engine = MiningEngine()
         tracker = EpochTracker()
@@ -732,35 +732,35 @@ class TestFixT002ClaimCost:
 
     def test_claim_cost_ring1_full_density(self):
         """At ring 1, density 1.0: cost = BASE_CLAIM_COST."""
-        from agentic.galaxy.claims import claim_cost
+        from agentic.lattice.claims import claim_cost
         agntc, cpu = claim_cost(ring=1, density=1.0)
         assert agntc == params.BASE_CLAIM_COST
         assert cpu == params.BASE_CPU_CLAIM_COST
 
     def test_claim_cost_outer_ring(self):
         """Outer rings are cheaper (city model)."""
-        from agentic.galaxy.claims import claim_cost
+        from agentic.lattice.claims import claim_cost
         cost_r1, _ = claim_cost(ring=1, density=1.0)
         cost_r5, _ = claim_cost(ring=5, density=1.0)
         assert cost_r5 < cost_r1
 
     def test_claim_cost_floor(self):
         """Cost never drops below CLAIM_COST_FLOOR."""
-        from agentic.galaxy.claims import claim_cost
+        from agentic.lattice.claims import claim_cost
         agntc, cpu = claim_cost(ring=10000, density=0.01)
         assert agntc >= params.CLAIM_COST_FLOOR
         assert cpu >= params.CLAIM_COST_FLOOR
 
     def test_claim_cost_zero_density(self):
         """Zero density → cost floored at CLAIM_COST_FLOOR."""
-        from agentic.galaxy.claims import claim_cost
+        from agentic.lattice.claims import claim_cost
         agntc, cpu = claim_cost(ring=1, density=0.0)
         assert agntc == params.CLAIM_COST_FLOOR
         assert cpu == params.CLAIM_COST_FLOOR
 
     def test_claim_cost_formula(self):
         """Exact formula: BASE × density / ring."""
-        from agentic.galaxy.claims import claim_cost
+        from agentic.lattice.claims import claim_cost
         agntc, cpu = claim_cost(ring=2, density=0.8)
         expected_agntc = params.BASE_CLAIM_COST * 0.8 / 2  # 40.0
         expected_cpu = params.BASE_CPU_CLAIM_COST * 0.8 / 2  # 20.0

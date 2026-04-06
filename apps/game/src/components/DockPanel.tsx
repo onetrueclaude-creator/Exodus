@@ -3,7 +3,7 @@
 import { useEffect, useCallback } from 'react';
 import { useGameStore } from '@/store';
 import type { DockPanelId } from '@/store/gameStore';
-import GalaxyChatRoom from '@/components/GalaxyChatRoom';
+import NetworkChatRoom from '@/components/NetworkChatRoom';
 import AgentChat from '@/components/AgentChat';
 import TimechainStats from '@/components/TimechainStats';
 import TimeRewind from '@/components/TimeRewind';
@@ -57,7 +57,7 @@ export default function DockPanel({
       case 'nodes':
         return <SecuredNodes onFocusNode={onFocusNode} />;
       case 'chat':
-        return <GalaxyChatRoom onSend={onHaikuSubmit} />;
+        return <NetworkChatRoom onSend={onHaikuSubmit} />;
       case 'terminal':
       case 'deploy':
         return currentAgent ? (

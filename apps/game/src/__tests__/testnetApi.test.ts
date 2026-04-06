@@ -5,14 +5,14 @@ const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
 
 // Import after mocking
-import { birthStarSystem, setIntro, sendMessage, getMessages } from '@/services/testnetApi';
+import { birthNode, setIntro, sendMessage, getMessages } from '@/services/testnetApi';
 
 describe('testnetApi', () => {
   beforeEach(() => {
     mockFetch.mockReset();
   });
 
-  describe('birthStarSystem', () => {
+  describe('birthNode', () => {
     it('sends POST with wallet_index in JSON body', async () => {
       const mockResult = {
         coordinate: { x: 142, y: -87 },
@@ -26,7 +26,7 @@ describe('testnetApi', () => {
         json: () => Promise.resolve(mockResult),
       });
 
-      const result = await birthStarSystem(3);
+      const result = await birthNode(3);
 
       expect(mockFetch).toHaveBeenCalledWith(
         'http://localhost:8080/api/birth',
@@ -46,7 +46,7 @@ describe('testnetApi', () => {
         statusText: 'Bad Request',
       });
 
-      await expect(birthStarSystem(99)).rejects.toThrow('Testnet API POST /api/birth');
+      await expect(birthNode(99)).rejects.toThrow('Testnet API POST /api/birth');
     });
   });
 

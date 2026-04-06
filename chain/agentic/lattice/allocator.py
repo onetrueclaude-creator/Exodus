@@ -1,8 +1,8 @@
 """CoordinateAllocator — ring-based territory expansion from home star."""
 from __future__ import annotations
 
-from agentic.galaxy.coordinate import GridCoordinate, GridBounds, GLOBAL_BOUNDS
-from agentic.galaxy.claims import ClaimRegistry
+from agentic.lattice.coordinate import GridCoordinate, GridBounds, GLOBAL_BOUNDS
+from agentic.lattice.claims import ClaimRegistry
 
 
 class CoordinateAllocator:

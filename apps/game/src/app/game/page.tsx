@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import GalaxyGrid from "@/components/GalaxyGrid";
+import LatticeGrid from "@/components/LatticeGrid";
 import AgentPanel from "@/components/AgentPanel";
 import AgentDropdown from "@/components/AgentDropdown";
 import QuickActionMenu from "@/components/QuickActionMenu";
@@ -25,7 +25,7 @@ import { getClarityLevel } from "@/lib/diplomacy";
 import type { SubscriptionTier } from "@/types";
 import type { FactionId } from "@/types";
 import { SUBSCRIPTION_PLANS } from "@/types/subscription";
-import { getFrontierBlocknode } from "@/lib/galaxy";
+import { getFrontierBlocknode } from "@/lib/lattice";
 import { visualToChain } from "@/services/testnetChainService";
 
 /** Map subscription tier to empire border color — matches faction blocknode colors */
@@ -60,7 +60,7 @@ export default function GamePage() {
   const setChainMode = useGameStore((s) => s.setChainMode);
   const isInitializing = useGameStore((s) => s.isInitializing);
   const setInitializing = useGameStore((s) => s.setInitializing);
-  const initGalaxy = useGameStore((s) => s.initGalaxy);
+  const initLattice = useGameStore((s) => s.initLattice);
   const claimBlocknode = useGameStore((s) => s.claimBlocknode);
   const setCurrentUserFaction = useGameStore((s) => s.setCurrentUserFaction);
   const revealFaction = useGameStore((s) => s.revealFaction);
@@ -145,7 +145,7 @@ export default function GamePage() {
       setChainMode(online ? "testnet" : "mock", 0);
 
       // Initialize Neural Lattice — start with genesis block only; grid expands with each block cycle
-      initGalaxy(1);
+      initLattice(1);
 
       // Dev seed: pre-claim Treasury and Founder genesis nodes for dev/test purposes.
       // visibleFactions is NOT updated by claimBlocknode — controlled explicitly via revealFaction below.
@@ -337,7 +337,7 @@ export default function GamePage() {
       <div className="flex-1 relative overflow-hidden">
         {/* Network tab — always mounted, hidden when inactive to preserve PixiJS canvas */}
         <div className={`absolute inset-0 ${activeTab !== "network" ? "hidden" : ""}`}>
-          <GalaxyGrid onSelectAgent={setSelectedAgent} onDeselect={() => setSelectedAgent(null)} />
+          <LatticeGrid onSelectAgent={setSelectedAgent} onDeselect={() => setSelectedAgent(null)} />
 
           {/* Top bar: Agents dropdown only (TimeRewind moved to dock) */}
           <div className="absolute top-4 left-4 z-10 flex items-start gap-2">

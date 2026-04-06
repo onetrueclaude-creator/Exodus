@@ -1,10 +1,10 @@
-"""Coordinate model and deterministic star system generation."""
+"""Coordinate model and deterministic node generation."""
 from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
 
-from agentic.params import MAX_PLANETS_PER_SYSTEM, NODE_GRID_SPACING
+from agentic.params import MAX_PLANETS_PER_NODE, NODE_GRID_SPACING
 
 
 class GridBounds:
@@ -37,7 +37,7 @@ GLOBAL_BOUNDS = GridBounds(initial_radius=2 * NODE_GRID_SPACING)  # ring 1 + fog
 
 @dataclass(frozen=True)
 class GridCoordinate:
-    """2D spatial coordinate on the galaxy grid.
+    """2D spatial coordinate on the Neural Lattice grid.
 
     x, y validated against bounds (default: GLOBAL_BOUNDS).
     The z-axis (time) is the slot number from Record.birth_slot.
@@ -81,18 +81,18 @@ class GridCoordinate:
         return cls(x=x_offset + b.min_val, y=y_offset + b.min_val, bounds=b)
 
 
-def star_system_seed(x: int, y: int) -> bytes:
-    """Deterministic 32-byte seed for a star system at (x, y)."""
+def node_seed(x: int, y: int) -> bytes:
+    """Deterministic 32-byte seed for a node at (x, y)."""
     return hashlib.sha256(f"starsystem:{x}:{y}".encode()).digest()
 
 
 def resource_density(x: int, y: int) -> float:
     """Resource density at (x, y), range [0.0, 1.0]. Deterministic."""
-    seed = star_system_seed(x, y)
+    seed = node_seed(x, y)
     return int.from_bytes(seed[:4], "big") / 0xFFFFFFFF
 
 
 def storage_slots(x: int, y: int) -> int:
-    """Number of planet storage slots at (x, y). Range [1, MAX_PLANETS_PER_SYSTEM]."""
+    """Number of planet storage slots at (x, y). Range [1, MAX_PLANETS_PER_NODE]."""
     density = resource_density(x, y)
-    return max(1, round(density * MAX_PLANETS_PER_SYSTEM))
+    return max(1, round(density * MAX_PLANETS_PER_NODE))

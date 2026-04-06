@@ -1,4 +1,4 @@
-import type { FactionId, BlockNode, GalaxyState } from "@/types";
+import type { FactionId, BlockNode, LatticeState } from "@/types";
 import { getArmCell, getSecureStrength } from "@/lib/spiral";
 
 const FACTIONS: FactionId[] = ["community", "treasury", "founder", "pro-max"];
@@ -89,10 +89,10 @@ export function getBlocknodeAtCell(
 }
 
 /**
- * Builds the full GalaxyState from scratch for a given chain height.
+ * Builds the full LatticeState from scratch for a given chain height.
  * visibleFactions is initially empty — factions become visible when nodes are claimed.
  */
-export function buildGalaxyState(totalBlocks: number): GalaxyState {
+export function buildLatticeState(totalBlocks: number): LatticeState {
   return {
     blocknodes: buildAllBlocknodes(totalBlocks),
     gridNodes: {},

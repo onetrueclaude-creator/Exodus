@@ -4,13 +4,13 @@ import pytest
 
 class TestMintBlockRewards:
     def test_method_exists(self):
-        from agentic.galaxy.mining import MiningEngine
+        from agentic.lattice.mining import MiningEngine
         engine = MiningEngine()
         assert hasattr(engine, "mint_block_rewards")
 
     def test_creates_records(self):
-        from agentic.galaxy.mining import MiningEngine
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.mining import MiningEngine
+        from agentic.lattice.coordinate import GridCoordinate
         from agentic.ledger.state import LedgerState
         engine = MiningEngine()
         state = LedgerState()
@@ -24,8 +24,8 @@ class TestMintBlockRewards:
         assert state.record_count > initial_count
 
     def test_record_values_match_yields(self):
-        from agentic.galaxy.mining import MiningEngine
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.mining import MiningEngine
+        from agentic.lattice.coordinate import GridCoordinate
         from agentic.ledger.state import LedgerState
         engine = MiningEngine()
         state = LedgerState()
@@ -43,8 +43,8 @@ class TestMintBlockRewards:
             assert r.value > 0
 
     def test_state_root_changes(self):
-        from agentic.galaxy.mining import MiningEngine
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.mining import MiningEngine
+        from agentic.lattice.coordinate import GridCoordinate
         from agentic.ledger.state import LedgerState
         engine = MiningEngine()
         state = LedgerState()
@@ -58,7 +58,7 @@ class TestMintBlockRewards:
         assert root_before != root_after
 
     def test_zero_yield_skipped(self):
-        from agentic.galaxy.mining import MiningEngine
+        from agentic.lattice.mining import MiningEngine
         from agentic.ledger.state import LedgerState
         engine = MiningEngine()
         state = LedgerState()
@@ -69,7 +69,7 @@ class TestMintBlockRewards:
         assert state.record_count == 0
 
     def test_float_to_int_conversion(self):
-        from agentic.galaxy.mining import MiningEngine
+        from agentic.lattice.mining import MiningEngine
         from agentic.ledger.state import LedgerState
         engine = MiningEngine()
         state = LedgerState()

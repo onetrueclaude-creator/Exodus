@@ -13,8 +13,8 @@ describe('TestnetChainService', () => {
   });
 
   describe('registerAgent (birth)', () => {
-    it('calls birthStarSystem and returns mapped Agent', async () => {
-      vi.mocked(api.birthStarSystem).mockResolvedValueOnce({
+    it('calls birthNode and returns mapped Agent', async () => {
+      vi.mocked(api.birthNode).mockResolvedValueOnce({
         coordinate: { x: 100, y: -50 },
         ring: 2,
         birth_cost: 200,
@@ -24,7 +24,7 @@ describe('TestnetChainService', () => {
 
       const agent = await service.registerAgent('user-123', 'sonnet');
 
-      expect(api.birthStarSystem).toHaveBeenCalledWith(0);
+      expect(api.birthNode).toHaveBeenCalledWith(0);
       expect(agent.tier).toBe('sonnet');
       expect(agent.userId).toBe('user-123');
       expect(agent.position.x).toBeDefined();
@@ -32,7 +32,7 @@ describe('TestnetChainService', () => {
     });
 
     it('propagates API errors', async () => {
-      vi.mocked(api.birthStarSystem).mockRejectedValueOnce(
+      vi.mocked(api.birthNode).mockRejectedValueOnce(
         new Error('Testnet API POST /api/birth: 400 Bad Request'),
       );
 

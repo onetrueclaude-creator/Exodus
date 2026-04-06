@@ -11,7 +11,7 @@ from __future__ import annotations
 import random as _random
 
 from agentic.consensus.validator import Validator
-from agentic.galaxy.coordinate import GridCoordinate, resource_density, storage_slots
+from agentic.lattice.coordinate import GridCoordinate, resource_density, storage_slots
 from agentic.params import (
     BASE_BIRTH_COST,
     GENESIS_FACTION_MASTERS,
@@ -73,7 +73,7 @@ class MachineAgentBehavior:
         an unclaimed coordinate. Expands global bounds as needed so
         GridCoordinate validation passes.
         """
-        from agentic.galaxy.coordinate import GLOBAL_BOUNDS
+        from agentic.lattice.coordinate import GLOBAL_BOUNDS
 
         state = self._state
         ox, oy = self.origin
@@ -143,7 +143,7 @@ class MachineAgentBehavior:
         state.viewing_keys[wallet.public_key] = wallet.viewing_key
 
         # Expand global bounds to include new coordinate
-        from agentic.galaxy.coordinate import GLOBAL_BOUNDS
+        from agentic.lattice.coordinate import GLOBAL_BOUNDS
         GLOBAL_BOUNDS.expand_to_contain(tx, ty)
 
         # Deduct cost

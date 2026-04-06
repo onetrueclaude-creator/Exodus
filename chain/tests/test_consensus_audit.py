@@ -36,7 +36,7 @@ from agentic.verification.pipeline import VerificationPipeline
 from agentic.verification.task import TaskType
 from agentic.verification.verdict import Verdict
 from agentic.actions.types import OwnershipProof, VoteRequest, VoteChoice
-from agentic.galaxy.coordinate import GridCoordinate
+from agentic.lattice.coordinate import GridCoordinate
 from agentic.economics.slashing import SlashingEngine, SlashReason
 
 

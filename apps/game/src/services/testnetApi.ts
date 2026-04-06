@@ -69,7 +69,7 @@ export function mineBlock(): Promise<MineResult> {
 }
 
 /** POST /api/birth — birth a new star system by spending AGNTC */
-export function birthStarSystem(walletIndex: number): Promise<BirthResult> {
+export function birthNode(walletIndex: number): Promise<BirthResult> {
   return post<BirthResult>('/api/birth', { wallet_index: walletIndex });
 }
 

@@ -64,9 +64,9 @@ import random as _random
 
 from agentic.consensus.block import Block, BlockStatus
 from agentic.consensus.validator import Validator
-from agentic.galaxy.allocator import CoordinateAllocator
-from agentic.galaxy.claims import claim_cost
-from agentic.galaxy.coordinate import GridCoordinate, resource_density, storage_slots
+from agentic.lattice.allocator import CoordinateAllocator
+from agentic.lattice.claims import claim_cost
+from agentic.lattice.coordinate import GridCoordinate, resource_density, storage_slots
 from agentic.ledger.transaction import BirthTx, validate_birth
 from agentic.params import (
     BASE_BIRTH_COST, BLOCK_TIME_MS, NODE_GRID_SPACING,
@@ -809,7 +809,7 @@ def get_resources(wallet_index: int) -> ResourceState:
             break
 
     epoch_hardness = g.epoch_tracker.hardness(g.epoch_tracker.current_ring)
-    from agentic.galaxy.subgrid import SubcellType
+    from agentic.lattice.subgrid import SubcellType
     out = alloc.compute_output(density=density, epoch_hardness=epoch_hardness)
 
     totals = g.resource_totals.get(owner, {
@@ -849,7 +849,7 @@ def assign_subgrid(request: Request, wallet_index: int, req: SubgridAssignReques
     alloc = g.subgrid_allocators.get(owner)
     if alloc is None:
         raise HTTPException(status_code=404, detail="No subgrid for this wallet")
-    from agentic.galaxy.subgrid import SubcellType
+    from agentic.lattice.subgrid import SubcellType
     total_requested = req.secure + req.develop + req.research + req.storage
     if total_requested > 64:
         raise HTTPException(
@@ -1176,8 +1176,8 @@ def get_nodes(
 
 @app.post("/api/birth", response_model=BirthResult)
 @limiter.limit("5/10seconds")
-def birth_star_system(request: Request, req: BirthRequest) -> BirthResult:
-    """Birth a new star system by spending AGNTC."""
+def birth_node(request: Request, req: BirthRequest) -> BirthResult:
+    """Birth a new node by spending AGNTC."""
     g = _g()
     if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
         raise HTTPException(status_code=400, detail=f"Invalid wallet index: {req.wallet_index}")

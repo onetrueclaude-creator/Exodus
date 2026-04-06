@@ -5,7 +5,7 @@ import type { AgentTier } from "@/types";
 import type { FactionId, BlockNode, GridNode } from "@/types";
 import type { ResearchProgress } from "@/types/research";
 import { RESEARCH_TREES } from "@/lib/research";
-import { buildBlocknodesForBlock, buildAllBlocknodes } from "@/lib/galaxy";
+import { buildBlocknodesForBlock, buildAllBlocknodes } from "@/lib/lattice";
 
 /** CPU Energy deducted per turn for each owned blocknode (maintenance cost) */
 export const NODE_CPU_PER_TURN = 1;
@@ -136,7 +136,7 @@ interface GameState {
   allocateResearchEnergy: (researchId: string, amount: number) => boolean;
   unlockSkill: (skillId: string) => void;
   setMaxDeployTier: (tier: AgentTier) => void;
-  initGalaxy: (totalBlocks: number) => void;
+  initLattice: (totalBlocks: number) => void;
   addBlocknodesForBlock: (blockIndex: number) => void;
   claimBlocknode: (nodeId: string, userId: string) => boolean;
   secureBlocknode: (nodeId: string, cpuAmount: number) => void;
@@ -602,7 +602,7 @@ export const useGameStore = create<GameState>((set) => ({
 
   setMaxDeployTier: (tier) => set({ maxDeployTier: tier }),
 
-  initGalaxy: (totalBlocks) =>
+  initLattice: (totalBlocks) =>
     set({
       blocknodes: buildAllBlocknodes(totalBlocks),
       totalBlocksMined: totalBlocks,

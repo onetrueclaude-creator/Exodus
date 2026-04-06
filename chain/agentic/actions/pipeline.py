@@ -9,8 +9,8 @@ from agentic.actions.types import (
     StoreRequest, VerifyRequest, VoteRequest, SecureRequest,
     ReadTarget,
 )
-from agentic.galaxy.claims import ClaimRegistry
-from agentic.galaxy.coordinate import resource_density, storage_slots
+from agentic.lattice.claims import ClaimRegistry
+from agentic.lattice.coordinate import resource_density, storage_slots
 from agentic.ledger.state import LedgerState
 
 

@@ -1,10 +1,10 @@
-"""Tests for BirthTx — star system creation transaction."""
+"""Tests for BirthTx — node creation transaction."""
 import pytest
 from agentic.ledger.state import LedgerState
 from agentic.ledger.transaction import validate_mint, MintTx
 from agentic.ledger.crypto import generate_key_pair, hash_tag
-from agentic.galaxy.coordinate import GridCoordinate
-from agentic.galaxy.claims import ClaimRegistry
+from agentic.lattice.coordinate import GridCoordinate
+from agentic.lattice.claims import ClaimRegistry
 from agentic.params import MINT_PROGRAM_ID, BASE_BIRTH_COST
 
 
@@ -30,7 +30,7 @@ class TestBirthTx:
 
     def test_valid_birth(self):
         from agentic.ledger.transaction import BirthTx, validate_birth
-        from agentic.galaxy.allocator import CoordinateAllocator
+        from agentic.lattice.allocator import CoordinateAllocator
         state = LedgerState()
         keys = generate_key_pair(1)
         registry = ClaimRegistry()
@@ -55,7 +55,7 @@ class TestBirthTx:
 
     def test_birth_creates_star_system_record(self):
         from agentic.ledger.transaction import BirthTx, validate_birth
-        from agentic.galaxy.allocator import CoordinateAllocator
+        from agentic.lattice.allocator import CoordinateAllocator
         from agentic.params import BIRTH_PROGRAM_ID
         state = LedgerState()
         keys = generate_key_pair(1)
@@ -90,7 +90,7 @@ class TestBirthTx:
 
     def test_birth_registers_claim(self):
         from agentic.ledger.transaction import BirthTx, validate_birth
-        from agentic.galaxy.allocator import CoordinateAllocator
+        from agentic.lattice.allocator import CoordinateAllocator
         state = LedgerState()
         keys = generate_key_pair(1)
         registry = ClaimRegistry()
@@ -115,7 +115,7 @@ class TestBirthTx:
 
     def test_birth_nullifies_inputs(self):
         from agentic.ledger.transaction import BirthTx, validate_birth
-        from agentic.galaxy.allocator import CoordinateAllocator
+        from agentic.lattice.allocator import CoordinateAllocator
         state = LedgerState()
         keys = generate_key_pair(1)
         registry = ClaimRegistry()
@@ -140,7 +140,7 @@ class TestBirthTx:
 
     def test_birth_returns_change(self):
         from agentic.ledger.transaction import BirthTx, validate_birth
-        from agentic.galaxy.allocator import CoordinateAllocator
+        from agentic.lattice.allocator import CoordinateAllocator
         state = LedgerState()
         keys = generate_key_pair(1)
         registry = ClaimRegistry()
@@ -162,7 +162,7 @@ class TestBirthTx:
             slot=1,
         )
         result = validate_birth(tx, state, registry, allocator)
-        assert result.records_created == 2  # star system + change
+        assert result.records_created == 2  # node + change
 
         change_found = False
         for i in range(initial_count, state.record_count):
@@ -173,7 +173,7 @@ class TestBirthTx:
 
     def test_insufficient_balance_rejected(self):
         from agentic.ledger.transaction import BirthTx, validate_birth
-        from agentic.galaxy.allocator import CoordinateAllocator
+        from agentic.lattice.allocator import CoordinateAllocator
         state = LedgerState()
         keys = generate_key_pair(1)
         registry = ClaimRegistry()
@@ -198,7 +198,7 @@ class TestBirthTx:
 
     def test_double_spend_rejected(self):
         from agentic.ledger.transaction import BirthTx, validate_birth
-        from agentic.galaxy.allocator import CoordinateAllocator
+        from agentic.lattice.allocator import CoordinateAllocator
         state = LedgerState()
         keys = generate_key_pair(1)
         registry = ClaimRegistry()

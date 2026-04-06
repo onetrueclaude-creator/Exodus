@@ -29,7 +29,7 @@ from agentic.params import (
     VERIFIERS_PER_BLOCK,
 )
 from agentic.testnet.genesis import create_genesis
-from agentic.galaxy.coordinate import GLOBAL_BOUNDS, resource_density
+from agentic.lattice.coordinate import GLOBAL_BOUNDS, resource_density
 
 # ── Faction assignments ──────────────────────────────────────────────────────
 

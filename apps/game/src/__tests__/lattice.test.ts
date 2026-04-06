@@ -5,8 +5,8 @@ import {
   buildAllBlocknodes,
   getFrontierBlocknode,
   getBlocknodeAtCell,
-  buildGalaxyState,
-} from "@/lib/galaxy";
+  buildLatticeState,
+} from "@/lib/lattice";
 
 describe("buildGenesisBlocknodes", () => {
   it("returns 4 nodes (one per faction)", () => {
@@ -136,19 +136,19 @@ describe("getBlocknodeAtCell", () => {
   });
 });
 
-describe("buildGalaxyState", () => {
+describe("buildLatticeState", () => {
   it("contains correct total blocks mined", () => {
-    const state = buildGalaxyState(10);
+    const state = buildLatticeState(10);
     expect(state.totalBlocksMined).toBe(10);
   });
 
   it("contains 4×N blocknodes", () => {
-    const state = buildGalaxyState(10);
+    const state = buildLatticeState(10);
     expect(Object.keys(state.blocknodes)).toHaveLength(40);
   });
 
   it("starts with no visible factions", () => {
-    const state = buildGalaxyState(5);
+    const state = buildLatticeState(5);
     expect(state.visibleFactions).toHaveLength(0);
   });
 });

@@ -17,7 +17,7 @@ class TestValidateRequestFields:
     def test_read_request_valid(self):
         from agentic.actions.pipeline import validate_request_fields
         from agentic.actions.types import ActionType, ReadRequest, ReadTarget
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         req = ReadRequest(
             coordinate=GridCoordinate(x=0, y=0), slot=1,
             target=ReadTarget.RESOURCE_DENSITY, planet_index=-1,
@@ -29,7 +29,7 @@ class TestValidateRequestFields:
     def test_edit_without_proof_rejected(self):
         from agentic.actions.pipeline import validate_request_fields
         from agentic.actions.types import ActionType, ReadRequest, ReadTarget
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         req = ReadRequest(
             coordinate=GridCoordinate(x=0, y=0), slot=1,
             target=ReadTarget.RESOURCE_DENSITY, planet_index=-1,
@@ -45,8 +45,8 @@ class TestPipelineDispatch:
         from agentic.actions.types import (
             ActionType, CallerType, ActionRequest, ReadRequest, ReadTarget,
         )
-        from agentic.galaxy.coordinate import GridCoordinate
-        from agentic.galaxy.claims import ClaimRegistry
+        from agentic.lattice.coordinate import GridCoordinate
+        from agentic.lattice.claims import ClaimRegistry
         from agentic.ledger.state import LedgerState
 
         pipeline = ActionPipeline(
@@ -71,8 +71,8 @@ class TestPipelineDispatch:
             ActionType, CallerType, ActionRequest,
             EditRequest, EditTarget, OwnershipProof,
         )
-        from agentic.galaxy.coordinate import GridCoordinate
-        from agentic.galaxy.claims import ClaimRegistry
+        from agentic.lattice.coordinate import GridCoordinate
+        from agentic.lattice.claims import ClaimRegistry
         from agentic.ledger.state import LedgerState
 
         pipeline = ActionPipeline(
@@ -104,8 +104,8 @@ class TestPipelineDispatch:
             ActionType, CallerType, ActionRequest, ReadRequest, ReadTarget,
             OwnershipProof,
         )
-        from agentic.galaxy.coordinate import GridCoordinate
-        from agentic.galaxy.claims import ClaimRegistry
+        from agentic.lattice.coordinate import GridCoordinate
+        from agentic.lattice.claims import ClaimRegistry
         from agentic.ledger.state import LedgerState
 
         pipeline = ActionPipeline(

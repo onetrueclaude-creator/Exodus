@@ -73,7 +73,7 @@ DISPUTE_REVERIFY_MULTIPLIER = 2       # 2x verifiers for re-verification
 
 # Galaxy Grid — dynamic bounds derived from current epoch ring
 # No fixed GRID_MIN/GRID_MAX — grid expands as epochs advance
-MAX_PLANETS_PER_SYSTEM = 10
+MAX_PLANETS_PER_NODE = 10
 CLAIM_PROGRAM_ID = b"agentic_claim"
 STORAGE_PROGRAM_ID = b"agentic_storage"
 

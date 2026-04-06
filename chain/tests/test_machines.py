@@ -17,7 +17,7 @@ from agentic.testnet.machines import MachineAgentBehavior
 def _reset_global_bounds():
     """Save and restore GLOBAL_BOUNDS around each test so expansion
     in machine tests doesn't bleed into other test modules."""
-    from agentic.galaxy.coordinate import GLOBAL_BOUNDS
+    from agentic.lattice.coordinate import GLOBAL_BOUNDS
     saved_min = GLOBAL_BOUNDS.min_val
     saved_max = GLOBAL_BOUNDS.max_val
     yield
@@ -123,7 +123,7 @@ class TestExpandTarget:
         """After (20,0) is claimed, next target is (30,0)."""
         state, machine = _make_behavior()
         # Claim (20, 0) manually
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         wallet = state.wallets[MACHINE_WALLET_INDEX]
         coord = GridCoordinate(x=20, y=0)
         state.claim_registry.register(
@@ -135,7 +135,7 @@ class TestExpandTarget:
         """If another wallet claims (20,0), machine skips to (30,0)."""
         state, machine = _make_behavior()
         other_wallet = state.wallets[5]  # some other wallet
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         coord = GridCoordinate(x=20, y=0)
         state.claim_registry.register(
             owner=other_wallet.public_key, coordinate=coord, stake=100, slot=0)
@@ -156,7 +156,7 @@ class TestExpandClaim:
         result = machine._expand(state)
         assert result is True
         # Check claim exists at (20, 0)
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         claim = state.claim_registry.get_claim_at(GridCoordinate(x=20, y=0))
         assert claim is not None
         assert claim.owner == state.wallets[MACHINE_WALLET_INDEX].public_key
@@ -223,14 +223,14 @@ class TestTick:
         """tick() should auto-expand when accumulated AGNTC >= BASE_BIRTH_COST."""
         state, machine = _make_behavior()
         machine.tick(state, block_reward=BASE_BIRTH_COST + 10)
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         claim = state.claim_registry.get_claim_at(GridCoordinate(x=20, y=0))
         assert claim is not None
 
     def test_tick_no_expand_below_threshold(self):
         state, machine = _make_behavior()
         machine.tick(state, block_reward=50.0)
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         claim = state.claim_registry.get_claim_at(GridCoordinate(x=20, y=0))
         assert claim is None
 
@@ -240,7 +240,7 @@ class TestTick:
         machine.tick(state, block_reward=40.0)
         assert machine.accumulated_agntc == pytest.approx(80.0)
         # Still below threshold
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         assert state.claim_registry.get_claim_at(GridCoordinate(x=20, y=0)) is None
         # Third tick pushes over
         machine.tick(state, block_reward=40.0)
@@ -253,7 +253,7 @@ class TestTick:
         state, machine = _make_behavior()
         machine.tick(state, block_reward=BASE_BIRTH_COST)
         machine.tick(state, block_reward=BASE_BIRTH_COST)
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         assert state.claim_registry.get_claim_at(GridCoordinate(x=20, y=0)) is not None
         assert state.claim_registry.get_claim_at(GridCoordinate(x=30, y=0)) is not None
 

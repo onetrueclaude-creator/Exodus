@@ -14,7 +14,7 @@ from fastapi.testclient import TestClient
 from agentic.testnet.api import app
 from agentic.testnet.genesis import create_genesis
 from agentic.testnet.persistence import init_db, save_state, load_state, clear_state
-from agentic.galaxy.subgrid import SubcellType
+from agentic.lattice.subgrid import SubcellType
 from tests.monitor_crosscheck.conftest import TEST_ADMIN_TOKEN
 
 _ADMIN = {"X-Admin-Token": TEST_ADMIN_TOKEN}
@@ -88,7 +88,7 @@ class TestUserClaimsPersistence:
     """Non-genesis claims survive save → load."""
 
     def test_user_claim_restored(self, fresh_genesis, tmp_db):
-        from agentic.galaxy.coordinate import GridCoordinate, GLOBAL_BOUNDS
+        from agentic.lattice.coordinate import GridCoordinate, GLOBAL_BOUNDS
         g = fresh_genesis
         # Expand bounds first, then register a user claim beyond genesis coords
         GLOBAL_BOUNDS.expand_to_contain(30, 30)
@@ -118,7 +118,7 @@ class TestUserClaimsPersistence:
         assert len(all_claims) == 9  # still exactly 9 genesis claims
 
     def test_user_claim_creates_subgrid_allocator(self, fresh_genesis, tmp_db):
-        from agentic.galaxy.coordinate import GridCoordinate, GLOBAL_BOUNDS
+        from agentic.lattice.coordinate import GridCoordinate, GLOBAL_BOUNDS
         g = fresh_genesis
         GLOBAL_BOUNDS.expand_to_contain(50, 50)
         wallet = g.wallets[20]

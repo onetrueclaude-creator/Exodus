@@ -1,4 +1,4 @@
-"""EpochTracker — mining-driven galaxy grid ring expansion."""
+"""EpochTracker — mining-driven Neural Lattice grid ring expansion."""
 from __future__ import annotations
 
 import math

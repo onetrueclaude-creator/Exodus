@@ -9,17 +9,17 @@ Tests that span multiple layers to verify end-to-end correctness:
 """
 import pytest
 
-from agentic.galaxy.allocator import CoordinateAllocator
-from agentic.galaxy.claims import ClaimRegistry
-from agentic.galaxy.coordinate import (
+from agentic.lattice.allocator import CoordinateAllocator
+from agentic.lattice.claims import ClaimRegistry
+from agentic.lattice.coordinate import (
     GridCoordinate, GridBounds, resource_density, storage_slots,
 )
-from agentic.galaxy.mining import MiningEngine
-from agentic.galaxy.content import validate_storage, StorageTx, ContentType
+from agentic.lattice.mining import MiningEngine
+from agentic.lattice.content import validate_storage, StorageTx, ContentType
 from agentic.economics.staking import StakeRegistry, StakeStatus, WARMUP_EPOCHS, COOLDOWN_EPOCHS
 from agentic.economics.epoch import EpochManager
 from agentic.consensus.validator import Validator
-from agentic.params import MAX_PLANETS_PER_SYSTEM
+from agentic.params import MAX_PLANETS_PER_NODE
 
 
 # ── Birth pipeline: allocator → claim → registry ────────────────────
@@ -172,15 +172,15 @@ class TestCoordinateDeterminism:
         assert d1 == d2
 
     def test_storage_slots_in_range(self):
-        """Storage slots should be in [1, MAX_PLANETS_PER_SYSTEM]."""
+        """Storage slots should be in [1, MAX_PLANETS_PER_NODE]."""
         for x in range(-10, 11):
             for y in range(-10, 11):
                 slots = storage_slots(x, y)
-                assert 1 <= slots <= MAX_PLANETS_PER_SYSTEM
+                assert 1 <= slots <= MAX_PLANETS_PER_NODE
 
     def test_storage_slots_uses_round_not_int(self):
         """Verify round() is used instead of int() for slots calculation."""
-        # With round(), density close to 1.0 can give MAX_PLANETS_PER_SYSTEM
+        # With round(), density close to 1.0 can give MAX_PLANETS_PER_NODE
         # We can't guarantee a specific coordinate has density ~1.0, but
-        # we can verify the formula allows MAX_PLANETS_PER_SYSTEM
-        assert max(1, round(0.95 * MAX_PLANETS_PER_SYSTEM)) == MAX_PLANETS_PER_SYSTEM
+        # we can verify the formula allows MAX_PLANETS_PER_NODE
+        assert max(1, round(0.95 * MAX_PLANETS_PER_NODE)) == MAX_PLANETS_PER_NODE

@@ -234,26 +234,26 @@ describe('PlanetCreator', () => {
   });
 });
 
-/* ── GalaxyChatRoom ───────────────────────────────────── */
+/* ── NetworkChatRoom ───────────────────────────────────── */
 
-describe('GalaxyChatRoom', () => {
-  let GalaxyChatRoom: React.ComponentType<{ onSend: (text: string) => void }>;
+describe('NetworkChatRoom', () => {
+  let NetworkChatRoom: React.ComponentType<{ onSend: (text: string) => void }>;
 
   beforeEach(async () => {
     useGameStore.getState().reset();
-    const mod = await import('@/components/GalaxyChatRoom');
-    GalaxyChatRoom = mod.default;
+    const mod = await import('@/components/NetworkChatRoom');
+    NetworkChatRoom = mod.default;
   });
 
   it('renders input and send button', () => {
-    render(<GalaxyChatRoom onSend={() => {}} />);
+    render(<NetworkChatRoom onSend={() => {}} />);
     expect(screen.getByPlaceholderText('Encode neural packet...')).toBeDefined();
     expect(screen.getByText('Send')).toBeDefined();
   });
 
   it('calls onSend when send button is clicked with text', () => {
     const onSend = vi.fn();
-    render(<GalaxyChatRoom onSend={onSend} />);
+    render(<NetworkChatRoom onSend={onSend} />);
     const input = screen.getByPlaceholderText('Encode neural packet...');
     fireEvent.change(input, { target: { value: 'Hello galaxy' } });
     fireEvent.click(screen.getByText('Send'));
@@ -262,7 +262,7 @@ describe('GalaxyChatRoom', () => {
 
   it('calls onSend on Enter key', () => {
     const onSend = vi.fn();
-    render(<GalaxyChatRoom onSend={onSend} />);
+    render(<NetworkChatRoom onSend={onSend} />);
     const input = screen.getByPlaceholderText('Encode neural packet...');
     fireEvent.change(input, { target: { value: 'Enter test' } });
     fireEvent.keyDown(input, { key: 'Enter' });
@@ -271,13 +271,13 @@ describe('GalaxyChatRoom', () => {
 
   it('does not send empty messages', () => {
     const onSend = vi.fn();
-    render(<GalaxyChatRoom onSend={onSend} />);
+    render(<NetworkChatRoom onSend={onSend} />);
     fireEvent.click(screen.getByText('Send'));
     expect(onSend).not.toHaveBeenCalled();
   });
 
   it('clears input after sending', () => {
-    render(<GalaxyChatRoom onSend={() => {}} />);
+    render(<NetworkChatRoom onSend={() => {}} />);
     const input = screen.getByPlaceholderText('Encode neural packet...') as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'test' } });
     fireEvent.click(screen.getByText('Send'));
@@ -285,7 +285,7 @@ describe('GalaxyChatRoom', () => {
   });
 
   it('can collapse and expand', () => {
-    render(<GalaxyChatRoom onSend={() => {}} />);
+    render(<NetworkChatRoom onSend={() => {}} />);
     // Click collapse button
     fireEvent.click(screen.getByText('▾'));
     // Should show collapsed state with Network Chat label
@@ -293,7 +293,7 @@ describe('GalaxyChatRoom', () => {
   });
 
   it('shows empty state message when no messages', () => {
-    render(<GalaxyChatRoom onSend={() => {}} />);
+    render(<NetworkChatRoom onSend={() => {}} />);
     expect(screen.getByText('No messages yet. Be the first to transmit.')).toBeDefined();
   });
 });

@@ -25,9 +25,9 @@ vi.mock("@solana/wallet-adapter-react", () => ({
 // Mock heavy sub-components used by DockPanel so they don't pull in PixiJS
 // or other browser-only dependencies
 // ---------------------------------------------------------------------------
-vi.mock("@/components/GalaxyChatRoom", () => ({
+vi.mock("@/components/NetworkChatRoom", () => ({
   default: ({ onSend }: { onSend: (t: string) => void }) => (
-    <div data-testid="galaxy-chat-room">
+    <div data-testid="network-chat-room">
       <button onClick={() => onSend("test")}>SendMock</button>
     </div>
   ),
@@ -191,16 +191,16 @@ describe("DockPanel", () => {
 
   it("no floating panel renders when activeDockPanel is null", () => {
     render(<DockPanel {...defaultDockProps} />);
-    expect(screen.queryByTestId("galaxy-chat-room")).toBeNull();
+    expect(screen.queryByTestId("network-chat-room")).toBeNull();
     expect(screen.queryByTestId("secured-nodes")).toBeNull();
     expect(screen.queryByTestId("timechain-stats")).toBeNull();
     expect(screen.queryByTestId("time-rewind")).toBeNull();
   });
 
-  it("GalaxyChatRoom panel renders when chat is active", () => {
+  it("NetworkChatRoom panel renders when chat is active", () => {
     render(<DockPanel {...defaultDockProps} />);
     fireEvent.click(screen.getByRole("button", { name: "Network Chat" }));
-    expect(screen.getByTestId("galaxy-chat-room")).toBeDefined();
+    expect(screen.getByTestId("network-chat-room")).toBeDefined();
   });
 
   it("SecuredNodes panel renders when nodes is active", () => {
@@ -244,9 +244,9 @@ describe("DockPanel", () => {
   it("panel disappears when toggle closes it", () => {
     render(<DockPanel {...defaultDockProps} />);
     fireEvent.click(screen.getByRole("button", { name: "Network Chat" }));
-    expect(screen.getByTestId("galaxy-chat-room")).toBeDefined();
+    expect(screen.getByTestId("network-chat-room")).toBeDefined();
     fireEvent.click(screen.getByRole("button", { name: "Network Chat" }));
-    expect(screen.queryByTestId("galaxy-chat-room")).toBeNull();
+    expect(screen.queryByTestId("network-chat-room")).toBeNull();
   });
 
   // ── Keyboard close ────────────────────────────────────────────────────────
@@ -597,7 +597,7 @@ describe("Integration — dock panel and tab navigation independence", () => {
     expect(useGameStore.getState().activeDockPanel).toBe("timeRewind");
     // Only the Time Rewind panel should be visible
     expect(screen.getByTestId("time-rewind")).toBeDefined();
-    expect(screen.queryByTestId("galaxy-chat-room")).toBeNull();
+    expect(screen.queryByTestId("network-chat-room")).toBeNull();
     expect(screen.queryByTestId("secured-nodes")).toBeNull();
   });
 

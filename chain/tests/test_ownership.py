@@ -6,7 +6,7 @@ class TestBuildOwnershipProof:
     def test_builds_valid_proof(self):
         from agentic.actions.ownership import build_ownership_proof
         from agentic.actions.types import ActionType
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         from agentic.ledger.crypto import generate_key_pair
 
         keys = generate_key_pair(seed=42)
@@ -24,7 +24,7 @@ class TestBuildOwnershipProof:
     def test_different_nonces_produce_different_nullifiers(self):
         from agentic.actions.ownership import build_ownership_proof
         from agentic.actions.types import ActionType
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         from agentic.ledger.crypto import generate_key_pair
 
         keys = generate_key_pair(seed=42)
@@ -46,7 +46,7 @@ class TestVerifyOwnershipProof:
     def test_valid_proof_passes(self):
         from agentic.actions.ownership import build_ownership_proof, verify_ownership_proof
         from agentic.actions.types import ActionType
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         from agentic.ledger.crypto import generate_key_pair
 
         keys = generate_key_pair(seed=42)
@@ -65,7 +65,7 @@ class TestVerifyOwnershipProof:
     def test_wrong_pubkey_fails(self):
         from agentic.actions.ownership import build_ownership_proof, verify_ownership_proof
         from agentic.actions.types import ActionType
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         from agentic.ledger.crypto import generate_key_pair
 
         keys = generate_key_pair(seed=42)
@@ -86,7 +86,7 @@ class TestVerifyOwnershipProof:
     def test_wrong_action_type_fails(self):
         from agentic.actions.ownership import build_ownership_proof, verify_ownership_proof
         from agentic.actions.types import ActionType
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         from agentic.ledger.crypto import generate_key_pair
 
         keys = generate_key_pair(seed=42)
@@ -107,7 +107,7 @@ class TestNullifierUniqueness:
     def test_same_action_different_slots_different_nullifiers(self):
         from agentic.actions.ownership import build_ownership_proof
         from agentic.actions.types import ActionType
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         from agentic.ledger.crypto import generate_key_pair
 
         keys = generate_key_pair(seed=42)
