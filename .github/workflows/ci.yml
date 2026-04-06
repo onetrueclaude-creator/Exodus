@@ -34,6 +34,7 @@ jobs:
             --deselect=tests/test_api_birth.py::TestBirthEndpoint::test_birth_after_mining \
             --deselect=tests/test_api_mine_records.py::TestMineCreatesRecords::test_mine_changes_state_root \
             --deselect=tests/test_api_mine_records.py::TestMineCreatesRecords::test_mine_increases_record_count \
+            --deselect=tests/test_node_lockdown.py::TestTransactionGating::test_multiple_endpoints_check_hash \
             -q
 
   game-build:

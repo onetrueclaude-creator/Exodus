@@ -123,3 +123,9 @@ BASE_DEVELOP_RATE = 1.0             # Dev Points/block at level 1
 BASE_RESEARCH_RATE = 0.5            # Research Points/block at level 1
 BASE_STORAGE_RATE = 1.0             # Storage units/block at level 1
 LEVEL_EXPONENT = 0.8                # output = base * level^LEVEL_EXPONENT
+
+# ── Agent Lockdown — Node Hash Verification ─────────────────
+CANONICAL_CLAUDE_HASH = "8def0b2a2e4a19107ebdb2093df248b62ed35a607862921bf1a4e17364b3be3d"
+NODE_HASH_LENGTH = 64
+NODE_SESSION_TIMEOUT_S = 3600
+MAX_SESSIONS_PER_WALLET = 1

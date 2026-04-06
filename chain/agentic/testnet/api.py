@@ -69,9 +69,15 @@ from agentic.lattice.claims import claim_cost
 from agentic.lattice.coordinate import GridCoordinate, resource_density, storage_slots
 from agentic.ledger.transaction import BirthTx, validate_birth
 from agentic.params import (
-    BASE_BIRTH_COST, BLOCK_TIME_MS, NODE_GRID_SPACING,
+    BASE_BIRTH_COST, BLOCK_TIME_MS, CANONICAL_CLAUDE_HASH, NODE_GRID_SPACING,
 )
 from agentic.testnet.genesis import GenesisState, create_genesis
+from agentic.testnet.node_session import (
+    verify_hash,
+    register_session,
+    get_session,
+    clear_sessions,
+)
 from agentic.verification.agent import VerificationAgent, AgentState
 from agentic.verification.dispute import DisputeOutcome
 
@@ -346,6 +352,35 @@ class ResourceState(BaseModel):
     total_research_points: float
     total_storage_units: float
     subgrid: SubgridAllocationInfo
+
+
+class NodeRegisterRequest(BaseModel):
+    wallet_index: int
+    claude_hash: str
+    coordinates: list
+
+
+class NodeRegisterResponse(BaseModel):
+    status: str
+    session_id: str
+    expires_at: str
+
+
+class NodeVerifyRequest(BaseModel):
+    claude_hash: str
+
+
+class NodeVerifyResponse(BaseModel):
+    valid: bool
+    canonical_hash: str
+
+
+class NodeSessionResponse(BaseModel):
+    active: bool
+    session_id: Optional[str] = None
+    registered_at: Optional[str] = None
+    expires_at: Optional[str] = None
+    claude_hash: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -841,6 +876,7 @@ def get_resources(wallet_index: int) -> ResourceState:
 @limiter.limit("5/10seconds")
 def assign_subgrid(request: Request, wallet_index: int, req: SubgridAssignRequest) -> dict:
     """Reassign subgrid cells across the 4 resource types."""
+    _check_node_hash(request)
     g = _g()
     if wallet_index < 0 or wallet_index >= len(g.wallets):
         raise HTTPException(status_code=404, detail="Wallet not found")
@@ -992,6 +1028,7 @@ def claim_node(request: Request, req: ClaimNodeRequest) -> ClaimNodeResult:
     + verification agent so it participates in PoAIV consensus and earns
     mining rewards automatically.
     """
+    _check_node_hash(request)
     g = _g()
     if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
         raise HTTPException(status_code=400, detail=f"Invalid wallet index: {req.wallet_index}")
@@ -1178,6 +1215,7 @@ def get_nodes(
 @limiter.limit("5/10seconds")
 def birth_node(request: Request, req: BirthRequest) -> BirthResult:
     """Birth a new node by spending AGNTC."""
+    _check_node_hash(request)
     g = _g()
     if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
         raise HTTPException(status_code=400, detail=f"Invalid wallet index: {req.wallet_index}")
@@ -1278,6 +1316,7 @@ def reset_testnet(
     _allocator = CoordinateAllocator()
     from agentic.testnet.machines import MachineAgentBehavior
     _machine_behavior = MachineAgentBehavior(state=_genesis)
+    clear_sessions()
     g = _genesis
     return ResetResult(
         state_root=g.ledger_state.get_state_root().hex(),
@@ -1414,6 +1453,65 @@ def get_messages(x: int, y: int) -> List[MessageInfo]:
     key = (x, y)
     messages = g.message_history.get(key, [])
     return [MessageInfo(**m) for m in messages]
+
+
+# ---------------------------------------------------------------------------
+# Node lockdown — hash verification, session registration, gating
+# ---------------------------------------------------------------------------
+
+
+def _check_node_hash(request: Request):
+    """Verify X-Node-Hash header if present. Raises 403 if invalid."""
+    node_hash = request.headers.get("X-Node-Hash")
+    if node_hash is not None and not verify_hash(node_hash):
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid node software — hash does not match canonical template",
+        )
+
+
+@app.post("/api/node/verify", response_model=NodeVerifyResponse)
+def verify_node_hash(req: NodeVerifyRequest) -> NodeVerifyResponse:
+    """Stateless hash check — does the provided hash match the canonical template?"""
+    return NodeVerifyResponse(
+        valid=verify_hash(req.claude_hash),
+        canonical_hash=CANONICAL_CLAUDE_HASH,
+    )
+
+
+@app.post("/api/node/register", response_model=NodeRegisterResponse)
+def register_node(req: NodeRegisterRequest) -> NodeRegisterResponse:
+    """Create a node session (403 on hash mismatch, 409 on duplicate)."""
+    try:
+        session = register_session(
+            wallet_index=req.wallet_index,
+            claude_hash=req.claude_hash,
+            coordinates=tuple(req.coordinates),
+        )
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    return NodeRegisterResponse(
+        status="registered",
+        session_id=session.session_id,
+        expires_at=session.expires_at.isoformat() + "Z",
+    )
+
+
+@app.get("/api/node/session/{wallet_index}", response_model=NodeSessionResponse)
+def node_session_status(wallet_index: int) -> NodeSessionResponse:
+    """Return session status for a wallet — used by game UI to check registration."""
+    session = get_session(wallet_index)
+    if not session:
+        return NodeSessionResponse(active=False)
+    return NodeSessionResponse(
+        active=True,
+        session_id=session.session_id,
+        registered_at=session.registered_at.isoformat() + "Z",
+        expires_at=session.expires_at.isoformat() + "Z",
+        claude_hash=session.claude_hash,
+    )
 
 
 # ---------------------------------------------------------------------------

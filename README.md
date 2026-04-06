@@ -74,6 +74,7 @@ ZK Agentic Chain uses **Proof of AI Verification (PoAIV)** — a consensus mecha
 | Fee burn | 50% |
 | Inflation ceiling | 5% annual |
 | Genesis supply | 900 AGNTC |
+| Node verification | SHA-256 hash of operator .claude/ (quantum-resistant upgrade planned) |
 
 Full protocol specification: [`spec/whitepaper.md`](spec/whitepaper.md)
 
