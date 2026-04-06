@@ -713,7 +713,7 @@ cd apps/game && npm run test:run
 
 ### Task 7: Rewrite zkagentic-node CLAUDE.md for menu-driven terminal
 
-**Repo:** `/Users/toyg/zkagentic-node`
+**Repo:** `<node-repo-path>`
 
 **Files:**
 - Modify: `.claude/CLAUDE.md`
@@ -728,7 +728,7 @@ Replace with menu-driven terminal instructions. Claude must:
 **Step 1: Commit**
 
 ```bash
-cd /Users/toyg/zkagentic-node
+cd <node-repo-path>
 git add .claude/CLAUDE.md
 git commit -m "feat: rewrite CLAUDE.md for menu-driven terminal
 
@@ -741,7 +741,7 @@ Blocks prompt injection at the UX layer."
 
 ### Task 8: Create demo playbook
 
-**Repo:** `/Users/toyg/zkagentic-node`
+**Repo:** `<node-repo-path>`
 
 **Files:**
 - Create: `tests/demo-playbook.md`
@@ -762,7 +762,7 @@ Manual test run by operator in real Claude Code session."
 
 ### Task 9: Update ROADMAP.md + README.md with quantum resistance note
 
-**Repo:** `/Users/toyg/Exodus`
+**Repo:** `<exodus-repo-path>`
 
 **Step 1:** Add to ROADMAP.md Phase 6 section:
 ```
