@@ -32,7 +32,7 @@ class TestGenesisState:
         from agentic.actions.types import (
             ActionType, CallerType, ActionRequest, ReadRequest, ReadTarget,
         )
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
         g = create_genesis(num_wallets=10, seed=42)
         req = ActionRequest(
             action_type=ActionType.READ, caller_type=CallerType.USER,
@@ -62,7 +62,7 @@ class TestGenesisState:
 
     def test_coordinate_to_coin_mapping(self):
         from agentic.testnet.genesis import create_genesis
-        from agentic.galaxy.coordinate import resource_density
+        from agentic.lattice.coordinate import resource_density
         g = create_genesis(num_wallets=10, seed=42)
         for claim in g.claim_registry.all_active_claims():
             d = resource_density(claim.coordinate.x, claim.coordinate.y)
@@ -104,7 +104,7 @@ class TestGenesisState:
 
 def test_genesis_has_epoch_tracker():
     from agentic.testnet.genesis import create_genesis
-    from agentic.galaxy.epoch import EpochTracker
+    from agentic.lattice.epoch import EpochTracker
     g = create_genesis(num_wallets=10, seed=42)
     assert hasattr(g, "epoch_tracker")
     assert isinstance(g.epoch_tracker, EpochTracker)
@@ -114,7 +114,7 @@ def test_genesis_has_epoch_tracker():
 
 def test_genesis_has_subgrid_allocators():
     from agentic.testnet.genesis import create_genesis
-    from agentic.galaxy.subgrid import SubgridAllocator
+    from agentic.lattice.subgrid import SubgridAllocator
     g = create_genesis(num_wallets=10, seed=42)
     assert hasattr(g, "subgrid_allocators")
     # Genesis creates 9 fixed nodes with 9 unique owners

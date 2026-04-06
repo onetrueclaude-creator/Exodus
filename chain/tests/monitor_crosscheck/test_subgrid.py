@@ -158,7 +158,7 @@ class TestSimulatorChainStateDisplay:
         client.post("/api/resources/0/assign", json=payload)
 
         from agentic.testnet.api import _genesis
-        from agentic.galaxy.subgrid import SubcellType
+        from agentic.lattice.subgrid import SubcellType
 
         g = _genesis
         wallet = g.wallets[0]

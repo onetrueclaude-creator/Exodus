@@ -8,10 +8,10 @@ Demonstrates:
 4. Planet data storage (hash-referenced content)
 5. Community pool depletion curve
 """
-from agentic.galaxy.coordinate import GridCoordinate, resource_density, storage_slots
-from agentic.galaxy.claims import ClaimRegistry
-from agentic.galaxy.mining import CommunityPool, MiningEngine, COMMUNITY_POOL_TOTAL
-from agentic.galaxy.content import ContentType, StorageTx, validate_storage, StorageMetadata
+from agentic.lattice.coordinate import GridCoordinate, resource_density, storage_slots
+from agentic.lattice.claims import ClaimRegistry
+from agentic.lattice.mining import CommunityPool, MiningEngine, COMMUNITY_POOL_TOTAL
+from agentic.lattice.content import ContentType, StorageTx, validate_storage, StorageMetadata
 from agentic.params import BASE_MINING_RATE_PER_BLOCK, BLOCK_TIME_MS
 
 

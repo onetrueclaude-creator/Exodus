@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Union
 
-from agentic.galaxy.coordinate import GridCoordinate
-from agentic.galaxy.content import ContentType
+from agentic.lattice.coordinate import GridCoordinate
+from agentic.lattice.content import ContentType
 
 
 class ActionType(IntEnum):

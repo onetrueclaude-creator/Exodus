@@ -29,7 +29,7 @@ class TestHandleAssignSubgrid:
         _handle_assign_subgrid(g, payload)
         owner = g.wallets[0].public_key
         alloc = g.subgrid_allocators[owner]
-        from agentic.galaxy.subgrid import SubcellType
+        from agentic.lattice.subgrid import SubcellType
         assert alloc.count(SubcellType.SECURE) == 16
         assert alloc.count(SubcellType.DEVELOP) == 16
 
@@ -126,7 +126,7 @@ class TestProcessPendingTransactions:
 
         # Verify state changed
         owner = genesis.wallets[0].public_key
-        from agentic.galaxy.subgrid import SubcellType
+        from agentic.lattice.subgrid import SubcellType
         assert genesis.subgrid_allocators[owner].count(SubcellType.SECURE) == 32
 
     def test_unknown_action_type_fails(self, genesis):

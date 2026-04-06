@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 
 from agentic.ledger.crypto import hash_tag
 from agentic.ledger.record import Record
-from agentic.galaxy.coordinate import GridCoordinate
+from agentic.lattice.coordinate import GridCoordinate
 from agentic.params import MINT_PROGRAM_ID, TRANSFER_PROGRAM_ID, STAKE_PROGRAM_ID, BIRTH_PROGRAM_ID, BASE_BIRTH_COST
 
 # Type alias for forward references
@@ -18,8 +18,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from agentic.ledger.state import LedgerState
     from agentic.economics.staking import StakeRegistry
-    from agentic.galaxy.claims import ClaimRegistry
-    from agentic.galaxy.allocator import CoordinateAllocator
+    from agentic.lattice.claims import ClaimRegistry
+    from agentic.lattice.allocator import CoordinateAllocator
 
 
 @dataclass
@@ -451,7 +451,7 @@ def validate_birth(
     8. Create change record if overpaid
     9. Register claim in ClaimRegistry
     """
-    from agentic.galaxy.coordinate import resource_density, storage_slots
+    from agentic.lattice.coordinate import resource_density, storage_slots
 
     # 1. Find next coordinate
     coord, ring_number = allocator.next_coordinate(tx.home_star, claim_registry)

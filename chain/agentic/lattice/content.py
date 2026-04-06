@@ -37,7 +37,7 @@ class StorageMetadata:
     @staticmethod
     def decode_data(data: list[int]) -> tuple:
         """Decode Record.data back to (GridCoordinate, dict of metadata fields)."""
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
 
         coord = GridCoordinate.from_offsets(data[0], data[1])
         meta = {
@@ -48,7 +48,7 @@ class StorageMetadata:
         return coord, meta
 
 
-from agentic.galaxy.coordinate import GridCoordinate, storage_slots
+from agentic.lattice.coordinate import GridCoordinate, storage_slots
 
 
 @dataclass

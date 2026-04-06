@@ -32,8 +32,8 @@ from agentic.actions.types import (
     VoteChoice,
     VoteRequest,
 )
-from agentic.galaxy.content import ContentType
-from agentic.galaxy.coordinate import resource_density, storage_slots
+from agentic.lattice.content import ContentType
+from agentic.lattice.coordinate import resource_density, storage_slots
 from agentic.testnet.genesis import GenesisState, create_genesis
 
 

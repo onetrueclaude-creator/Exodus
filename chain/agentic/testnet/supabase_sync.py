@@ -31,7 +31,7 @@ load_dotenv(_CHAIN_ROOT / ".env")
 # Also try the Exodus repo root .env.local as fallback
 load_dotenv(_CHAIN_ROOT.parent / ".env.local")
 
-from agentic.galaxy.coordinate import resource_density, storage_slots
+from agentic.lattice.coordinate import resource_density, storage_slots
 from agentic.params import GENESIS_FACTION_MASTERS, GENESIS_HOMENODES, GENESIS_ORIGIN
 from agentic.testnet.genesis import GenesisState
 
@@ -272,7 +272,7 @@ def _sync_agents(g: GenesisState) -> None:
 def _sync_subgrid_allocations(g: GenesisState) -> None:
     """Upsert per-wallet subgrid cell counts to the subgrid_allocations table."""
     client = _get_client()
-    from agentic.galaxy.subgrid import SubcellType
+    from agentic.lattice.subgrid import SubcellType
 
     rows = []
     for i, wallet in enumerate(g.wallets):

@@ -106,7 +106,7 @@ def init_db(db_path: Path) -> None:
 
 def save_state(g: GenesisState, last_block_time: float, db_path: Path) -> None:
     """Persist all mutable state to SQLite. Safe to call frequently."""
-    from agentic.galaxy.subgrid import SubcellType
+    from agentic.lattice.subgrid import SubcellType
 
     try:
         with _connect(db_path) as conn:
@@ -214,8 +214,8 @@ def load_state(g: GenesisState, db_path: Path) -> float:
     Returns the last_block_time value (0.0 if no prior state).
     Safe to call even when the DB is empty (no-op).
     """
-    from agentic.galaxy.coordinate import GridCoordinate, GLOBAL_BOUNDS
-    from agentic.galaxy.subgrid import SubgridAllocator, SubcellType
+    from agentic.lattice.coordinate import GridCoordinate, GLOBAL_BOUNDS
+    from agentic.lattice.subgrid import SubgridAllocator, SubcellType
     from agentic.consensus.validator import Validator
     from agentic.verification.agent import VerificationAgent, AgentState
     import random as _random

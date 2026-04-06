@@ -1,12 +1,12 @@
 """Tests for CoordinateAllocator — ring-based territory expansion."""
 import pytest
-from agentic.galaxy.coordinate import GridCoordinate, GridBounds
-from agentic.galaxy.claims import ClaimRegistry
+from agentic.lattice.coordinate import GridCoordinate, GridBounds
+from agentic.lattice.claims import ClaimRegistry
 
 
 class TestCoordinateAllocator:
     def _make_allocator(self):
-        from agentic.galaxy.allocator import CoordinateAllocator
+        from agentic.lattice.allocator import CoordinateAllocator
         return CoordinateAllocator()
 
     def test_first_allocation_ring_1(self):

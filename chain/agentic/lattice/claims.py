@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from agentic.galaxy.coordinate import GridCoordinate
+from agentic.lattice.coordinate import GridCoordinate
 from agentic.params import BASE_CLAIM_COST, BASE_CPU_CLAIM_COST, CLAIM_COST_FLOOR
 
 

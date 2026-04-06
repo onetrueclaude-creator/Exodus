@@ -10,17 +10,17 @@ from agentic.actions.pipeline import ActionPipeline
 from agentic.consensus.validator import Validator
 from agentic.economics.fees import FeeEngine
 from agentic.economics.staking import StakeRegistry
-from agentic.galaxy.claims import ClaimRegistry
-from agentic.galaxy.coordinate import GridCoordinate, resource_density, storage_slots
-from agentic.galaxy.mining import MiningEngine
+from agentic.lattice.claims import ClaimRegistry
+from agentic.lattice.coordinate import GridCoordinate, resource_density, storage_slots
+from agentic.lattice.mining import MiningEngine
 from agentic.ledger.crypto import hash_tag
 from agentic.ledger.record import Record
 from agentic.ledger.state import LedgerState
 from agentic.ledger.wallet import Wallet
 from agentic.verification.agent import VerificationAgent, AgentState
 from agentic.verification.pipeline import VerificationPipeline
-from agentic.galaxy.epoch import EpochTracker
-from agentic.galaxy.subgrid import SubgridAllocator
+from agentic.lattice.epoch import EpochTracker
+from agentic.lattice.subgrid import SubgridAllocator
 from agentic.params import (
     GENESIS_BALANCE, BIRTH_PROGRAM_ID,
     GENESIS_ORIGIN, GENESIS_FACTION_MASTERS, GENESIS_HOMENODES,
@@ -126,7 +126,7 @@ def create_genesis(
             state.insert_record(star_record)
 
     # Expand global bounds to cover genesis coordinates
-    from agentic.galaxy.coordinate import GLOBAL_BOUNDS
+    from agentic.lattice.coordinate import GLOBAL_BOUNDS
     for x, y in genesis_coords:
         GLOBAL_BOUNDS.expand_to_contain(x, y)
 

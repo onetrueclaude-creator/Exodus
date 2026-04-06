@@ -9,13 +9,13 @@ Tests that span multiple layers to verify end-to-end correctness:
 """
 import pytest
 
-from agentic.galaxy.allocator import CoordinateAllocator
-from agentic.galaxy.claims import ClaimRegistry
-from agentic.galaxy.coordinate import (
+from agentic.lattice.allocator import CoordinateAllocator
+from agentic.lattice.claims import ClaimRegistry
+from agentic.lattice.coordinate import (
     GridCoordinate, GridBounds, resource_density, storage_slots,
 )
-from agentic.galaxy.mining import MiningEngine
-from agentic.galaxy.content import validate_storage, StorageTx, ContentType
+from agentic.lattice.mining import MiningEngine
+from agentic.lattice.content import validate_storage, StorageTx, ContentType
 from agentic.economics.staking import StakeRegistry, StakeStatus, WARMUP_EPOCHS, COOLDOWN_EPOCHS
 from agentic.economics.epoch import EpochManager
 from agentic.consensus.validator import Validator

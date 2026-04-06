@@ -2,7 +2,7 @@
 import math
 import pytest
 
-from agentic.galaxy.subgrid import SubcellType, SubgridAllocator, SubgridOutput, _level_multiplier
+from agentic.lattice.subgrid import SubcellType, SubgridAllocator, SubgridOutput, _level_multiplier
 from agentic.params import (
     SUBGRID_SIZE, BASE_SECURE_RATE, BASE_DEVELOP_RATE,
     BASE_RESEARCH_RATE, BASE_STORAGE_RATE, LEVEL_EXPONENT,

@@ -80,7 +80,7 @@ def test_unchanged_params():
 
 
 def test_epoch_hardness_16n():
-    from agentic.galaxy.epoch import EpochTracker
+    from agentic.lattice.epoch import EpochTracker
     et = EpochTracker()
     assert et.hardness(1) == 16
     assert et.hardness(10) == 160
@@ -90,14 +90,14 @@ def test_epoch_hardness_16n():
 
 def test_epoch_hardness_no_cap():
     """Hardness should NOT cap at 100 anymore."""
-    from agentic.galaxy.epoch import EpochTracker
+    from agentic.lattice.epoch import EpochTracker
     et = EpochTracker()
     assert et.hardness(200) == 3200  # old code would cap at 100
 
 
 def test_epoch_faction_names_updated():
     """Faction key 'treasury' renamed to 'machines'."""
-    from agentic.galaxy.epoch import EpochTracker
+    from agentic.lattice.epoch import EpochTracker
     et = EpochTracker()
     coord = et.homenode_coordinate("machines", 1)
     assert isinstance(coord, tuple)
@@ -106,7 +106,7 @@ def test_epoch_faction_names_updated():
 
 def test_homenode_no_grid_clamp():
     """Homenode coordinates should not be clamped to fixed ±3240."""
-    from agentic.galaxy.epoch import EpochTracker
+    from agentic.lattice.epoch import EpochTracker
     et = EpochTracker()
     coord = et.homenode_coordinate("community", 500)
     assert isinstance(coord, tuple)
@@ -114,11 +114,11 @@ def test_homenode_no_grid_clamp():
 
 def test_mining_no_pool_exhaustion():
     """Mining should never exhaust — no finite pool in v2."""
-    from agentic.galaxy.mining import MiningEngine
-    from agentic.galaxy.epoch import EpochTracker
+    from agentic.lattice.mining import MiningEngine
+    from agentic.lattice.epoch import EpochTracker
     engine = MiningEngine()
     et = EpochTracker()
-    from agentic.galaxy.coordinate import GridCoordinate
+    from agentic.lattice.coordinate import GridCoordinate
     claims = [{"owner": b"\x01" * 32, "coordinate": GridCoordinate(x=0, y=0), "stake": 100}]
     for _ in range(1000):
         yields = engine.compute_block_yields(claims, epoch_tracker=et)
@@ -132,9 +132,9 @@ def test_mining_yield_formula_v2():
     Pre-seeds total_rewards_distributed high so the inflation ceiling is above
     raw yield and doesn't interfere with the formula test.
     """
-    from agentic.galaxy.mining import MiningEngine
-    from agentic.galaxy.epoch import EpochTracker
-    from agentic.galaxy.coordinate import GridCoordinate, resource_density
+    from agentic.lattice.mining import MiningEngine
+    from agentic.lattice.epoch import EpochTracker
+    from agentic.lattice.coordinate import GridCoordinate, resource_density
     from agentic.params import BASE_MINING_RATE_PER_BLOCK
     engine = MiningEngine(total_rewards_distributed=500_000.0)
     et = EpochTracker()
@@ -149,7 +149,7 @@ def test_mining_yield_formula_v2():
 
 
 def test_grid_bounds_initial_radius():
-    from agentic.galaxy.coordinate import GridBounds
+    from agentic.lattice.coordinate import GridBounds
     bounds = GridBounds(initial_radius=10)
     assert bounds.min_val == -10
     assert bounds.max_val == 10
@@ -158,7 +158,7 @@ def test_grid_bounds_initial_radius():
 
 
 def test_grid_bounds_expand_to_ring():
-    from agentic.galaxy.coordinate import GridBounds
+    from agentic.lattice.coordinate import GridBounds
     from agentic.params import NODE_GRID_SPACING
     bounds = GridBounds(initial_radius=10)
     bounds.expand_to_ring(5)
@@ -169,7 +169,7 @@ def test_grid_bounds_expand_to_ring():
 
 def test_global_bounds_genesis_size():
     """GLOBAL_BOUNDS should start small (genesis ring + fog), not ±3240."""
-    from agentic.galaxy.coordinate import GLOBAL_BOUNDS, GridBounds
+    from agentic.lattice.coordinate import GLOBAL_BOUNDS, GridBounds
     from agentic.params import NODE_GRID_SPACING
     # Reset to initial state (other tests may have expanded it)
     fresh = GridBounds(initial_radius=2 * NODE_GRID_SPACING)
@@ -182,7 +182,7 @@ def test_global_bounds_genesis_size():
 
 def test_grid_coordinate_dynamic_offset():
     """Offsets should be relative to bounds, not hardcoded GRID_MIN."""
-    from agentic.galaxy.coordinate import GridCoordinate, GridBounds
+    from agentic.lattice.coordinate import GridCoordinate, GridBounds
     bounds = GridBounds(initial_radius=100)
     coord = GridCoordinate(x=50, y=-30, bounds=bounds)
     # x_offset = x - bounds.min_val = 50 - (-100) = 150

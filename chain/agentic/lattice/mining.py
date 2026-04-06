@@ -9,7 +9,7 @@ from agentic.params import (
     BLOCK_TIME_MS,
     GENESIS_SUPPLY,
 )
-from agentic.galaxy.coordinate import resource_density
+from agentic.lattice.coordinate import resource_density
 
 # Blocks per year at current block time (used for ceiling enforcement)
 _BLOCKS_PER_YEAR = (365.25 * 24 * 3600 * 1000) / BLOCK_TIME_MS

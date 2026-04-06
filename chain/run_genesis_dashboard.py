@@ -12,7 +12,7 @@ from agentic.params import (
     FEE_BURN_RATE, BLOCK_TIME_MS,
 )
 from agentic.testnet.genesis import create_genesis
-from agentic.galaxy.coordinate import resource_density
+from agentic.lattice.coordinate import resource_density
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 API = "http://localhost:8080"

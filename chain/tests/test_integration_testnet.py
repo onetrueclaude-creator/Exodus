@@ -18,7 +18,7 @@ class TestCoordinateToCoinMapping:
 
     def test_coordinate_has_deterministic_properties(self):
         """Every coordinate in range has deterministic density and slots."""
-        from agentic.galaxy.coordinate import resource_density, storage_slots
+        from agentic.lattice.coordinate import resource_density, storage_slots
         import random
         # v2: GRID_MIN/GRID_MAX removed; use legacy range for determinism tests
         _GRID_MIN, _GRID_MAX = -3240, 3240
@@ -45,7 +45,7 @@ class TestCoordinateToCoinMapping:
             SecureRequest, SecurityAction,
         )
         from agentic.actions.ownership import build_ownership_proof
-        from agentic.galaxy.content import ContentType
+        from agentic.lattice.content import ContentType
 
         g = create_genesis(num_wallets=5, num_claims=3, seed=42)
         wallet = g.wallets[0]
@@ -89,7 +89,7 @@ class TestCoordinateToCoinMapping:
     def test_mining_yields_map_to_coordinates(self):
         """Mining yields should come from specific coordinate densities."""
         from agentic.testnet.genesis import create_genesis
-        from agentic.galaxy.coordinate import resource_density
+        from agentic.lattice.coordinate import resource_density
 
         g = create_genesis(num_wallets=5, num_claims=3, seed=42)
         claims_input = g.claim_registry.as_mining_claims()
@@ -111,7 +111,7 @@ class TestCoordinateToCoinMapping:
             ActionType, CallerType, ActionRequest,
             ReadRequest, ReadTarget, OwnershipProof,
         )
-        from agentic.galaxy.coordinate import GridCoordinate
+        from agentic.lattice.coordinate import GridCoordinate
 
         g = create_genesis(num_wallets=3, num_claims=2, seed=42)
         proof = OwnershipProof(

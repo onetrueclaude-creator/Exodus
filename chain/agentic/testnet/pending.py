@@ -90,7 +90,7 @@ def _handle_assign_subgrid(g: GenesisState, payload: dict) -> None:
     if alloc is None:
         raise ValueError(f"No subgrid allocator for wallet {wallet_index}")
 
-    from agentic.galaxy.subgrid import SubcellType
+    from agentic.lattice.subgrid import SubcellType
 
     secure = payload.get("secure", 0)
     develop = payload.get("develop", 0)
@@ -114,8 +114,8 @@ def _handle_assign_subgrid(g: GenesisState, payload: dict) -> None:
 
 def _handle_claim(g: GenesisState, payload: dict) -> None:
     """Claim a grid coordinate for a wallet."""
-    from agentic.galaxy.coordinate import GridCoordinate, resource_density
-    from agentic.galaxy.claims import claim_cost
+    from agentic.lattice.coordinate import GridCoordinate, resource_density
+    from agentic.lattice.claims import claim_cost
     from agentic.consensus.validator import Validator
     from agentic.verification.agent import VerificationAgent, AgentState
     from agentic.params import NODE_GRID_SPACING

@@ -17,7 +17,7 @@ import struct
 from dataclasses import dataclass
 
 from agentic.actions.types import ActionType, OwnershipProof
-from agentic.galaxy.coordinate import GridCoordinate
+from agentic.lattice.coordinate import GridCoordinate
 
 
 @dataclass
