@@ -257,7 +257,7 @@ Simple text replacements:
 
 | Check | Result |
 |-------|--------|
-| `/Users/toyg` in tracked files | **CLEAN** — zero occurrences |
+| `<local-path>/` in tracked files | **CLEAN** — zero occurrences |
 | `sb_secret_` in tracked files | **CLEAN** — zero occurrences |
 | `sb_publishable_` in tracked files | **SAFE** — only in monitor.js/simulator.js (publishable keys are public by design) |
 | JWT tokens (`eyJ...`) in tracked files | **CLEAN** — only npm integrity hashes in package-lock.json |
