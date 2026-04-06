@@ -21,14 +21,14 @@ jobs:
         run: |
           cd chain
           pip install -r requirements.txt
-          pip install pytest pytest-timeout
+          pip install pytest pytest-timeout numpy
       - name: Run tests
         run: |
           cd chain
           python -m pytest tests/ -v \
             --timeout=120 \
             --ignore=tests/benchmarks \
-            -x -q
+            -q
 
   game-build:
     name: Game Build + Tests (Node)
@@ -42,6 +42,8 @@ jobs:
           cache-dependency-path: apps/game/package-lock.json
       - name: Install dependencies
         run: cd apps/game && npm ci
+      - name: Generate Prisma client
+        run: cd apps/game && npx prisma generate
       - name: Build
         run: cd apps/game && npm run build
       - name: Run tests
