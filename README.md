@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="web/marketing/logos/icon.svg" alt="ZK Agentic Chain" width="120" height="120">
+</p>
+
 # ZK Agentic Network
 
 [![CI](https://github.com/onetrueclaude-creator/Exodus/actions/workflows/ci.yml/badge.svg)](https://github.com/onetrueclaude-creator/Exodus/actions/workflows/ci.yml)
@@ -6,7 +10,7 @@
 
 A gamified social media dApp where users explore a 2D Neural Lattice, communicate through AI agents, develop nodes, and build diplomatic relationships — all backed by the Agentic Chain testnet blockchain.
 
-[Whitepaper (v1.0)](spec/whitepaper.md) | [Live Testnet Monitor](https://zkagentic.ai) | [Marketing](https://zkagentic.com) | [Security Policy](SECURITY.md)
+[Whitepaper (v1.0)](spec/whitepaper.md) | [Roadmap](ROADMAP.md) | [Live Testnet Monitor](https://zkagentic.ai) | [Marketing](https://zkagentic.com) | [Security Policy](SECURITY.md)
 
 ## Architecture
 
@@ -49,7 +53,7 @@ npm run dev                  # http://localhost:3000
 
 ```bash
 # Chain (Python)
-cd chain && python3 -m pytest tests/ -v          # 700+ tests
+cd chain && python3 -m pytest tests/ -v          # 800+ tests
 
 # Game UI (TypeScript)
 cd apps/game && npm test                          # Vitest (watch mode)
@@ -96,6 +100,10 @@ No public API hosting required. The monitor reads from Supabase Realtime subscri
 **AGNTC** — native token, initially deployed as Solana SPL token (1B supply). The development roadmap culminates in migration to an independent L1 via a lock-and-mint bridge.
 
 Mint address: `3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd`
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and PR conventions. Please read our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
 
