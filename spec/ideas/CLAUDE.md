@@ -1,4 +1,4 @@
-# Change Log — vault/ideas/
+# Change Log — spec/ideas/
 
 > Tracks ideas added, promoted to features, or discarded.
 > Read `seed.md` first.

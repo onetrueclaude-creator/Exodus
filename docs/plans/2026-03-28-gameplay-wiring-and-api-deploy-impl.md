@@ -1,6 +1,5 @@
 # Gameplay Wiring + Public API Deployment — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Deploy the Python testnet API publicly at `api.zkagentic.ai`, wire the game terminal's Secure and Chain Stats commands to the real blockchain, enhance the testnet monitor with missing data fields, and add a Subgrid Simulation tab.
 

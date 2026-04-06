@@ -549,7 +549,7 @@ The project's "fail-safe" position is also strong: even if the full PoAIV vision
 
 ## Appendix A: Protocol Parameters Reference
 
-All values from `vault/agentic-chain/agentic/params.py` -- the canonical source of truth.
+All values from `spec/agentic-chain/agentic/params.py` -- the canonical source of truth.
 
 | Parameter | Value | Category |
 |-----------|-------|----------|
@@ -605,9 +605,9 @@ From the competitor architecture report (2026-02-25).
 
 | Document | Path | Purpose |
 |----------|------|---------|
-| Whitepaper v1.1 | `vault/whitepaper.md` | Complete protocol specification (~2,400 lines) |
-| Protocol parameters | `vault/agentic-chain/agentic/params.py` | Canonical parameter values (119 lines) |
-| Competitor report | `vault/research/competitors/REPORT-competitor-architecture-2026-02-25.md` | 35+ project analysis (457 lines) |
+| Whitepaper v1.1 | `spec/whitepaper.md` | Complete protocol specification (~2,400 lines) |
+| Protocol parameters | `spec/agentic-chain/agentic/params.py` | Canonical parameter values (119 lines) |
+| Competitor report | `spec/research/competitors/REPORT-competitor-architecture-2026-02-25.md` | 35+ project analysis (457 lines) |
 | Enforced ZK L1 design | `docs/plans/2026-03-04-enforced-zk-l1-design.md` | ZK implementation architecture |
 | Enforced ZK L1 impl | `docs/plans/2026-03-04-enforced-zk-l1-impl.md` | 13-task implementation plan |
 | Whitepaper v1.1 upgrade | `docs/plans/2026-03-09-whitepaper-v1-1-academic-upgrade-design.md` | Academic upgrade plan |

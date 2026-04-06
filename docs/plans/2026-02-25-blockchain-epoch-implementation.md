@@ -1,6 +1,5 @@
 # Blockchain Epoch System + Tokenomics Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Implement mining-driven grid expansion — the galaxy grid grows one ring per Epoch, gated by cumulative AGNTC mined, with per-epoch hardness scaling.
 

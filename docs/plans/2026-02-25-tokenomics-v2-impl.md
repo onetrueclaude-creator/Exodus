@@ -1,6 +1,5 @@
 # AGNTC Tokenomics v2 — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Implement the organic-growth tokenomics model from `docs/plans/2026-02-25-tokenomics-v2-design.md` — remove scheduled inflation, update hardness to 16N, make grid dynamic, set 25/25/25/25 faction distribution.
 

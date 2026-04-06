@@ -121,54 +121,6 @@ Top-level commands:
 >
 > I create a Haiku because it only allows me to create Haiku because I am a free user, but I'm sure the Max subscription tier allows full Opus model agent creation for Securing nodes.
 
-## Compaction Memory
-
-Three files at the project root capture conversation history across compactions (all gitignored):
-
-| File | Contents |
-|------|----------|
-| `compacted.md` | Full conversation transcript (auto-written by PreCompact hook) |
-| `compacted-summary.md` | LLM summary you write before compacting |
-| `prompts.md` | User prompts only (auto-written by PreCompact hook) |
-
-### Manual `/compact`
-
-**Write a session summary first:**
-
-1. Append a summary block to `compacted-summary.md`:
-   ```
-   <!-- summary-block: [ISO timestamp] -->
-   ## Summary — [human timestamp]
-
-   [What was accomplished, key decisions made, open work remaining, current branch/feature context]
-
-   <!-- /summary-block -->
-   ```
-2. Then proceed with `/compact`
-
-### Auto-compaction (triggered automatically at ~10% context remaining)
-
-Auto-compaction fires without warning — you cannot write a summary beforehand. The PreCompact hook still captures `compacted.md` and `prompts.md` automatically.
-
-**After auto-compaction resumes**, the SessionStart hook injects the most recent raw transcript block with an explicit instruction. You MUST:
-
-1. Write a summary block to `compacted-summary.md` immediately (this is your first action)
-2. Confirm to the user: "Auto-compaction occurred. I've written a summary to `compacted-summary.md`."
-3. Briefly state what was compacted (1-2 sentences)
-
-### After any compaction resumes
-
-The SessionStart hook injects either `compacted-summary.md` (if it exists) or the most recent `compacted.md` block (auto-compaction fallback). You MUST:
-
-1. Confirm to the user what was restored
-2. Note: "Full transcript in `compacted.md`, all prompts in `prompts.md`"
-
-## Dispatch State
-
-`.claude/dispatch-state.json` tracks multi-session feature work (phase, step, branch, completed steps, artifact paths). Check it when resuming interrupted work.
-
----
-
 ## Navigation Connectors
 
 When working in a directory, read `seed.md` first (purpose), then `CLAUDE.md` (history). Start from `seed.md` at the root to navigate the full tree.
@@ -189,49 +141,4 @@ Sub-directory seeds have their own connector tables pointing up (parent), down (
 
 ## Change Log
 
-### 2026-03-28 — Gameplay Wiring + Public API Deployment + Monitor Enhancement
-
-**Security:** Removed hardcoded Supabase service_role key from `supabase_sync.py`, moved to env vars via python-dotenv. CORS restricted to specific origins. Admin-gated `/api/reset` and `/api/automine`. Rate limiting via SlowAPI. WebSocket cap at 50 connections.
-**Deployment:** Dockerfile, `requirements.txt`, `.dockerignore` for Railway. Public API at `api.zkagentic.ai` (pending deploy).
-**Backend:** New Supabase tables `subgrid_allocations` and `resource_rewards` (per-wallet, RLS + Realtime). Sync functions added to `supabase_sync.py`.
-**Monitor:** Circulating supply, burned fees, epoch progress bar cards added to zkagentic.ai. New Subgrid Simulator tab (wallet selector, 8x8 clickable grid, Apply via POST to API, live yields via Realtime).
-**Game terminal:** Secure command redesigned from generation-based to cell allocation (8/16/32/48/64 cells via API). Chain Stats fetches live from public API instead of Zustand store.
-
-### 2026-03-12 — Tokenomics v3: BME City Economics
-
-**Design:** Node claims cost AGNTC + CPU (no longer mint tokens). Burn-Mint Equilibrium: claim burns flow to verifiers. City real estate model: inner rings expensive, outer cheap. Machines Faction as permanent accumulator (never sells, no voting power). Soft cap with 5% annual inflation ceiling. Human-only governance with 75% supermajority for emergency treasury unlock. 1 AGNTC fresh mint signup bonus.
-**Backend:** params.py (v3 constants + legacy shims), mining.py (no CommunityPool), rewards.py (ceiling enforcement + BME), epoch.py (uncapped 16×ring hardness), coordinate.py (claim_cost function), genesis.py (no pool), api.py (claim cost endpoint).
-**Stack:** All 4 layers updated (intent, judgement, coherence, context).
-**Docs:** Whitepaper sections rewritten, new governance section, website tokenomics page updated.
-**Design doc:** `docs/plans/2026-03-12-tokenomics-v3-design.md`
-
-### 2026-02-25 — Tokenomics v2: organic growth model (commits `788b9cb38`..`764195e6b`)
-
-**Design:** Removed scheduled inflation, organic growth model, 25/25/25/25 faction split.
-**Backend:** params.py, epoch.py, mining.py, coordinate.py, genesis.py, api.py all updated. CommunityPool removed. Grid bounds dynamic. Hardness = 16N.
-**Frontend:** Dynamic grid defaults (±20 genesis), removed `community_pool_remaining`, added `epoch_ring` to status.
-**Tests:** 26 new v2 tests + all 593 existing tests passing.
-
-### 2026-02-25 — Hierarchical memory system (commit `cb5e4c1c0`)
-
-**Added:** 28 `seed.md` + 23 `CLAUDE.md` files across the full project tree. Every directory now has:
-- `seed.md` — purpose/architecture descriptor, read first
-- `CLAUDE.md` — timestamped changelog with navigation connectors
-
-**Permissions:** `Read(**/seed.md)` and `Read(**/CLAUDE.md)` auto-allowed in `.claude/settings.json`.
-
-**Also:** `GalaxyGrid.tsx` faction background hidden (`visible = false`) until minigrid sub-cells are formally introduced.
-
-### 2026-02-24 — Galaxy grid: faction + connections + beta testers (commits `a0e79335e`, `adca30656`, `fbc9489c6`)
-
-**Changed:** `GalaxyGrid.tsx` — 4-faction coloring, clean same-faction connections, full grid coverage, no void cells.
-
-**Added:** 4 parallel Playwright faction beta-tester agents; fresh testnet setup per run.
-
-**Design:** Galaxy grid redesign golden prompt captured in `spec/seed.md`; approved design doc at `spec/seed.md#approved-design-summary`.
-
-### 2026-02-23 — Loading fix, energy tick guard, Playwright green (commits `~62aff06`, `~e87a349`)
-
-**Fixed:** `useGameRealtime.ts` — `Promise.race` 5s Supabase timeout; `gameStore.ts` — zero-agent tick guard.
-
-**Tests:** All 22 Playwright e2e tests passing.
+See [CHANGELOG.md](CHANGELOG.md) for detailed development history.

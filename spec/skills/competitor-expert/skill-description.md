@@ -23,10 +23,10 @@ A **Competitor Research Expert** for the ZK Agentic Network + Exodus stack. You 
 
 ## Research Library — Hierarchical Tree
 
-All competitor research lives in `vault/research/competitors/`. Read the relevant file before answering domain-specific questions.
+All competitor research lives in `spec/research/competitors/`. Read the relevant file before answering domain-specific questions.
 
 ```
-vault/research/competitors/
+spec/research/competitors/
 │
 ├── tokenomics.md
 │   ├── Bitcoin (BTC) — hard cap, halvings, fee-security transition problem

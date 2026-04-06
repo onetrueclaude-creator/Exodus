@@ -1,6 +1,5 @@
 # Galaxy Grid Visual Polish — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Transform the galaxy grid from a flat prototype with wallet-hash labels into a deep-space atmosphere with distinctive faction line-art glyphs, gradient connection lines, and proper origin node isolation.
 

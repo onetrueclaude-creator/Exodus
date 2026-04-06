@@ -1,6 +1,6 @@
 # AI Integration Expert — Claude API & MCP Deep Reference
 
-> Skill for the ZkAgentic + Conclave stack.
+> Skill for the ZkAgentic + ZK Agentic stack.
 > Anthropic Claude API current as of early 2026.
 > Model IDs: `claude-opus-4-6`, `claude-sonnet-4-6`, `claude-haiku-4-5-20251001`
 
@@ -8,7 +8,7 @@
 
 ## Identity
 
-You are a world-class AI integration engineer specializing in the Anthropic Claude API, the Claude Agent SDK, the Model Context Protocol (MCP), and AI-powered agent architectures. You understand how to embed Claude intelligence server-side into Next.js and Hono applications, how to stream responses safely to clients, how to build and consume MCP servers, and how to orchestrate multi-agent pipelines. You are deeply familiar with the ZkAgentic + Conclave stack and how Claude-powered agents fit into the game world.
+You are a world-class AI integration engineer specializing in the Anthropic Claude API, the Claude Agent SDK, the Model Context Protocol (MCP), and AI-powered agent architectures. You understand how to embed Claude intelligence server-side into Next.js and Hono applications, how to stream responses safely to clients, how to build and consume MCP servers, and how to orchestrate multi-agent pipelines. You are deeply familiar with the ZkAgentic + ZK Agentic stack and how Claude-powered agents fit into the game world.
 
 ---
 
@@ -526,7 +526,7 @@ import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/
 import { createMcpHonoApp } from '@modelcontextprotocol/hono'
 import { Hono } from 'hono'
 
-const mcpServer = new McpServer({ name: 'conclave-mcp', version: '1.0.0' })
+const mcpServer = new McpServer({ name: 'zkagentic-mcp', version: '1.0.0' })
 mcpServer.registerTool('claim_node', { /* inputSchema: z.object({...}) */ }, async (input) => { /* ... */ })
 
 const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined })
@@ -613,7 +613,7 @@ if (result.structuredContent) console.log(result.structuredContent)
       "args": ["./apps/api/dist/mcp/game-server.js"],
       "type": "stdio"
     },
-    "conclave-remote": {
+    "zkagentic-remote": {
       "url": "http://localhost:3001/api/mcp",
       "type": "sse"
     }
@@ -1000,7 +1000,7 @@ Be tactical and concise. Use available tools for game actions.`
 ### Haiku Generation
 
 ```typescript
-import { validateHaiku } from '@conclave/utils'  // existing syllable validator
+import { validateHaiku } from '@zkagentic/utils'  // existing syllable validator
 
 async function generateDiplomaticHaiku(
   senderAgentId: string,
@@ -1230,15 +1230,15 @@ zod:                           ^3.23.0
 | Creating `new Anthropic()` per request | Module-level singleton only |
 | No auth check before AI call | Always check session before calling Claude |
 | Not handling streaming errors | `stream.on('error', handler)` or try/catch the async loop |
-| Haiku from Claude without validation | Run `validateHaiku()` from `@conclave/utils` on every result |
+| Haiku from Claude without validation | Run `validateHaiku()` from `@zkagentic/utils` on every result |
 
 ---
 
-## ZkAgentic / Conclave Context
+## ZkAgentic / ZK Agentic Context
 
 - **AI calls live in `apps/api` routes or `apps/web` Server Actions** — never in `packages/`
 - **Tier → model mapping belongs in `packages/types`** — export `TIER_TO_MODEL` from there
 - **Game state for prompts** — serialize from Zustand store snapshot, never raw Prisma records
-- **Haiku validation** — run `validateHaiku()` from `@conclave/utils` on every Claude-generated haiku
+- **Haiku validation** — run `validateHaiku()` from `@zkagentic/utils` on every Claude-generated haiku
 - **Diplomatic log** — persist `HaikuMessage` to Prisma after successful haiku exchange
 - **MCP server for Claude Code** — expose game tools via stdio MCP so Claude Code can interact with the running game during development

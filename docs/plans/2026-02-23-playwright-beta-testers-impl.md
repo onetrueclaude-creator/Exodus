@@ -1,6 +1,5 @@
 # Playwright Autonomous Beta Testers — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** A continuous Playwright test suite that plays through ZK Agentic Network end-to-end and produces structured gap reports.
 

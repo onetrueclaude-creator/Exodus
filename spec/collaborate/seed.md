@@ -1,4 +1,4 @@
-# Seed — vault/collaborate/
+# Seed — spec/collaborate/
 
 > Collaboration artifacts: clarifying questions, external input, and Q&A logs.
 > Read `CLAUDE.md` for what changed.

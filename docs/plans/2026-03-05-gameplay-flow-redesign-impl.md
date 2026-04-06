@@ -1,6 +1,5 @@
 # Gameplay Flow Redesign — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Replace manual node selection with automatic faction-arm placement, add dev mode fast path, implement Machine faction auto-spawn bots, and add spawn animations.
 

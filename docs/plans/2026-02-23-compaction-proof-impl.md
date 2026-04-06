@@ -1,6 +1,5 @@
 # Compaction-Proof Memory — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Automatically capture conversation history before every compaction into `compacted.md` and `prompts.md`, then restore context after compaction via `session-start-compact.sh`.
 

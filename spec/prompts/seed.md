@@ -1,4 +1,4 @@
-# Seed — vault/prompts/
+# Seed — spec/prompts/
 
 > Prompt templates used in the ZK Agentic Network agent terminal system.
 > Read `CLAUDE.md` for what changed.
@@ -11,7 +11,7 @@ Stores prompt templates, system prompts, and NCP (Neural Communication Packet) t
 
 | File | Description |
 |------|-------------|
-| `_templates/prompt.md` | Template for new prompt documents (in `vault/_templates/`) |
+| `_templates/prompt.md` | Template for new prompt documents (in `spec/_templates/`) |
 
 ## Architecture
 

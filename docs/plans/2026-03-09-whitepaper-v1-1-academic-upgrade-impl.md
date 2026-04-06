@@ -1,6 +1,5 @@
 # Whitepaper v1.1 Academic Upgrade — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Upgrade AGNTC whitepaper to peer-review quality and produce 3 companion documents (PoAIV paper, Feasibility Report, Litepaper).
 

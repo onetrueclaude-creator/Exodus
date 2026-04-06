@@ -1,4 +1,4 @@
-# Seed — vault/product/
+# Seed — spec/product/
 
 > Product management knowledge base: feature specs, decisions, and roadmap.
 > Read `CLAUDE.md` for what changed and what's being planned.

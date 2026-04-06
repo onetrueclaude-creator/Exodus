@@ -1,4 +1,4 @@
-# Seed — vault/skills/
+# Seed — spec/skills/
 
 > Claude Code skill library for ZK Agentic Network / Exodus development.
 > Read `CLAUDE.md` for what skills exist and what's been added.

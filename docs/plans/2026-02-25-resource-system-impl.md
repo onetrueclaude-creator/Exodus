@@ -1,6 +1,5 @@
 # Resource System Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Implement the CPU Tokens rename, CPU Staked counter, and 4-type subgrid allocation system (Secure/Develop/Research/Storage) with per-block autonomous agent outputs.
 

@@ -1,4 +1,4 @@
-# Change Log — vault/skills/
+# Change Log — spec/skills/
 
 > Tracks what skills exist, what's been added/modified, and what's planned.
 > Read `seed.md` first.
@@ -15,7 +15,7 @@
 
 ## 2026-02-25 — competitor-expert skill created
 
-**Added:** `competitor-expert/skill-description.md` — deep reference file with hierarchical research tree pointing to all 4 competitor research files in `vault/research/competitors/`.
+**Added:** `competitor-expert/skill-description.md` — deep reference file with hierarchical research tree pointing to all 4 competitor research files in `spec/research/competitors/`.
 **Added:** `.claude/commands/skills/competitor-expert.md` — slash command that activates the Competitor Expert persona.
 
 **Why:** Reusable persona skill for competitive analysis against ZkAgentic's design.

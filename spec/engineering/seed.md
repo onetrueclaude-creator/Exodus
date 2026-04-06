@@ -1,4 +1,4 @@
-# Seed — vault/engineering/
+# Seed — spec/engineering/
 
 > Engineering knowledge base: architecture decisions, system design, and runbooks.
 > Read `CLAUDE.md` for what changed and what's being added.

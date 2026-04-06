@@ -1,6 +1,5 @@
 # Enforced Zero-Knowledge L1 Architecture — Design Document
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement the companion implementation plan task-by-task.
 
 **Goal:** Replace all simulated cryptographic primitives with real ZK proof infrastructure, making every transaction on the Agentic Chain require a verified zero-knowledge proof — no transparent transactions exist.
 

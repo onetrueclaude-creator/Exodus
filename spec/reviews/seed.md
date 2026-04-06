@@ -1,4 +1,4 @@
-# Seed — vault/reviews/
+# Seed — spec/reviews/
 
 > Review artifacts: code reviews, design reviews, architecture reviews.
 > Read `CLAUDE.md` for what's been reviewed and what's pending.

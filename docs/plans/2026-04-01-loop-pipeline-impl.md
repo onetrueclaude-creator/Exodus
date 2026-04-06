@@ -1,6 +1,5 @@
 # Loop Pipeline Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Create 4 loop commands for parent (Exodus) and 3 for each child, with collision-aware timing and terse/comprehensive prompt scaling.
 

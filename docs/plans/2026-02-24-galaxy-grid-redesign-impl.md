@@ -1,6 +1,5 @@
 # Galaxy Grid Redesign Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Transform the flat blockchain grid into a logarithmic 4-arm spiral galaxy with per-cell minigrids, faction fog, and a constrained multi-agent Claude terminal action layer.
 

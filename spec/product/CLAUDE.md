@@ -1,4 +1,4 @@
-# Change Log — vault/product/
+# Change Log — spec/product/
 
 > Tracks what changed in product documentation, what's planned, and why.
 > Read `seed.md` first.
@@ -17,7 +17,7 @@
 
 **Decided:** 4-arm spiral galaxy, faction-based grid visibility, minigrids as blockchain ledger.
 
-**Logged in:** `vault/seed.md` (golden prompt + approved design summary).
+**Logged in:** `spec/seed.md` (golden prompt + approved design summary).
 
 **Why:** Major UX update — transforms flat grid into living blockchain visualization.
 

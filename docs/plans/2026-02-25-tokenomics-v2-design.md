@@ -1,6 +1,5 @@
 # AGNTC Tokenomics v2 — Design Document
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Date:** 2026-02-25
 **Status:** Approved

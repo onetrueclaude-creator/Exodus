@@ -1,6 +1,5 @@
 # A* Priority Registry + Mailbox Relocation — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Add adaptive priority scoring to all .claude/ files, create a prioritize skill that rescores each loop iteration, and relocate the mailbox (inbox/outbox) from .claude/ to the project root.
 

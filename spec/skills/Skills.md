@@ -1,11 +1,11 @@
 # Skill Library — Master Index
 
-> All 10 expert skills for the ZkAgentic + Conclave project.
+> All 10 expert skills for the ZkAgentic + ZK Agentic project.
 > Invoke with `/skills:<name>` in Claude Code.
 
 ---
 
-## General Skills (Conclave Monorepo)
+## General Skills (ZK Agentic Monorepo)
 
 | Skill | Invocation | Domain |
 |-------|-----------|--------|
@@ -47,7 +47,7 @@
 ## File Structure
 
 ```
-vault/skills/
+spec/skills/
 ├── Skills.md                          ← this file
 ├── frontend-expert/skill-description.md
 ├── backend-expert/skill-description.md

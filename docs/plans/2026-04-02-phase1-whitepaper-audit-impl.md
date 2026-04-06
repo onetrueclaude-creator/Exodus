@@ -1,6 +1,5 @@
 # Phase 1: Whitepaper Audit — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Systematically audit whitepaper v1.2 against testnet code, fix all discrepancies, verify math formulas, and produce whitepaper v1.3 with zero code-spec mismatches.
 

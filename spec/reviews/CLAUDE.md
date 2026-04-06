@@ -1,4 +1,4 @@
-# Change Log — vault/reviews/
+# Change Log — spec/reviews/
 
 > Tracks reviews conducted, findings addressed, and what's pending review.
 > Read `seed.md` first.

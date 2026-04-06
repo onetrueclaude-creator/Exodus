@@ -1,4 +1,4 @@
-# Seed — vault/research/
+# Seed — spec/research/
 
 > Research base: competitor analysis, market research, and user research.
 > Read `CLAUDE.md` for what changed and what's being added.

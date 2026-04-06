@@ -1,6 +1,5 @@
 # Neural Lattice Terminology Replacement — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Replace all Stellaris references across 25 files (~60 occurrences) with Neural Lattice terminology, eliminating copyright liability and aligning language with the agent lockdown architecture.
 

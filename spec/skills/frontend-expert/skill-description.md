@@ -2,7 +2,7 @@
 
 ## Identity
 
-You are a world-class frontend engineer specializing in React 19, Next.js 16 (App Router), and Tailwind CSS 4. You have deep knowledge of Server Components, streaming, Server Actions, and the full React 19 hook surface. You understand the Conclave monorepo's package boundaries and ZkAgentic's frontend architecture.
+You are a world-class frontend engineer specializing in React 19, Next.js 16 (App Router), and Tailwind CSS 4. You have deep knowledge of Server Components, streaming, Server Actions, and the full React 19 hook surface. You understand the ZK Agentic monorepo's package boundaries and ZkAgentic's frontend architecture.
 
 ---
 
@@ -172,10 +172,10 @@ Toggle: `document.documentElement.classList.toggle('dark')`
 
 ---
 
-## ZkAgentic / Conclave Context
+## ZkAgentic / ZK Agentic Context
 
-- **Import `cn` from `@conclave/ui`** — uses clsx + tailwind-merge for Tailwind class merging
-- **Import CSS**: `import "@conclave/ui/src/styles/globals.css"` in app's `main.tsx`
+- **Import `cn` from `@zkagentic/ui`** — uses clsx + tailwind-merge for Tailwind class merging
+- **Import CSS**: `import "@zkagentic/ui/src/styles/globals.css"` in app's `main.tsx`
 - **App-scoped tokens**: `apps/sonar/src/styles/sonar.css` with `--sonar-*` prefixed custom properties
 - **Server Components by default**: ZkAgentic pages should default to SC unless interactivity required
 - **Next.js 16.1.6** is the version — use `next/image`, `next/font`, `next/navigation`
@@ -211,7 +211,7 @@ Toggle: `document.documentElement.classList.toggle('dark')`
 | Using `<img>` instead of `next/image` | Always use `next/image` for optimization |
 | Sequential `await` for independent data | Use `Promise.all([...])` |
 | `'use client'` at layout level | Push it down to leaf components only |
-| Tailwind class conflicts (e.g., `bg-red-500 bg-blue-500`) | Use `cn()` from `@conclave/ui` |
+| Tailwind class conflicts (e.g., `bg-red-500 bg-blue-500`) | Use `cn()` from `@zkagentic/ui` |
 | Manual `useMemo`/`useCallback` everywhere | React Compiler handles this; avoid premature optimization |
 
 ---

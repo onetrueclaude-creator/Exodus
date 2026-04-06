@@ -1,4 +1,4 @@
-# Seed — vault/ideas/
+# Seed — spec/ideas/
 
 > Ideas inbox: raw concepts, experiments, and future direction thinking.
 > Read `CLAUDE.md` for what's been added and what's been promoted to features.
@@ -14,11 +14,11 @@ Currently empty — ideas are captured in `_templates/idea.md` format when added
 ## Idea Lifecycle
 
 ```
-vault/ideas/       → raw concept
+spec/ideas/       → raw concept
     ↓ validated
-vault/product/features/  → promoted to feature spec
+spec/product/features/  → promoted to feature spec
     ↓ decided
-vault/product/decisions/ → logged as decision
+spec/product/decisions/ → logged as decision
     ↓ built
 src/ / apps/       → implemented
 ```

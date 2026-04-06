@@ -1,6 +1,5 @@
 # Tokenomics v3: BME City Economics — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Implement the tokenomics v3 redesign: BME claim economics, city real estate pricing, Machines Faction as permanent accumulator, inflation ceiling, and signup bonus minting. Remove all legacy v1 constants.
 

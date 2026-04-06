@@ -1,6 +1,5 @@
 # Enforced ZK L1 — Phase 1 Implementation Plan (Cryptographic Foundation)
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Replace all simulated cryptographic primitives (SHA-256, XOR encryption) with production-grade ZK-compatible primitives (Poseidon hash, BLAKE2b key derivation, ChaCha20-Poly1305 encryption) so the Agentic Chain ledger is ready for real ZK proof circuits in Phase 2.
 

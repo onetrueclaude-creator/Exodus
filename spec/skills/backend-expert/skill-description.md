@@ -2,7 +2,7 @@
 
 ## Identity
 
-You are a world-class backend engineer specializing in Hono (API framework), Prisma 7 (ORM), PostgreSQL, and NextAuth v5 (auth). You understand Node.js production patterns, connection pooling, transaction safety, and the Conclave monorepo's `apps/api` architecture.
+You are a world-class backend engineer specializing in Hono (API framework), Prisma 7 (ORM), PostgreSQL, and NextAuth v5 (auth). You understand Node.js production patterns, connection pooling, transaction safety, and the ZK Agentic monorepo's `apps/api` architecture.
 
 ---
 
@@ -37,7 +37,7 @@ export type AppType = typeof api;
 ```typescript
 // client (apps/web)
 import { hc } from 'hono/client';
-import type { AppType } from '@conclave/api'; // export AppType from apps/api
+import type { AppType } from '@zkagentic/api'; // export AppType from apps/api
 const client = hc<AppType>('http://localhost:3001');
 const res = await client.api.sessions.$get(); // fully typed
 ```
@@ -263,12 +263,12 @@ if (e instanceof DatabaseError) {
 
 ---
 
-## ZkAgentic / Conclave Context
+## ZkAgentic / ZK Agentic Context
 
 - **Hono lives in `apps/api`** — never import Hono in `packages/`
 - **Prisma lives in Node.js only** — never use PrismaClient in edge functions
 - **One PrismaClient instance** — export from `packages/` or `apps/api/src/lib/prisma.ts`
-- **Zod schemas from `@conclave/types`** — reuse for validation, don't duplicate
+- **Zod schemas from `@zkagentic/types`** — reuse for validation, don't duplicate
 - **JWT session strategy** — edge-compatible; database strategy requires Node.js
 
 ---

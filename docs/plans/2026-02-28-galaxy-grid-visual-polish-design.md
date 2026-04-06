@@ -1,6 +1,5 @@
 # Galaxy Grid Visual Polish — Design Document
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task.
 
 **Goal:** Transform the galaxy grid from a flat prototype into a deep-space atmosphere with distinctive faction glyphs, clean connections, and proper origin node isolation.
 

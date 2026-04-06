@@ -1,4 +1,4 @@
-# Change Log — vault/research/
+# Change Log — spec/research/
 
 > Tracks what research has been added, what's planned, and why.
 > Read `seed.md` first.

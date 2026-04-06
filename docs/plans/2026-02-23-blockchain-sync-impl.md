@@ -1,6 +1,5 @@
 # Blockchain Sync — Supabase Middleware Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Make Supabase the sole read source for blockchain grid state — Python syncs after each block, frontend never polls the Python API for grid data on startup.
 

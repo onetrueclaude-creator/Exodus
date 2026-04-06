@@ -1,4 +1,4 @@
-# Change Log — vault/engineering/
+# Change Log — spec/engineering/
 
 > Tracks what changed in engineering documentation, what's planned, and why.
 > Read `seed.md` first.

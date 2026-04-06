@@ -1,6 +1,5 @@
 # Supabase Game State Layer — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Migrate ZK Agentic Network from NextAuth + local PostgreSQL + Zustand-only persistence to a single Supabase backend serving the entire game state with Realtime push.
 

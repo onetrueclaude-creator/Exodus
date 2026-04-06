@@ -1,6 +1,5 @@
 # Filesystem Reorganization — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Restructure the Exodus monorepo from 35+ root items with duplicates into a clean, industry-aligned hierarchy: `chain/`, `apps/game/`, `web/`, `spec/`, `docs/`, `tests/`.
 

@@ -1,4 +1,4 @@
-# Change Log — vault/collaborate/
+# Change Log — spec/collaborate/
 
 > Tracks collaboration activity: questions asked, answers received, decisions made.
 > Read `seed.md` first.
