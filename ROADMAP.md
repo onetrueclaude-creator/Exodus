@@ -72,6 +72,7 @@ ZK Agentic Chain follows a 6-phase sequential rollout — from whitepaper throug
 - Rust implementation of Proof of AI Verification (PoAIV) consensus
 - L1 node software (replaces Python testnet)
 - Lock-and-mint bridge: Solana SPL → native AGNTC migration
+- Quantum-resistant hashing: SHA-3 (SHAKE256) for node verification, SPHINCS+ for identity proofs
 - Formal verification of core protocol mechanisms
 - Mainnet launch
 
