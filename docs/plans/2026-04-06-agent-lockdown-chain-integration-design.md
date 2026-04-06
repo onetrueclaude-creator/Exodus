@@ -239,7 +239,7 @@ New file: `tests/demo-playbook.md`
 ### 6a. Setup
 
 ```
-1. cd /Users/toyg/zkagentic-node
+1. cd <node-repo-path>
 2. python3 verify.py       → confirm canonical hash
 3. claude                   → opens locked terminal
 4. Menu should appear immediately — no greeting, no chat
