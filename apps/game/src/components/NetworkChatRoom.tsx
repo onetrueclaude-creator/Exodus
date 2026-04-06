@@ -9,11 +9,11 @@ const TIER_COLOR: Record<string, string> = {
   haiku: 'text-yellow-400',
 };
 
-interface GalaxyChatRoomProps {
+interface NetworkChatRoomProps {
   onSend: (text: string) => void;
 }
 
-export default function GalaxyChatRoom({ onSend }: GalaxyChatRoomProps) {
+export default function NetworkChatRoom({ onSend }: NetworkChatRoomProps) {
   const [input, setInput] = useState('');
   const [collapsed, setCollapsed] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);

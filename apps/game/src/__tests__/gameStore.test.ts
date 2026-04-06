@@ -1,27 +1,27 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { useGameStore } from "@/store/gameStore";
 
-describe("gameStore — galaxy/blocknode state", () => {
+describe("gameStore — lattice/blocknode state", () => {
   beforeEach(() => {
     useGameStore.getState().reset();
   });
 
-  it("initGalaxy sets blocknodes and totalBlocksMined", () => {
-    useGameStore.getState().initGalaxy(3);
+  it("initLattice sets blocknodes and totalBlocksMined", () => {
+    useGameStore.getState().initLattice(3);
     const s = useGameStore.getState();
     expect(s.totalBlocksMined).toBe(3);
     expect(Object.keys(s.blocknodes)).toHaveLength(12); // 4 factions × 3 blocks
   });
 
   it("addBlocknodesForBlock adds 4 new nodes", () => {
-    useGameStore.getState().initGalaxy(2);
+    useGameStore.getState().initLattice(2);
     useGameStore.getState().addBlocknodesForBlock(2);
     const s = useGameStore.getState();
     expect(Object.keys(s.blocknodes)).toHaveLength(12); // 3 blocks = 12 nodes
   });
 
   it("claimBlocknode sets ownerId but does NOT auto-add to visibleFactions", () => {
-    useGameStore.getState().initGalaxy(1);
+    useGameStore.getState().initLattice(1);
     const result = useGameStore.getState().claimBlocknode("block-0-community", "user-001");
     expect(result).toBe(true);
     const state = useGameStore.getState();
@@ -31,27 +31,27 @@ describe("gameStore — galaxy/blocknode state", () => {
   });
 
   it("revealFaction adds faction to visibleFactions", () => {
-    useGameStore.getState().initGalaxy(1);
+    useGameStore.getState().initLattice(1);
     useGameStore.getState().revealFaction("community");
     expect(useGameStore.getState().visibleFactions).toContain("community");
   });
 
   it("revealFaction is idempotent — does not duplicate", () => {
-    useGameStore.getState().initGalaxy(1);
+    useGameStore.getState().initLattice(1);
     useGameStore.getState().revealFaction("community");
     useGameStore.getState().revealFaction("community");
     expect(useGameStore.getState().visibleFactions.filter((f) => f === "community").length).toBe(1);
   });
 
   it("claimBlocknode returns false for already claimed node", () => {
-    useGameStore.getState().initGalaxy(1);
+    useGameStore.getState().initLattice(1);
     useGameStore.getState().claimBlocknode("block-0-community", "user-001");
     const result = useGameStore.getState().claimBlocknode("block-0-community", "user-002");
     expect(result).toBe(false);
   });
 
   it("claimBlocknode rejects cross-faction claim when currentUserFaction is set", () => {
-    useGameStore.getState().initGalaxy(1);
+    useGameStore.getState().initLattice(1);
     // User belongs to community — cannot claim treasury nodes
     useGameStore.getState().setCurrentUserFaction("community");
     const result = useGameStore.getState().claimBlocknode("block-0-treasury", "user-001");
@@ -60,7 +60,7 @@ describe("gameStore — galaxy/blocknode state", () => {
   });
 
   it("claimBlocknode returns false when currentUserFaction is set (arm nodes are faction infrastructure, not user territory)", () => {
-    useGameStore.getState().initGalaxy(1);
+    useGameStore.getState().initLattice(1);
     useGameStore.getState().setCurrentUserFaction("community");
     const result = useGameStore.getState().claimBlocknode("block-0-community", "user-001");
     expect(result).toBe(false);
@@ -68,7 +68,7 @@ describe("gameStore — galaxy/blocknode state", () => {
   });
 
   it("claimBlocknode bypasses faction check when currentUserFaction is null (dev seed)", () => {
-    useGameStore.getState().initGalaxy(1);
+    useGameStore.getState().initLattice(1);
     // currentUserFaction is null after reset — dev seeds can claim any faction
     expect(useGameStore.getState().currentUserFaction).toBeNull();
     const result = useGameStore.getState().claimBlocknode("block-0-treasury", "dev-treasury");
@@ -76,7 +76,7 @@ describe("gameStore — galaxy/blocknode state", () => {
   });
 
   it("claimBlocknode does not deduct AGNTC when currentUserFaction is set (arm nodes blocked)", () => {
-    useGameStore.getState().initGalaxy(1);
+    useGameStore.getState().initLattice(1);
     useGameStore.setState({ agntcBalance: 5 });
     useGameStore.getState().setCurrentUserFaction("community");
     useGameStore.getState().claimBlocknode("block-0-community", "user-001");
@@ -84,7 +84,7 @@ describe("gameStore — galaxy/blocknode state", () => {
   });
 
   it("claimBlocknode rejects when AGNTC balance is too low", () => {
-    useGameStore.getState().initGalaxy(1);
+    useGameStore.getState().initLattice(1);
     useGameStore.setState({ agntcBalance: 0 });
     useGameStore.getState().setCurrentUserFaction("community");
     const result = useGameStore.getState().claimBlocknode("block-0-community", "user-001");
@@ -92,7 +92,7 @@ describe("gameStore — galaxy/blocknode state", () => {
   });
 
   it("claimBlocknode rejects ring-1 when ring-0 not owned by user", () => {
-    useGameStore.getState().initGalaxy(2);
+    useGameStore.getState().initLattice(2);
     useGameStore.getState().setCurrentUserFaction("community");
     // ring-0 not claimed — trying ring-1 should fail
     const result = useGameStore.getState().claimBlocknode("block-1-community", "user-001");
@@ -100,7 +100,7 @@ describe("gameStore — galaxy/blocknode state", () => {
   });
 
   it("claimBlocknode does not allow ring-1 claims (arm nodes are faction infrastructure, not user territory)", () => {
-    useGameStore.getState().initGalaxy(2);
+    useGameStore.getState().initLattice(2);
     useGameStore.setState({ agntcBalance: 10 });
     useGameStore.getState().setCurrentUserFaction("community");
     // All arm node claims are rejected for regular users regardless of ring or AGNTC
@@ -111,7 +111,7 @@ describe("gameStore — galaxy/blocknode state", () => {
   });
 
   it("secureBlocknode increases agntcBalance and decreases energy", () => {
-    useGameStore.getState().initGalaxy(1);
+    useGameStore.getState().initLattice(1);
     useGameStore.getState().claimBlocknode("block-0-community", "user-001");
     const energyBefore = useGameStore.getState().energy;
     useGameStore.getState().secureBlocknode("block-0-community", 100);
@@ -121,7 +121,7 @@ describe("gameStore — galaxy/blocknode state", () => {
   });
 
   it("secureBlocknode does NOT spawn new nodes", () => {
-    useGameStore.getState().initGalaxy(1);
+    useGameStore.getState().initLattice(1);
     useGameStore.getState().claimBlocknode("block-0-community", "user-001");
     const nodesBefore = Object.keys(useGameStore.getState().blocknodes).length;
     // Stake large amount — used to trigger ring spawn, should not any more
@@ -199,7 +199,7 @@ describe("gameStore — empireColor (subscription tier color)", () => {
 describe("gameStore — grid node territory (mineGridNode / claimGridNode)", () => {
   beforeEach(() => {
     useGameStore.getState().reset();
-    useGameStore.getState().initGalaxy(1);
+    useGameStore.getState().initLattice(1);
     // New user init order: claim homenode FIRST (faction null = init mode), then set faction
     useGameStore.setState({ currentUserId: "user-001", energy: 1000, agntcBalance: 50 });
     useGameStore.getState().claimBlocknode("block-0-community", "user-001");
@@ -242,10 +242,10 @@ describe("gameStore — grid node territory (mineGridNode / claimGridNode)", () 
   });
 
   it("mineGridNode returns false when cell not adjacent to arm or owned territory", () => {
-    // Use initGalaxy(3) for larger mineableRange; (1,-4) is community territory
+    // Use initLattice(3) for larger mineableRange; (1,-4) is community territory
     // but NOT adjacent to any community arm node (Chebyshev > 1 from all)
     useGameStore.getState().reset();
-    useGameStore.getState().initGalaxy(3);
+    useGameStore.getState().initLattice(3);
     useGameStore.setState({ currentUserId: "user-001", energy: 1000, agntcBalance: 50 });
     useGameStore.getState().claimBlocknode("block-0-community", "user-001");
     useGameStore.getState().setCurrentUserFaction("community");
@@ -291,7 +291,7 @@ describe("gameStore — grid node territory (mineGridNode / claimGridNode)", () 
     // (-1,-2) is adjacent to claimed (0,-2) but also adjacent to arm (0,-1) at distance max(1,1)=1
     // Let me use (0,-3) which is adjacent to claimed (0,-2) only (community arm is at (0,-1), distance 2)
     const result = useGameStore.getState().mineGridNode(0, -3);
-    // (0,-3) is within mineableRange=2 only if |cy|=3 ≤ 2 → out of range with initGalaxy(1)!
+    // (0,-3) is within mineableRange=2 only if |cy|=3 ≤ 2 → out of range with initLattice(1)!
     // So this cell would fail range check. Just verify the claim path works.
     expect(result).toBe(false); // out of range — need more blocks to reach ring -3
   });

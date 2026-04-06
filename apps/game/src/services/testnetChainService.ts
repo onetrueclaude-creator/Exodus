@@ -15,7 +15,7 @@ import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent
 import type { ChainService } from './chainService';
 import * as api from './testnetApi';
 
-/** Visual grid extent (matches GalaxyGrid GRID_EXTENT / 2) */
+/** Visual grid extent (matches LatticeGrid GRID_EXTENT / 2) */
 const VISUAL_HALF = 4000;
 const VISUAL_SPAN = VISUAL_HALF * 2; // 8000
 
@@ -129,7 +129,7 @@ export class TestnetChainService implements ChainService {
   async registerAgent(userId: string, tier: AgentTier): Promise<Agent> {
     // For testnet, wallet_index defaults to 0 (first wallet)
     // In production, this would be derived from the authenticated user
-    const result = await api.birthStarSystem(0);
+    const result = await api.birthNode(0);
     const position = chainToVisual(result.coordinate.x, result.coordinate.y);
 
     return {
@@ -151,7 +151,7 @@ export class TestnetChainService implements ChainService {
   }
 
   async postHaiku(agentId: string, text: string): Promise<HaikuMessage> {
-    // Local broadcast — GalaxyChatRoom uses this for network-wide chat
+    // Local broadcast — NetworkChatRoom uses this for network-wide chat
     // Point-to-point messaging uses sendMessage() instead
     return {
       id: `haiku-${Date.now()}`,

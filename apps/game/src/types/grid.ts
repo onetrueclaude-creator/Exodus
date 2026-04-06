@@ -54,7 +54,7 @@ export interface GridNode {
 }
 
 /** Full network state — snapshot of all blocknodes, grid nodes, and visible factions */
-export interface GalaxyState {
+export interface LatticeState {
   blocknodes: Record<string, BlockNode>; // keyed by blocknode id (arm nodes)
   gridNodes: Record<string, GridNode>; // keyed by "grid-{cx}-{cy}" (territory nodes)
   totalBlocksMined: number;

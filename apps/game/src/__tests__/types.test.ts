@@ -7,7 +7,7 @@ import type {
   BlockNode,
   FactionId,
   CellCoord,
-  GalaxyState,
+  LatticeState,
 } from "@/types";
 
 describe("Type definitions", () => {
@@ -96,7 +96,7 @@ describe("Type definitions", () => {
     expect(coord.cy).toBe(-2);
   });
 
-  it("should allow creating a valid GalaxyState", () => {
+  it("should allow creating a valid LatticeState", () => {
     const node: BlockNode = {
       id: "block-0-community",
       blockIndex: 0,
@@ -109,7 +109,7 @@ describe("Type definitions", () => {
       stakedCpu: 0,
       cumulativeSecures: 0,
     };
-    const state: GalaxyState = {
+    const state: LatticeState = {
       blocknodes: { "block-0-community": node },
       gridNodes: {},
       totalBlocksMined: 1,

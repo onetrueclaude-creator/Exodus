@@ -15,12 +15,12 @@ const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 3;
 const MIN_INITIAL_ZOOM = 0.8; // minimum zoom level on first blocknode render
 
-interface GalaxyGridProps {
+interface LatticeGridProps {
   onSelectAgent?: (agentId: string) => void;
   onDeselect?: () => void;
 }
 
-export default function GalaxyGrid({ onDeselect }: GalaxyGridProps) {
+export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const worldRef = useRef<Container | null>(null);

@@ -1,7 +1,7 @@
 import type { GridPosition } from "./grid";
 
 export type { GridPosition, FogLevel } from "./grid";
-export type { BlockNode, FactionId, CellCoord, GalaxyState, GridNode } from "./grid";
+export type { BlockNode, FactionId, CellCoord, LatticeState, GridNode } from "./grid";
 export type { AgentTier, Agent, Planet } from "./agent";
 export type { HaikuMessage, DiplomaticState } from "./haiku";
 export type { ResearchCategory, ResearchItem, ResearchProgress } from "./research";

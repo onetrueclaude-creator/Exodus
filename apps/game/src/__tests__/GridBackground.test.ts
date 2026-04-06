@@ -33,7 +33,7 @@ import {
   updateGridBackground,
   FACTION_COLORS,
 } from "@/components/grid/GridBackground";
-import { buildGenesisBlocknodes } from "@/lib/galaxy";
+import { buildGenesisBlocknodes } from "@/lib/lattice";
 
 describe("FACTION_COLORS", () => {
   it("all 4 factions have colors defined", () => {
