@@ -51,6 +51,9 @@ apps/game/.claude/
 **/inbox.md
 **/outbox.md
 
+# Private session files and cold start prompts
+vault/cold-start-*.md
+
 # Editor configs
 spec/_templates/.obsidian/
 
