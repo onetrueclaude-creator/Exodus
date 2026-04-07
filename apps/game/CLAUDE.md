@@ -63,9 +63,10 @@ Gamified social media dApp built on the Neural Lattice where users explore a 2D 
 - Node density = resource richness (0-100%), multiplies CPU cost for Secure actions
 
 ## Subscription Tiers
-- **Community (free)**: Sonnet Homenode, 1000 CPU Energy, yellowish-orange theme, deploys Haiku only
-- **Professional ($50/mo)**: Opus Homenode, 500 CPU Energy, cyan blue theme, deploys up to Opus
-- **Max ($200/mo)**: Opus Homenode, 2000 CPU Energy, purple theme, unlimited Opus deployment
+- **Community (free)**: 1,000 CPU Energy, yellowish-orange theme
+- **Professional ($50/mo)**: 5,000 CPU Energy, cyan blue theme
+
+All tiers can deploy any Claude model (Haiku/Sonnet/Opus) for both homenode and child agents. API cost is the natural gate. Tiers control resources (CPU Energy, deploy range, node count), visual theme, and governance weight.
 
 ## Onboarding Flow
 Landing (/) → Google OAuth → /onboard (choose unique username, real-time check) → /subscribe (choose tier) → /game
@@ -81,7 +82,7 @@ Top-level commands:
    - **Stats** → full status report
 3. **Adjust Securing Operations Rate** → staking CPU sub-choices
 4. **Adjust Network Parameters** → mining rate + border pressure
-5. **Settings** → network color (Opus only), status report
+5. **Settings** → network color (premium visual feature), status report
 
 ## Commands
 - `npm run dev` — development server (localhost:3000)
@@ -100,20 +101,20 @@ Top-level commands:
 
 > I go to zkagenticnetwork.com, I see a landing page asking for Google Login. I am already logged in to Google from my Chrome. I click the Google auth that the website is asking me, Google automatically connects, only providing my email address. Then I see another window asking me for a unique username. I am asked to enter a unique username. I try entering "God" as username, but the entry box flashes red and says that username cannot be taken. It seems to check and compare against its datasets and checks and denies duplicate username attempts. That's good. I find a unique username and enter it.
 >
-> I am asked to choose between three subscription methods. First one is Free for Community, a yellowish orange themed tier card. Second one is for Professional method, a cyan blue tier card. And a Max access tier, able to start with Opus 4.6 agent model. I see that the Free for Community access can only create Sonnet agent at max and it says on the card "Sonnet Homenode". Max says "Opus Homenode", Pro says "Opus Homenode". I choose free tier for now.
+> I am asked to choose between two subscription methods. First one is Free for Community, a yellowish orange themed tier card. Second one is for Professional method, a cyan blue tier card. The tier cards show CPU Energy allocation, deploy range, node count, and governance weight. Each tier can use any Claude model — the difference is in resources, not model access. I choose free tier for now.
 >
 > I am now presented with a 2D grid map of the entire visualized blockchain environment. I see nodes with coordinates written on them. I see on the right upper corner the Timechain stats — it gives the genesis block timestamp, and it has a live blockchain, it shows how many epochs and blocks mined values, it shows critical live blockchain stats. For now it shows it is on testnet.
 >
-> I seem to have a CPU Energy ticker on the resources tab on the top, and Secured Chains. When the 2D grid map first rendered, it was focused on my Sonnet Homenode. I see Neural Lattice networked nodes, and my Homenode has a border around it, it is yellow, like the subscription tier I've chosen.
+> I seem to have a CPU Energy ticker on the resources tab on the top, and Secured Chains. When the 2D grid map first rendered, it was focused on my Homenode. I see Neural Lattice networked nodes, and my Homenode has a border around it, it is yellow, like the subscription tier I've chosen.
 >
-> I see a window opened to give my Sonnet prewritten commands. There are: Deploy Agent, Blockchain Protocols, Adjust Securing Operations Rate, Adjust Network Parameters, and Settings. I click Blockchain Protocols. This choice is most likely the only choice to perform operations on chain, it looks like. The Sonnet now asks me for additional prewritten choices: Secure, Write Data On Chain, Read Data On Chain, Transact, Stats.
+> I see a window opened to give my agent prewritten commands. There are: Deploy Agent, Blockchain Protocols, Adjust Securing Operations Rate, Adjust Network Parameters, and Settings. I click Blockchain Protocols. This choice is most likely the only choice to perform operations on chain, it looks like. The agent now asks me for additional prewritten choices: Secure, Write Data On Chain, Read Data On Chain, Transact, Stats.
 >
-> For now I choose Secure. Other choices are self-explanatory and they can do what they say. Sonnet now asks me to choose again, for how many block generation cycles and for how much AGNTC Coin. It says I will have to pay CPU Energy on this action, and it says the AGNTC Coin I will receive is calculated from how much actual CPU that I will use by spending Claude usage.
+> For now I choose Secure. Other choices are self-explanatory and they can do what they say. The agent now asks me to choose again, for how many block generation cycles and for how much AGNTC Coin. It says I will have to pay CPU Energy on this action, and it says the AGNTC Coin I will receive is calculated from how much actual CPU that I will use by spending Claude usage.
 >
 > When I click execute action for 10 generations, and spend 500 of my CPU Energy (which is the yellow resource value shown above the 2D grid map), I click execute and it shows -500 CPU Energy in red right next to the yellow display, but the Secured Chains has +1 in green right next to it. The initial values were 1000 CPU Energy and 0 Secured Chains. Now it says 1000-500 CPU Energy and 0+1 Secured Chains. It looks like it will update in the next block creation cycle.
 >
 > The right-hand side stats window seems to be showing how many block creation cycles it has been since the genesis block creation, and est. time for next block creation. It seems to be creating a block every minute or so and has been creating for many minutes now since the genesis.
 >
-> I now look at the 2D map. I can click on the unclaimed nodes. I see that I can also deploy clones in the left-hand side bar — it changed when I clicked on the unclaimed node. I close the chat with my Sonnet. I click "create agent" on the left bar while an unclaimed node is selected. Also I notice the Node density values. I see that this is a rich density node, which will give multipliers on the cost of the CPU Energy per blockchain Secure actions.
+> I now look at the 2D map. I can click on the unclaimed nodes. I see that I can also deploy clones in the left-hand side bar — it changed when I clicked on the unclaimed node. I close the chat with my agent. I click "create agent" on the left bar while an unclaimed node is selected. Also I notice the Node density values. I see that this is a rich density node, which will give multipliers on the cost of the CPU Energy per blockchain Secure actions.
 >
-> I create a Haiku because it only allows me to create Haiku because I am a free user, but I'm sure the Max subscription tier allows full Opus model agent creation for Securing nodes.
+> I see model options: Haiku, Sonnet, and Opus. Each shows an estimated API cost indicator. I choose Haiku because it's the most cost-effective for a secondary node. I could deploy Opus here, but the API costs would be significantly higher — the choice is economic, not a tier restriction.
