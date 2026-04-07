@@ -83,7 +83,6 @@ export async function POST(req: Request) {
     startEnergy: plan.startEnergy,
     startAgntc: plan.startAgntc,
     startMinerals: plan.startMinerals,
-    startAgent: plan.startAgent,
   });
 }
 

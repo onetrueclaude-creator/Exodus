@@ -1,7 +1,7 @@
 # Phase 2 Gate: Open-Source Readiness — Research & Plan
 
 > **Date:** 2026-04-05
-> **Status:** Research (append-only, no implementation yet)
+> **Status:** COMPLETE (2026-04-06) — all gate items done. Repo public, CI green, SECURITY.md published, 5 PRs merged.
 > **Scope:** SECURITY.md, .github/ templates, CI/CD, README fixes, merge → main, go public
 > **Previous work:** `2026-04-03-wp6-wp7-deploy-opensource-design.md` (LICENSE, README, CONTRIBUTING.md done)
 

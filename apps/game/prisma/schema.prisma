@@ -85,7 +85,7 @@ model WaitlistEntry {
 // --- Subscription tiers ---
 
 enum SubscriptionTier {
-  COMMUNITY      // Free — starts with Sonnet, 100 Energy
-  PROFESSIONAL   // $50/mo — starts with Sonnet, 500 Energy, validator access
-  MAX            // Premium — starts with Opus, 2000 Energy, full features
+  COMMUNITY      // Free — 1,000 CPU Energy, 1 Moore ring
+  PROFESSIONAL   // $50/mo — 5,000 CPU Energy, 2 Moore rings
+  MAX            // Dormant — 20,000 CPU Energy (hidden from UI)
 }

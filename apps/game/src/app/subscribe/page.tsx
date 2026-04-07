@@ -92,9 +92,6 @@ export default function SubscribePage() {
                     <span className={`text-[15px] font-semibold ${textClass}`} style={{ fontFamily: "'Outfit', sans-serif" }}>
                       {plan.name}
                     </span>
-                    <span className={`ml-2 text-[11px] ${textClass} opacity-60`} style={{ fontFamily: "'Fira Code', monospace" }}>
-                      {plan.homenode}
-                    </span>
                   </div>
                   <span className={`text-[13px] font-semibold ${textClass}`} style={{ fontFamily: "'Fira Code', monospace" }}>
                     {plan.priceLabel}
@@ -104,9 +101,6 @@ export default function SubscribePage() {
                   <span>{plan.startEnergy} CPU Energy</span>
                   <span>{plan.startAgntc} AGNTC</span>
                   <span>{plan.startMinerals} Data Frags</span>
-                </div>
-                <div className="text-[9px] text-text-muted/30" style={{ fontFamily: "'Fira Code', monospace" }}>
-                  Max deploy: {plan.maxAgentTier === 'opus' ? 'Opus / Sonnet / Haiku' : 'Haiku only'}
                 </div>
               </button>
             );
