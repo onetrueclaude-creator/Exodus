@@ -1,5 +1,3 @@
-import type { AgentTier } from "./agent";
-
 export type SubscriptionTier = "COMMUNITY" | "PROFESSIONAL" | "MAX";
 
 export interface SubscriptionPlan {

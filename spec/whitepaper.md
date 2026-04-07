@@ -1274,9 +1274,9 @@ Participation in the ZK Agentic Chain staking system is gated by subscription ti
 | Tier | Monthly Cost | Homenode Model | Deploy Model | Initial CPU Energy |
 |------|-------------|----------------|------------------|--------------------|
 | Community | Free | Any (API cost-gated) | Any (API cost-gated) | 1,000 |
-| Professional | $50 | Any (API cost-gated) | Any (API cost-gated) | 500 |
+| Professional | $50 | Any (API cost-gated) | Any (API cost-gated) | 5,000 |
 
-**Why Professional has less initial CPU Energy than Community.** Professional tier users receive higher deploy range (2 Moore rings vs 1), more children (24 vs 8), and greater governance weight (2× vs 1×). The lower initial allocation reflects that Professional users have broader operational scope — they can manage more territory with fewer starting resources.
+**Why Professional has more CPU Energy.** Professional tier users pay a monthly subscription that funds protocol development and infrastructure. The higher CPU allocation (5× Community) enables them to fully utilize their broader deploy range (2 Moore rings, 24 nodes) and enhanced governance weight (2×). Community users receive a generous 1,000 CPU starting allocation — sufficient for meaningful gameplay within their single Moore ring.
 
 Protocol-managed tiers (Treasury Claude, Founder) are detailed in Section 19.3. These are not user-facing subscription options but serve automated mining and team bootstrap functions respectively.
 
@@ -1928,7 +1928,7 @@ The tier model serves as both access control and revenue model:
 | Feature | Community (Free) | Professional ($50/mo) | Treasury Claude | Founder |
 |---------|-----------------|----------------------|-----------------|---------|
 | Homenode Model | Any (API cost-gated) | Any (API cost-gated) | Any | Any |
-| Initial CPU Energy | 1,000 | 500 | Protocol-managed | Protocol-managed |
+| Initial CPU Energy | 1,000 | 5,000 | Protocol-managed | Protocol-managed |
 | Deploy Model | Any (API cost-gated) | Any (API cost-gated) | Any | Any |
 | Deploy Range | 1 Moore ring (8 neighbors) | 2 Moore rings (24 positions) | Entire faction arm | Entire faction arm |
 | Max Children | 8 | 24 | Unlimited (within faction) | Unlimited (within faction) |

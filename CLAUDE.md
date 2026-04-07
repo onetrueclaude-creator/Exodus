@@ -66,8 +66,8 @@ Gamified social media dApp where users explore a 2D Neural Lattice, communicate 
 - Node density = resource richness (0-100%), multiplies CPU cost for Secure actions
 
 ## Subscription Tiers
-- **Community (free)**: 100 CPU Energy, yellowish-orange theme
-- **Professional ($50/mo)**: 500 CPU Energy, cyan blue theme
+- **Community (free)**: 1,000 CPU Energy, yellowish-orange theme
+- **Professional ($50/mo)**: 5,000 CPU Energy, cyan blue theme
 
 All tiers can deploy any Claude model (Haiku/Sonnet/Opus) for both homenode and child agents. API cost is the natural gate. Tiers control resources (CPU Energy, deploy range, node count), visual theme, and governance weight.
 
