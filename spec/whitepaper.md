@@ -1269,14 +1269,14 @@ These counters are verifiable through the AI provider's API response metadata �
 
 #### 13.3 Staking Requirements by Tier
 
-Participation in the ZK Agentic Chain staking system is gated by subscription tier, which determines the maximum agent model tier available and the initial CPU Energy allocation:
+Participation in the ZK Agentic Chain staking system is gated by subscription tier, which determines the initial CPU Energy allocation, deploy range, and governance weight. Model selection is unrestricted across all tiers (see Section 19.3):
 
-| Tier | Monthly Cost | Homenode Model | Max Deploy Model | Initial CPU Energy |
+| Tier | Monthly Cost | Homenode Model | Deploy Model | Initial CPU Energy |
 |------|-------------|----------------|------------------|--------------------|
-| Community | Free | Sonnet | Haiku | 1,000 |
-| Professional | $50 | Opus | Opus | 500 |
+| Community | Free | Any (API cost-gated) | Any (API cost-gated) | 1,000 |
+| Professional | $50 | Any (API cost-gated) | Any (API cost-gated) | 500 |
 
-**Why Professional has less initial CPU Energy than Community.** Professional tier users receive Opus-level homenodes, which generate higher yield per CPU token spent (deeper reasoning, more thorough verification). The lower initial allocation reflects that Opus inference is more expensive per call but more productive per token — Professional users achieve comparable or superior output with fewer CPU tokens.
+**Why Professional has less initial CPU Energy than Community.** Professional tier users receive higher deploy range (2 Moore rings vs 1), more children (24 vs 8), and greater governance weight (2× vs 1×). The lower initial allocation reflects that Professional users have broader operational scope — they can manage more territory with fewer starting resources.
 
 Protocol-managed tiers (Treasury Claude, Founder) are detailed in Section 19.3. These are not user-facing subscription options but serve automated mining and team bootstrap functions respectively.
 
@@ -1778,11 +1778,13 @@ The terminal uses multi-choice bubble clicks and numbered trees as the input mod
 
 The three agent tiers correspond to Claude model classes with distinct performance characteristics:
 
-**Haiku** — the entry-level agent model. Haiku agents are fast (low latency per interaction), inexpensive (low CPU token consumption per operation), and suitable for high-throughput operations. Community tier users can deploy Haiku agents at claimed nodes. Haiku agents perform standard operations — Secure cycles, data reads, basic transfers — with adequate reasoning depth for routine verification.
+**Haiku** — the entry-level agent model. Haiku agents are fast (low latency per interaction), inexpensive (low CPU token consumption per operation), and suitable for high-throughput operations. Haiku agents perform standard operations — Secure cycles, data reads, basic transfers — with adequate reasoning depth for routine verification.
 
-**Sonnet** — the balanced mid-tier model. Sonnet agents provide more thorough reasoning, better pattern recognition in verification tasks, and more detailed status analysis. All tier users receive a Sonnet homenode at registration. Sonnet agents are the default choice for users who want reliable verification without the CPU cost of Opus.
+**Sonnet** — the balanced mid-tier model. Sonnet agents provide more thorough reasoning, better pattern recognition in verification tasks, and more detailed status analysis. Sonnet agents are the default choice for users who want reliable verification without the CPU cost of Opus.
 
-**Opus** — the premium reasoning model. Opus agents apply deep, multi-step reasoning to verification tasks, examining logical consistency across extended transaction chains and identifying subtle anomalies that simpler models would miss. Available to Professional tier users, Opus agents consume significantly more CPU tokens per operation but produce higher-quality verification attestations. In consensus, an Opus agent's attestation carries the same weight as a Haiku agent's (1 vote = 1 vote), but Opus agents are more likely to correctly identify invalid transactions, reducing their false attestation risk.
+**Opus** — the premium reasoning model. Opus agents apply deep, multi-step reasoning to verification tasks, examining logical consistency across extended transaction chains and identifying subtle anomalies that simpler models would miss. Opus agents consume significantly more CPU tokens per operation but produce higher-quality verification attestations. In consensus, an Opus agent's attestation carries the same weight as a Haiku agent's (1 vote = 1 vote), but Opus agents are more likely to correctly identify invalid transactions, reducing their false attestation risk.
+
+All agent models are available to all subscription tiers. The choice between Haiku, Sonnet, and Opus is an economic decision — participants select their cost-quality tradeoff based on their Claude API budget, not their subscription level.
 
 The tiered agent system creates a natural market structure: participants choose their cost-quality tradeoff. A network with a mix of Haiku, Sonnet, and Opus agents achieves both high throughput (many Haiku agents processing quickly) and high security (Opus agents catching edge cases that simpler models miss).
 
@@ -1813,7 +1815,7 @@ The terminal presents a hierarchical command tree. At the top level:
 - Border pressure settings (how the agent responds to rival faction expansion)
 
 **5. Settings.** Node configuration:
-- Network color customization (Opus agents only — premium visual identity)
+- Network color customization (premium visual identity feature)
 - Status report generation
 - Agent model information
 
@@ -1906,13 +1908,13 @@ New participants enter the ZK Agentic Chain through a structured onboarding sequ
 
 **Step 2: Username selection.** Participants choose a unique network handle. The protocol enforces uniqueness through real-time availability checking against the global registry. Reserved names (protocol terms, faction names, offensive terms) are rejected.
 
-**Step 3: Subscription tier.** Participants select their tier (Community, Professional). The tier determines initial CPU Energy allocation, homenode model, and maximum deployable agent model. Tier can be changed at any time — upgrades take effect immediately; downgrades take effect at the next billing cycle.
+**Step 3: Subscription tier.** Participants select their tier (Community, Professional). The tier determines initial CPU Energy allocation, deploy range, and governance weight. Model selection (Haiku, Sonnet, Opus) is unrestricted across all tiers — the Claude API cost is the natural gate. Tier can be changed at any time — upgrades take effect immediately; downgrades take effect at the next billing cycle.
 
 **Step 4: Network entry.** Upon tier selection, the participant is assigned a homenode position in their faction arm. Community users are assigned to the Northwest arm, Professional users to the Southwest arm, and so on. The homenode position is determined by the current epoch ring and the golden-angle prime-twist algorithm (Section 11.2), ensuring quasi-random distribution within the faction arm.
 
 At this point, the participant has:
 - A claimed coordinate (their homenode position) with 1 AGNTC signup bonus minted
-- An active Sonnet agent at their homenode (or Opus for Professional)
+- An active agent at their homenode (model chosen during setup)
 - A 64-cell subgrid (all unassigned)
 - Their initial CPU Energy allocation
 - A terminal interface to their homenode agent
@@ -1925,9 +1927,9 @@ The tier model serves as both access control and revenue model:
 
 | Feature | Community (Free) | Professional ($50/mo) | Treasury Claude | Founder |
 |---------|-----------------|----------------------|-----------------|---------|
-| Homenode Model | Sonnet | Opus | Opus | Opus |
+| Homenode Model | Any (API cost-gated) | Any (API cost-gated) | Any | Any |
 | Initial CPU Energy | 1,000 | 500 | Protocol-managed | Protocol-managed |
-| Max Deploy Model | Haiku | Opus | Opus | Opus |
+| Deploy Model | Any (API cost-gated) | Any (API cost-gated) | Any | Any |
 | Deploy Range | 1 Moore ring (8 neighbors) | 2 Moore rings (24 positions) | Entire faction arm | Entire faction arm |
 | Max Children | 8 | 24 | Unlimited (within faction) | Unlimited (within faction) |
 | Inactivity Grace (Haiku) | 24 hours | 48 hours | No decay | No decay |
@@ -1936,6 +1938,8 @@ The tier model serves as both access control and revenue model:
 | Homenode Decay | Never | Never | Never | Never |
 | Subgrid Visibility | Own grid only | Own + neighbor summary | Full faction | Full network |
 | Governance Weight | 1× | 2× | No voting power | 5× |
+
+**Model selection is unrestricted.** All subscription tiers can deploy any available Claude model (Haiku, Sonnet, Opus) for both homenode and child agents. The natural cost gate is the Claude API bill — Opus costs approximately 19× more per token than Haiku. Participants who choose higher-cost models accept the operational expense. Tiers govern resources (CPU Energy, deploy range, subgrid visibility) and governance weight, not model access.
 
 **Deploy Range** defines how far from the homenode a participant can place child agents, measured in Moore neighborhood rings:
 
