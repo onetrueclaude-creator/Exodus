@@ -7,14 +7,11 @@ export interface SubscriptionPlan {
   name: string;
   price: number; // USD per month (0 = free)
   priceLabel: string;
-  startAgent: AgentTier;
-  homenode: string; // display label for the homenode tier
   startEnergy: number;
   startAgntc: number;
   startMinerals: number;
   features: string[];
   accent: string; // Tailwind color classes: text border bg
-  maxAgentTier: AgentTier; // highest tier agent this subscription can create
 }
 
 /** Subscription plans — determines starting conditions at registration */
@@ -24,62 +21,52 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     name: "Community",
     price: 0,
     priceLabel: "Free",
-    startAgent: "sonnet",
-    homenode: "Sonnet Homenode",
-    startEnergy: 100,
+    startEnergy: 1000,
     startAgntc: 10,
     startMinerals: 10,
     features: [
-      "1 Sonnet agent at registration",
-      "100 CPU Energy starting balance",
+      "1,000 CPU Energy starting balance",
       "10 AGNTC tokens",
-      "Deploy Haiku sub-agents",
-      "Community governance voting",
+      "Deploy any Claude model (API cost-gated)",
+      "1 Moore ring deploy range (8 nodes)",
+      "Community governance voting (1x)",
     ],
     accent: "text-white border-white/30 bg-white/5",
-    maxAgentTier: "haiku",
   },
   {
     tier: "PROFESSIONAL",
     name: "Professional",
     price: 50,
     priceLabel: "$50/mo",
-    startAgent: "sonnet",
-    homenode: "Opus Homenode",
-    startEnergy: 500,
+    startEnergy: 5000,
     startAgntc: 100,
     startMinerals: 50,
     features: [
-      "1 Sonnet agent at registration",
-      "500 Energy starting balance",
+      "5,000 CPU Energy starting balance",
       "100 AGNTC tokens",
-      "Deploy up to Opus agents",
-      "Validator node access",
+      "Deploy any Claude model (API cost-gated)",
+      "2 Moore rings deploy range (24 nodes)",
+      "Enhanced governance voting (2x)",
       "Priority border pressure",
     ],
     accent: "text-cyan-400 border-cyan-400/30 bg-cyan-400/5",
-    maxAgentTier: "opus",
   },
   {
     tier: "MAX",
     name: "Max",
     price: 200,
     priceLabel: "$200/mo",
-    startAgent: "opus",
-    homenode: "Opus Homenode",
-    startEnergy: 2000,
+    startEnergy: 20000,
     startAgntc: 500,
     startMinerals: 200,
     features: [
-      "1 Opus agent at registration",
-      "2000 Energy starting balance",
+      "20,000 CPU Energy starting balance",
       "500 AGNTC tokens",
-      "Deploy unlimited Opus agents",
+      "Deploy any Claude model (API cost-gated)",
       "Full validator suite",
       "Maximum border influence",
       "Direct chain governance",
     ],
     accent: "text-orange-400 border-orange-400/30 bg-orange-400/5",
-    maxAgentTier: "opus",
   },
 ];
