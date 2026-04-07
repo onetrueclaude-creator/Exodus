@@ -5,6 +5,8 @@
 > **Approach:** A (Lean Sequential)
 > **Funding Model:** Hybrid — solo founder + AI agents until SPL token sale funds team
 > **Estimated Timeline:** 12-18 months to token sale, 6-12 months post-sale to mainnet
+>
+> **Status Update (2026-04-07):** Phase 1 gates COMPLETE (2026-04-05). Phase 2 gates COMPLETE (2026-04-06). See ROADMAP.md for current status.
 
 ---
 

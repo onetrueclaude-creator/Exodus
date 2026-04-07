@@ -38,9 +38,12 @@ ZK Agentic Chain follows a 6-phase sequential rollout — from whitepaper throug
 
 ## Phase 3: Game UI Demo 🔄
 
-- Neural Lattice code refactor (aligning codebase with whitepaper terminology)
-- Locked blockchain operator node template ([zkagentic-node](https://github.com/onetrueclaude-creator/zkagentic-node))
-- SMT hash verification of operator `.claude/` directory
+- Neural Lattice code refactor (aligning codebase with whitepaper terminology) ✅
+- Locked blockchain operator node template ([zkagentic-node](https://github.com/onetrueclaude-creator/zkagentic-node)) ✅
+- SMT hash verification of operator `.claude/` directory ✅
+- Hard wrapper enforcement: Python CLI with menu-only input (74 tests) ✅
+- All 4 node operations implemented: Secure, Read, Deploy, Write ✅
+- Tier model restrictions removed: any tier, any Claude model (API cost-gated) ✅
 - Game onboarding flow: landing → Google OAuth → username → tier selection → /game
 - Territory visualization: online/offline nodes, agent deployment, faction borders
 - Agent Terminal: pre-defined blockchain operations (Secure, Deploy, Read, Write, Stats)
