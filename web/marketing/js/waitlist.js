@@ -2,7 +2,7 @@
 (function () {
   var SUPABASE_URL = 'https://inqwwaqiptrmpxruyczy.supabase.co';
   var SUPABASE_ANON_KEY =
-    '***REDACTED_ANON_KEY***';
+    'sb_publishable_Bf4rObV5_-SYcTZKytbL2g_YYjRKNRp';
 
   if (!window.supabase || !window.supabase.createClient) {
     console.error('Supabase JS not loaded — waitlist disabled');
