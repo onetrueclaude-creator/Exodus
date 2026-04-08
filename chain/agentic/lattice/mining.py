@@ -4,8 +4,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from agentic.params import (
+    ALPHA,
     BASE_MINING_RATE_PER_BLOCK,
     ANNUAL_INFLATION_CEILING,
+    BETA,
     BLOCK_TIME_MS,
     GENESIS_SUPPLY,
 )
@@ -29,6 +31,7 @@ class MiningEngine:
 
     def compute_block_yields(
         self, claims: list[dict], *, epoch_tracker=None,
+        cpu_stakes: dict[bytes, float] | None = None,
     ) -> dict[bytes, float]:
         """Compute mining rewards for one block.
 
@@ -36,6 +39,10 @@ class MiningEngine:
             claims: list of dicts with keys: owner (bytes), coordinate (GridCoordinate), stake (int)
             epoch_tracker: optional EpochTracker — applies ring hardness as yield divisor
                            and records mined amount.
+            cpu_stakes: optional dict mapping owner -> CPU stake (from active securing positions).
+                        When provided, uses dual-staking formula:
+                        effective_stake = ALPHA × token_stake + BETA × cpu_stake
+                        When None, falls back to pure token weighting (backward compat).
 
         Returns:
             dict mapping owner -> reward amount (float AGNTC)
@@ -54,13 +61,32 @@ class MiningEngine:
         if epoch_tracker is not None:
             hardness = epoch_tracker.hardness(epoch_tracker.current_ring)
 
-        # Compute raw yields: BASE_RATE × density × stake_weight / hardness
+        # Compute effective stakes using dual-staking formula (Fix 2)
+        # S_eff = ALPHA × token_stake + BETA × cpu_stake
+        effective_stakes: dict[bytes, float] = {}
+        for claim in claims:
+            owner = claim["owner"]
+            token = claim["stake"]
+            cpu = cpu_stakes.get(owner, 0.0) if cpu_stakes else 0.0
+            if cpu_stakes is not None:
+                effective_stakes[owner] = effective_stakes.get(owner, 0.0) + (
+                    ALPHA * token + BETA * cpu
+                )
+            else:
+                # Backward compat: pure token weighting
+                effective_stakes[owner] = effective_stakes.get(owner, 0.0) + token
+
+        total_effective = sum(effective_stakes.values())
+        if total_effective <= 0:
+            total_effective = total_stake  # fallback
+
+        # Compute raw yields: BASE_RATE × density × effective_stake_weight / hardness
         raw_yields: dict[bytes, float] = {}
         for claim in claims:
             density = resource_density(claim["coordinate"].x, claim["coordinate"].y)
-            stake_weight = claim["stake"] / total_stake
-            raw = BASE_MINING_RATE_PER_BLOCK * density * stake_weight / hardness
             owner = claim["owner"]
+            stake_weight = effective_stakes.get(owner, 0.0) / total_effective
+            raw = BASE_MINING_RATE_PER_BLOCK * density * stake_weight / hardness
             raw_yields[owner] = raw_yields.get(owner, 0.0) + raw
 
         total_minted = sum(raw_yields.values())

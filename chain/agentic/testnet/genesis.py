@@ -9,6 +9,7 @@ from unittest.mock import patch
 from agentic.actions.pipeline import ActionPipeline
 from agentic.consensus.validator import Validator
 from agentic.economics.fees import FeeEngine
+from agentic.economics.securing import SecuringRegistry
 from agentic.economics.staking import StakeRegistry
 from agentic.lattice.claims import ClaimRegistry
 from agentic.lattice.coordinate import GridCoordinate, resource_density, storage_slots
@@ -43,6 +44,7 @@ class GenesisState:
     viewing_keys: dict = None
     fee_engine: FeeEngine = field(default_factory=FeeEngine)
     stake_registry: StakeRegistry = field(default_factory=StakeRegistry)
+    securing_registry: SecuringRegistry = field(default_factory=SecuringRegistry)
     # Agent intro messages: (x, y) -> str
     intro_messages: dict = field(default_factory=dict)
     # Agent-to-agent message history: (x, y) -> list[dict]
