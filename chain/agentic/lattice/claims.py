@@ -73,6 +73,10 @@ class ClaimRegistry:
         """All active claims across all owners."""
         return [c for c in self._claims if c.active]
 
+    def get_claims_for_owner(self, owner: bytes) -> list[ClaimEntry]:
+        """All active claims for a specific owner."""
+        return [c for c in self._claims if c.owner == owner and c.active]
+
     def total_mining_stake(self) -> int:
         """Total AGNTC staked for mining across all active claims."""
         return sum(c.stake_amount for c in self._claims if c.active)

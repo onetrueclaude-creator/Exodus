@@ -69,7 +69,8 @@ from agentic.lattice.claims import claim_cost
 from agentic.lattice.coordinate import GridCoordinate, resource_density, storage_slots
 from agentic.ledger.transaction import BirthTx, validate_birth
 from agentic.params import (
-    BASE_BIRTH_COST, BLOCK_TIME_MS, CANONICAL_CLAUDE_HASH, NODE_GRID_SPACING,
+    ALPHA, BASE_BIRTH_COST, BASE_CPU_PER_SECURE_BLOCK, BETA, BLOCK_TIME_MS,
+    CANONICAL_CLAUDE_HASH, NODE_GRID_SPACING, SECURE_REWARD_IMMEDIATE,
 )
 from agentic.testnet.genesis import GenesisState, create_genesis
 from agentic.testnet.node_session import (
@@ -512,8 +513,15 @@ def _do_mine(g: GenesisState) -> dict:
     hex_yields: Dict[str, float] = {}
     if vresult.outcome == DisputeOutcome.FINALIZED:
         claims_input = g.claim_registry.as_mining_claims()
+        # Fix 2: dual-staking — pass CPU stakes from securing positions
+        cpu_stakes = {
+            owner: g.securing_registry.get_cpu_for_owner(owner, block_slot)
+            for owner in {c["owner"] for c in claims_input}
+        }
         yields = g.mining_engine.compute_block_yields(
-            claims_input, epoch_tracker=g.epoch_tracker)
+            claims_input, epoch_tracker=g.epoch_tracker,
+            cpu_stakes=cpu_stakes if any(cpu_stakes.values()) else None,
+        )
         if yields:
             g.mining_engine.mint_block_rewards(yields, g.ledger_state, g.viewing_keys)
         hex_yields = {k.hex(): round(v, 6) for k, v in yields.items()}
@@ -523,7 +531,59 @@ def _do_mine(g: GenesisState) -> dict:
         # Production: sum actual tx fees from the block's transaction list.
         block_fees = [g.fee_engine.schedule.base_fee] * vresult.valid_proof_count
         if block_fees:
-            g.fee_engine.collect_and_distribute(block_fees)
+            fee_dist = g.fee_engine.collect_and_distribute(block_fees)
+
+            # --- FIX 1: Wire fee distribution to wallets ---
+            # Verifier rewards → verification committee (proportional to effective stake)
+            if fee_dist.to_verifiers > 0 and g.validators:
+                online_validators = [v for v in g.validators if v.online]
+                if online_validators:
+                    total_effective = sum(
+                        ALPHA * v.token_stake + BETA * v.cpu_vpu
+                        for v in online_validators
+                    )
+                    if total_effective > 0:
+                        for v in online_validators:
+                            v_eff = ALPHA * v.token_stake + BETA * v.cpu_vpu
+                            v_share = fee_dist.to_verifiers * (v_eff / total_effective)
+                            # Credit to the wallet that owns this validator
+                            for claim in claims_input:
+                                if claim.get("validator_id") == v.id:
+                                    owner = claim["owner"]
+                                    vk = g.viewing_keys.get(owner, owner)
+                                    micro = round(v_share)
+                                    if micro > 0:
+                                        from agentic.ledger.transaction import MintTx, validate_mint
+                                        validate_mint(MintTx(
+                                            recipient=owner, recipient_viewing_key=vk,
+                                            amount=micro, slot=block_slot,
+                                        ), g.ledger_state)
+                                    break
+
+            # Staker/securer rewards → active securing positions (from fee pool)
+            fee_for_stakers_agntc = 0.0
+            if block_fees:
+                # Convert microAGNTC fee to AGNTC float for securing distribution
+                fee_for_stakers_agntc = fee_dist.to_stakers / 1_000_000.0
+
+            # --- FIX 3: Process active securing positions ---
+            securing_rewards = g.securing_registry.process_block(
+                current_block=block_slot,
+                fee_pool_for_stakers=fee_for_stakers_agntc,
+                hardness=g.epoch_tracker.hardness(g.epoch_tracker.current_ring),
+            )
+            # Mint immediate securing rewards to ledger
+            if securing_rewards:
+                from agentic.ledger.transaction import MintTx, validate_mint
+                from agentic.params import MINT_PROGRAM_ID
+                for owner, amount in securing_rewards.items():
+                    micro = round(amount * 1_000_000)
+                    if micro > 0:
+                        vk = g.viewing_keys.get(owner, owner)
+                        validate_mint(MintTx(
+                            recipient=owner, recipient_viewing_key=vk,
+                            amount=micro, slot=block_slot,
+                        ), g.ledger_state)
 
         # Distribute subgrid outputs for all allocators
         for owner, alloc in g.subgrid_allocators.items():
@@ -795,6 +855,145 @@ def get_staking(wallet_index: int) -> StakingResponse:
         effective_stake=round(effective, 4),
         positions=pos_list,
         status=status,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Securing — active CPU Energy commitments to chain validation
+# ---------------------------------------------------------------------------
+
+
+class SecureRequest(BaseModel):
+    wallet_index: int
+    duration_blocks: int  # how many block cycles to secure
+
+
+class SecureResponse(BaseModel):
+    position_id: str
+    cpu_cost: float
+    duration_blocks: int
+    start_block: int
+    end_block: int
+    density: float
+    estimated_reward_per_block: float
+
+
+class SecuringPositionInfo(BaseModel):
+    id: str
+    cpu_committed: float
+    start_block: int
+    end_block: int
+    secured_blocks: int
+    total_reward: float
+    immediate_reward: float
+    vesting_reward: float
+    status: str
+    density: float
+
+
+class SecuringStatusResponse(BaseModel):
+    wallet_index: int
+    active_positions: list[SecuringPositionInfo]
+    completed_positions: list[SecuringPositionInfo]
+    total_secured_chains: int
+    total_cpu_committed: float
+    total_rewards_earned: float
+
+
+@app.post("/api/secure", response_model=SecureResponse)
+def create_secure(req: SecureRequest):
+    """Create a new securing position — commit CPU Energy for N block cycles.
+
+    Mining produces new AGNTC (block subsidy). Securing earns from
+    transaction fees. Different economic functions, like Bitcoin.
+    """
+    g = _g()
+    if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    if req.duration_blocks < 1 or req.duration_blocks > 1000:
+        raise HTTPException(status_code=400, detail="Duration must be 1-1000 blocks")
+
+    wallet = g.wallets[req.wallet_index]
+    # Find the wallet's homenode coordinates
+    claims = g.claim_registry.get_claims_for_owner(wallet.public_key)
+    if not claims:
+        raise HTTPException(status_code=400, detail="No claimed node — claim a node first")
+
+    # Use first claim's coordinate as the securing node
+    claim = claims[0]
+    node_x, node_y = claim.coordinate.x, claim.coordinate.y
+
+    # Preview the CPU cost
+    cpu_cost, density = g.securing_registry.compute_cpu_cost(
+        req.duration_blocks, node_x, node_y,
+    )
+
+    # Check if wallet has enough CPU energy (using validator VPU as proxy)
+    # In testnet, we don't enforce CPU limits — just record the commitment
+    current_block = g.mining_engine.total_blocks_processed
+
+    pos = g.securing_registry.create_position(
+        wallet_index=req.wallet_index,
+        owner=wallet.public_key,
+        duration_blocks=req.duration_blocks,
+        current_block=current_block,
+        node_x=node_x,
+        node_y=node_y,
+    )
+
+    # Estimate reward per block (based on current fee rate and no competition)
+    est_reward = 0.0
+    if g.fee_engine.total_collected > 0 and g.mining_engine.total_blocks_processed > 0:
+        avg_fee_per_block = g.fee_engine.total_collected / g.mining_engine.total_blocks_processed
+        staker_share = avg_fee_per_block * (1 - 0.50) * 0.40  # 50% burn, 40% of remainder
+        est_reward = staker_share / 1_000_000.0  # convert micro to AGNTC
+
+    return SecureResponse(
+        position_id=pos.id,
+        cpu_cost=round(cpu_cost, 2),
+        duration_blocks=req.duration_blocks,
+        start_block=pos.start_block,
+        end_block=pos.end_block,
+        density=round(density, 4),
+        estimated_reward_per_block=round(est_reward, 6),
+    )
+
+
+@app.get("/api/secure/{wallet_index}", response_model=SecuringStatusResponse)
+def get_securing_status(wallet_index: int):
+    """Return all securing positions for a wallet."""
+    g = _g()
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+
+    positions = g.securing_registry.get_positions(wallet_index)
+    active = []
+    completed = []
+    for p in positions:
+        info = SecuringPositionInfo(
+            id=p.id,
+            cpu_committed=round(p.cpu_committed, 2),
+            start_block=p.start_block,
+            end_block=p.end_block,
+            secured_blocks=p.secured_blocks,
+            total_reward=round(p.total_reward, 6),
+            immediate_reward=round(p.immediate_reward, 6),
+            vesting_reward=round(p.vesting_reward, 6),
+            status=p.status.value,
+            density=round(p.density, 4),
+        )
+        if p.status.value == "active":
+            active.append(info)
+        else:
+            completed.append(info)
+
+    return SecuringStatusResponse(
+        wallet_index=wallet_index,
+        active_positions=active,
+        completed_positions=completed,
+        total_secured_chains=g.securing_registry.get_secured_chains(wallet_index),
+        total_cpu_committed=round(sum(p.cpu_committed for p in positions), 2),
+        total_rewards_earned=round(sum(p.total_reward for p in positions), 6),
     )
 
 

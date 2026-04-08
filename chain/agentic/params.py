@@ -112,9 +112,10 @@ GENESIS_EPOCH_RING = 1            # rings pre-revealed at genesis (ring 0 + ring
 HARDNESS_MULTIPLIER = 16          # hardness(ring) = 16 × ring (no cap)
 HOMENODE_BASE_ANGLE = 137.5       # golden-prime twist base angle (degrees)
 
-# Vesting — Secure action rewards
+# Securing — active CPU Energy commitment to chain validation
 SECURE_REWARD_IMMEDIATE = 0.50    # 50% liquid on block confirmation
 SECURE_REWARD_VEST_DAYS = 30      # remaining 50% vests linearly over 30 days
+BASE_CPU_PER_SECURE_BLOCK = 50    # CPU Energy cost per block cycle at density 1.0
 
 # Subgrid allocation — 4 autonomous sub-cell agent types (base output at level 1, full density)
 SUBGRID_SIZE = 64                   # 8x8 sub-cells per homenode inner grid
