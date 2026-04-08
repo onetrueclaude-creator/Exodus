@@ -1497,6 +1497,196 @@ def birth_node(request: Request, req: BirthRequest) -> BirthResult:
     )
 
 
+# ---------------------------------------------------------------------------
+# Transact — AGNTC wallet-to-wallet transfer
+# ---------------------------------------------------------------------------
+
+
+class TransactRequest(BaseModel):
+    sender_wallet: int
+    recipient_wallet: int
+    amount: float  # AGNTC (float, converted to microAGNTC internally)
+
+
+class TransactResponse(BaseModel):
+    success: bool
+    sender_wallet: int
+    recipient_wallet: int
+    amount: float
+    fee: float
+    records_created: int
+    nullifiers_published: int
+    message: str
+
+
+@app.post("/api/transact", response_model=TransactResponse)
+@limiter.limit("10/10seconds")
+def transact(request: Request, req: TransactRequest) -> TransactResponse:
+    """Transfer AGNTC between wallets. Fee = FeeSchedule.transfer_fee (50% burned).
+
+    Like Bitcoin: transfers cost fees, fees fund the network.
+    """
+    g = _g()
+    if req.sender_wallet < 0 or req.sender_wallet >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Sender wallet not found")
+    if req.recipient_wallet < 0 or req.recipient_wallet >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Recipient wallet not found")
+    if req.sender_wallet == req.recipient_wallet:
+        raise HTTPException(status_code=400, detail="Cannot transfer to self")
+    if req.amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be positive")
+
+    sender = g.wallets[req.sender_wallet]
+    recipient = g.wallets[req.recipient_wallet]
+
+    micro_amount = round(req.amount * 1_000_000)
+    if micro_amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount too small")
+
+    # Discover sender's unspent records
+    unspent = sender._discover_records_with_positions(g.ledger_state)
+    if not unspent:
+        raise HTTPException(status_code=400, detail="Sender has no unspent records (zero balance)")
+
+    # Greedy coin selection
+    input_records = []
+    total_input = 0
+    for record, pos in unspent:
+        input_records.append((record, pos))
+        total_input += record.value
+        if total_input >= micro_amount:
+            break
+
+    if total_input < micro_amount:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Insufficient balance: have={total_input / 1_000_000:.6f} AGNTC, need={req.amount} AGNTC",
+        )
+
+    # Build and validate transfer
+    from agentic.ledger.transaction import TransferTx, validate_transfer
+    slot = g.mining_engine.total_blocks_processed
+
+    tx = TransferTx.build(
+        sender_keys={
+            "public_key": sender.public_key,
+            "spending_key": sender.spending_key,
+            "nullifier_key": sender.spending_key,  # testnet: same key
+            "viewing_key": sender.viewing_key,
+        },
+        input_records=input_records,
+        recipient_pubkey=recipient.public_key,
+        recipient_viewing_key=recipient.viewing_key,
+        amount=micro_amount,
+        slot=slot,
+    )
+
+    result = validate_transfer(tx, g.ledger_state)
+    if not result.valid:
+        raise HTTPException(status_code=400, detail=result.error)
+
+    # Track new tags so wallets can discover transferred records
+    for i in range(g.ledger_state.record_count):
+        r = g.ledger_state.get_record(i)
+        if r.owner == recipient.public_key and r.tag not in recipient._known_tags:
+            recipient._known_tags.append(r.tag)
+        if r.owner == sender.public_key and r.tag not in sender._known_tags:
+            sender._known_tags.append(r.tag)
+
+    # Collect transfer fee
+    fee_amount = g.fee_engine.schedule.transfer_fee
+    g.fee_engine.collect_and_distribute([fee_amount])
+
+    return TransactResponse(
+        success=True,
+        sender_wallet=req.sender_wallet,
+        recipient_wallet=req.recipient_wallet,
+        amount=req.amount,
+        fee=fee_amount / 1_000_000,
+        records_created=result.records_created,
+        nullifiers_published=result.nullifiers_published,
+        message=f"Transferred {req.amount} AGNTC (fee: {fee_amount / 1_000_000:.6f})",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Settings — per-wallet network parameters
+# ---------------------------------------------------------------------------
+
+
+class WalletSettingsResponse(BaseModel):
+    wallet_index: int
+    securing_rate: float      # CPU Energy committed per block (from active securing)
+    mining_rate: float        # per-block AGNTC yield estimate
+    subgrid_allocation: dict  # {secure, develop, research, storage} cell counts
+    total_secured_chains: int
+    effective_stake: float
+
+
+class SubgridAssignRequest(BaseModel):
+    secure: int = 0
+    develop: int = 0
+    research: int = 0
+    storage: int = 0
+
+
+@app.get("/api/settings/{wallet_index}", response_model=WalletSettingsResponse)
+def get_wallet_settings(wallet_index: int) -> WalletSettingsResponse:
+    """Return current network parameters for a wallet — securing rate, mining rate, subgrid."""
+    g = _g()
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+
+    wallet = g.wallets[wallet_index]
+    current_block = g.mining_engine.total_blocks_processed
+
+    # Securing rate = total CPU committed in active positions
+    securing_cpu = g.securing_registry.get_cpu_for_owner(wallet.public_key, current_block)
+
+    # Mining rate estimate = current per-block yield
+    claims = g.claim_registry.get_claims(wallet.public_key)
+    mining_rate = 0.0
+    if claims:
+        from agentic.lattice.coordinate import resource_density as rd
+        density = rd(claims[0].coordinate.x, claims[0].coordinate.y)
+        total_stake = g.claim_registry.total_mining_stake()
+        if total_stake > 0:
+            hardness = g.epoch_tracker.hardness(g.epoch_tracker.current_ring)
+            stake_weight = claims[0].stake_amount / total_stake
+            from agentic.params import BASE_MINING_RATE_PER_BLOCK
+            mining_rate = BASE_MINING_RATE_PER_BLOCK * density * stake_weight / hardness
+
+    # Subgrid allocation
+    alloc = g.subgrid_allocators.get(wallet.public_key)
+    subgrid = {"secure": 0, "develop": 0, "research": 0, "storage": 0}
+    if alloc:
+        subgrid = {
+            "secure": alloc._allocations.get(alloc._allocations.__class__.__mro__[0].__name__ if False else "secure", 0),
+            "develop": 0, "research": 0, "storage": 0,
+        }
+        # Use the allocator's actual allocation dict
+        from agentic.lattice.subgrid import SubcellType
+        subgrid = {
+            "secure": alloc._allocations.get(SubcellType.SECURE, 0),
+            "develop": alloc._allocations.get(SubcellType.DEVELOP, 0),
+            "research": alloc._allocations.get(SubcellType.RESEARCH, 0),
+            "storage": alloc._allocations.get(SubcellType.STORAGE, 0),
+        }
+
+    # Effective stake (dual-staking)
+    token_staked = sum(c.stake_amount for c in claims)
+    effective = ALPHA * token_staked + BETA * securing_cpu
+
+    return WalletSettingsResponse(
+        wallet_index=wallet_index,
+        securing_rate=round(securing_cpu, 2),
+        mining_rate=round(mining_rate, 8),
+        subgrid_allocation=subgrid,
+        total_secured_chains=g.securing_registry.get_secured_chains(wallet_index),
+        effective_stake=round(effective, 4),
+    )
+
+
 @app.post("/api/reset", response_model=ResetResult)
 def reset_testnet(
     request: Request,
