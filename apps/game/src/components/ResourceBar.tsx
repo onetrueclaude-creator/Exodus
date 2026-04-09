@@ -128,10 +128,10 @@ export default function ResourceBar() {
         )}
       </div>
 
-      {/* Faction arm indicator */}
-      <div className="flex items-center gap-1.5">
-        <div className={`w-2 h-2 rounded-full animate-pulse ${FACTION_DOT[faction]}`} />
-        <span className="text-sm font-heading text-text-primary">{FACTION_LABEL[faction]} Faction</span>
+      {/* Faction indicator */}
+      <div className="flex items-center gap-1.5" suppressHydrationWarning>
+        <div className={`w-2 h-2 rounded-full animate-pulse ${FACTION_DOT[faction]}`} suppressHydrationWarning />
+        <span className="text-sm font-heading text-text-primary" suppressHydrationWarning>{FACTION_LABEL[faction]} Faction</span>
         {ownedBlocknodes.length > 0 && (
           <span className={`text-[10px] font-mono ${FACTION_TEXT[faction]}`}>
             {ownedBlocknodes.length} node{ownedBlocknodes.length !== 1 ? "s" : ""}
