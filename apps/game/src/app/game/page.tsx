@@ -13,6 +13,7 @@ import SkillsPanel from "@/components/SkillsPanel";
 import AgentProfilePopup from "@/components/AgentProfilePopup";
 import DockPanel from "@/components/DockPanel";
 import { startDebugListener } from "@/lib/debugListener";
+import DebugOverlay from "@/components/DebugOverlay";
 import { useGameStore } from "@/store";
 import { MockChainService } from "@/services/chainService";
 import type { ChainService } from "@/services/chainService";
@@ -485,6 +486,9 @@ export default function GamePage() {
           }}
         />
       )}
+
+      {/* Debug overlay — dev mode only */}
+      {process.env.NODE_ENV === "development" && <DebugOverlay />}
     </div>
   );
 }

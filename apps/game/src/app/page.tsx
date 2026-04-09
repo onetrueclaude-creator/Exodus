@@ -3,6 +3,7 @@
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { SUBSCRIPTION_PLANS } from "@/types/subscription";
+import { logAction } from "@/lib/actionLogger";
 import type { SubscriptionTier } from "@/types/subscription";
 import type { FactionId } from "@/types";
 
@@ -69,6 +70,7 @@ function DevFactionSelect() {
   const router = useRouter();
 
   const handleSelect = (f: typeof DEV_FACTIONS[number]) => {
+    logAction('click', `Faction selected: ${f.name}`, `faction=${f.faction} tier=${f.tier} energy=${f.energy}`);
     localStorage.setItem("dev_tier", f.tier);
     localStorage.setItem("dev_faction", f.faction);
     router.push("/game");
