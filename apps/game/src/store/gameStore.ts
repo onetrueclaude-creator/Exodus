@@ -5,7 +5,7 @@ import type { AgentTier } from "@/types";
 import type { FactionId, BlockNode, GridNode } from "@/types";
 import type { ResearchProgress } from "@/types/research";
 import { RESEARCH_TREES } from "@/lib/research";
-import { buildBlocknodesForBlock, buildAllBlocknodes } from "@/lib/lattice";
+import { buildCellsForRing, buildAllCells } from "@/lib/lattice";
 
 /** CPU Energy deducted per turn for each owned blocknode (maintenance cost) */
 export const NODE_CPU_PER_TURN = 1;
@@ -638,19 +638,19 @@ export const useGameStore = create<GameState>((set) => ({
 
   setMaxDeployTier: (tier) => set({ maxDeployTier: tier }),
 
-  initLattice: (totalBlocks) =>
+  initLattice: (totalRings) =>
     set({
-      blocknodes: buildAllBlocknodes(totalBlocks),
-      totalBlocksMined: totalBlocks,
+      blocknodes: buildAllCells(totalRings),
+      totalBlocksMined: totalRings,
       visibleFactions: [],
     }),
 
-  addBlocknodesForBlock: (blockIndex) =>
+  addBlocknodesForBlock: (ringIndex) =>
     set((s) => {
-      const newNodes = buildBlocknodesForBlock(blockIndex);
+      const newCells = buildCellsForRing(ringIndex);
       return {
-        blocknodes: { ...s.blocknodes, ...newNodes },
-        totalBlocksMined: Math.max(s.totalBlocksMined, blockIndex + 1),
+        blocknodes: { ...s.blocknodes, ...newCells },
+        totalBlocksMined: Math.max(s.totalBlocksMined, ringIndex),
       };
     }),
 

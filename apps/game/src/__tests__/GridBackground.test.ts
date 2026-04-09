@@ -33,7 +33,7 @@ import {
   updateGridBackground,
   FACTION_COLORS,
 } from "@/components/grid/GridBackground";
-import { buildGenesisBlocknodes } from "@/lib/lattice";
+import { buildAllCells } from "@/lib/lattice";
 
 describe("FACTION_COLORS", () => {
   it("all 4 factions have colors defined", () => {
@@ -51,9 +51,9 @@ describe("createGridBackground", () => {
   });
 
   it("calls fill for faction cells when faction is visible", () => {
-    const nodes = buildGenesisBlocknodes();
-    // Claim community genesis
-    nodes["block-0-community"].ownerId = "user-001";
+    const nodes = buildAllCells(1);
+    // Claim community genesis (ring-1, community quadrant: cx=-1, cy=-1)
+    nodes["cell--1--1"].ownerId = "user-001";
     const g = createGridBackground(nodes, ["community"], 5) as unknown as MockGraphics;
     expect(g.fill).toHaveBeenCalled();
   });
@@ -73,7 +73,7 @@ describe("createGridBackground", () => {
 
 describe("updateGridBackground", () => {
   it("calls clear before redrawing", () => {
-    const nodes = buildGenesisBlocknodes();
+    const nodes = buildAllCells(1);
     const g = createGridBackground(nodes, [], 5) as unknown as MockGraphics;
     // Clear the call count to verify clear() is called during update
     g.clear.mockClear();
