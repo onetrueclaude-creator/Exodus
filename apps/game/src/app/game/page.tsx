@@ -170,8 +170,11 @@ export default function GamePage() {
       chainRef.current = service;
       setChainMode(online ? "testnet" : "mock", 0);
 
-      // Initialize Neural Lattice — start with genesis block only; grid expands with each block cycle
-      initLattice(1);
+      // Initialize Neural Lattice — build all rings up to current chain height
+      // This prevents a flash of cells appearing when syncFromChain catches up
+      const chainStatus = online ? await import("@/services/testnetApi").then(m => m.getStatus()).catch(() => null) : null;
+      const initialRings = chainStatus ? Math.max(1, chainStatus.blocks_processed) : 1;
+      initLattice(initialRings);
 
       // Dev seed: pre-claim Treasury and Founder genesis nodes for dev/test purposes.
       // visibleFactions is NOT updated by claimBlocknode — controlled explicitly via revealFaction below.

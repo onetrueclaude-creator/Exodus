@@ -67,6 +67,9 @@ export function createGridBackground(
   // --- Pass 1: cell backgrounds and fill dots ---
   for (let cy = -range; cy <= range; cy++) {
     for (let cx = -range; cx <= range; cx++) {
+      // Skip axis cells and origin — these are faction boundaries, not territory
+      if (cx === 0 || cy === 0) continue;
+
       const key = `${cx},${cy}`;
       const { px, py } = cellToPixel(cx, cy);
       const x = px - CELL_SIZE / 2;
@@ -165,6 +168,9 @@ export function updateGridBackground(
 
   for (let cy = -range; cy <= range; cy++) {
     for (let cx = -range; cx <= range; cx++) {
+      // Skip axis cells and origin — these are faction boundaries, not territory
+      if (cx === 0 || cy === 0) continue;
+
       const key = `${cx},${cy}`;
       const { px, py } = cellToPixel(cx, cy);
       const x = px - CELL_SIZE / 2;
@@ -228,9 +234,9 @@ export function updateGridBackground(
   }
   existing.stroke();
 
-  // Origin marker — the meeting point of all 4 factions
-  existing.circle(0, 0, 3);
-  existing.fill({ color: 0xffffff, alpha: 0.5 });
+  // Origin marker — tiny point at the meeting center of all 4 factions
+  existing.circle(0, 0, 1.5);
+  existing.fill({ color: 0xffffff, alpha: 0.3 });
 
   // Quadrant boundaries — dashed lines along axes
   const extent = range * CELL_SIZE;
