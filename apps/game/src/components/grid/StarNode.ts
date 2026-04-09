@@ -1,6 +1,6 @@
 import { Graphics, Text, Container } from "pixi.js";
 import type { Agent, FogLevel, BlockNode } from "@/types";
-import { ARM_BASE_ANGLES, ARM_RADIUS_GROWTH, TWIST_PER_RING, CELL_SIZE } from "@/lib/spiral";
+import { CELL_SIZE, cellToPixel } from "@/lib/lattice";
 
 const TIER_RADIUS = { opus: 10, sonnet: 7, haiku: 4 };
 const TIER_COLOR = { opus: 0xf97316, sonnet: 0x9333ea, haiku: 0xffffff };
@@ -181,15 +181,7 @@ export function createBlockNode(
 ): Container {
   const container = new Container();
 
-  // Use exact floating-point spiral coordinates rather than the rounded integer cx/cy.
-  // getArmCell() uses Math.round() which can map multiple ring indices to the same integer
-  // cell, causing PixiJS containers to stack at identical pixel positions and only the
-  // topmost one to receive pointer events.
-  const exactAngleDeg = ARM_BASE_ANGLES[node.faction] - node.ringIndex * TWIST_PER_RING;
-  const exactAngleRad = (exactAngleDeg * Math.PI) / 180;
-  const exactRadius = Math.SQRT2 + node.ringIndex * ARM_RADIUS_GROWTH;
-  const px = exactRadius * Math.cos(exactAngleRad) * CELL_SIZE;
-  const py = exactRadius * Math.sin(exactAngleRad) * CELL_SIZE;
+  const { px, py } = cellToPixel(node.cx, node.cy);
   container.position.set(px, py);
 
   const color = BLOCKNODE_COLORS[node.faction] ?? 0xffffff;
