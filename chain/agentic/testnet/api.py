@@ -92,7 +92,7 @@ def _grid_bounds(g) -> tuple[int, int]:
 # Block timing — fixed interval (epoch hardness replaces old dynamic difficulty)
 _BLOCK_TIME_S: float = BLOCK_TIME_MS / 1000.0  # 60s fixed block time
 _last_block_time: float = 0.0  # epoch timestamp of last mined block; 0 = never mined
-_auto_mine: bool = True  # auto-mining ON — blocks mine automatically at fixed block time
+_auto_mine: bool = False  # auto-mining OFF — players mine manually via POST /api/mine
 
 
 def _snap_to_grid(v: int) -> int:

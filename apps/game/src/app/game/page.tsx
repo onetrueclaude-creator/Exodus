@@ -13,7 +13,8 @@ import SkillsPanel from "@/components/SkillsPanel";
 import AgentProfilePopup from "@/components/AgentProfilePopup";
 import DockPanel from "@/components/DockPanel";
 import { startDebugListener } from "@/lib/debugListener";
-import DebugOverlay from "@/components/DebugOverlay";
+import dynamic from "next/dynamic";
+const DebugOverlay = dynamic(() => import("@/components/DebugOverlay"), { ssr: false });
 import { useGameStore } from "@/store";
 import { MockChainService } from "@/services/chainService";
 import type { ChainService } from "@/services/chainService";
@@ -26,7 +27,7 @@ import { getClarityLevel } from "@/lib/diplomacy";
 import type { SubscriptionTier } from "@/types";
 import type { FactionId } from "@/types";
 import { SUBSCRIPTION_PLANS } from "@/types/subscription";
-import { getFrontierBlocknode } from "@/lib/lattice";
+import { getFrontierCell } from "@/lib/lattice";
 import { visualToChain } from "@/services/testnetChainService";
 
 /** Map subscription tier to empire border color — matches faction blocknode colors */
@@ -169,13 +170,16 @@ export default function GamePage() {
       chainRef.current = service;
       setChainMode(online ? "testnet" : "mock", 0);
 
-      // Initialize Neural Lattice — start with genesis block only; grid expands with each block cycle
-      initLattice(1);
+      // Initialize Neural Lattice — build all rings up to current chain height
+      // This prevents a flash of cells appearing when syncFromChain catches up
+      const chainStatus = online ? await import("@/services/testnetApi").then(m => m.getStatus()).catch(() => null) : null;
+      const initialRings = chainStatus ? Math.max(1, chainStatus.blocks_processed) : 1;
+      initLattice(initialRings);
 
       // Dev seed: pre-claim Treasury and Founder genesis nodes for dev/test purposes.
       // visibleFactions is NOT updated by claimBlocknode — controlled explicitly via revealFaction below.
-      claimBlocknode("block-0-treasury", "dev-treasury");
-      claimBlocknode("block-0-founder", "dev-founder");
+      claimBlocknode("cell-1--1", "dev-treasury");    // NE genesis = treasury
+      claimBlocknode("cell-1-1", "dev-founder");      // SE genesis = founder
 
       const agentList = await service.getAgents();
       agentList.forEach(addAgent);
@@ -221,7 +225,7 @@ export default function GamePage() {
         // ring-0 node as the user's "Homenode" starting reference. setCurrentUserFaction is
         // called AFTER so future arm-node claim attempts are blocked for regular users.
         const freshStore = useGameStore.getState();
-        const frontierNode = getFrontierBlocknode(newUserFaction, freshStore.blocknodes);
+        const frontierNode = getFrontierCell(newUserFaction, freshStore.blocknodes);
         if (frontierNode) {
           claimBlocknode(frontierNode.id, newUserId);
           useGameStore.getState().requestFocus(frontierNode.id);

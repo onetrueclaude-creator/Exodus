@@ -1,102 +1,86 @@
-import type { FactionId, BlockNode, LatticeState } from "@/types";
-import { getArmCell, getSecureStrength } from "@/lib/spiral";
+import type { FactionId, BlockNode } from "@/types";
 
-const FACTIONS: FactionId[] = ["community", "treasury", "founder", "pro-max"];
+export const CELL_SIZE = 64;
+export const DENSITY_DECAY = 0.15;
+export const FACTIONS: FactionId[] = ["community", "treasury", "founder", "pro-max"];
 
-/**
- * Creates a single blocknode for a given faction and block/ring index.
- */
-function createBlockNode(faction: FactionId, blockIndex: number): BlockNode {
-  const ringIndex = blockIndex; // block N lives at ring N
-  const { cx, cy } = getArmCell(faction, ringIndex);
+const QUADRANT_SIGNS: Record<FactionId, { sx: number; sy: number }> = {
+  community: { sx: -1, sy: -1 },
+  treasury: { sx: 1, sy: -1 },
+  founder: { sx: 1, sy: 1 },
+  "pro-max": { sx: -1, sy: 1 },
+};
+
+export function getFactionForCell(cx: number, cy: number): FactionId | null {
+  if (cx === 0 || cy === 0) return null;
+  if (cx < 0 && cy < 0) return "community";
+  if (cx > 0 && cy < 0) return "treasury";
+  if (cx > 0 && cy > 0) return "founder";
+  return "pro-max";
+}
+
+export function getCellDensity(cx: number, cy: number): number {
+  const dist = Math.sqrt(cx * cx + cy * cy);
+  return 1.0 / (1 + dist * DENSITY_DECAY);
+}
+
+export function cellToPixel(cx: number, cy: number): { px: number; py: number } {
+  return { px: cx * CELL_SIZE, py: cy * CELL_SIZE };
+}
+
+export function cellId(cx: number, cy: number): string {
+  return `cell-${cx}-${cy}`;
+}
+
+function createCell(cx: number, cy: number, ringIndex: number): BlockNode {
+  const faction = getFactionForCell(cx, cy);
+  if (!faction) throw new Error(`Cannot create cell at axis/origin (${cx},${cy})`);
   return {
-    id: `block-${blockIndex}-${faction}`,
-    blockIndex,
+    id: cellId(cx, cy),
+    blockIndex: ringIndex,
     ringIndex,
-    cx,
-    cy,
-    faction,
-    secureStrength: getSecureStrength(ringIndex),
+    cx, cy, faction,
+    secureStrength: getCellDensity(cx, cy) * 100,
     ownerId: null,
     stakedCpu: 0,
     cumulativeSecures: 0,
   };
 }
 
-/**
- * Builds the 4 genesis blocknodes (one per faction arm, ring 0).
- * Returns them keyed by id.
- */
-export function buildGenesisBlocknodes(): Record<string, BlockNode> {
-  const result: Record<string, BlockNode> = {};
+export function getCellsForRing(ring: number): BlockNode[] {
+  if (ring <= 0) return [];
+  const cells: BlockNode[] = [];
   for (const faction of FACTIONS) {
-    const node = createBlockNode(faction, 0);
-    result[node.id] = node;
+    const { sx, sy } = QUADRANT_SIGNS[faction];
+    if (ring === 1) {
+      cells.push(createCell(sx, sy, ring));
+    } else {
+      for (let i = 1; i <= ring; i++) { cells.push(createCell(sx * i, sy * ring, ring)); }
+      for (let i = 1; i < ring; i++) { cells.push(createCell(sx * ring, sy * i, ring)); }
+    }
   }
-  return result;
+  return cells;
 }
 
-/**
- * Builds the 4 blocknodes for a specific block index (one per faction arm).
- * Block 0 is genesis (ring 0), block 1 is ring 1, etc.
- */
-export function buildBlocknodesForBlock(blockIndex: number): Record<string, BlockNode> {
+export function buildCellsForRing(ring: number): Record<string, BlockNode> {
   const result: Record<string, BlockNode> = {};
-  for (const faction of FACTIONS) {
-    const node = createBlockNode(faction, blockIndex);
-    result[node.id] = node;
-  }
+  for (const cell of getCellsForRing(ring)) { result[cell.id] = cell; }
   return result;
 }
 
-/**
- * Builds all blocknodes for a chain of totalBlocks blocks (0..totalBlocks-1).
- * Returns the full Record keyed by blocknode id.
- */
-export function buildAllBlocknodes(totalBlocks: number): Record<string, BlockNode> {
+export function buildAllCells(totalRings: number): Record<string, BlockNode> {
   const result: Record<string, BlockNode> = {};
-  for (let i = 0; i < totalBlocks; i++) {
-    Object.assign(result, buildBlocknodesForBlock(i));
-  }
+  for (let r = 1; r <= totalRings; r++) { Object.assign(result, buildCellsForRing(r)); }
   return result;
 }
 
-/**
- * Returns the frontier blocknode for a faction — the lowest unclaimed ringIndex.
- * This is where a new user's node will be placed on join.
- * Returns null if no unclaimed nodes exist for this faction.
- */
-export function getFrontierBlocknode(
-  faction: FactionId,
-  blocknodes: Record<string, BlockNode>
-): BlockNode | null {
-  const arm = Object.values(blocknodes)
-    .filter((n) => n.faction === faction && n.ownerId === null)
-    .sort((a, b) => a.ringIndex - b.ringIndex);
-  return arm[0] ?? null;
+export function getFrontierCell(faction: FactionId, cells: Record<string, BlockNode>): BlockNode | null {
+  const candidates = Object.values(cells)
+    .filter((c) => c.faction === faction && c.ownerId === null)
+    .sort((a, b) => (a.cx * a.cx + a.cy * a.cy) - (b.cx * b.cx + b.cy * b.cy));
+  return candidates[0] ?? null;
 }
 
-/**
- * Looks up a blocknode by its cell coordinate.
- * Returns null if no blocknode occupies that cell.
- */
-export function getBlocknodeAtCell(
-  cx: number,
-  cy: number,
-  blocknodes: Record<string, BlockNode>
-): BlockNode | null {
-  return Object.values(blocknodes).find((n) => n.cx === cx && n.cy === cy) ?? null;
-}
-
-/**
- * Builds the full LatticeState from scratch for a given chain height.
- * visibleFactions is initially empty — factions become visible when nodes are claimed.
- */
-export function buildLatticeState(totalBlocks: number): LatticeState {
-  return {
-    blocknodes: buildAllBlocknodes(totalBlocks),
-    gridNodes: {},
-    totalBlocksMined: totalBlocks,
-    visibleFactions: [],
-  };
+export function getCellAt(cx: number, cy: number, cells: Record<string, BlockNode>): BlockNode | null {
+  return cells[cellId(cx, cy)] ?? null;
 }

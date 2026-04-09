@@ -1,13 +1,13 @@
 import { Graphics } from "pixi.js";
 import type { BlockNode, FactionId } from "@/types";
-import { CELL_SIZE, cellToPixel } from "@/lib/spiral";
+import { CELL_SIZE, cellToPixel, getFactionForCell } from "@/lib/lattice";
 
 /** Faction fill colors */
 export const FACTION_COLORS: Record<FactionId, number> = {
-  community: 0xffffff, // white — free tier
-  treasury: 0xf97316, // gold orange
-  founder: 0xd946ef, // fuchsia
-  "pro-max": 0x00ffff, // cyan — professional tier
+  community: 0x0d9488, // teal
+  treasury: 0xdc2680,  // pink (Machines)
+  founder: 0xf59e0b,   // amber
+  "pro-max": 0x3b82f6, // blue (Professional)
 };
 
 const ALL_FACTIONS: FactionId[] = ["community", "treasury", "founder", "pro-max"];
@@ -19,25 +19,15 @@ const FOG_COLOR = 0x050510;
 const FOG_ALPHA = 0.85;
 
 /**
- * Assigns every cell in the viewport a faction via Voronoi (nearest arm node).
+ * Assigns every cell in the viewport a faction via quadrant-based lookup.
  * Returns a cx,cy → FactionId map for all cells in [-range, range]².
  */
-function buildCellFactionMap(range: number, nodes: BlockNode[]): Record<string, FactionId> {
+function buildCellFactionMap(range: number, _nodes: BlockNode[]): Record<string, FactionId> {
   const map: Record<string, FactionId> = {};
-  if (nodes.length === 0) return map;
-
   for (let cy = -range; cy <= range; cy++) {
     for (let cx = -range; cx <= range; cx++) {
-      let minDist = Infinity;
-      let nearest: FactionId | null = null;
-      for (const node of nodes) {
-        const d = (node.cx - cx) ** 2 + (node.cy - cy) ** 2;
-        if (d < minDist) {
-          minDist = d;
-          nearest = node.faction;
-        }
-      }
-      if (nearest) map[`${cx},${cy}`] = nearest;
+      const faction = getFactionForCell(cx, cy);
+      if (faction) map[`${cx},${cy}`] = faction;
     }
   }
   return map;
@@ -46,7 +36,7 @@ function buildCellFactionMap(range: number, nodes: BlockNode[]): Record<string, 
 /**
  * Draws the background for the Neural Lattice grid.
  *
- * Every cell is Voronoi-assigned to the nearest faction arm node.
+ * Every cell is quadrant-assigned to a faction based on its (cx, cy) coordinates.
  * - Arm-path cells for visible factions: faction color tint + bright dot
  * - Non-arm cells for visible factions: fog + faction-colored dim dot
  * - Non-visible faction cells: fog + very dim faction-colored dot
@@ -77,6 +67,9 @@ export function createGridBackground(
   // --- Pass 1: cell backgrounds and fill dots ---
   for (let cy = -range; cy <= range; cy++) {
     for (let cx = -range; cx <= range; cx++) {
+      // Skip axis cells and origin — these are faction boundaries, not territory
+      if (cx === 0 || cy === 0) continue;
+
       const key = `${cx},${cy}`;
       const { px, py } = cellToPixel(cx, cy);
       const x = px - CELL_SIZE / 2;
@@ -175,6 +168,9 @@ export function updateGridBackground(
 
   for (let cy = -range; cy <= range; cy++) {
     for (let cx = -range; cx <= range; cx++) {
+      // Skip axis cells and origin — these are faction boundaries, not territory
+      if (cx === 0 || cy === 0) continue;
+
       const key = `${cx},${cy}`;
       const { px, py } = cellToPixel(cx, cy);
       const x = px - CELL_SIZE / 2;
@@ -237,4 +233,22 @@ export function updateGridBackground(
     existing.lineTo(pixelRange + CELL_SIZE / 2, py);
   }
   existing.stroke();
+
+  // Origin marker — tiny point at the meeting center of all 4 factions
+  existing.circle(0, 0, 1.5);
+  existing.fill({ color: 0xffffff, alpha: 0.3 });
+
+  // Quadrant boundaries — dashed lines along axes
+  const extent = range * CELL_SIZE;
+  existing.setStrokeStyle({ width: 1, color: 0x444444, alpha: 0.4 });
+  for (let x = -extent; x < extent; x += 8) {
+    existing.moveTo(x, 0);
+    existing.lineTo(Math.min(x + 4, extent), 0);
+    existing.stroke();
+  }
+  for (let y = -extent; y < extent; y += 8) {
+    existing.moveTo(0, y);
+    existing.lineTo(0, Math.min(y + 4, extent));
+    existing.stroke();
+  }
 }

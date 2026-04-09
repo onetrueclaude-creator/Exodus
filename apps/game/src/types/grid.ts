@@ -12,17 +12,17 @@ export interface CellCoord {
 }
 
 /**
- * The 4 Megafactions. Each arm of the logarithmic spiral belongs to one faction.
- * - community: free users (upper-left arm)
- * - treasury:  AI-controlled swarm — the Agentic Network itself (upper-right arm)
- * - founder:   founding dev team (lower-right arm)
- * - pro-max:   premium users (lower-left arm)
+ * The 4 Megafactions. Each occupies a 90-degree quadrant of the Neural Lattice.
+ * - community: free users (NW quadrant, cx<0 cy<0)
+ * - treasury:  AI-controlled Machines swarm (NE quadrant, cx>0 cy<0)
+ * - founder:   founding dev team (SE quadrant, cx>0 cy>0)
+ * - pro-max:   premium users (SW quadrant, cx<0 cy>0)
  */
 export type FactionId = "community" | "treasury" | "founder" | "pro-max";
 
 /**
- * A blocknode is the node at the center of a grid square, pointing to one block
- * on the blockchain. Every mined block creates one new blocknode per arm (4 total).
+ * A cell in the Neural Lattice grid. Each cell sits at the center of a
+ * grid square, identified by integer coordinates (cx, cy).
  * Secure Strength decays outward: center nodes are most valuable.
  */
 export interface BlockNode {

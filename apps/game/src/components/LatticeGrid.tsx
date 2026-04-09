@@ -5,10 +5,9 @@ import { Application, Container, Graphics } from "pixi.js";
 import { useGameStore } from "@/store";
 import { createGridBackground, updateGridBackground } from "./grid/GridBackground";
 import { createBlockNode } from "./grid/StarNode";
-import { createBlocknodeConnections } from "./grid/ConnectionLine";
 import BlockNodePanel from "./BlockNodePanel";
 import GridNodePanel from "./GridNodePanel";
-import { CELL_SIZE, getBlocknodePixelPos } from "@/lib/spiral";
+import { CELL_SIZE, cellToPixel } from "@/lib/lattice";
 import type { FactionId } from "@/types";
 
 const MIN_ZOOM = 0.1;
@@ -276,14 +275,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
 
     const nodes = Object.values(blocknodes);
 
-    // Draw connection lines first (behind nodes)
-    for (const node of nodes) {
-      const isVisible = effectiveVisible.includes(node.faction);
-      const lines = createBlocknodeConnections(node, nodes, isVisible);
-      layer.addChild(lines);
-    }
-
-    // Draw blocknode circles on top of lines
+    // Draw blocknode circles
     for (const node of nodes) {
       const isVisible = effectiveVisible.includes(node.faction);
       const nodeContainer = createBlockNode(
@@ -314,7 +306,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
       let minPy = Infinity,
         maxPy = -Infinity;
       for (const node of nodesForZoom) {
-        const { px, py } = getBlocknodePixelPos(node);
+        const { px, py } = cellToPixel(node.cx, node.cy);
         minPx = Math.min(minPx, px);
         maxPx = Math.max(maxPx, px);
         minPy = Math.min(minPy, py);
@@ -359,7 +351,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
     const blocknode = useGameStore.getState().blocknodes[focusRequest.nodeId];
     if (blocknode) {
       if (!world || !app) return;
-      const { px, py } = getBlocknodePixelPos(blocknode);
+      const { px, py } = cellToPixel(blocknode.cx, blocknode.cy);
       world.position.set(
         app.screen.width / 2 - px * world.scale.x,
         app.screen.height / 2 - py * world.scale.x
@@ -390,7 +382,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
       (n) => n.ownerId === userId
     );
     if (!owned) return;
-    const { px, py } = getBlocknodePixelPos(owned);
+    const { px, py } = cellToPixel(owned.cx, owned.cy);
     world.position.set(
       app.screen.width / 2 - px * world.scale.x,
       app.screen.height / 2 - py * world.scale.x
