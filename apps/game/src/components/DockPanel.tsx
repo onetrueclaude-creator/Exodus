@@ -7,7 +7,6 @@ import NetworkChatRoom from '@/components/NetworkChatRoom';
 import AgentChat from '@/components/AgentChat';
 import TimechainStats from '@/components/TimechainStats';
 import TimeRewind from '@/components/TimeRewind';
-import SecuredNodes from '@/components/SecuredNodes';
 import type { Agent } from '@/types';
 import type { ChainService } from '@/services/chainService';
 
@@ -17,16 +16,13 @@ interface DockPanelProps {
   chainService: ChainService | null;
   onAgentDeploy: (newId: string) => void;
   onFocusNode: (nodeId: string) => void;
-  deployTargetForTerminal?: string | null;
   serverStartTime: number;
   onTimeChange: (ts: number) => void;
 }
 
 const DOCK_ITEMS: { id: DockPanelId; icon: string; label: string }[] = [
-  { id: 'nodes',      icon: '\u2B22', label: 'Secured Nodes' },
   { id: 'chat',       icon: '\u25C8', label: 'Network Chat' },
   { id: 'terminal',   icon: '\u25A3', label: 'Agent Terminal' },
-  { id: 'deploy',     icon: '\u26A1', label: 'Deploy Agent' },
   { id: 'stats',      icon: '\u25EB', label: 'Chain Stats' },
   { id: 'timeRewind', icon: '\u25F7', label: 'Time Rewind' },
 ];
@@ -37,7 +33,6 @@ export default function DockPanel({
   chainService,
   onAgentDeploy,
   onFocusNode,
-  deployTargetForTerminal,
   serverStartTime,
   onTimeChange,
 }: DockPanelProps) {
@@ -54,12 +49,9 @@ export default function DockPanel({
 
   const renderPanel = useCallback(() => {
     switch (activeDockPanel) {
-      case 'nodes':
-        return <SecuredNodes onFocusNode={onFocusNode} />;
       case 'chat':
         return <NetworkChatRoom onSend={onHaikuSubmit} />;
       case 'terminal':
-      case 'deploy':
         return currentAgent ? (
           <AgentChat
             agent={currentAgent}
@@ -67,7 +59,7 @@ export default function DockPanel({
             onClose={() => setActiveDockPanel(null)}
             onDeploy={onAgentDeploy}
             onFocusNode={onFocusNode}
-            initialDeployTarget={deployTargetForTerminal ?? undefined}
+            initialDeployTarget={undefined}
           />
         ) : (
           <div className="p-4 text-text-muted text-xs font-mono">
@@ -88,12 +80,12 @@ export default function DockPanel({
       default:
         return null;
     }
-  }, [activeDockPanel, onHaikuSubmit, currentAgent, chainService, onAgentDeploy, onFocusNode, deployTargetForTerminal, serverStartTime, onTimeChange, setActiveDockPanel]);
+  }, [activeDockPanel, onHaikuSubmit, currentAgent, chainService, onAgentDeploy, onFocusNode, serverStartTime, onTimeChange, setActiveDockPanel]);
 
   return (
     <>
       {/* Dock Rail */}
-      <div className="absolute right-0 top-0 bottom-8 w-10 z-30 flex flex-col items-center pt-2 gap-1 bg-background/40 backdrop-blur-sm border-l border-card-border">
+      <div className="absolute left-0 top-0 bottom-8 w-10 z-30 flex flex-col items-center pt-2 gap-1 bg-background/40 backdrop-blur-sm border-r border-card-border">
         {DOCK_ITEMS.map((item) => {
           const isActive = activeDockPanel === item.id;
           return (
@@ -111,12 +103,12 @@ export default function DockPanel({
                 {item.icon}
               </span>
               {/* Tooltip */}
-              <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded text-[10px] font-mono bg-background-light border border-card-border text-text-secondary whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
+              <span className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded text-[10px] font-mono bg-background-light border border-card-border text-text-secondary whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
                 {item.label}
               </span>
               {/* Active indicator */}
               {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-accent-cyan/60 animate-fade-in" />
+                <span className="absolute right-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-accent-cyan/60 animate-fade-in" />
               )}
             </button>
           );
@@ -125,7 +117,7 @@ export default function DockPanel({
 
       {/* Floating Panel */}
       {activeDockPanel && (
-        <div className="absolute right-12 top-2 bottom-10 z-[25] w-80 glass-panel-floating animate-slide-left overflow-hidden flex flex-col">
+        <div className="absolute left-12 top-2 bottom-10 z-[25] w-80 glass-panel-floating animate-slide-left overflow-hidden flex flex-col">
           <div className="relative z-10 flex-1 min-h-0">
             {renderPanel()}
           </div>
