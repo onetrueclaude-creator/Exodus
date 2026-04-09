@@ -429,24 +429,22 @@ describe("ResourceBar", () => {
     expect(useGameStore.getState().securedChains).toBe(1);
   });
 
-  it("renders faction arm label", () => {
-    // setCurrentUserFaction("community") → shows "Community Arm"
+  it("renders faction label", () => {
     useGameStore.getState().setCurrentUserFaction("community");
     render(<ResourceBar />);
-    expect(screen.getByText("Community Arm")).toBeDefined();
+    expect(screen.getByText("Community Faction")).toBeDefined();
   });
 
-  it("renders default community arm when faction is null", () => {
+  it("renders default community faction when faction is null", () => {
     useGameStore.getState().reset();
     render(<ResourceBar />);
-    // null faction falls back to "community" display
-    expect(screen.getByText("Community Arm")).toBeDefined();
+    expect(screen.getByText("Community Faction")).toBeDefined();
   });
 
-  it("renders faction-specific arm label", () => {
+  it("renders faction-specific label", () => {
     useGameStore.getState().setCurrentUserFaction("pro-max");
     render(<ResourceBar />);
-    expect(screen.getByText("Pro/Max Arm")).toBeDefined();
+    expect(screen.getByText("Professional Faction")).toBeDefined();
   });
 
   it("shows No wallet indicator when publicKey is null", () => {

@@ -147,13 +147,8 @@ export default function GamePage() {
       // Initialize Neural Lattice — build all rings up to current chain height
       // This prevents a flash of cells appearing when syncFromChain catches up
       const chainStatus = online ? await import("@/services/testnetApi").then(m => m.getStatus()).catch(() => null) : null;
-      const initialRings = chainStatus ? Math.max(1, chainStatus.blocks_processed) : 1;
+      const initialRings = chainStatus ? Math.max(2, chainStatus.blocks_processed) : 2;
       initLattice(initialRings);
-
-      // Dev seed: pre-claim Treasury and Founder genesis nodes for dev/test purposes.
-      // visibleFactions is NOT updated by claimBlocknode — controlled explicitly via revealFaction below.
-      claimBlocknode("cell-1--1", "dev-treasury");    // NE genesis = treasury
-      claimBlocknode("cell-1-1", "dev-founder");      // SE genesis = founder
 
       const agentList = await service.getAgents();
       agentList.forEach(addAgent);
@@ -192,7 +187,6 @@ export default function GamePage() {
           minerals: plan.startMinerals,
           empireColor: DEV_FACTION_COLOR[newUserFaction],
         });
-        setCurrentUser(newUserId, "");
         // Claim homenode FIRST while currentUserFaction is still null (init/dev-seed mode).
         // claimBlocknode requires faction === null to assign arm nodes — this is intentional:
         // arm nodes are faction infrastructure, not user territory. The claim here marks the
@@ -202,7 +196,30 @@ export default function GamePage() {
         const frontierNode = getFrontierCell(newUserFaction, freshStore.blocknodes);
         if (frontierNode) {
           claimBlocknode(frontierNode.id, newUserId);
+
+          // Create a homenode agent so the terminal works immediately
+          const homenodeAgent: import("@/types").Agent = {
+            id: frontierNode.id,
+            userId: newUserId,
+            position: { x: frontierNode.cx * 64, y: frontierNode.cy * 64 },
+            tier: "opus" as const,
+            isPrimary: true,
+            planets: [],
+            createdAt: Date.now(),
+            username: `Homenode`,
+            borderRadius: 30,
+            borderPressure: 0,
+            cpuPerTurn: 0,
+            miningRate: 0,
+            energyLimit: 0,
+            stakedCpu: 0,
+          };
+          addAgent(homenodeAgent);
+          setCurrentUser(newUserId, frontierNode.id);
           useGameStore.getState().requestFocus(frontierNode.id);
+          setActiveDockPanel("terminal");
+        } else {
+          setCurrentUser(newUserId, "");
         }
         setCurrentUserFaction(newUserFaction);
         revealFaction(newUserFaction);

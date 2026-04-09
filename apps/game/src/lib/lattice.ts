@@ -4,19 +4,21 @@ export const CELL_SIZE = 64;
 export const DENSITY_DECAY = 0.15;
 export const FACTIONS: FactionId[] = ["community", "treasury", "founder", "pro-max"];
 
+/** Quadrant signs — math convention: +Y = up (NW top-left, NE top-right, etc.) */
 const QUADRANT_SIGNS: Record<FactionId, { sx: number; sy: number }> = {
-  community: { sx: -1, sy: -1 },
-  treasury: { sx: 1, sy: -1 },
-  founder: { sx: 1, sy: 1 },
-  "pro-max": { sx: -1, sy: 1 },
+  community: { sx: -1, sy: 1 },   // NW (top-left)
+  treasury: { sx: 1, sy: 1 },     // NE (top-right)
+  founder: { sx: 1, sy: -1 },     // SE (bottom-right)
+  "pro-max": { sx: -1, sy: -1 },  // SW (bottom-left)
 };
 
+/** Determine which faction owns a cell. Math convention: +Y = up. */
 export function getFactionForCell(cx: number, cy: number): FactionId | null {
   if (cx === 0 || cy === 0) return null;
-  if (cx < 0 && cy < 0) return "community";
-  if (cx > 0 && cy < 0) return "treasury";
-  if (cx > 0 && cy > 0) return "founder";
-  return "pro-max";
+  if (cx < 0 && cy > 0) return "community";   // NW
+  if (cx > 0 && cy > 0) return "treasury";    // NE
+  if (cx > 0 && cy < 0) return "founder";     // SE
+  return "pro-max";                            // SW
 }
 
 export function getCellDensity(cx: number, cy: number): number {
@@ -24,8 +26,9 @@ export function getCellDensity(cx: number, cy: number): number {
   return 1.0 / (1 + dist * DENSITY_DECAY);
 }
 
+/** Convert cell to pixel. Y is negated so positive cy renders upward (math convention). */
 export function cellToPixel(cx: number, cy: number): { px: number; py: number } {
-  return { px: cx * CELL_SIZE, py: cy * CELL_SIZE };
+  return { px: cx * CELL_SIZE, py: -(cy * CELL_SIZE) || 0 };
 }
 
 export function cellId(cx: number, cy: number): string {
