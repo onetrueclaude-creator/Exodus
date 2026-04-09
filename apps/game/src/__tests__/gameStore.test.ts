@@ -171,11 +171,11 @@ describe("gameStore — empireColor (subscription tier color)", () => {
     useGameStore.getState().reset();
   });
 
-  it("defaults to Max tier fuchsia 0xd946ef", () => {
-    expect(useGameStore.getState().empireColor).toBe(0xd946ef);
+  it("defaults to Community white 0xffffff", () => {
+    expect(useGameStore.getState().empireColor).toBe(0xffffff);
   });
 
-  it("setEmpireColor updates to community yellowish-orange", () => {
+  it("setEmpireColor updates to amber (founders)", () => {
     useGameStore.getState().setEmpireColor(0xf59e0b);
     expect(useGameStore.getState().empireColor).toBe(0xf59e0b);
   });
@@ -185,10 +185,10 @@ describe("gameStore — empireColor (subscription tier color)", () => {
     expect(useGameStore.getState().empireColor).toBe(0x06b6d4);
   });
 
-  it("reset() restores empireColor to default Max tier fuchsia", () => {
+  it("reset() restores empireColor to default Community white", () => {
     useGameStore.getState().setEmpireColor(0xf59e0b);
     useGameStore.getState().reset();
-    expect(useGameStore.getState().empireColor).toBe(0xd946ef);
+    expect(useGameStore.getState().empireColor).toBe(0xffffff);
   });
 });
 

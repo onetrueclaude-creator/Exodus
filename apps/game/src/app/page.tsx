@@ -4,15 +4,73 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { SUBSCRIPTION_PLANS } from "@/types/subscription";
 import type { SubscriptionTier } from "@/types/subscription";
+import type { FactionId } from "@/types";
 
 const IS_DEV = process.env.NODE_ENV === "development";
 
+/** All 4 factions for dev testing — includes closed factions (founder, treasury) */
+const DEV_FACTIONS: {
+  faction: FactionId;
+  tier: SubscriptionTier;
+  name: string;
+  label: string;
+  energy: number;
+  agntc: number;
+  arm: string;
+  accent: string;
+  closed?: boolean;
+}[] = [
+  {
+    faction: "community",
+    tier: "COMMUNITY",
+    name: "Community",
+    label: "Free",
+    energy: 1000,
+    agntc: 10,
+    arm: "NW arm",
+    accent: "text-teal-400 border-teal-400/30 bg-teal-400/5",
+  },
+  {
+    faction: "pro-max",
+    tier: "PROFESSIONAL",
+    name: "Professional",
+    label: "$50/mo",
+    energy: 5000,
+    agntc: 100,
+    arm: "SW arm",
+    accent: "text-blue-400 border-blue-400/30 bg-blue-400/5",
+  },
+  {
+    faction: "founder",
+    tier: "PROFESSIONAL",
+    name: "Founders",
+    label: "Closed",
+    energy: 20000,
+    agntc: 500,
+    arm: "SE arm",
+    accent: "text-amber-400 border-amber-400/30 bg-amber-400/5",
+    closed: true,
+  },
+  {
+    faction: "treasury",
+    tier: "PROFESSIONAL",
+    name: "Machines",
+    label: "Closed",
+    energy: 50000,
+    agntc: 1000,
+    arm: "NE arm",
+    accent: "text-pink-400 border-pink-400/30 bg-pink-400/5",
+    closed: true,
+  },
+];
+
 /** Development entry point — choose faction, skip auth */
-function DevTierSelect() {
+function DevFactionSelect() {
   const router = useRouter();
 
-  const handleSelect = (tier: SubscriptionTier) => {
-    localStorage.setItem("dev_tier", tier);
+  const handleSelect = (f: typeof DEV_FACTIONS[number]) => {
+    localStorage.setItem("dev_tier", f.tier);
+    localStorage.setItem("dev_faction", f.faction);
     router.push("/game");
   };
 
@@ -20,7 +78,7 @@ function DevTierSelect() {
     <main className="min-h-screen flex flex-col items-center justify-center bg-background relative">
       <div className="flex flex-col items-center w-full max-w-lg px-6">
         <div className="mb-4 text-[10px] font-mono text-yellow-500/70 tracking-widest uppercase border border-yellow-500/20 rounded px-3 py-1">
-          ◈ Dev Mode — No Auth Required
+          {'\u25C8'} Dev Mode — All Factions Unlocked
         </div>
 
         <h1
@@ -32,37 +90,42 @@ function DevTierSelect() {
         <p className="text-[13px] text-text-muted mb-8">Choose your faction to enter the testnet</p>
 
         <div className="w-full grid gap-3">
-          {SUBSCRIPTION_PLANS.map((plan) => {
-            const [textClass, borderClass, bgClass] = plan.accent.split(" ");
+          {DEV_FACTIONS.map((f) => {
+            const [textClass, borderClass, bgClass] = f.accent.split(" ");
             return (
               <button
-                key={plan.tier}
-                onClick={() => handleSelect(plan.tier)}
+                key={f.faction}
+                onClick={() => handleSelect(f)}
                 className={`w-full text-left p-5 rounded-xl border ${borderClass} ${bgClass} hover:bg-white/[0.04] transition-all duration-200 group`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div>
+                  <div className="flex items-center gap-2">
                     <span
                       className={`text-[15px] font-semibold ${textClass}`}
                       style={{ fontFamily: "'Outfit', sans-serif" }}
                     >
-                      {plan.name}
+                      {f.name}
                     </span>
+                    {f.closed && (
+                      <span className="text-[9px] font-mono text-yellow-500/60 bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20">
+                        DEV ONLY
+                      </span>
+                    )}
                   </div>
                   <span
                     className={`text-[13px] font-semibold ${textClass}`}
                     style={{ fontFamily: "'Fira Code', monospace" }}
                   >
-                    {plan.priceLabel}
+                    {f.label}
                   </span>
                 </div>
                 <div
-                  className="flex gap-4 text-[10px] text-text-muted/50 mb-2"
+                  className="flex gap-4 text-[10px] text-text-muted/50"
                   style={{ fontFamily: "'Fira Code', monospace" }}
                 >
-                  <span>{plan.startEnergy} CPU Energy</span>
-                  <span>{plan.startAgntc} AGNTC</span>
-                  <span>{plan.startMinerals} Data Frags</span>
+                  <span>{f.energy.toLocaleString()} CPU</span>
+                  <span>{f.agntc} AGNTC</span>
+                  <span className="text-text-muted/30">{f.arm}</span>
                 </div>
               </button>
             );
@@ -70,7 +133,7 @@ function DevTierSelect() {
         </div>
 
         <p className="mt-6 text-[11px] text-text-muted/30 text-center max-w-sm">
-          Tier stored in localStorage. Clear it to pick a different one on next visit.
+          Faction stored in localStorage. Clear it to pick a different one on next visit.
         </p>
       </div>
 
@@ -79,7 +142,7 @@ function DevTierSelect() {
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-50" />
           <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-yellow-400" />
         </span>
-        <span className="text-yellow-400/60 tracking-wide">TESTNET · DEV</span>
+        <span className="text-yellow-400/60 tracking-wide">TESTNET {'\u00B7'} DEV</span>
       </div>
     </main>
   );
@@ -160,6 +223,5 @@ function ProductionLanding() {
 }
 
 export default function Home() {
-  // Always show tier selection during active testnet development; swap to ProductionLanding for prod
-  return IS_DEV ? <DevTierSelect /> : <ProductionLanding />;
+  return IS_DEV ? <DevFactionSelect /> : <ProductionLanding />;
 }

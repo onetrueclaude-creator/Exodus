@@ -1,4 +1,4 @@
-export type SubscriptionTier = "COMMUNITY" | "PROFESSIONAL" | "MAX";
+export type SubscriptionTier = "COMMUNITY" | "PROFESSIONAL";
 
 export interface SubscriptionPlan {
   tier: SubscriptionTier;
@@ -48,23 +48,5 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
       "Priority border pressure",
     ],
     accent: "text-cyan-400 border-cyan-400/30 bg-cyan-400/5",
-  },
-  {
-    tier: "MAX",
-    name: "Max",
-    price: 200,
-    priceLabel: "$200/mo",
-    startEnergy: 20000,
-    startAgntc: 500,
-    startMinerals: 200,
-    features: [
-      "20,000 CPU Energy starting balance",
-      "500 AGNTC tokens",
-      "Deploy any Claude model (API cost-gated)",
-      "Full validator suite",
-      "Maximum border influence",
-      "Direct chain governance",
-    ],
-    accent: "text-orange-400 border-orange-400/30 bg-orange-400/5",
   },
 ];

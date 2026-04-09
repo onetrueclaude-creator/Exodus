@@ -32,14 +32,20 @@ import { visualToChain } from "@/services/testnetChainService";
 const SUBSCRIPTION_EMPIRE_COLOR: Record<SubscriptionTier, number> = {
   COMMUNITY: 0xffffff, // white — community faction
   PROFESSIONAL: 0x00ffff, // cyan — pro-max faction
-  MAX: 0xd946ef, // fuchsia — founder faction
 };
 
 /** Map subscription tier to faction arm */
 const SUBSCRIPTION_FACTION: Record<SubscriptionTier, FactionId | null> = {
   COMMUNITY: "community",
   PROFESSIONAL: "pro-max",
-  MAX: "founder",
+};
+
+/** Dev-only faction colors — for factions not available to players */
+const DEV_FACTION_COLOR: Record<FactionId, number> = {
+  community: 0xffffff,
+  "pro-max": 0x00ffff,
+  founder: 0xf59e0b, // amber
+  treasury: 0xdc2680, // pink (Machines)
 };
 
 /** Block time on chain — refresh grid every 60 seconds to sync with ledger */
@@ -189,22 +195,25 @@ export default function GamePage() {
         // Center camera on homenode
         useGameStore.getState().setCamera(homenode.position, 2);
       } else {
-        // New user — read dev-selected tier (dev mode) or default to COMMUNITY
+        // New user — read dev-selected tier + faction (dev mode) or default to COMMUNITY
         const devTierRaw = typeof window !== "undefined" ? localStorage.getItem("dev_tier") : null;
+        const devFactionRaw = typeof window !== "undefined" ? localStorage.getItem("dev_faction") : null;
         const devTier = (devTierRaw as SubscriptionTier | null) ?? "COMMUNITY";
         const plan = SUBSCRIPTION_PLANS.find((p) => p.tier === devTier) ?? SUBSCRIPTION_PLANS[0];
 
+        // Dev faction override — allows testing founder/treasury factions regardless of tier
+        const devFaction = (devFactionRaw as FactionId | null);
+
         const newUserId = `user-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        const newUserFaction: FactionId = devFaction ?? SUBSCRIPTION_FACTION[devTier] ?? "community";
         useGameStore.setState({
           currentUserId: newUserId,
           energy: plan.startEnergy,
           agntcBalance: plan.startAgntc + 1, // +1 genesis airdrop
           minerals: plan.startMinerals,
-          empireColor: SUBSCRIPTION_EMPIRE_COLOR[devTier],
+          empireColor: DEV_FACTION_COLOR[newUserFaction],
         });
         setCurrentUser(newUserId, "");
-
-        const newUserFaction: FactionId = SUBSCRIPTION_FACTION[devTier] ?? "community";
         // Claim homenode FIRST while currentUserFaction is still null (init/dev-seed mode).
         // claimBlocknode requires faction === null to assign arm nodes — this is intentional:
         // arm nodes are faction infrastructure, not user territory. The claim here marks the
@@ -282,7 +291,7 @@ export default function GamePage() {
         if (success) {
           store.setPrimary(selectedAgent);
           // Set empire color based on homenode tier (subscription-aware once auth wired)
-          store.setEmpireColor(SUBSCRIPTION_EMPIRE_COLOR.MAX); // Default: opus homenode = Max tier
+          store.setEmpireColor(SUBSCRIPTION_EMPIRE_COLOR.COMMUNITY);
           setActiveDockPanel("terminal");
           setSelectedAgent(null);
           // Center camera on claimed homenode
