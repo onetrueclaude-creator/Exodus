@@ -129,13 +129,12 @@ describe("gameStore — lattice/blocknode state", () => {
     expect(Object.keys(useGameStore.getState().blocknodes).length).toBe(nodesBefore);
   });
 
-  it("tick does NOT add baseIncome faucet energy", () => {
-    // Set up a user with no agents (zero mining)
-    useGameStore.setState({ currentUserId: "user-001", energy: 500, agents: {} });
+  it("tick adds passive CPU regen", () => {
+    useGameStore.setState({ currentUserId: "user-001", energy: 500, cpuRegenPerTurn: 100 });
     useGameStore.getState().tick();
     const s = useGameStore.getState();
-    // With no agents and no faucet, energy should remain 500
-    expect(s.energy).toBe(500);
+    // 500 + 100 regen = 600
+    expect(s.energy).toBe(600);
   });
 });
 

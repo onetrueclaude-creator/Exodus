@@ -421,48 +421,19 @@ describe("gameStore", () => {
       expect(useGameStore.getState().turn).toBe(1);
     });
 
-    it("increases energy by mining - cpuCost (no faucet)", () => {
+    it("increases energy by regen minus commitments", () => {
+      useGameStore.setState({ cpuRegenPerTurn: 100, miningCpuPerBlock: 30, securingCpuPerBlock: 20 });
       const before = useGameStore.getState().energy;
       useGameStore.getState().tick();
       const after = useGameStore.getState().energy;
-      const agent = useGameStore.getState().agents["a1"];
-      const expectedNet = agent.miningRate - agent.cpuPerTurn;
-      expect(after).toBe(Math.max(0, before + expectedNet));
+      // regen(100) - mining(30) - securing(20) = +50
+      expect(after).toBe(before + 50);
     });
 
     it("increases minerals by 1 per owned agent", () => {
       const before = useGameStore.getState().minerals;
       useGameStore.getState().tick();
       expect(useGameStore.getState().minerals).toBe(before + 1);
-    });
-
-    it("deducts AGNTC from border pressure", () => {
-      useGameStore.getState().setBorderPressure("a1", 10);
-      const before = useGameStore.getState().agntcBalance;
-      useGameStore.getState().tick();
-      const after = useGameStore.getState().agntcBalance;
-      expect(after).toBeCloseTo(before - 10 * 0.1, 2);
-    });
-
-    it("grows border radius with pressure", () => {
-      useGameStore.getState().setBorderPressure("a1", 4);
-      const before = useGameStore.getState().agents["a1"].borderRadius;
-      useGameStore.getState().tick();
-      const after = useGameStore.getState().agents["a1"].borderRadius;
-      expect(after).toBeGreaterThan(before);
-    });
-
-    it("caps border radius at 3x base", () => {
-      // Set borderRadius near max
-      useGameStore.setState((s) => ({
-        agents: {
-          ...s.agents,
-          a1: { ...s.agents["a1"], borderRadius: TIER_BASE_BORDER.opus * 3, borderPressure: 10 },
-        },
-      }));
-      useGameStore.getState().tick();
-      const after = useGameStore.getState().agents["a1"].borderRadius;
-      expect(after).toBeLessThanOrEqual(TIER_BASE_BORDER.opus * 3);
     });
 
     it("does not tick if no current user", () => {

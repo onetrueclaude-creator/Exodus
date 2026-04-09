@@ -1,0 +1,110 @@
+<h2>Where does a new player's homenode go?</h2>
+<p class="subtitle">When a player joins and picks a faction, they need a homenode in their quadrant. How is it assigned?</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Option A: Nearest Unclaimed to Origin</div>
+    <div class="mockup-body" style="padding: 20px;">
+      <svg viewBox="-160 -160 320 320" width="100%" height="260" style="background: #0a0a12; border-radius: 8px;">
+        <!-- Grid -->
+        <line x1="-160" y1="0" x2="160" y2="0" stroke="#333" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="0" y1="-160" x2="0" y2="160" stroke="#333" stroke-width="1" stroke-dasharray="4,4"/>
+
+        <!-- NW Community quadrant cells -->
+        <!-- Ring 0 -->
+        <rect x="-30" y="-30" width="28" height="28" rx="3" fill="#0D9488" opacity="0.8" stroke="#0D9488" stroke-width="1.5"/>
+        <text x="-24" y="-12" fill="white" font-size="7" font-family="monospace">P1</text>
+
+        <!-- Ring 1 -->
+        <rect x="-62" y="-30" width="28" height="28" rx="3" fill="#0D9488" opacity="0.5" stroke="#0D9488" stroke-width="1"/>
+        <text x="-56" y="-12" fill="white" font-size="7" font-family="monospace">P2</text>
+        <rect x="-30" y="-62" width="28" height="28" rx="3" fill="#0D9488" opacity="0.5" stroke="#0D9488" stroke-width="1"/>
+        <text x="-24" y="-44" fill="white" font-size="7" font-family="monospace">P3</text>
+        <rect x="-62" y="-62" width="28" height="28" rx="3" fill="none" stroke="#0D9488" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.3"/>
+
+        <!-- Ring 2 -->
+        <rect x="-94" y="-30" width="28" height="28" rx="3" fill="none" stroke="#0D9488" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.2"/>
+        <rect x="-94" y="-62" width="28" height="28" rx="3" fill="none" stroke="#0D9488" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.2"/>
+        <rect x="-94" y="-94" width="28" height="28" rx="3" fill="none" stroke="#0D9488" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.2"/>
+        <rect x="-62" y="-94" width="28" height="28" rx="3" fill="none" stroke="#0D9488" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.2"/>
+        <rect x="-30" y="-94" width="28" height="28" rx="3" fill="none" stroke="#0D9488" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.2"/>
+
+        <!-- Arrow showing assignment order -->
+        <text x="-22" y="-82" fill="#22c55e" font-size="8" font-family="monospace" opacity="0.6">next free</text>
+        <line x1="-16" y1="-76" x2="-48" y2="-56" stroke="#22c55e" stroke-width="0.8" opacity="0.5" marker-end="none"/>
+
+        <!-- Other quadrant homenodes (just genesis) -->
+        <rect x="2" y="-30" width="28" height="28" rx="3" fill="#DC2680" opacity="0.5" stroke="#DC2680" stroke-width="0.5"/>
+        <rect x="2" y="2" width="28" height="28" rx="3" fill="#F59E0B" opacity="0.5" stroke="#F59E0B" stroke-width="0.5"/>
+        <rect x="-30" y="2" width="28" height="28" rx="3" fill="#3B82F6" opacity="0.5" stroke="#3B82F6" stroke-width="0.5"/>
+        <circle cx="0" cy="0" r="2" fill="white" opacity="0.5"/>
+      </svg>
+      <div style="margin-top: 8px; color: #888; font-size: 11px; font-family: monospace;">
+        P1 gets ring-0 (closest to origin, most valuable). P2 gets next closest. Late joiners land further out. <b>Early = better position.</b>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Option B: Random in Quadrant</div>
+    <div class="mockup-body" style="padding: 20px;">
+      <svg viewBox="-160 -160 320 320" width="100%" height="260" style="background: #0a0a12; border-radius: 8px;">
+        <!-- Grid -->
+        <line x1="-160" y1="0" x2="160" y2="0" stroke="#333" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="0" y1="-160" x2="0" y2="160" stroke="#333" stroke-width="1" stroke-dasharray="4,4"/>
+
+        <!-- NW Community — scattered placement -->
+        <rect x="-30" y="-30" width="28" height="28" rx="3" fill="none" stroke="#0D9488" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.3"/>
+        <rect x="-62" y="-30" width="28" height="28" rx="3" fill="none" stroke="#0D9488" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.3"/>
+        <rect x="-30" y="-62" width="28" height="28" rx="3" fill="#0D9488" opacity="0.5" stroke="#0D9488" stroke-width="1"/>
+        <text x="-24" y="-44" fill="white" font-size="7" font-family="monospace">P1</text>
+        <rect x="-62" y="-62" width="28" height="28" rx="3" fill="none" stroke="#0D9488" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.3"/>
+        <rect x="-94" y="-30" width="28" height="28" rx="3" fill="#0D9488" opacity="0.5" stroke="#0D9488" stroke-width="1"/>
+        <text x="-88" y="-12" fill="white" font-size="7" font-family="monospace">P2</text>
+        <rect x="-94" y="-62" width="28" height="28" rx="3" fill="none" stroke="#0D9488" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.3"/>
+        <rect x="-94" y="-94" width="28" height="28" rx="3" fill="none" stroke="#0D9488" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.3"/>
+        <rect x="-62" y="-94" width="28" height="28" rx="3" fill="#0D9488" opacity="0.5" stroke="#0D9488" stroke-width="1"/>
+        <text x="-56" y="-76" fill="white" font-size="7" font-family="monospace">P3</text>
+        <rect x="-30" y="-94" width="28" height="28" rx="3" fill="none" stroke="#0D9488" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.3"/>
+
+        <!-- Other quadrant homenodes -->
+        <rect x="2" y="-30" width="28" height="28" rx="3" fill="#DC2680" opacity="0.5" stroke="#DC2680" stroke-width="0.5"/>
+        <rect x="2" y="2" width="28" height="28" rx="3" fill="#F59E0B" opacity="0.5" stroke="#F59E0B" stroke-width="0.5"/>
+        <rect x="-30" y="2" width="28" height="28" rx="3" fill="#3B82F6" opacity="0.5" stroke="#3B82F6" stroke-width="0.5"/>
+        <circle cx="0" cy="0" r="2" fill="white" opacity="0.5"/>
+
+        <!-- Question marks on empty cells -->
+        <text x="-20" y="-12" fill="#0D9488" font-size="10" font-family="monospace" opacity="0.3">?</text>
+        <text x="-52" y="-44" fill="#0D9488" font-size="10" font-family="monospace" opacity="0.3">?</text>
+      </svg>
+      <div style="margin-top: 8px; color: #888; font-size: 11px; font-family: monospace;">
+        Players placed randomly within available cells. More fair, but less strategic. Players can't choose position.
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top: 24px;">How are homenodes assigned?</h3>
+<div class="options">
+  <div class="option" data-choice="nearest" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Nearest Unclaimed to Origin (Recommended)</h3>
+      <p>First come, first served. Early players get prime real estate near the center. Late players land on the frontier. Creates urgency to join early.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="random" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Random Placement</h3>
+      <p>Assigned randomly among unclaimed cells in the quadrant. More fair, but removes the strategic land-rush dynamic.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="player-pick" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Player Picks Cell</h3>
+      <p>Player clicks any unclaimed cell in their quadrant to place their homenode. Most agency, but adds a UI step to onboarding.</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,146 @@
+<h2>Tall vs Wide: Strategic Territory Model</h2>
+<p class="subtitle">Confirming the Stellaris/Civ-inspired tradeoff mechanics</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">TALL: Stay Near Origin</div>
+    <div class="mockup-body" style="padding: 20px;">
+      <svg viewBox="-140 -140 280 280" width="100%" height="250" style="background: #0a0a12; border-radius: 8px;">
+        <line x1="-140" y1="0" x2="140" y2="0" stroke="#333" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="0" y1="-140" x2="0" y2="140" stroke="#333" stroke-width="1" stroke-dasharray="4,4"/>
+
+        <!-- NW quadrant - crowded near origin -->
+        <!-- Player 1 homenode -->
+        <rect x="-30" y="-30" width="26" height="26" rx="3" fill="#0D9488" opacity="0.9" stroke="white" stroke-width="1.5"/>
+        <text x="-24" y="-14" fill="white" font-size="6" font-family="monospace" font-weight="bold">YOU</text>
+
+        <!-- Other players' homenodes - crowded -->
+        <rect x="-58" y="-30" width="26" height="26" rx="3" fill="#0D9488" opacity="0.6" stroke="#0D9488" stroke-width="1"/>
+        <text x="-52" y="-14" fill="white" font-size="5" font-family="monospace">P2</text>
+        <rect x="-30" y="-58" width="26" height="26" rx="3" fill="#0D9488" opacity="0.6" stroke="#0D9488" stroke-width="1"/>
+        <text x="-24" y="-42" fill="white" font-size="5" font-family="monospace">P3</text>
+        <rect x="-58" y="-58" width="26" height="26" rx="3" fill="#0D9488" opacity="0.6" stroke="#0D9488" stroke-width="1"/>
+        <text x="-52" y="-42" fill="white" font-size="5" font-family="monospace">P4</text>
+
+        <!-- No room for subnodes nearby! -->
+        <rect x="-86" y="-30" width="26" height="26" rx="3" fill="#0D9488" opacity="0.4" stroke="#0D9488" stroke-width="0.5"/>
+        <text x="-80" y="-14" fill="white" font-size="5" font-family="monospace">P5</text>
+        <rect x="-30" y="-86" width="26" height="26" rx="3" fill="#0D9488" opacity="0.4" stroke="#0D9488" stroke-width="0.5"/>
+        <text x="-24" y="-70" fill="white" font-size="5" font-family="monospace">P6</text>
+
+        <!-- X marks where subnodes can't go -->
+        <rect x="-86" y="-58" width="26" height="26" rx="3" fill="none" stroke="#ef4444" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.4"/>
+        <text x="-78" y="-42" fill="#ef4444" font-size="8" font-family="monospace" opacity="0.5">X</text>
+        <rect x="-86" y="-86" width="26" height="26" rx="3" fill="none" stroke="#ef4444" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.4"/>
+        <text x="-78" y="-70" fill="#ef4444" font-size="8" font-family="monospace" opacity="0.5">X</text>
+        <rect x="-58" y="-86" width="26" height="26" rx="3" fill="none" stroke="#ef4444" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.4"/>
+        <text x="-50" y="-70" fill="#ef4444" font-size="8" font-family="monospace" opacity="0.5">X</text>
+
+        <!-- Density indicator -->
+        <text x="-130" y="130" fill="#22c55e" font-size="9" font-family="monospace" opacity="0.7">+ High density</text>
+        <text x="-130" y="120" fill="#22c55e" font-size="9" font-family="monospace" opacity="0.7">+ Rich rewards</text>
+        <text x="20" y="120" fill="#ef4444" font-size="9" font-family="monospace" opacity="0.7">- No room for subnodes</text>
+        <text x="20" y="130" fill="#ef4444" font-size="9" font-family="monospace" opacity="0.7">- Single agent only</text>
+      </svg>
+      <div style="margin-top: 8px; color: #f59e0b; font-size: 11px; font-family: monospace;">
+        <b>Tall:</b> High density, rich mining rewards, but surrounded by other players' homenodes. No empty cells for subnodes. One agent, maxed out.
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">WIDE: Teleport to Frontier</div>
+    <div class="mockup-body" style="padding: 20px;">
+      <svg viewBox="-140 -140 280 280" width="100%" height="250" style="background: #0a0a12; border-radius: 8px;">
+        <line x1="-140" y1="0" x2="140" y2="0" stroke="#333" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="0" y1="-140" x2="0" y2="140" stroke="#333" stroke-width="1" stroke-dasharray="4,4"/>
+
+        <!-- NW quadrant - crowded center -->
+        <rect x="-30" y="-30" width="26" height="26" rx="3" fill="#0D9488" opacity="0.4" stroke="#0D9488" stroke-width="0.5"/>
+        <text x="-24" y="-14" fill="white" font-size="5" font-family="monospace">P2</text>
+        <rect x="-58" y="-30" width="26" height="26" rx="3" fill="#0D9488" opacity="0.4" stroke="#0D9488" stroke-width="0.5"/>
+        <text x="-52" y="-14" fill="white" font-size="5" font-family="monospace">P3</text>
+        <rect x="-30" y="-58" width="26" height="26" rx="3" fill="#0D9488" opacity="0.4" stroke="#0D9488" stroke-width="0.5"/>
+        <text x="-24" y="-42" fill="white" font-size="5" font-family="monospace">P4</text>
+
+        <!-- Player teleported to frontier -->
+        <rect x="-114" y="-114" width="26" height="26" rx="3" fill="#0D9488" opacity="0.9" stroke="white" stroke-width="1.5"/>
+        <text x="-108" y="-98" fill="white" font-size="6" font-family="monospace" font-weight="bold">YOU</text>
+
+        <!-- Subnodes around player's homenode -->
+        <rect x="-114" y="-86" width="26" height="26" rx="3" fill="#22c55e" opacity="0.5" stroke="#22c55e" stroke-width="1"/>
+        <text x="-108" y="-70" fill="white" font-size="5" font-family="monospace">sub</text>
+        <rect x="-86" y="-114" width="26" height="26" rx="3" fill="#22c55e" opacity="0.5" stroke="#22c55e" stroke-width="1"/>
+        <text x="-80" y="-98" fill="white" font-size="5" font-family="monospace">sub</text>
+        <rect x="-86" y="-86" width="26" height="26" rx="3" fill="#22c55e" opacity="0.5" stroke="#22c55e" stroke-width="1"/>
+        <text x="-80" y="-70" fill="white" font-size="5" font-family="monospace">sub</text>
+
+        <!-- More empty cells available -->
+        <rect x="-114" y="-58" width="26" height="26" rx="3" fill="none" stroke="#0D9488" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.3"/>
+        <rect x="-86" y="-58" width="26" height="26" rx="3" fill="none" stroke="#0D9488" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.3"/>
+
+        <!-- Teleport arrow -->
+        <path d="M -16,-16 C -40,-60 -80,-80 -100,-100" stroke="#f59e0b" stroke-width="1.5" fill="none" stroke-dasharray="4,3" opacity="0.6"/>
+        <text x="-75" y="-55" fill="#f59e0b" font-size="8" font-family="monospace" opacity="0.6" transform="rotate(-40,-75,-55)">TELEPORT</text>
+        <text x="-75" y="-45" fill="#f59e0b" font-size="7" font-family="monospace" opacity="0.4" transform="rotate(-40,-75,-45)">costs AGNTC</text>
+
+        <!-- Benefits -->
+        <text x="-130" y="120" fill="#22c55e" font-size="9" font-family="monospace" opacity="0.7">+ Room for subnodes</text>
+        <text x="-130" y="130" fill="#22c55e" font-size="9" font-family="monospace" opacity="0.7">+ Multi-agent empire</text>
+        <text x="20" y="120" fill="#ef4444" font-size="9" font-family="monospace" opacity="0.7">- Lower density</text>
+        <text x="20" y="130" fill="#ef4444" font-size="9" font-family="monospace" opacity="0.7">- Costs AGNTC to move</text>
+      </svg>
+      <div style="margin-top: 8px; color: #3b82f6; font-size: 11px; font-family: monospace;">
+        <b>Wide:</b> Pay AGNTC to teleport homenode to frontier. Lower density, but empty cells for subnodes. Build a multi-agent empire.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 20px; padding: 16px; border: 1px solid #333; border-radius: 8px; background: #111;">
+  <h3 style="color: #e5e5e5; margin: 0 0 12px 0; font-size: 14px;">Rules Summary — Confirm These</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 11px; font-family: monospace; color: #aaa;">
+    <div>
+      <div style="color: #0D9488; margin-bottom: 4px;">HOMENODE</div>
+      <div>- Auto-assigned: nearest unclaimed to origin</div>
+      <div>- Can teleport to any empty cell (costs AGNTC)</div>
+      <div>- One homenode per player</div>
+    </div>
+    <div>
+      <div style="color: #22c55e; margin-bottom: 4px;">SUBNODES</div>
+      <div>- Claimed on empty cells adjacent to homenode</div>
+      <div>- Run sub-agents (Haiku/Sonnet)</div>
+      <div>- Cannot be used as homenode placement</div>
+    </div>
+    <div>
+      <div style="color: #f59e0b; margin-bottom: 4px;">TALL STRATEGY</div>
+      <div>- Stay near origin for high density/rewards</div>
+      <div>- Crowded = no subnodes, single agent only</div>
+      <div>- Strong mining, weak expansion</div>
+    </div>
+    <div>
+      <div style="color: #3b82f6; margin-bottom: 4px;">WIDE STRATEGY</div>
+      <div>- Teleport to frontier (costs AGNTC)</div>
+      <div>- Empty space = subnodes, multi-agent empire</div>
+      <div>- Weak mining, strong expansion</div>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top: 20px;">Does this capture the Tall vs Wide model correctly?</h3>
+<div class="options">
+  <div class="option" data-choice="correct" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Yes, this is correct</h3>
+      <p>The rules summary captures the intended mechanics. Proceed to design spec.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="needs-changes" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Close but needs adjustments</h3>
+      <p>The core idea is right, but some details need changing. I'll explain in the terminal.</p>
+    </div>
+  </div>
+</div>
