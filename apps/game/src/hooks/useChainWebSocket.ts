@@ -53,13 +53,32 @@ export function useChainWebSocket(enabled: boolean) {
           store.addBlocknodesForBlock(b);
         }
 
-        // Refresh agents from chain after a block
-        api
-          .getClaims()
-          .then(() => {
-            // Full refresh via testnet service will happen on next sync
-          })
-          .catch(() => {});
+        // Refresh chain status + wallet state after each block
+        api.getStatus().then(status => {
+          useGameStore.getState().setChainStatus({
+            poolRemaining: status.circulating_supply,
+            totalMined: status.total_mined,
+            stateRoot: status.state_root,
+            nextBlockIn: status.next_block_in,
+            blocks: status.blocks_processed,
+            epochRing: status.epoch_ring,
+            hardness: status.hardness,
+          });
+        }).catch(() => {});
+
+        // Refresh wallet resources (secured chains, rates)
+        Promise.all([
+          api.getSettings(0),
+          api.getRewards(0),
+        ]).then(([settings]) => {
+          useGameStore.getState().setWalletState({
+            securedChains: settings.total_secured_chains,
+            securingRate: settings.securing_rate,
+            miningRate: settings.mining_rate,
+            effectiveStake: settings.effective_stake,
+          });
+        }).catch(() => {});
+
         break;
       }
       case "agent_born": {
