@@ -158,10 +158,10 @@ export function setNodeDimmed(container: Container, dimmed: boolean): void {
 
 /** Blocknode colors by faction */
 const BLOCKNODE_COLORS: Record<string, number> = {
-  community: 0xffffff, // white — free tier
-  treasury: 0xf97316, // gold orange
-  founder: 0xd946ef, // fuchsia
-  "pro-max": 0x00ffff, // cyan — professional tier
+  community: 0x0d9488, // teal
+  treasury: 0xdc2680,  // pink (Machines)
+  founder: 0xf59e0b,   // amber
+  "pro-max": 0x3b82f6, // blue (Professional)
 };
 
 /**

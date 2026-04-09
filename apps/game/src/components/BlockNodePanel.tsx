@@ -45,7 +45,7 @@ export default function BlockNodePanel({ node, onClose }: BlockNodePanelProps) {
 
   return (
     <div
-      className={`absolute top-4 left-14 z-30 w-56 rounded-xl border ${style.border} ${style.bg} backdrop-blur-sm p-3 shadow-xl`}
+      className={`absolute top-4 right-4 z-30 w-56 rounded-xl border ${style.border} ${style.bg} backdrop-blur-sm p-3 shadow-xl`}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-2">

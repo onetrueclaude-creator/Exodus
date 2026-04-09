@@ -192,7 +192,6 @@ export default function GamePage() {
           minerals: plan.startMinerals,
           empireColor: DEV_FACTION_COLOR[newUserFaction],
         });
-        setCurrentUser(newUserId, "");
         // Claim homenode FIRST while currentUserFaction is still null (init/dev-seed mode).
         // claimBlocknode requires faction === null to assign arm nodes — this is intentional:
         // arm nodes are faction infrastructure, not user territory. The claim here marks the
@@ -202,7 +201,29 @@ export default function GamePage() {
         const frontierNode = getFrontierCell(newUserFaction, freshStore.blocknodes);
         if (frontierNode) {
           claimBlocknode(frontierNode.id, newUserId);
+
+          // Create a homenode agent so the terminal works immediately
+          const homenodeAgent: import("@/types").Agent = {
+            id: frontierNode.id,
+            userId: newUserId,
+            position: { x: frontierNode.cx * 64, y: frontierNode.cy * 64 },
+            tier: "opus" as const,
+            isPrimary: true,
+            planets: [],
+            createdAt: Date.now(),
+            username: `Homenode`,
+            borderRadius: 30,
+            borderPressure: 0,
+            cpuPerTurn: 0,
+            miningRate: 0,
+            energyLimit: 0,
+            stakedCpu: 0,
+          };
+          addAgent(homenodeAgent);
+          setCurrentUser(newUserId, frontierNode.id);
           useGameStore.getState().requestFocus(frontierNode.id);
+        } else {
+          setCurrentUser(newUserId, "");
         }
         setCurrentUserFaction(newUserFaction);
         revealFaction(newUserFaction);
