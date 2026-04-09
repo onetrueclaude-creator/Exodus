@@ -222,6 +222,7 @@ export default function GamePage() {
           addAgent(homenodeAgent);
           setCurrentUser(newUserId, frontierNode.id);
           useGameStore.getState().requestFocus(frontierNode.id);
+          setActiveDockPanel("terminal");
         } else {
           setCurrentUser(newUserId, "");
         }
