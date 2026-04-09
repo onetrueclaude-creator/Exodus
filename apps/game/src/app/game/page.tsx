@@ -2,16 +2,13 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import LatticeGrid from "@/components/LatticeGrid";
-import AgentPanel from "@/components/AgentPanel";
-import AgentDropdown from "@/components/AgentDropdown";
-import QuickActionMenu from "@/components/QuickActionMenu";
 import ResourceBar from "@/components/ResourceBar";
 import TabNavigation from "@/components/TabNavigation";
 import AccountView from "@/components/AccountView";
 import ResearchPanel from "@/components/ResearchPanel";
 import SkillsPanel from "@/components/SkillsPanel";
-import AgentProfilePopup from "@/components/AgentProfilePopup";
 import DockPanel from "@/components/DockPanel";
+import CellTooltip from "@/components/CellTooltip";
 import { startDebugListener } from "@/lib/debugListener";
 import dynamic from "next/dynamic";
 const DebugOverlay = dynamic(() => import("@/components/DebugOverlay"), { ssr: false });
@@ -21,20 +18,11 @@ import type { ChainService } from "@/services/chainService";
 import { TestnetChainService } from "@/services/testnetChainService";
 import { isTestnetOnline, getSettings, getRewards } from "@/services/testnetApi";
 import { useChainWebSocket } from "@/hooks/useChainWebSocket";
-import { getDistance } from "@/lib/proximity";
-import { getFogLevel } from "@/lib/fog";
-import { getClarityLevel } from "@/lib/diplomacy";
 import type { SubscriptionTier } from "@/types";
 import type { FactionId } from "@/types";
 import { SUBSCRIPTION_PLANS } from "@/types/subscription";
-import { getFrontierCell } from "@/lib/lattice";
+import { getFrontierCell, getFactionForCell, getCellDensity } from "@/lib/lattice";
 import { visualToChain } from "@/services/testnetChainService";
-
-/** Map subscription tier to empire border color — matches faction blocknode colors */
-const SUBSCRIPTION_EMPIRE_COLOR: Record<SubscriptionTier, number> = {
-  COMMUNITY: 0xffffff, // white — community faction
-  PROFESSIONAL: 0x00ffff, // cyan — pro-max faction
-};
 
 /** Map subscription tier to faction arm */
 const SUBSCRIPTION_FACTION: Record<SubscriptionTier, FactionId | null> = {
@@ -60,9 +48,6 @@ export default function GamePage() {
   const currentAgentId = useGameStore((s) => s.currentAgentId);
   const activeTab = useGameStore((s) => s.activeTab);
   const agents = useGameStore((s) => s.agents);
-  const energy = useGameStore((s) => s.energy);
-  const setActiveTab = useGameStore((s) => s.setActiveTab);
-  const currentUserId = useGameStore((s) => s.currentUserId);
   const startTurnTimer = useGameStore((s) => s.startTurnTimer);
   const stopTurnTimer = useGameStore((s) => s.stopTurnTimer);
   const setChainMode = useGameStore((s) => s.setChainMode);
@@ -77,20 +62,9 @@ export default function GamePage() {
   // Connect WebSocket when in testnet mode
   useChainWebSocket(chainMode === "testnet");
 
-  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
-  const [profileAgent, setProfileAgent] = useState<string | null>(null);
   const setActiveDockPanel = useGameStore((s) => s.setActiveDockPanel);
   const switchAgent = useGameStore((s) => s.switchAgent);
-  const activeDockPanel = useGameStore((s) => s.activeDockPanel);
-  /** When deploying via sidebar, pass the target node ID to the terminal */
-  const [deployTargetForTerminal, setDeployTargetForTerminal] = useState<string | null>(null);
-
-  // Clear deploy target when the terminal panel is closed without completing a deploy
-  useEffect(() => {
-    if (activeDockPanel !== "terminal") {
-      setDeployTargetForTerminal(null);
-    }
-  }, [activeDockPanel]);
+  const [tooltip, setTooltip] = useState<{ cx: number; cy: number; screenX: number; screenY: number } | null>(null);
   const [serverStartTime] = useState(() => Date.now() - 24 * 60 * 60 * 1000);
 
   const chainRef = useRef<ChainService | null>(null);
@@ -266,94 +240,6 @@ export default function GamePage() {
     addHaiku(haiku);
   };
 
-  const handleQuickAction = async (action: string) => {
-    switch (action) {
-      case "inspect":
-        // Already showing AgentPanel
-        break;
-      case "chat":
-        // Network chat is always visible — no action needed
-        break;
-      case "deploy-via-terminal":
-        // Open the current agent's terminal with the selected node as deploy target
-        if (currentAgentId) {
-          setDeployTargetForTerminal(selectedAgent);
-          setActiveDockPanel("terminal");
-        }
-        break;
-      case "claim-homenode": {
-        // First-time user: claim an unclaimed node as their Homenode (primary agent)
-        if (!selectedAgent) break;
-        const store = useGameStore.getState();
-        const slot = store.agents[selectedAgent];
-        if (!slot) break;
-
-        // Register on-chain first, then update local state
-        const svc = chainRef.current;
-        if (svc) {
-          try {
-            const chainCoord = visualToChain(slot.position.x, slot.position.y);
-            await svc.claimNode(chainCoord.x, chainCoord.y, 200);
-          } catch (err) {
-            console.error("Failed to claim node on-chain:", err);
-            break;
-          }
-        }
-
-        const success = store.claimNode(selectedAgent, "opus");
-        if (success) {
-          store.setPrimary(selectedAgent);
-          // Set empire color based on homenode tier (subscription-aware once auth wired)
-          store.setEmpireColor(SUBSCRIPTION_EMPIRE_COLOR.COMMUNITY);
-          setActiveDockPanel("terminal");
-          setSelectedAgent(null);
-          // Center camera on claimed homenode
-          store.setCamera(slot.position, 2);
-          // Sync from chain to get updated state
-          syncFromChain();
-        }
-        break;
-      }
-      case "research":
-        setActiveTab("researches");
-        break;
-      case "manage":
-        setActiveTab("account");
-        break;
-      case "terminal":
-        if (selectedAgent) setActiveDockPanel("terminal");
-        break;
-      case "profile":
-        if (selectedAgent) setProfileAgent(selectedAgent);
-        break;
-      case "mine": {
-        const svc = chainRef.current;
-        if (!svc || !("mine" in svc)) break;
-        try {
-          const result = await (
-            svc as { mine(): Promise<{ blockNumber: number; yields: Record<string, number> }> }
-          ).mine();
-          // Update block count (preserve current mode)
-          const store = useGameStore.getState();
-          store.setChainMode(store.chainMode, result.blockNumber);
-          // Trigger full sync to get updated agents/status
-          syncFromChain();
-        } catch {
-          // Rate-limited (429) or other error — display will be handled by ResourceBar countdown
-        }
-        break;
-      }
-      case "secure":
-        // CPU staking is the security mechanism — open terminal for staking controls
-        if (selectedAgent) setActiveDockPanel("terminal");
-        break;
-      case "vote":
-        // Governance voting — open profile for now (full voting with mainnet)
-        if (selectedAgent) setProfileAgent(selectedAgent);
-        break;
-    }
-  };
-
   return (
     <div className="flex flex-col w-screen h-screen overflow-hidden bg-background">
       {/* Loading overlay */}
@@ -377,31 +263,23 @@ export default function GamePage() {
       <div className="flex-1 relative overflow-hidden">
         {/* Network tab — always mounted, hidden when inactive to preserve PixiJS canvas */}
         <div className={`absolute inset-0 ${activeTab !== "network" ? "hidden" : ""}`}>
-          <LatticeGrid onSelectAgent={setSelectedAgent} onDeselect={() => setSelectedAgent(null)} />
+          <LatticeGrid onSelectAgent={() => {}} onDeselect={() => {}} />
 
-          {/* Top bar: Agents dropdown only (TimeRewind moved to dock) */}
-          <div className="absolute top-4 left-4 z-10 flex items-start gap-2">
-            <AgentDropdown onSelectAgent={setSelectedAgent} />
-          </div>
-
-          {/* Dock Panel — right edge */}
+          {/* Dock Panel — left edge */}
           <DockPanel
             onHaikuSubmit={handleHaikuSubmit}
             currentAgent={currentAgentId ? (agents[currentAgentId] ?? null) : null}
             chainService={chainRef.current}
             onAgentDeploy={(newId) => {
               switchAgent(newId);
-              setDeployTargetForTerminal(null);
               setActiveDockPanel("terminal");
             }}
             onFocusNode={(nodeId) => {
               const node = agents[nodeId];
               if (node) {
-                setSelectedAgent(nodeId);
                 useGameStore.getState().requestFocus(nodeId);
               }
             }}
-            deployTargetForTerminal={deployTargetForTerminal}
             serverStartTime={serverStartTime}
             onTimeChange={() => {
               /* TODO: Load historical state */
@@ -409,7 +287,7 @@ export default function GamePage() {
           />
 
           {/* Bottom bar — compact action strip */}
-          <div className="absolute bottom-0 left-0 right-10 h-8 z-10 flex items-center px-3 gap-3 bg-background/40 backdrop-blur-sm border-t border-card-border">
+          <div className="absolute bottom-0 left-10 right-0 h-8 z-10 flex items-center px-3 gap-3 bg-background/40 backdrop-blur-sm border-t border-card-border">
             {/* Center on owned node */}
             <button
               onClick={() => {
@@ -425,42 +303,26 @@ export default function GamePage() {
             </button>
           </div>
 
-          {/* Left sidebar — Neural Lattice persistent selection panel */}
-          {selectedAgent &&
-            agents[selectedAgent] &&
-            (() => {
-              const selected = agents[selectedAgent];
-              const viewer = currentAgentId ? agents[currentAgentId] : null;
-              const isOwn = currentUserId ? selected.userId === currentUserId : false;
-              const distance = viewer ? getDistance(viewer.position, selected.position) : 0;
-              const fogLevel = viewer ? getFogLevel(distance, viewer.tier) : ("clear" as const);
-              const dipKey = viewer ? [viewer.id, selected.id].sort().join("-") : "";
-              const dipState = useGameStore.getState().diplomacy[dipKey];
-              // Own agents: full clarity (4). Unclaimed nodes: public info (1). Foreign: hidden until diplomacy.
-              const clarity = dipState
-                ? getClarityLevel(dipState.exchangeCount)
-                : isOwn
-                  ? 4
-                  : !selected.userId
-                    ? 1
-                    : 0;
-              return (
-                <div className="absolute top-0 left-0 bottom-0 z-20 w-72 bg-background-light/95 border-r border-card-border overflow-y-auto flex flex-col gap-0">
-                  <QuickActionMenu
-                    agent={selected}
-                    isOwn={isOwn}
-                    onClose={() => setSelectedAgent(null)}
-                    onAction={handleQuickAction}
-                  />
-                  <AgentPanel
-                    agent={selected}
-                    fogLevel={fogLevel}
-                    clarityLevel={clarity}
-                    onClose={() => setSelectedAgent(null)}
-                  />
-                </div>
-              );
-            })()}
+          {/* Cell tooltip */}
+          {tooltip && (() => {
+            const faction = getFactionForCell(tooltip.cx, tooltip.cy);
+            if (!faction) return null;
+            const density = getCellDensity(tooltip.cx, tooltip.cy);
+            const cellKey = `cell-${tooltip.cx}-${tooltip.cy}`;
+            const node = useGameStore.getState().blocknodes[cellKey];
+            return (
+              <CellTooltip
+                cx={tooltip.cx}
+                cy={tooltip.cy}
+                faction={faction}
+                density={density}
+                owner={node?.ownerId ?? null}
+                screenX={tooltip.screenX}
+                screenY={tooltip.screenY}
+                onClose={() => setTooltip(null)}
+              />
+            );
+          })()}
         </div>
 
         {/* Account View tab */}
@@ -472,32 +334,6 @@ export default function GamePage() {
         {/* Skills tab */}
         {activeTab === "skills" && <SkillsPanel />}
       </div>
-
-      {/* Agent Profile Popup */}
-      {profileAgent && agents[profileAgent] && (
-        <AgentProfilePopup
-          agent={agents[profileAgent]}
-          isOwn={currentUserId ? agents[profileAgent].userId === currentUserId : false}
-          onClose={() => setProfileAgent(null)}
-          onSendMessage={async (text) => {
-            const svc = chainRef.current;
-            const sender = currentAgentId ? agents[currentAgentId] : null;
-            const target = agents[profileAgent];
-            if (svc && sender && target) {
-              try {
-                await svc.sendMessage(sender.position, target.position, text);
-              } catch {
-                // Silently fall through — message shown in UI regardless
-              }
-            }
-            setProfileAgent(null);
-          }}
-          onOpenTerminal={() => {
-            setActiveDockPanel("terminal");
-            setProfileAgent(null);
-          }}
-        />
-      )}
 
       {/* Debug overlay — dev mode only */}
       {process.env.NODE_ENV === "development" && <DebugOverlay />}

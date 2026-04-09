@@ -41,14 +41,6 @@ vi.mock("@/components/AgentChat", () => ({
   ),
 }));
 
-vi.mock("@/components/SecuredNodes", () => ({
-  default: ({ onFocusNode }: { onFocusNode: (id: string) => void }) => (
-    <div data-testid="secured-nodes">
-      <button onClick={() => onFocusNode("node-1")}>FocusMock</button>
-    </div>
-  ),
-}));
-
 vi.mock("@/components/TimechainStats", () => ({
   default: () => <div data-testid="timechain-stats">TimechainStats</div>,
 }));
@@ -92,7 +84,6 @@ const defaultDockProps = {
   chainService: null,
   onAgentDeploy: vi.fn(),
   onFocusNode: vi.fn(),
-  deployTargetForTerminal: null,
   serverStartTime: Date.now() - 60_000,
   onTimeChange: vi.fn(),
 };
@@ -113,12 +104,10 @@ describe("DockPanel", () => {
 
   // ── Button rendering ──────────────────────────────────────────────────────
 
-  it("renders all 6 dock icon buttons", () => {
+  it("renders all 4 dock icon buttons", () => {
     render(<DockPanel {...defaultDockProps} />);
-    expect(screen.getByRole("button", { name: "Secured Nodes" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Network Chat" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Agent Terminal" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "Deploy Agent" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Chain Stats" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Time Rewind" })).toBeDefined();
   });
@@ -126,10 +115,8 @@ describe("DockPanel", () => {
   it("each dock button has a correct aria-label", () => {
     render(<DockPanel {...defaultDockProps} />);
     const labels = [
-      "Secured Nodes",
       "Network Chat",
       "Agent Terminal",
-      "Deploy Agent",
       "Chain Stats",
       "Time Rewind",
     ];
@@ -163,22 +150,10 @@ describe("DockPanel", () => {
     expect(useGameStore.getState().activeDockPanel).toBe("stats");
   });
 
-  it("clicking Secured Nodes sets activeDockPanel to nodes", () => {
-    render(<DockPanel {...defaultDockProps} />);
-    fireEvent.click(screen.getByRole("button", { name: "Secured Nodes" }));
-    expect(useGameStore.getState().activeDockPanel).toBe("nodes");
-  });
-
   it("clicking Agent Terminal sets activeDockPanel to terminal", () => {
     render(<DockPanel {...defaultDockProps} />);
     fireEvent.click(screen.getByRole("button", { name: "Agent Terminal" }));
     expect(useGameStore.getState().activeDockPanel).toBe("terminal");
-  });
-
-  it("clicking Deploy Agent sets activeDockPanel to deploy", () => {
-    render(<DockPanel {...defaultDockProps} />);
-    fireEvent.click(screen.getByRole("button", { name: "Deploy Agent" }));
-    expect(useGameStore.getState().activeDockPanel).toBe("deploy");
   });
 
   it("clicking Time Rewind sets activeDockPanel to timeRewind", () => {
@@ -192,7 +167,6 @@ describe("DockPanel", () => {
   it("no floating panel renders when activeDockPanel is null", () => {
     render(<DockPanel {...defaultDockProps} />);
     expect(screen.queryByTestId("network-chat-room")).toBeNull();
-    expect(screen.queryByTestId("secured-nodes")).toBeNull();
     expect(screen.queryByTestId("timechain-stats")).toBeNull();
     expect(screen.queryByTestId("time-rewind")).toBeNull();
   });
@@ -201,12 +175,6 @@ describe("DockPanel", () => {
     render(<DockPanel {...defaultDockProps} />);
     fireEvent.click(screen.getByRole("button", { name: "Network Chat" }));
     expect(screen.getByTestId("network-chat-room")).toBeDefined();
-  });
-
-  it("SecuredNodes panel renders when nodes is active", () => {
-    render(<DockPanel {...defaultDockProps} />);
-    fireEvent.click(screen.getByRole("button", { name: "Secured Nodes" }));
-    expect(screen.getByTestId("secured-nodes")).toBeDefined();
   });
 
   it("TimeRewind panel renders when timeRewind is active", () => {
@@ -221,23 +189,10 @@ describe("DockPanel", () => {
     expect(screen.getByText("No agent selected. Claim a node first.")).toBeDefined();
   });
 
-  it('shows "No agent selected" message for deploy panel when no currentAgent', () => {
-    render(<DockPanel {...defaultDockProps} currentAgent={null} />);
-    fireEvent.click(screen.getByRole("button", { name: "Deploy Agent" }));
-    expect(screen.getByText("No agent selected. Claim a node first.")).toBeDefined();
-  });
-
   it("renders AgentChat when terminal is active and currentAgent is set", () => {
     const agent = makeAgent();
     render(<DockPanel {...defaultDockProps} currentAgent={agent} />);
     fireEvent.click(screen.getByRole("button", { name: "Agent Terminal" }));
-    expect(screen.getByTestId("agent-chat")).toBeDefined();
-  });
-
-  it("renders AgentChat when deploy is active and currentAgent is set", () => {
-    const agent = makeAgent();
-    render(<DockPanel {...defaultDockProps} currentAgent={agent} />);
-    fireEvent.click(screen.getByRole("button", { name: "Deploy Agent" }));
     expect(screen.getByTestId("agent-chat")).toBeDefined();
   });
 
@@ -576,13 +531,13 @@ describe("Integration — dock panel and tab navigation independence", () => {
   it("opening multiple dock panels sequentially only one is active at a time", () => {
     render(<DockPanel {...defaultDockProps} />);
     fireEvent.click(screen.getByRole("button", { name: "Network Chat" }));
-    fireEvent.click(screen.getByRole("button", { name: "Secured Nodes" }));
+    fireEvent.click(screen.getByRole("button", { name: "Chain Stats" }));
     fireEvent.click(screen.getByRole("button", { name: "Time Rewind" }));
     expect(useGameStore.getState().activeDockPanel).toBe("timeRewind");
     // Only the Time Rewind panel should be visible
     expect(screen.getByTestId("time-rewind")).toBeDefined();
     expect(screen.queryByTestId("network-chat-room")).toBeNull();
-    expect(screen.queryByTestId("secured-nodes")).toBeNull();
+    expect(screen.queryByTestId("timechain-stats")).toBeNull();
   });
 
   it("tab state and dock panel state are fully independent", () => {
