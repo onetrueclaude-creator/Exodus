@@ -206,7 +206,7 @@ const initialState = {
   unlockedSkills: [] as string[],
   maxDeployTier: "haiku" as AgentTier, // default: Community tier (haiku only)
   activeTab: "network" as GameTab,
-  empireColor: 0xd946ef, // default: Max tier fuchsia (matches SUBSCRIPTION_EMPIRE_COLOR.MAX)
+  empireColor: 0xffffff, // default: Community faction white
   activeDockPanel: null as DockPanelId | null,
   focusRequest: null as { nodeId: string; ts: number } | null,
 };
