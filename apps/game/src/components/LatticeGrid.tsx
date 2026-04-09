@@ -6,7 +6,7 @@ import { useGameStore } from "@/store";
 import { createGridBackground, updateGridBackground } from "./grid/GridBackground";
 import { createBlockNode } from "./grid/StarNode";
 import BlockNodePanel from "./BlockNodePanel";
-import GridNodePanel from "./GridNodePanel";
+// GridNodePanel removed — all actions via terminal
 import { CELL_SIZE, cellToPixel } from "@/lib/lattice";
 import type { FactionId } from "@/types";
 
@@ -433,7 +433,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
           ? Object.values(blocknodes).filter((n) => n.ownerId === currentUserId).length
           : 0;
         return (
-          <div className="absolute top-2 left-2 z-10 text-[10px] font-mono text-text-muted glass-card px-2 py-1">
+          <div className="absolute top-2 left-14 z-10 text-[10px] font-mono text-text-muted glass-card px-2 py-1">
             <span className="text-accent-cyan">◈</span> {totalBlocksMined} blocks ·{" "}
             {Object.keys(blocknodes).length} nodes
             {ownedCount > 0 && <span className="text-green-400 ml-1">· {ownedCount} owned</span>}
@@ -475,14 +475,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
         />
       )}
 
-      {/* Grid cell info + mine/claim panel (territory nodes) */}
-      {selectedGridCell && !selectedBlocknodeId && (
-        <GridNodePanel
-          cx={selectedGridCell.cx}
-          cy={selectedGridCell.cy}
-          onClose={() => setSelectedGridCell(null)}
-        />
-      )}
+      {/* Grid cell click — no action panel, info only via CellTooltip in game page */}
 
       {/* Cursor coordinates — bottom left */}
       {cursorCoords && (
