@@ -17,7 +17,7 @@ import { useGameStore } from "@/store";
 import { MockChainService } from "@/services/chainService";
 import type { ChainService } from "@/services/chainService";
 import { TestnetChainService } from "@/services/testnetChainService";
-import { isTestnetOnline } from "@/services/testnetApi";
+import { isTestnetOnline, getSettings, getRewards } from "@/services/testnetApi";
 import { useChainWebSocket } from "@/hooks/useChainWebSocket";
 import { getDistance } from "@/lib/proximity";
 import { getFogLevel } from "@/lib/fog";
@@ -118,6 +118,8 @@ export default function GamePage() {
           stateRoot: status.state_root,
           nextBlockIn: status.next_block_in,
           blocks: status.blocks_processed,
+          epochRing: status.epoch_ring,
+          hardness: status.hardness,
         });
         // Expand network if new blocks were mined since last sync
         if (status.blocks_processed > prevBlocknodeMined) {
@@ -128,6 +130,22 @@ export default function GamePage() {
       } catch {
         // Status fetch failed — keep stale data
       }
+    }
+
+    // Sync wallet state (secured chains, rates, effective stake)
+    try {
+      const [settings, rewards] = await Promise.all([
+        getSettings(0),  // wallet 0 for testnet
+        getRewards(0),
+      ]);
+      store.setWalletState({
+        securedChains: settings.total_secured_chains,
+        securingRate: settings.securing_rate,
+        miningRate: settings.mining_rate,
+        effectiveStake: settings.effective_stake,
+      });
+    } catch {
+      // Wallet sync failed — keep stale data
     }
   }, []);
 

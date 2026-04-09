@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useGameStore } from '@/store';
 
 /** Right-side panel showing live blockchain statistics */
@@ -11,16 +11,14 @@ export default function TimechainStats() {
   const nextBlockIn = useGameStore((s) => s.nextBlockIn);
   const totalMined = useGameStore((s) => s.totalMined);
   const poolRemaining = useGameStore((s) => s.poolRemaining);
+  const epochRing = useGameStore((s) => s.epochRing);
+  const hardness = useGameStore((s) => s.hardness);
 
-  // Genesis timestamp — fixed for testnet
-  const [genesis] = useState(() => {
-    // Use a stored genesis or current session start
-    const stored = typeof window !== 'undefined' && sessionStorage.getItem('genesis_ts');
-    if (stored) return new Date(stored);
-    const now = new Date();
-    if (typeof window !== 'undefined') sessionStorage.setItem('genesis_ts', now.toISOString());
-    return now;
-  });
+  // Computed genesis: derive from block count × ~60s block time
+  const genesis = useMemo(() => {
+    if (testnetBlocks <= 0) return new Date();
+    return new Date(Date.now() - testnetBlocks * 60_000);
+  }, [testnetBlocks]);
 
   // Live countdown to next block
   const [countdown, setCountdown] = useState(Math.ceil(nextBlockIn));
@@ -31,9 +29,6 @@ export default function TimechainStats() {
     }, 1000);
     return () => clearInterval(timer);
   }, [nextBlockIn]);
-
-  // Epochs = blocks / 10 (approx)
-  const epochs = Math.floor(testnetBlocks / 10);
 
   if (chainMode !== 'testnet') return null;
 
@@ -49,10 +44,11 @@ export default function TimechainStats() {
           label="Genesis"
           value={genesis.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) + ' ' + genesis.toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit' })}
         />
-        <StatRow label="Epochs" value={epochs.toLocaleString()} />
+        <StatRow label="Epoch Ring" value={epochRing.toLocaleString()} />
+        <StatRow label="Hardness" value={`${hardness}x`} />
         <StatRow label="Blocks" value={testnetBlocks.toLocaleString()} />
-        <StatRow label="Mined" value={totalMined.toLocaleString()} />
-        <StatRow label="Pool" value={poolRemaining.toLocaleString()} />
+        <StatRow label="Mined" value={totalMined.toFixed(4)} />
+        <StatRow label="Circulating" value={poolRemaining.toFixed(4)} />
         <StatRow
           label="Next Block"
           value={`~${countdown}s`}

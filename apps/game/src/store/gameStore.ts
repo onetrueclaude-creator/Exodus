@@ -64,6 +64,13 @@ interface GameState {
   totalMined: number;
   stateRoot: string;
   nextBlockIn: number;
+  epochRing: number;
+  hardness: number;
+
+  // Wallet state (from chain sync)
+  walletSecuringRate: number;
+  walletMiningRate: number;
+  walletEffectiveStake: number;
 
   // Neural Lattice / blocknode state (arm nodes — faction infrastructure)
   blocknodes: Record<string, BlockNode>;
@@ -126,6 +133,14 @@ interface GameState {
     stateRoot: string;
     nextBlockIn: number;
     blocks: number;
+    epochRing?: number;
+    hardness?: number;
+  }) => void;
+  setWalletState: (state: {
+    securedChains: number;
+    securingRate: number;
+    miningRate: number;
+    effectiveStake: number;
   }) => void;
   setInitializing: (v: boolean) => void;
   setEmpireColor: (color: number) => void;
@@ -175,6 +190,11 @@ const initialState = {
   totalMined: 0,
   stateRoot: "",
   nextBlockIn: 60,
+  epochRing: 0,
+  hardness: 1,
+  walletSecuringRate: 0,
+  walletMiningRate: 0,
+  walletEffectiveStake: 0,
   blocknodes: {} as Record<string, BlockNode>,
   gridNodes: {} as Record<string, GridNode>,
   visibleFactions: [] as FactionId[],
@@ -528,12 +548,28 @@ export const useGameStore = create<GameState>((set) => ({
     set({ chainMode: mode, ...(blocks !== undefined ? { testnetBlocks: blocks } : {}) }),
 
   setChainStatus: (status) =>
-    set({
+    set((s) => ({
       poolRemaining: status.poolRemaining,
       totalMined: status.totalMined,
       stateRoot: status.stateRoot,
       nextBlockIn: status.nextBlockIn,
       testnetBlocks: status.blocks,
+      ...(status.epochRing !== undefined ? { epochRing: status.epochRing } : {}),
+      ...(status.hardness !== undefined ? { hardness: status.hardness } : {}),
+    })),
+
+  setWalletState: (state) =>
+    set((s) => {
+      const delta = state.securedChains - s.securedChains;
+      return {
+        securedChains: state.securedChains,
+        walletSecuringRate: state.securingRate,
+        walletMiningRate: state.miningRate,
+        walletEffectiveStake: state.effectiveStake,
+        ...(delta !== 0
+          ? { resourceDeltas: { ...s.resourceDeltas, securedChains: { value: delta, ts: Date.now() } } }
+          : {}),
+      };
     }),
 
   setInitializing: (v) => set({ isInitializing: v }),
