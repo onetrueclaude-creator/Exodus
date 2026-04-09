@@ -8,6 +8,8 @@ import type {
   TestnetStatus, CoordinateInfo, ClaimInfo,
   GridRegion, MineResult, BirthResult, ClaimNodeResult, NodeInfo,
   IntroResult, MessageResult, MessageInfo,
+  SecureResponse, SecuringStatusResponse, TransactResponse,
+  WalletSettingsResponse, EpochStatus, RewardsResponse, VestingResponse,
 } from '@/types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_TESTNET_API ?? 'http://localhost:8080';
@@ -131,12 +133,8 @@ export function getNodes(count: number = 1000, seed: number = 42): Promise<NodeI
 }
 
 /** GET /api/rewards/{wallet_index} — cumulative rewards for a wallet */
-export function getRewards(walletIndex: number): Promise<{
-  agntc_earned: number; dev_points: number; research_points: number; secured_chains: number;
-}> {
-  return get<{
-    agntc_earned: number; dev_points: number; research_points: number; secured_chains: number;
-  }>(`/api/rewards/${walletIndex}`);
+export function getRewards(walletIndex: number): Promise<RewardsResponse> {
+  return get<RewardsResponse>(`/api/rewards/${walletIndex}`);
 }
 
 /** GET /api/staking/{wallet_index} — staking positions and effective stake */
@@ -156,6 +154,36 @@ export function assignSubgrid(walletIndex: number, allocation: {
     `/api/resources/${walletIndex}/assign`,
     allocation,
   );
+}
+
+/** POST /api/secure — commit CPU Energy for N block cycles */
+export function postSecure(walletIndex: number, durationBlocks: number): Promise<SecureResponse> {
+  return post<SecureResponse>('/api/secure', { wallet_index: walletIndex, duration_blocks: durationBlocks });
+}
+
+/** GET /api/secure/{wallet_index} — securing positions for a wallet */
+export function getSecuringStatus(walletIndex: number): Promise<SecuringStatusResponse> {
+  return get<SecuringStatusResponse>(`/api/secure/${walletIndex}`);
+}
+
+/** POST /api/transact — AGNTC wallet-to-wallet transfer */
+export function postTransact(senderWallet: number, recipientWallet: number, amount: number): Promise<TransactResponse> {
+  return post<TransactResponse>('/api/transact', { sender_wallet: senderWallet, recipient_wallet: recipientWallet, amount });
+}
+
+/** GET /api/settings/{wallet_index} — per-wallet network parameters */
+export function getSettings(walletIndex: number): Promise<WalletSettingsResponse> {
+  return get<WalletSettingsResponse>(`/api/settings/${walletIndex}`);
+}
+
+/** GET /api/epoch — epoch ring expansion state */
+export function getEpoch(): Promise<EpochStatus> {
+  return get<EpochStatus>('/api/epoch');
+}
+
+/** GET /api/vesting/{wallet_index} — vesting schedule */
+export function getVesting(walletIndex: number): Promise<VestingResponse> {
+  return get<VestingResponse>(`/api/vesting/${walletIndex}`);
 }
 
 /** Check if the testnet API is reachable */
