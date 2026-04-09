@@ -4,10 +4,10 @@ import { CELL_SIZE, cellToPixel, getFactionForCell } from "@/lib/lattice";
 
 /** Faction fill colors */
 export const FACTION_COLORS: Record<FactionId, number> = {
-  community: 0xffffff, // white — free tier
-  treasury: 0xf97316, // gold orange
-  founder: 0xd946ef, // fuchsia
-  "pro-max": 0x00ffff, // cyan — professional tier
+  community: 0x0d9488, // teal
+  treasury: 0xdc2680,  // pink (Machines)
+  founder: 0xf59e0b,   // amber
+  "pro-max": 0x3b82f6, // blue (Professional)
 };
 
 const ALL_FACTIONS: FactionId[] = ["community", "treasury", "founder", "pro-max"];
@@ -227,4 +227,22 @@ export function updateGridBackground(
     existing.lineTo(pixelRange + CELL_SIZE / 2, py);
   }
   existing.stroke();
+
+  // Origin marker — the meeting point of all 4 factions
+  existing.circle(0, 0, 3);
+  existing.fill({ color: 0xffffff, alpha: 0.5 });
+
+  // Quadrant boundaries — dashed lines along axes
+  const extent = range * CELL_SIZE;
+  existing.setStrokeStyle({ width: 1, color: 0x444444, alpha: 0.4 });
+  for (let x = -extent; x < extent; x += 8) {
+    existing.moveTo(x, 0);
+    existing.lineTo(Math.min(x + 4, extent), 0);
+    existing.stroke();
+  }
+  for (let y = -extent; y < extent; y += 8) {
+    existing.moveTo(0, y);
+    existing.lineTo(0, Math.min(y + 4, extent));
+    existing.stroke();
+  }
 }

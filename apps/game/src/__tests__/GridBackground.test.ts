@@ -37,10 +37,10 @@ import { buildAllCells } from "@/lib/lattice";
 
 describe("FACTION_COLORS", () => {
   it("all 4 factions have colors defined", () => {
-    expect(FACTION_COLORS.community).toBe(0xffffff); // white — free tier
-    expect(FACTION_COLORS.treasury).toBe(0xf97316); // gold orange
-    expect(FACTION_COLORS.founder).toBe(0xd946ef); // fuchsia
-    expect(FACTION_COLORS["pro-max"]).toBe(0x00ffff); // cyan — professional tier
+    expect(FACTION_COLORS.community).toBe(0x0d9488); // teal
+    expect(FACTION_COLORS.treasury).toBe(0xdc2680);  // pink (Machines)
+    expect(FACTION_COLORS.founder).toBe(0xf59e0b);   // amber
+    expect(FACTION_COLORS["pro-max"]).toBe(0x3b82f6); // blue (Professional)
   });
 });
 
