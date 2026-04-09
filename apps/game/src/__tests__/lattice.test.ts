@@ -11,11 +11,17 @@ import {
   FACTIONS,
 } from "@/lib/lattice";
 
+// Math convention: +X = right, +Y = up
+// NW = cx<0 cy>0 (top-left)    = Community
+// NE = cx>0 cy>0 (top-right)   = Treasury/Machines
+// SE = cx>0 cy<0 (bottom-right) = Founders
+// SW = cx<0 cy<0 (bottom-left)  = Professional
+
 describe("getFactionForCell", () => {
-  it("(-1,-1) is community (NW)", () => { expect(getFactionForCell(-1, -1)).toBe("community"); });
-  it("(1,-1) is treasury (NE)", () => { expect(getFactionForCell(1, -1)).toBe("treasury"); });
-  it("(1,1) is founder (SE)", () => { expect(getFactionForCell(1, 1)).toBe("founder"); });
-  it("(-1,1) is pro-max (SW)", () => { expect(getFactionForCell(-1, 1)).toBe("pro-max"); });
+  it("(-1,1) is community (NW)", () => { expect(getFactionForCell(-1, 1)).toBe("community"); });
+  it("(1,1) is treasury (NE)", () => { expect(getFactionForCell(1, 1)).toBe("treasury"); });
+  it("(1,-1) is founder (SE)", () => { expect(getFactionForCell(1, -1)).toBe("founder"); });
+  it("(-1,-1) is pro-max (SW)", () => { expect(getFactionForCell(-1, -1)).toBe("pro-max"); });
   it("(0,0) returns null (origin is a point, not a cell)", () => { expect(getFactionForCell(0, 0)).toBeNull(); });
   it("cells on axes return null (boundaries)", () => {
     expect(getFactionForCell(0, -3)).toBeNull();
@@ -23,8 +29,8 @@ describe("getFactionForCell", () => {
     expect(getFactionForCell(0, 2)).toBeNull();
     expect(getFactionForCell(-2, 0)).toBeNull();
   });
-  it("(-5, -3) is community (NW)", () => { expect(getFactionForCell(-5, -3)).toBe("community"); });
-  it("(2, 4) is founder (SE)", () => { expect(getFactionForCell(2, 4)).toBe("founder"); });
+  it("(-5, 3) is community (NW)", () => { expect(getFactionForCell(-5, 3)).toBe("community"); });
+  it("(2, -4) is founder (SE)", () => { expect(getFactionForCell(2, -4)).toBe("founder"); });
 });
 
 describe("getCellsForRing", () => {
@@ -38,7 +44,8 @@ describe("getCellsForRing", () => {
   it("ring 2 returns 12 new cells (3 per quadrant)", () => {
     const cells = getCellsForRing(2);
     expect(cells).toHaveLength(12);
-    const nw = cells.filter((c) => c.cx < 0 && c.cy < 0);
+    // NW quadrant (cx<0, cy>0) should have 3 cells
+    const nw = cells.filter((c) => c.cx < 0 && c.cy > 0);
     expect(nw).toHaveLength(3);
   });
   it("ring 3 returns 20 new cells (5 per quadrant)", () => {
@@ -71,7 +78,7 @@ describe("buildAllCells", () => {
 });
 
 describe("getCellDensity", () => {
-  it("cells near origin have higher density", () => { expect(getCellDensity(-1, -1)).toBeGreaterThan(getCellDensity(-5, -5)); });
+  it("cells near origin have higher density", () => { expect(getCellDensity(-1, 1)).toBeGreaterThan(getCellDensity(-5, 5)); });
   it("density is between 0 and 1", () => {
     expect(getCellDensity(1, 1)).toBeGreaterThan(0);
     expect(getCellDensity(1, 1)).toBeLessThanOrEqual(1);
@@ -84,15 +91,15 @@ describe("getFrontierCell", () => {
     const frontier = getFrontierCell("community", cells);
     expect(frontier).not.toBeNull();
     expect(frontier!.cx).toBe(-1);
-    expect(frontier!.cy).toBe(-1);
+    expect(frontier!.cy).toBe(1);  // NW: cy > 0
   });
   it("returns next nearest when genesis is claimed", () => {
     const cells = buildAllCells(3);
-    cells["cell--1--1"].ownerId = "user-1";
+    cells["cell--1-1"].ownerId = "user-1";  // community genesis
     const frontier = getFrontierCell("community", cells);
     expect(frontier).not.toBeNull();
     expect(frontier!.cx).toBeLessThan(0);
-    expect(frontier!.cy).toBeLessThan(0);
+    expect(frontier!.cy).toBeGreaterThan(0);
   });
   it("returns null when all cells are claimed", () => {
     const cells = buildAllCells(1);
@@ -104,5 +111,10 @@ describe("getFrontierCell", () => {
 describe("cellToPixel", () => {
   it("(0,0) maps to pixel (0,0)", () => { expect(cellToPixel(0, 0)).toEqual({ px: 0, py: 0 }); });
   it("(1,0) maps to (CELL_SIZE, 0)", () => { expect(cellToPixel(1, 0)).toEqual({ px: CELL_SIZE, py: 0 }); });
-  it("(-1,-1) maps to (-CELL_SIZE, -CELL_SIZE)", () => { expect(cellToPixel(-1, -1)).toEqual({ px: -CELL_SIZE, py: -CELL_SIZE }); });
+  it("(-1,1) maps to (-CELL_SIZE, -CELL_SIZE) — Y negated for screen", () => {
+    expect(cellToPixel(-1, 1)).toEqual({ px: -CELL_SIZE, py: -CELL_SIZE });
+  });
+  it("(1,-1) maps to (CELL_SIZE, CELL_SIZE) — negative Y renders downward", () => {
+    expect(cellToPixel(1, -1)).toEqual({ px: CELL_SIZE, py: CELL_SIZE });
+  });
 });

@@ -52,8 +52,8 @@ describe("createGridBackground", () => {
 
   it("calls fill for faction cells when faction is visible", () => {
     const nodes = buildAllCells(1);
-    // Claim community genesis (ring-1, community quadrant: cx=-1, cy=-1)
-    nodes["cell--1--1"].ownerId = "user-001";
+    // Claim community genesis (ring-1, community NW quadrant: cx=-1, cy=1)
+    nodes["cell--1-1"].ownerId = "user-001";
     const g = createGridBackground(nodes, ["community"], 5) as unknown as MockGraphics;
     expect(g.fill).toHaveBeenCalled();
   });

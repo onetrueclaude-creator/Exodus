@@ -49,26 +49,26 @@ function DeltaFlash({ resourceKey }: { resourceKey: string }) {
   );
 }
 
-/** Faction dot color and label for the arm indicator */
+/** Faction dot color and label */
 const FACTION_DOT: Record<FactionId, string> = {
-  community: "bg-white",
-  treasury: "bg-orange-400",
-  founder: "bg-fuchsia-400",
-  "pro-max": "bg-cyan-400",
+  community: "bg-teal-400",
+  treasury: "bg-pink-400",
+  founder: "bg-amber-400",
+  "pro-max": "bg-blue-400",
 };
 
 const FACTION_TEXT: Record<FactionId, string> = {
-  community: "text-white",
-  treasury: "text-orange-400",
-  founder: "text-fuchsia-400",
-  "pro-max": "text-cyan-400",
+  community: "text-teal-400",
+  treasury: "text-pink-400",
+  founder: "text-amber-400",
+  "pro-max": "text-blue-400",
 };
 
 const FACTION_LABEL: Record<FactionId, string> = {
   community: "Community",
-  treasury: "Treasury",
-  founder: "Founder",
-  "pro-max": "Pro/Max",
+  treasury: "Machines",
+  founder: "Founders",
+  "pro-max": "Professional",
 };
 
 export default function ResourceBar() {
@@ -131,7 +131,7 @@ export default function ResourceBar() {
       {/* Faction arm indicator */}
       <div className="flex items-center gap-1.5">
         <div className={`w-2 h-2 rounded-full animate-pulse ${FACTION_DOT[faction]}`} />
-        <span className="text-sm font-heading text-text-primary">{FACTION_LABEL[faction]} Arm</span>
+        <span className="text-sm font-heading text-text-primary">{FACTION_LABEL[faction]} Faction</span>
         {ownedBlocknodes.length > 0 && (
           <span className={`text-[10px] font-mono ${FACTION_TEXT[faction]}`}>
             {ownedBlocknodes.length} node{ownedBlocknodes.length !== 1 ? "s" : ""}
