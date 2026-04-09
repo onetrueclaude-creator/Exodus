@@ -684,7 +684,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
               <div className="flex items-center gap-2 py-1.5">
                 <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
                 <span
-                  className="text-[9px] text-text-muted/60 tracking-[0.15em] uppercase shrink-0"
+                  className="text-[12px] text-text-muted/60 tracking-[0.15em] uppercase shrink-0"
                   style={{ fontFamily: "'Fira Code', monospace" }}
                 >
                   {msg.content}
@@ -702,7 +702,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                       cmd
                     </span>
                   </div>
-                  <span className="whitespace-pre-wrap text-text-primary text-[11px] leading-relaxed" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <span className="whitespace-pre-wrap text-text-primary text-[13px] leading-relaxed" style={{ fontFamily: "'Fira Code', monospace" }}>
                     {msg.content}
                   </span>
                 </div>
@@ -725,7 +725,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                       {tier.label}
                     </span>
                   </div>
-                  <span className="whitespace-pre-wrap text-text-secondary text-[11px] leading-[1.6]" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <span className="whitespace-pre-wrap text-text-secondary text-[13px] leading-[1.6]" style={{ fontFamily: "'Fira Code', monospace" }}>
                     {msg.content}
                   </span>
                 </div>
@@ -759,7 +759,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
         {/* ─── Message flow: Pick target ─── */}
         {msgStep === 'pick-target' ? (
           <div className="p-2 space-y-0.5">
-            <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+            <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
               SELECT TARGET
             </div>
             {nearbyAgents.map(target => {
@@ -786,13 +786,13 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                 </button>
               );
             })}
-            <button onClick={() => { setMsgStep(null); setMsgTarget(null); }} className="w-full px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+            <button onClick={() => { setMsgStep(null); setMsgTarget(null); }} className="w-full px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
               {'\u2190'} back
             </button>
           </div>
         ) : msgStep === 'compose' ? (
           <div className="p-3 space-y-2.5">
-            <div className="text-[9px] text-text-muted/60 tracking-[0.15em]" style={{ fontFamily: "'Fira Code', monospace" }}>
+            <div className="text-[11px] text-text-muted/60 tracking-[0.15em]" style={{ fontFamily: "'Fira Code', monospace" }}>
               COMPOSE NCP
             </div>
             <input
@@ -808,7 +808,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
             <div className="flex justify-between items-center">
               <span className="text-[9px] text-text-muted/30" style={{ fontFamily: "'Fira Code', monospace" }}>{msgText.length}/140</span>
               <div className="flex gap-2">
-                <button onClick={() => { setMsgStep('pick-target'); setMsgText(''); }} className="px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                <button onClick={() => { setMsgStep('pick-target'); setMsgText(''); }} className="px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                   {'\u2190'} back
                 </button>
                 <button
@@ -830,7 +830,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
 
             {deployStep === 'pick-star' && (
               <div className="px-2 pb-2 space-y-0.5">
-                <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+                <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
                   NEARBY NEURAL NODES
                 </div>
                 {nearbyUnclaimed.length === 0 ? (
@@ -883,7 +883,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                     );
                   })
                 )}
-                <button onClick={() => { setDeployStep(null); setDeployTarget(null); }} className="w-full px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                <button onClick={() => { setDeployStep(null); setDeployTarget(null); }} className="w-full px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                   {'\u2190'} cancel
                 </button>
               </div>
@@ -926,7 +926,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                     </button>
                   );
                 })}
-                <button onClick={() => { setDeployStep('pick-star'); setDeployTarget(null); }} className="w-full px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                <button onClick={() => { setDeployStep('pick-star'); setDeployTarget(null); }} className="w-full px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                   {'\u2190'} back
                 </button>
               </div>
@@ -946,7 +946,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                 <div className="flex justify-between items-center">
                   <span className="text-[9px] text-text-muted/30" style={{ fontFamily: "'Fira Code', monospace" }}>{deployIntro.length}/140</span>
                   <div className="flex gap-2">
-                    <button onClick={() => { setDeployStep('pick-model'); setDeployIntro(''); }} className="px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    <button onClick={() => { setDeployStep('pick-model'); setDeployIntro(''); }} className="px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                       {'\u2190'} back
                     </button>
                     <button
@@ -971,7 +971,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
         /* ─── Sub-choice menu ─── */
         ) : pendingAction?.subChoices ? (
           <div className="p-2 space-y-0.5">
-            <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+            <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
               CONFIGURE
             </div>
             {pendingAction.subChoices.map(choice => (
@@ -987,7 +987,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                 </div>
               </button>
             ))}
-            <button onClick={() => setPendingAction(null)} className="w-full px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+            <button onClick={() => setPendingAction(null)} className="w-full px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
               {'\u2190'} back
             </button>
           </div>
@@ -1012,12 +1012,12 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-orange-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u2604'}</span>
-                        <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                        <span className="text-[12px] text-orange-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u2604'}</span>
+                        <span className="text-[13px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                           Deploy Agent
                         </span>
                       </div>
-                      <span className="text-[9px] text-yellow-400/40 group-hover:text-yellow-400/70 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      <span className="text-[11px] text-yellow-400/40 group-hover:text-yellow-400/70 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                         {deployAction.cpuCost}cpu
                       </span>
                     </button>
@@ -1030,12 +1030,12 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                     className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-emerald-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u26D3'}</span>
-                      <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      <span className="text-[12px] text-emerald-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u26D3'}</span>
+                      <span className="text-[13px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                         Blockchain Protocols
                       </span>
                     </div>
-                    <span className="text-[9px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    <span className="text-[11px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                       {'\u203A'}
                     </span>
                   </button>
@@ -1212,7 +1212,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
             {/* ── Transact flow ── */}
             {menuLevel === 'transact-flow' && (
               <>
-                <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+                <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
                   TRANSACT {'\u2014'} AGNTC TRANSFER
                 </div>
                 <div className="px-3 py-2 space-y-2">
@@ -1246,7 +1246,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                   </div>
                 </div>
                 <div className="flex gap-2 px-2 pt-1 pb-1">
-                  <button onClick={() => setMenuLevel('blockchain')} className="px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <button onClick={() => setMenuLevel('blockchain')} className="px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                     {'\u2190'} back
                   </button>
                   <button

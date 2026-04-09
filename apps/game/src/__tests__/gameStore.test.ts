@@ -286,3 +286,36 @@ describe("gameStore — grid node territory (mineGridNode / claimGridNode)", () 
     expect(result).toBe(false); // out of range
   });
 });
+
+describe("gameStore — CPU regen and allocation", () => {
+  beforeEach(() => {
+    useGameStore.getState().reset();
+    useGameStore.setState({ currentUserId: "user-001", energy: 1000, cpuRegenPerTurn: 100 });
+  });
+
+  it("tick adds cpuRegenPerTurn to energy", () => {
+    useGameStore.getState().tick();
+    expect(useGameStore.getState().energy).toBe(1100); // 1000 + 100 regen
+  });
+
+  it("tick deducts mining + securing commitments from energy", () => {
+    useGameStore.getState().setCpuAllocation(50, 30);
+    useGameStore.getState().tick();
+    // 1000 + 100 regen - 50 mining - 30 securing = 1020
+    expect(useGameStore.getState().energy).toBe(1020);
+  });
+
+  it("energy does not go below 0", () => {
+    useGameStore.setState({ energy: 10, cpuRegenPerTurn: 0 });
+    useGameStore.getState().setCpuAllocation(500, 500);
+    useGameStore.getState().tick();
+    expect(useGameStore.getState().energy).toBe(0);
+  });
+
+  it("setCpuAllocation updates both fields", () => {
+    useGameStore.getState().setCpuAllocation(200, 100);
+    const s = useGameStore.getState();
+    expect(s.miningCpuPerBlock).toBe(200);
+    expect(s.securingCpuPerBlock).toBe(100);
+  });
+});
