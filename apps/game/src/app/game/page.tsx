@@ -186,6 +186,7 @@ export default function GamePage() {
           agntcBalance: plan.startAgntc + 1, // +1 genesis airdrop
           minerals: plan.startMinerals,
           empireColor: DEV_FACTION_COLOR[newUserFaction],
+          cpuRegenPerTurn: plan.cpuRegen,
         });
         // Claim homenode FIRST while currentUserFaction is still null (init/dev-seed mode).
         // claimBlocknode requires faction === null to assign arm nodes — this is intentional:

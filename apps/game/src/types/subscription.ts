@@ -8,6 +8,7 @@ export interface SubscriptionPlan {
   startEnergy: number;
   startAgntc: number;
   startMinerals: number;
+  cpuRegen: number; // CPU Energy gained per turn (passive income)
   features: string[];
   accent: string; // Tailwind color classes: text border bg
 }
@@ -22,6 +23,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     startEnergy: 1000,
     startAgntc: 10,
     startMinerals: 10,
+    cpuRegen: 100,
     features: [
       "1,000 CPU Energy starting balance",
       "10 AGNTC tokens",
@@ -39,6 +41,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     startEnergy: 5000,
     startAgntc: 100,
     startMinerals: 50,
+    cpuRegen: 200,
     features: [
       "5,000 CPU Energy starting balance",
       "100 AGNTC tokens",
