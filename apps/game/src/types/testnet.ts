@@ -148,3 +148,90 @@ export interface MessageInfo {
   text: string;
   timestamp: number;
 }
+
+// POST /api/secure — commit CPU Energy for N block cycles
+export interface SecureResponse {
+  position_id: string;
+  cpu_cost: number;
+  duration_blocks: number;
+  start_block: number;
+  end_block: number;
+  density: number;
+  estimated_reward_per_block: number;
+}
+
+// GET /api/secure/{wallet_index} — securing positions
+export interface SecuringPositionInfo {
+  id: string;
+  cpu_committed: number;
+  start_block: number;
+  end_block: number;
+  secured_blocks: number;
+  total_reward: number;
+  immediate_reward: number;
+  vesting_reward: number;
+  status: string;
+  density: number;
+}
+
+export interface SecuringStatusResponse {
+  wallet_index: number;
+  active_positions: SecuringPositionInfo[];
+  completed_positions: SecuringPositionInfo[];
+  total_secured_chains: number;
+  total_cpu_committed: number;
+  total_rewards_earned: number;
+}
+
+// POST /api/transact — AGNTC wallet-to-wallet transfer
+export interface TransactResponse {
+  success: boolean;
+  sender_wallet: number;
+  recipient_wallet: number;
+  amount: number;
+  fee: number;
+  records_created: number;
+  nullifiers_published: number;
+  message: string;
+}
+
+// GET /api/settings/{wallet_index} — per-wallet network parameters
+export interface WalletSettingsResponse {
+  wallet_index: number;
+  securing_rate: number;
+  mining_rate: number;
+  subgrid_allocation: { secure: number; develop: number; research: number; storage: number };
+  total_secured_chains: number;
+  effective_stake: number;
+}
+
+// GET /api/epoch — epoch ring expansion state
+export interface EpochStatus {
+  current_ring: number;
+  total_mined: number;
+  next_threshold: number;
+  progress: number;
+  agntc_remaining: number;
+  homenode_coordinates: Record<string, unknown>;
+}
+
+// GET /api/rewards/{wallet_index} — cumulative rewards
+export interface RewardsResponse {
+  wallet_index: number;
+  agntc_earned: number;
+  dev_points: number;
+  research_points: number;
+  storage_units: number;
+  secured_chains: number;
+}
+
+// GET /api/vesting/{wallet_index} — vesting schedule
+export interface VestingResponse {
+  faction: string;
+  total_allocation: number;
+  vested: number;
+  locked: number;
+  next_unlock_month: number;
+  immediate_pct: number;
+  vest_days: number;
+}

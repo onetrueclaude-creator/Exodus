@@ -24,6 +24,14 @@ export type {
   MessageRequest,
   MessageResult,
   MessageInfo,
+  SecureResponse,
+  SecuringPositionInfo,
+  SecuringStatusResponse,
+  TransactResponse,
+  WalletSettingsResponse,
+  EpochStatus,
+  RewardsResponse,
+  VestingResponse,
 } from "./testnet";
 export { CHAIN_GRID_MIN, CHAIN_GRID_MAX, CHAIN_GRID_SPAN } from "./testnet";
 

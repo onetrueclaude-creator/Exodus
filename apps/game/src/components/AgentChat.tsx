@@ -6,7 +6,7 @@ import { TIER_CPU_COST, TIER_MINING_RATE, TIER_CLAIM_COST } from '@/types/agent'
 import { useGameStore } from '@/store';
 import { getDistance } from '@/lib/proximity';
 import { visualToChain } from '@/services/testnetChainService';
-import { assignSubgrid, getStatus as fetchChainStats } from '@/services/testnetApi';
+import { postSecure, postTransact, getStatus as fetchChainStats } from '@/services/testnetApi';
 
 /* ── Agent Action Definitions ─────────────────────────────── */
 
@@ -414,8 +414,10 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
   const [msgStep, setMsgStep] = useState<null | 'pick-target' | 'compose'>(null);
   const [msgTarget, setMsgTarget] = useState<{ id: string; x: number; y: number } | null>(null);
   const [msgText, setMsgText] = useState('');
-  const [menuLevel, setMenuLevel] = useState<'top' | 'blockchain' | 'network-params' | 'settings' | 'secure-flow' | null>(null);
+  const [menuLevel, setMenuLevel] = useState<'top' | 'blockchain' | 'network-params' | 'settings' | 'secure-flow' | 'transact-flow' | null>(null);
   const [secureConfig, setSecureConfig] = useState<{ cycles: number } | null>(null);
+  const [transactRecipient, setTransactRecipient] = useState<string>('');
+  const [transactAmount, setTransactAmount] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const energy = useGameStore((s) => s.energy);
@@ -550,7 +552,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
         break;
       }
       case 'secure': {
-        // Handled via assignSubgrid API in selectSubChoice — no local action needed
+        // Handled via secure-flow menu with postSecure API — no local action here
         break;
       }
       default:
@@ -753,26 +755,9 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
     if (!pendingAction || processing) return;
     const action = pendingAction;
 
-    // Secure action: call assignSubgrid API
-    if (action.id === 'secure' && choiceId.startsWith('secure-')) {
-      const secureCells = parseInt(choiceId.split('-')[1]);
-      const remaining = 64 - secureCells;
+    // Secure action: handled via secure-flow menu, not sub-choices
+    if (action.id === 'secure') {
       setPendingAction(null);
-      addMsg('user', choiceLabel);
-      setProcessing(true);
-      try {
-        await assignSubgrid(0, {  // wallet 0 for now
-          secure: secureCells,
-          develop: 0,
-          research: 0,
-          storage: remaining,
-        });
-        addMsg('agent', `Securing with ${secureCells} cells. Yields accrue every block (~60s).`);
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Allocation failed';
-        addMsg('agent', `Allocation failed: ${msg}`);
-      }
-      setProcessing(false);
       return;
     }
 
@@ -1418,9 +1403,9 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                   );
                 })()}
 
-                {/* Transact -- placeholder */}
+                {/* Transact */}
                 <button
-                  onClick={() => { addMsg('system', 'Transact: Coming soon.'); setMenuLevel(null); }}
+                  onClick={() => { setMenuLevel('transact-flow'); setTransactRecipient(''); setTransactAmount(''); }}
                   disabled={processing}
                   className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
                 >
@@ -1430,8 +1415,8 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                       Transact
                     </span>
                   </div>
-                  <span className="text-[9px] text-text-muted/30" style={{ fontFamily: "'Fira Code', monospace" }}>
-                    soon
+                  <span className="text-[9px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    {'\u203A'}
                   </span>
                 </button>
 
@@ -1461,29 +1446,29 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
               </>
             )}
 
-            {/* ── Secure flow: pick cell allocation ── */}
+            {/* ── Secure flow: pick block duration ── */}
             {menuLevel === 'secure-flow' && secureConfig === null && (
               <>
                 <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
-                  SECURE {'\u2014'} SUBGRID CELL ALLOCATION
+                  SECURE {'\u2014'} BLOCK GENERATION CYCLES
                 </div>
-                {[8, 16, 32, 48, 64, 0].map(cells => {
-                  const label = cells === 0 ? 'Cancel Securing (0 cells)' : cells === 64 ? `All ${cells} cells \u2192 Secure` : `${cells} cells \u2192 Secure`;
+                {[10, 25, 50, 100, 250].map(blocks => {
+                  const estCpu = blocks * 50; // BASE_CPU_PER_SECURE_BLOCK = 50
                   return (
                     <button
-                      key={cells}
-                      onClick={() => setSecureConfig({ cycles: cells })}
+                      key={blocks}
+                      onClick={() => setSecureConfig({ cycles: blocks })}
                       disabled={processing}
                       className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] text-green-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u26E8'}</span>
                         <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                          {label}
+                          {blocks} blocks {'\u2192'} Secure
                         </span>
                       </div>
                       <span className="text-[9px] text-text-muted/30 group-hover:text-text-muted/50 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                        {cells}/64
+                        ~{estCpu} CPU
                       </span>
                     </button>
                   );
@@ -1496,8 +1481,8 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
 
             {/* ── Secure flow: confirm ── */}
             {menuLevel === 'secure-flow' && secureConfig !== null && (() => {
-              const secureCells = secureConfig.cycles; // reusing cycles field for cell count
-              const remaining = 64 - secureCells;
+              const durationBlocks = secureConfig.cycles;
+              const estCpu = durationBlocks * 50; // BASE_CPU_PER_SECURE_BLOCK = 50
               return (
                 <>
                   <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
@@ -1505,13 +1490,13 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                   </div>
                   <div className="px-3 py-2 space-y-1.5">
                     <div className="text-[11px] text-text-primary" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      {secureCells} of 64 subgrid cells {'\u2192'} Secure
+                      {durationBlocks} block cycles {'\u2192'} Secure
                     </div>
-                    <div className="text-[9px] text-text-muted/50" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      Remaining {remaining} cells {'\u2192'} Storage
+                    <div className="text-[9px] text-yellow-400/70" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      Est. CPU cost: ~{estCpu} Energy
                     </div>
                     <div className="text-[9px] text-green-400/70" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      Yields accrue every block (~60s)
+                      Rewards accrue each block (~60s) from fee pool
                     </div>
                   </div>
                   <div className="flex gap-2 px-2 pt-1 pb-1">
@@ -1524,16 +1509,23 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                         setSecureConfig(null);
                         setProcessing(true);
                         try {
-                          await assignSubgrid(0, {
-                            secure: secureCells,
-                            develop: 0,
-                            research: 0,
-                            storage: remaining,
-                          });
-                          addMsg('agent', `Securing with ${secureCells} cells. Yields accrue every block (~60s).`);
+                          const result = await postSecure(0, durationBlocks);
+                          const store = useGameStore.getState();
+                          store.spendEnergy(result.cpu_cost, 'secure');
+                          store.flashDelta('energy', -result.cpu_cost);
+                          store.addSecuredChain();
+                          store.flashDelta('securedChains', 1);
+                          const lines = [
+                            `Securing position created.`,
+                            `Duration: ${result.duration_blocks} blocks (${result.start_block}\u2192${result.end_block})`,
+                            `CPU committed: ${result.cpu_cost}`,
+                            `Node density: ${(result.density * 100).toFixed(1)}%`,
+                            `Est. reward/block: ${result.estimated_reward_per_block.toFixed(6)} AGNTC`,
+                          ];
+                          addMsg('agent', lines.join('\n'));
                         } catch (err: unknown) {
-                          const msg = err instanceof Error ? err.message : 'Allocation failed';
-                          addMsg('agent', `Allocation failed: ${msg}`);
+                          const msg = err instanceof Error ? err.message : 'Securing failed';
+                          addMsg('agent', `Securing failed: ${msg}`);
                         }
                         setProcessing(false);
                       }}
@@ -1547,6 +1539,89 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                 </>
               );
             })()}
+
+            {/* ── Transact flow ── */}
+            {menuLevel === 'transact-flow' && (
+              <>
+                <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  TRANSACT {'\u2014'} AGNTC TRANSFER
+                </div>
+                <div className="px-3 py-2 space-y-2">
+                  <div>
+                    <label className="text-[9px] text-text-muted/50 block mb-1" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      Recipient wallet index
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="49"
+                      value={transactRecipient}
+                      onChange={(e) => setTransactRecipient(e.target.value)}
+                      placeholder="0-49"
+                      className="w-full px-2 py-1.5 rounded-md bg-white/[0.03] border border-card-border text-[11px] text-text-primary font-mono focus:border-accent-cyan/40 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] text-text-muted/50 block mb-1" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      Amount (AGNTC)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={transactAmount}
+                      onChange={(e) => setTransactAmount(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full px-2 py-1.5 rounded-md bg-white/[0.03] border border-card-border text-[11px] text-text-primary font-mono focus:border-accent-cyan/40 focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 px-2 pt-1 pb-1">
+                  <button onClick={() => setMenuLevel('blockchain')} className="px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    {'\u2190'} back
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const recipient = parseInt(transactRecipient);
+                      const amount = parseFloat(transactAmount);
+                      if (isNaN(recipient) || recipient < 0 || recipient > 49) {
+                        addMsg('system', 'Invalid recipient wallet index (0-49).');
+                        return;
+                      }
+                      if (isNaN(amount) || amount <= 0) {
+                        addMsg('system', 'Invalid amount.');
+                        return;
+                      }
+                      setMenuLevel(null);
+                      setProcessing(true);
+                      try {
+                        const result = await postTransact(0, recipient, amount);
+                        const store = useGameStore.getState();
+                        store.flashDelta('agntc', -(amount + result.fee));
+                        const lines = [
+                          `Transfer confirmed.`,
+                          `Sent: ${result.amount} AGNTC \u2192 wallet #${result.recipient_wallet}`,
+                          `Fee: ${result.fee.toFixed(6)} AGNTC (50% burned)`,
+                          `Records: ${result.records_created} | Nullifiers: ${result.nullifiers_published}`,
+                        ];
+                        addMsg('agent', lines.join('\n'));
+                      } catch (err: unknown) {
+                        const msg = err instanceof Error ? err.message : 'Transfer failed';
+                        addMsg('agent', `Transfer failed: ${msg}`);
+                      }
+                      setTransactRecipient('');
+                      setTransactAmount('');
+                      setProcessing(false);
+                    }}
+                    disabled={processing || !transactRecipient || !transactAmount}
+                    className="flex-1 px-4 py-1.5 rounded-lg text-[10px] font-semibold bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 hover:bg-yellow-400/20 hover:border-yellow-400/40 disabled:opacity-15 disabled:cursor-not-allowed transition-all duration-300"
+                    style={{ fontFamily: "'Outfit', sans-serif" }}
+                  >
+                    Execute Transfer
+                  </button>
+                </div>
+              </>
+            )}
 
             {/* ── Network Parameters sub-menu ── */}
             {menuLevel === 'network-params' && (
