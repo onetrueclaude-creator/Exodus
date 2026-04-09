@@ -7,6 +7,7 @@ import { useGameStore } from '@/store';
 import { getDistance } from '@/lib/proximity';
 import { visualToChain } from '@/services/testnetChainService';
 import { postSecure, postTransact, getStatus as fetchChainStats } from '@/services/testnetApi';
+import { logAction } from '@/lib/actionLogger';
 
 /* ── Agent Action Definitions ─────────────────────────────── */
 
@@ -561,8 +562,10 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
   }, [agent, setBorderPressure, setMiningRate, setEnergyLimit, setStakedCpu]);
 
   const selectAction = async (action: AgentAction) => {
+    logAction('click', `Action: ${action.label}`, `id=${action.id} cpu=${action.cpuCost} tier=${agent.tier}`);
     if (processing) return;
     if (energy < action.cpuCost) {
+      logAction('chain-err', `Insufficient energy`, `need=${action.cpuCost} have=${energy.toFixed(0)}`);
       addMsg('system', `Insufficient energy. Need ${action.cpuCost} CPU, have ${energy.toFixed(0)}.`);
       return;
     }
@@ -610,6 +613,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
     }
 
     if (action.id === 'chain-stats') {
+      logAction('chain-call', 'GET /api/status', 'fetching chain stats');
       addMsg('user', 'Chain Stats');
       setProcessing(true);
       try {
@@ -703,6 +707,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
   };
 
   const executeDeploy = async (selectedTier: AgentTier, target: { id: string; x: number; y: number }) => {
+    logAction('click', 'Deploy Agent', `tier=${selectedTier} target=${target.id.slice(0,8)} at (${target.x.toFixed(0)},${target.y.toFixed(0)})`);
     setDeployStep(null);
     setProcessing(true);
     const eCost = TIER_CLAIM_COST[selectedTier];
@@ -1505,11 +1510,14 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                     </button>
                     <button
                       onClick={async () => {
+                        logAction('click', 'Execute Secure', `duration=${durationBlocks} blocks`);
                         setMenuLevel(null);
                         setSecureConfig(null);
                         setProcessing(true);
                         try {
+                          logAction('chain-call', 'POST /api/secure', `wallet=0 duration=${durationBlocks}`);
                           const result = await postSecure(0, durationBlocks);
+                          logAction('chain-ok', 'Secure created', `pos=${result.position_id} cpu=${result.cpu_cost} density=${result.density}`);
                           const store = useGameStore.getState();
                           store.spendEnergy(result.cpu_cost, 'secure');
                           store.flashDelta('energy', -result.cpu_cost);
@@ -1525,6 +1533,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                           addMsg('agent', lines.join('\n'));
                         } catch (err: unknown) {
                           const msg = err instanceof Error ? err.message : 'Securing failed';
+                          logAction('chain-err', 'Secure failed', msg);
                           addMsg('agent', `Securing failed: ${msg}`);
                         }
                         setProcessing(false);
@@ -1584,6 +1593,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                     onClick={async () => {
                       const recipient = parseInt(transactRecipient);
                       const amount = parseFloat(transactAmount);
+                      logAction('click', 'Execute Transfer', `to=${recipient} amount=${amount}`);
                       if (isNaN(recipient) || recipient < 0 || recipient > 49) {
                         addMsg('system', 'Invalid recipient wallet index (0-49).');
                         return;
@@ -1595,7 +1605,9 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                       setMenuLevel(null);
                       setProcessing(true);
                       try {
+                        logAction('chain-call', 'POST /api/transact', `from=0 to=${recipient} amount=${amount}`);
                         const result = await postTransact(0, recipient, amount);
+                        logAction('chain-ok', 'Transfer confirmed', `amount=${result.amount} fee=${result.fee}`);
                         const store = useGameStore.getState();
                         store.flashDelta('agntc', -(amount + result.fee));
                         const lines = [
@@ -1607,6 +1619,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                         addMsg('agent', lines.join('\n'));
                       } catch (err: unknown) {
                         const msg = err instanceof Error ? err.message : 'Transfer failed';
+                        logAction('chain-err', 'Transfer failed', msg);
                         addMsg('agent', `Transfer failed: ${msg}`);
                       }
                       setTransactRecipient('');
