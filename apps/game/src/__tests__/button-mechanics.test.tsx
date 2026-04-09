@@ -294,12 +294,10 @@ describe("TabNavigation", () => {
 
   // ── Rendering ─────────────────────────────────────────────────────────────
 
-  it("renders all 4 tabs", () => {
+  it("renders active tabs", () => {
     render(<TabNavigation />);
     expect(screen.getByText("Network")).toBeDefined();
     expect(screen.getByText("Account View")).toBeDefined();
-    expect(screen.getByText("Researches")).toBeDefined();
-    expect(screen.getByText("Skills")).toBeDefined();
   });
 
   it("renders tab labels in UPPERCASE via CSS class", () => {
@@ -342,23 +340,11 @@ describe("TabNavigation", () => {
     expect(useGameStore.getState().activeTab).toBe("account");
   });
 
-  it("clicking Researches tab changes activeTab to researches", () => {
-    render(<TabNavigation />);
-    fireEvent.click(screen.getByText("Researches").closest("button")!);
-    expect(useGameStore.getState().activeTab).toBe("researches");
-  });
-
-  it("clicking Skills tab changes activeTab to skills", () => {
-    render(<TabNavigation />);
-    fireEvent.click(screen.getByText("Skills").closest("button")!);
-    expect(useGameStore.getState().activeTab).toBe("skills");
-  });
-
   it("clicking Network tab changes activeTab to network", () => {
     render(<TabNavigation />);
     // Start on a different tab
-    fireEvent.click(screen.getByText("Skills").closest("button")!);
-    expect(useGameStore.getState().activeTab).toBe("skills");
+    fireEvent.click(screen.getByText("Account View").closest("button")!);
+    expect(useGameStore.getState().activeTab).toBe("account");
     // Switch back to Network
     fireEvent.click(screen.getByText("Network").closest("button")!);
     expect(useGameStore.getState().activeTab).toBe("network");
@@ -372,17 +358,17 @@ describe("TabNavigation", () => {
 
   it("newly active tab button gains accent-cyan class", () => {
     render(<TabNavigation />);
-    const skillsBtn = screen.getByText("Skills").closest("button")!;
-    expect(skillsBtn.className).not.toContain("text-accent-cyan");
-    fireEvent.click(skillsBtn);
-    expect(skillsBtn.className).toContain("text-accent-cyan");
+    const accountBtn = screen.getByText("Account View").closest("button")!;
+    expect(accountBtn.className).not.toContain("text-accent-cyan");
+    fireEvent.click(accountBtn);
+    expect(accountBtn.className).toContain("text-accent-cyan");
   });
 
   it("previously active tab loses accent-cyan class when another is selected", () => {
     render(<TabNavigation />);
     const networkBtn = screen.getByText("Network").closest("button")!;
     expect(networkBtn.className).toContain("text-accent-cyan");
-    fireEvent.click(screen.getByText("Skills").closest("button")!);
+    fireEvent.click(screen.getByText("Account View").closest("button")!);
     // Re-query after re-render
     expect(screen.getByText("Network").closest("button")!.className).not.toContain(
       "text-accent-cyan"
@@ -393,8 +379,6 @@ describe("TabNavigation", () => {
     render(<TabNavigation />);
     const tabs = [
       { label: "Account View", id: "account" },
-      { label: "Researches", id: "researches" },
-      { label: "Skills", id: "skills" },
       { label: "Network", id: "network" },
     ] as const;
 
@@ -583,8 +567,8 @@ describe("Integration — dock panel and tab navigation independence", () => {
     fireEvent.click(screen.getByRole("button", { name: "Chain Stats" }));
     expect(useGameStore.getState().activeDockPanel).toBe("stats");
     // Switch tab
-    fireEvent.click(screen.getByText("Skills").closest("button")!);
-    expect(useGameStore.getState().activeTab).toBe("skills");
+    fireEvent.click(screen.getByText("Account View").closest("button")!);
+    expect(useGameStore.getState().activeTab).toBe("account");
     // Dock panel must still be open
     expect(useGameStore.getState().activeDockPanel).toBe("stats");
   });
@@ -609,19 +593,19 @@ describe("Integration — dock panel and tab navigation independence", () => {
       </>
     );
     // Set both to non-default values
-    fireEvent.click(screen.getByText("Researches").closest("button")!);
+    fireEvent.click(screen.getByText("Account View").closest("button")!);
     fireEvent.click(screen.getByRole("button", { name: "Time Rewind" }));
-    expect(useGameStore.getState().activeTab).toBe("researches");
+    expect(useGameStore.getState().activeTab).toBe("account");
     expect(useGameStore.getState().activeDockPanel).toBe("timeRewind");
 
     // Toggle dock panel off — tab unchanged
     fireEvent.click(screen.getByRole("button", { name: "Time Rewind" }));
     expect(useGameStore.getState().activeDockPanel).toBeNull();
-    expect(useGameStore.getState().activeTab).toBe("researches");
+    expect(useGameStore.getState().activeTab).toBe("account");
 
     // Switch tab — dock unchanged (still null)
-    fireEvent.click(screen.getByText("Skills").closest("button")!);
-    expect(useGameStore.getState().activeTab).toBe("skills");
+    fireEvent.click(screen.getByText("Network").closest("button")!);
+    expect(useGameStore.getState().activeTab).toBe("network");
     expect(useGameStore.getState().activeDockPanel).toBeNull();
   });
 });

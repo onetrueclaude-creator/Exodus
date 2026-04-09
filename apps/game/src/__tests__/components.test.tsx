@@ -37,22 +37,16 @@ describe('TabNavigation', () => {
     TabNavigation = mod.default;
   });
 
-  it('renders all 4 tabs', () => {
+  it('renders active tabs', () => {
     render(<TabNavigation />);
     expect(screen.getByText('Network')).toBeDefined();
     expect(screen.getByText('Account View')).toBeDefined();
-    expect(screen.getByText('Researches')).toBeDefined();
-    expect(screen.getByText('Skills')).toBeDefined();
   });
 
   it('clicking a tab switches the active tab in store', () => {
     render(<TabNavigation />);
     fireEvent.click(screen.getByText('Account View'));
     expect(useGameStore.getState().activeTab).toBe('account');
-    fireEvent.click(screen.getByText('Researches'));
-    expect(useGameStore.getState().activeTab).toBe('researches');
-    fireEvent.click(screen.getByText('Skills'));
-    expect(useGameStore.getState().activeTab).toBe('skills');
     fireEvent.click(screen.getByText('Network'));
     expect(useGameStore.getState().activeTab).toBe('network');
   });

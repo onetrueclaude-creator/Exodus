@@ -13,8 +13,6 @@ const TAB_ICONS: Record<GameTab, string> = {
 const TABS: { id: GameTab; label: string }[] = [
   { id: 'network', label: 'Network' },
   { id: 'account', label: 'Account View' },
-  { id: 'researches', label: 'Researches' },
-  { id: 'skills', label: 'Skills' },
 ];
 
 export default function TabNavigation() {

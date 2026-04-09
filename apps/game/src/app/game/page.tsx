@@ -228,6 +228,14 @@ export default function GamePage() {
         }
         setCurrentUserFaction(newUserFaction);
         revealFaction(newUserFaction);
+
+        // Dev mode: reveal all factions so the full grid is visible
+        if (isDev) {
+          revealFaction("community");
+          revealFaction("pro-max");
+          revealFaction("founder");
+          revealFaction("treasury");
+        }
       }
 
       setInitializing(false);

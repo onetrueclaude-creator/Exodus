@@ -450,7 +450,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
       })()}
 
       {/* Zoom slider + home button — bottom center */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 glass-card px-3 py-1.5">
+      <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 glass-card px-3 py-1.5">
         <button
           onClick={handleCenterHome}
           className="text-[10px] text-text-muted hover:text-accent-cyan transition-colors px-1"
