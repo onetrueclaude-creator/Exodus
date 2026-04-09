@@ -129,13 +129,12 @@ describe("gameStore — lattice/blocknode state", () => {
     expect(Object.keys(useGameStore.getState().blocknodes).length).toBe(nodesBefore);
   });
 
-  it("tick does NOT add baseIncome faucet energy", () => {
-    // Set up a user with no agents (zero mining)
-    useGameStore.setState({ currentUserId: "user-001", energy: 500, agents: {} });
+  it("tick adds passive CPU regen", () => {
+    useGameStore.setState({ currentUserId: "user-001", energy: 500, cpuRegenPerTurn: 100 });
     useGameStore.getState().tick();
     const s = useGameStore.getState();
-    // With no agents and no faucet, energy should remain 500
-    expect(s.energy).toBe(500);
+    // 500 + 100 regen = 600
+    expect(s.energy).toBe(600);
   });
 });
 
@@ -284,5 +283,38 @@ describe("gameStore — grid node territory (mineGridNode / claimGridNode)", () 
     // (-3,1) is adjacent to claimed (-2,1) but out of mineableRange with initLattice(1)
     const result = useGameStore.getState().mineGridNode(-3, 1);
     expect(result).toBe(false); // out of range
+  });
+});
+
+describe("gameStore — CPU regen and allocation", () => {
+  beforeEach(() => {
+    useGameStore.getState().reset();
+    useGameStore.setState({ currentUserId: "user-001", energy: 1000, cpuRegenPerTurn: 100 });
+  });
+
+  it("tick adds cpuRegenPerTurn to energy", () => {
+    useGameStore.getState().tick();
+    expect(useGameStore.getState().energy).toBe(1100); // 1000 + 100 regen
+  });
+
+  it("tick deducts mining + securing commitments from energy", () => {
+    useGameStore.getState().setCpuAllocation(50, 30);
+    useGameStore.getState().tick();
+    // 1000 + 100 regen - 50 mining - 30 securing = 1020
+    expect(useGameStore.getState().energy).toBe(1020);
+  });
+
+  it("energy does not go below 0", () => {
+    useGameStore.setState({ energy: 10, cpuRegenPerTurn: 0 });
+    useGameStore.getState().setCpuAllocation(500, 500);
+    useGameStore.getState().tick();
+    expect(useGameStore.getState().energy).toBe(0);
+  });
+
+  it("setCpuAllocation updates both fields", () => {
+    useGameStore.getState().setCpuAllocation(200, 100);
+    const s = useGameStore.getState();
+    expect(s.miningCpuPerBlock).toBe(200);
+    expect(s.securingCpuPerBlock).toBe(100);
   });
 });

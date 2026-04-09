@@ -6,7 +6,7 @@ import { TIER_CPU_COST, TIER_MINING_RATE, TIER_CLAIM_COST } from '@/types/agent'
 import { useGameStore } from '@/store';
 import { getDistance } from '@/lib/proximity';
 import { visualToChain } from '@/services/testnetChainService';
-import { postSecure, postTransact, getStatus as fetchChainStats } from '@/services/testnetApi';
+import { postTransact, getStatus as fetchChainStats } from '@/services/testnetApi';
 import { logAction } from '@/lib/actionLogger';
 
 /* ── Agent Action Definitions ─────────────────────────────── */
@@ -18,164 +18,36 @@ interface AgentAction {
   cpuCost: number;
   estTime: string;
   description: string;
-  category: 'blockchain' | 'economy' | 'expansion' | 'intel' | 'social' | 'settings';
+  category: 'blockchain' | 'expansion' | 'intel' | 'social';
   /** If set, this action opens a sub-menu of choices instead of executing directly */
   subChoices?: { id: string; label: string; description: string }[];
 }
 
 const AGENT_ACTIONS: Record<AgentTier, AgentAction[]> = {
   opus: [
-    // ── Deploy ──
-    { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 4, estTime: '~5min', description: 'Claim a neural node with new sub-agent', category: 'expansion' },
-
-    // ── Blockchain Protocols ──
-    { id: 'secure', label: 'Secure', icon: '\u26D3', cpuCost: 0, estTime: '~2min', description: 'Allocate subgrid cells to secure the chain', category: 'blockchain',
-      subChoices: [
-        { id: 'secure-8', label: '8 cells \u2192 Secure', description: '8 of 64 subgrid cells' },
-        { id: 'secure-16', label: '16 cells \u2192 Secure', description: '16 of 64 subgrid cells' },
-        { id: 'secure-32', label: '32 cells \u2192 Secure', description: '32 of 64 subgrid cells' },
-        { id: 'secure-48', label: '48 cells \u2192 Secure', description: '48 of 64 subgrid cells' },
-        { id: 'secure-64', label: 'All 64 cells \u2192 Secure', description: 'Maximum securing' },
-        { id: 'secure-0', label: 'Cancel Securing (0 cells)', description: 'Release all cells' },
-      ],
-    },
-    { id: 'write-data', label: 'Write Data', icon: '\u270E', cpuCost: 8, estTime: '~1min', description: 'Write data on-chain (planet/content)', category: 'blockchain' },
-    { id: 'read-data', label: 'Read Data', icon: '\u25A3', cpuCost: 2, estTime: '~10s', description: 'Query on-chain data in range', category: 'blockchain' },
-    { id: 'transact', label: 'Transact', icon: '\u21C4', cpuCost: 5, estTime: '~30s', description: 'Transfer AGNTC to another agent', category: 'blockchain' },
-    { id: 'chain-stats', label: 'Chain Stats', icon: '\u2588', cpuCost: 0, estTime: '~5s', description: 'View live blockchain statistics', category: 'blockchain' },
-
-    // ── Network Parameters ──
-    { id: 'adjust-staked-cpu', label: 'Securing Rate', icon: '\u26A1', cpuCost: 1, estTime: '~10s', description: 'Adjust CPU staked to blockchain security', category: 'economy',
-      subChoices: [
-        { id: 'stake-none', label: 'No Stake (0)', description: 'Keep all CPU for operations' },
-        { id: 'stake-low', label: 'Low Stake (5)', description: '5 CPU/t to blockchain security' },
-        { id: 'stake-medium', label: 'Medium Stake (10)', description: '10 CPU/t \u2014 standard contribution' },
-        { id: 'stake-high', label: 'High Stake (20)', description: '20 CPU/t \u2014 heavy commitment' },
-      ],
-    },
-    { id: 'set-mining', label: 'Mining Rate', icon: '\u26CF', cpuCost: 2, estTime: '~30s', description: 'Reallocate mining output', category: 'economy',
-      subChoices: [
-        { id: 'mining-low', label: 'Low Output (25%)', description: 'Reduce mining, save CPU' },
-        { id: 'mining-normal', label: 'Standard Output (100%)', description: 'Default mining rate' },
-        { id: 'mining-boost', label: 'Boost Output (200%)', description: 'Double mining, costs extra CPU' },
-      ],
-    },
-    { id: 'expand-border', label: 'Extend Reach', icon: '\u2B22', cpuCost: 5, estTime: '~2min', description: 'Extend network perimeter', category: 'economy',
-      subChoices: [
-        { id: 'pressure-2', label: 'Low Bandwidth (+2)', description: '+2 CPU/t, +0.2 AGNTC/t' },
-        { id: 'pressure-6', label: 'Med Bandwidth (+6)', description: '+6 CPU/t, +0.6 AGNTC/t' },
-        { id: 'pressure-12', label: 'High Bandwidth (+12)', description: '+12 CPU/t, +1.2 AGNTC/t' },
-        { id: 'pressure-0', label: 'Release (0)', description: 'Stop perimeter extension' },
-      ],
-    },
-
-    // ── Intel ──
+    { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 0, estTime: '~5min', description: 'Claim a node with a new sub-agent', category: 'expansion' },
+    { id: 'cpu-allocation', label: 'CPU Allocation', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining and Securing CPU per block', category: 'blockchain' },
+    { id: 'transact', label: 'Transact', icon: '\u21C4', cpuCost: 0, estTime: '~30s', description: 'Transfer AGNTC to another wallet', category: 'blockchain' },
+    { id: 'chain-stats', label: 'Chain Stats', icon: '\u25A3', cpuCost: 0, estTime: '~5s', description: 'View live blockchain statistics', category: 'blockchain' },
     { id: 'report-status', label: 'Status Report', icon: '\u2588', cpuCost: 0, estTime: '~5s', description: 'Agent reports current state', category: 'intel' },
     { id: 'deep-scan', label: 'Deep Scan', icon: '\u25CE', cpuCost: 6, estTime: '~3min', description: 'Reveal agents in wide radius', category: 'intel' },
-
-    // ── Social ──
-    { id: 'diplomatic-msg', label: 'Broadcast', icon: '\u25CE', cpuCost: 3, estTime: '~1min', description: 'Broadcast signal to all nearby agents', category: 'social' },
-
-    // ── Settings ──
-    { id: 'empire-color', label: 'Network Color', icon: '\u25CF', cpuCost: 0, estTime: '~5s', description: 'Set empire border color on map', category: 'settings',
-      subChoices: [
-        { id: 'color-purple', label: 'Purple', description: 'Default \u2014 #8B5CF6' },
-        { id: 'color-cyan', label: 'Cyan', description: 'Bright teal \u2014 #00D4FF' },
-        { id: 'color-gold', label: 'Gold', description: 'Warm amber \u2014 #F5A623' },
-        { id: 'color-green', label: 'Emerald', description: 'Fresh green \u2014 #22C55E' },
-      ],
-    },
+    { id: 'diplomatic-msg', label: 'Broadcast', icon: '\u25CE', cpuCost: 3, estTime: '~1min', description: 'Broadcast signal to nearby agents', category: 'social' },
   ],
   sonnet: [
-    // ── Deploy ──
-    { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 4, estTime: '~3min', description: 'Claim a neural node with Haiku sub-agent', category: 'expansion' },
-
-    // ── Blockchain Protocols ──
-    { id: 'secure', label: 'Secure', icon: '\u26D3', cpuCost: 0, estTime: '~2min', description: 'Allocate subgrid cells to secure the chain', category: 'blockchain',
-      subChoices: [
-        { id: 'secure-8', label: '8 cells \u2192 Secure', description: '8 of 64 subgrid cells' },
-        { id: 'secure-16', label: '16 cells \u2192 Secure', description: '16 of 64 subgrid cells' },
-        { id: 'secure-32', label: '32 cells \u2192 Secure', description: '32 of 64 subgrid cells' },
-        { id: 'secure-48', label: '48 cells \u2192 Secure', description: '48 of 64 subgrid cells' },
-        { id: 'secure-64', label: 'All 64 cells \u2192 Secure', description: 'Maximum securing' },
-        { id: 'secure-0', label: 'Cancel Securing (0 cells)', description: 'Release all cells' },
-      ],
-    },
-    { id: 'write-data', label: 'Write Data', icon: '\u270E', cpuCost: 6, estTime: '~1min', description: 'Write data on-chain (planet/content)', category: 'blockchain' },
-    { id: 'read-data', label: 'Read Data', icon: '\u25A3', cpuCost: 1, estTime: '~10s', description: 'Query on-chain data in range', category: 'blockchain' },
-    { id: 'transact', label: 'Transact', icon: '\u21C4', cpuCost: 3, estTime: '~30s', description: 'Transfer AGNTC to another agent', category: 'blockchain' },
-    { id: 'chain-stats', label: 'Chain Stats', icon: '\u2588', cpuCost: 0, estTime: '~5s', description: 'View live blockchain statistics', category: 'blockchain' },
-
-    // ── Network Parameters ──
-    { id: 'adjust-staked-cpu', label: 'Securing Rate', icon: '\u26A1', cpuCost: 1, estTime: '~10s', description: 'Adjust CPU staked to blockchain security', category: 'economy',
-      subChoices: [
-        { id: 'stake-none', label: 'No Stake (0)', description: 'Keep all CPU for operations' },
-        { id: 'stake-low', label: 'Low Stake (5)', description: '5 CPU/t to blockchain security' },
-        { id: 'stake-medium', label: 'Medium Stake (10)', description: '10 CPU/t \u2014 standard contribution' },
-      ],
-    },
-    { id: 'set-mining', label: 'Mining Rate', icon: '\u26CF', cpuCost: 1, estTime: '~30s', description: 'Reallocate mining output', category: 'economy',
-      subChoices: [
-        { id: 'mining-low', label: 'Low Output (25%)', description: 'Reduce mining, save CPU' },
-        { id: 'mining-normal', label: 'Standard Output (100%)', description: 'Default mining rate' },
-        { id: 'mining-boost', label: 'Boost Output (200%)', description: 'Double mining, costs extra CPU' },
-      ],
-    },
-    { id: 'expand-border', label: 'Extend Reach', icon: '\u2B22', cpuCost: 3, estTime: '~2min', description: 'Extend network perimeter', category: 'economy',
-      subChoices: [
-        { id: 'pressure-2', label: 'Low Bandwidth (+2)', description: '+2 CPU/t, +0.2 AGNTC/t' },
-        { id: 'pressure-6', label: 'Med Bandwidth (+6)', description: '+6 CPU/t, +0.6 AGNTC/t' },
-        { id: 'pressure-0', label: 'Release (0)', description: 'Stop perimeter extension' },
-      ],
-    },
-
-    // ── Intel ──
+    { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 0, estTime: '~3min', description: 'Claim a node with a Haiku sub-agent', category: 'expansion' },
+    { id: 'cpu-allocation', label: 'CPU Allocation', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining and Securing CPU per block', category: 'blockchain' },
+    { id: 'transact', label: 'Transact', icon: '\u21C4', cpuCost: 0, estTime: '~30s', description: 'Transfer AGNTC to another wallet', category: 'blockchain' },
+    { id: 'chain-stats', label: 'Chain Stats', icon: '\u25A3', cpuCost: 0, estTime: '~5s', description: 'View live blockchain statistics', category: 'blockchain' },
     { id: 'report-status', label: 'Status Report', icon: '\u2588', cpuCost: 0, estTime: '~5s', description: 'Agent reports current state', category: 'intel' },
     { id: 'scan-local', label: 'Scan Vicinity', icon: '\u25CE', cpuCost: 2, estTime: '~1min', description: 'Reveal nearby agents', category: 'intel' },
-
-    // ── Social ──
-    { id: 'send-message', label: 'Send NCP', icon: '\u25A3', cpuCost: 1, estTime: '~30s', description: 'Encode and transmit a neural communication packet', category: 'social' },
+    { id: 'send-message', label: 'Send NCP', icon: '\u25A3', cpuCost: 1, estTime: '~30s', description: 'Transmit a neural communication packet', category: 'social' },
   ],
   haiku: [
-    // ── Blockchain Protocols ──
-    { id: 'secure', label: 'Secure', icon: '\u26D3', cpuCost: 0, estTime: '~1min', description: 'Allocate subgrid cells to secure the chain', category: 'blockchain',
-      subChoices: [
-        { id: 'secure-8', label: '8 cells \u2192 Secure', description: '8 of 64 subgrid cells' },
-        { id: 'secure-16', label: '16 cells \u2192 Secure', description: '16 of 64 subgrid cells' },
-        { id: 'secure-32', label: '32 cells \u2192 Secure', description: '32 of 64 subgrid cells' },
-        { id: 'secure-0', label: 'Cancel Securing (0 cells)', description: 'Release all cells' },
-      ],
-    },
-    { id: 'read-data', label: 'Read Data', icon: '\u25A3', cpuCost: 1, estTime: '~10s', description: 'Query on-chain data in range', category: 'blockchain' },
-    { id: 'chain-stats', label: 'Chain Stats', icon: '\u2588', cpuCost: 0, estTime: '~5s', description: 'View live blockchain statistics', category: 'blockchain' },
-
-    // ── Network Parameters ──
-    { id: 'adjust-staked-cpu', label: 'Securing Rate', icon: '\u26A1', cpuCost: 0, estTime: '~10s', description: 'Adjust CPU staked to blockchain security', category: 'economy',
-      subChoices: [
-        { id: 'stake-none', label: 'No Stake (0)', description: 'Keep all CPU for operations' },
-        { id: 'stake-low', label: 'Low Stake (3)', description: '3 CPU/t to blockchain security' },
-      ],
-    },
-    { id: 'set-mining', label: 'Mining Rate', icon: '\u26CF', cpuCost: 1, estTime: '~30s', description: 'Reallocate mining output', category: 'economy',
-      subChoices: [
-        { id: 'mining-low', label: 'Low Output (25%)', description: 'Reduce mining, save CPU' },
-        { id: 'mining-normal', label: 'Standard Output (100%)', description: 'Default mining rate' },
-        { id: 'mining-boost', label: 'Boost Output (200%)', description: 'Double mining, costs extra CPU' },
-      ],
-    },
-    { id: 'fortify', label: 'Reinforce', icon: '\u25A0', cpuCost: 1, estTime: '~1min', description: 'Strengthen node perimeter', category: 'economy',
-      subChoices: [
-        { id: 'pressure-2', label: 'Low Reinforcement (+2)', description: '+2 CPU/t perimeter integrity' },
-        { id: 'pressure-0', label: 'Release (0)', description: 'Remove reinforcement allocation' },
-      ],
-    },
-
-    // ── Intel ──
+    { id: 'cpu-allocation', label: 'CPU Allocation', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining and Securing CPU per block', category: 'blockchain' },
+    { id: 'chain-stats', label: 'Chain Stats', icon: '\u25A3', cpuCost: 0, estTime: '~5s', description: 'View live blockchain statistics', category: 'blockchain' },
     { id: 'report-status', label: 'Status Report', icon: '\u2588', cpuCost: 0, estTime: '~5s', description: 'Agent reports current state', category: 'intel' },
     { id: 'ping', label: 'Ping', icon: '\u25CE', cpuCost: 1, estTime: '~20s', description: 'Quick scan of surroundings', category: 'intel' },
-
-    // ── Social ──
-    { id: 'send-message', label: 'Send NCP', icon: '\u25A3', cpuCost: 0, estTime: '~15s', description: 'Encode and transmit a neural communication packet', category: 'social' },
+    { id: 'send-message', label: 'Send NCP', icon: '\u25A3', cpuCost: 0, estTime: '~15s', description: 'Transmit a neural communication packet', category: 'social' },
   ],
 };
 
@@ -191,26 +63,6 @@ interface ChatMessage {
 /* ── Agent Response Templates ─────────────────────────────── */
 
 const ACTION_RESPONSES: Record<string, Record<AgentTier, string>> = {
-  'set-mining': {
-    opus: 'Mining reallocation complete.\nResource pipelines recalibrated.\nNew output rate active.',
-    sonnet: 'Mining flow adjusted\u2014\nnew extraction rate confirmed.\nPipeline recalibrated.',
-    haiku: 'Mining rate updated.\nOutput adjusted.',
-  },
-  'adjust-staked-cpu': {
-    opus: 'Staking configuration updated.\nCPU allocation to blockchain security recalibrated.\nEnergy cost per turn adjusted.',
-    sonnet: 'Staking level adjusted\u2014\nblockchain contribution updated.\nCPU allocation confirmed.',
-    haiku: 'Stake updated.\nBlockchain contribution set.',
-  },
-  'expand-border': {
-    opus: 'Perimeter bandwidth reallocated.\nNetwork vectors updated.\nAGNTC flow adjusted for expansion.',
-    sonnet: 'Perimeter shifting\u2014\nbandwidth allocation changed.\nNetwork reach updating.',
-    haiku: 'Perimeter adjusted.\nBandwidth set.',
-  },
-  'fortify': {
-    opus: 'Node perimeter updated.\nNetwork integrity reinforced.',
-    sonnet: 'Reinforcement level changed\u2014\nperimeter strength recalibrated.',
-    haiku: 'Perimeter updated.\nNode secured.',
-  },
   'deploy': {
     opus: 'Sub-agent deployed.\nNew node claimed and operational.\nTerminal now available.',
     sonnet: 'Agent deployed\u2014\nnode claimed successfully.\nNew terminal online.',
@@ -240,26 +92,6 @@ const ACTION_RESPONSES: Record<string, Record<AgentTier, string>> = {
     opus: 'Network broadcast sent.\nAll agents within signal range\nhave received your transmission.',
     sonnet: '',
     haiku: '',
-  },
-  'empire-color': {
-    opus: 'Empire color updated.\nMap borders recalibrated.',
-    sonnet: '',
-    haiku: '',
-  },
-  'secure': {
-    opus: 'Generations secured.\nBlockchain integrity verified.\nSecured Chains counter updated.',
-    sonnet: 'Generations contributed\u2014\nchain security enhanced.\nLedger integrity confirmed.',
-    haiku: 'Chain secured.\nGenerations committed.',
-  },
-  'write-data': {
-    opus: 'Data written on-chain.\nContent hash committed to ledger.\nBlock confirmation pending.',
-    sonnet: 'On-chain write confirmed\u2014\ncontent stored in ledger.\nHash recorded.',
-    haiku: '',
-  },
-  'read-data': {
-    opus: 'On-chain query complete.\nData retrieved from ledger.\nResults displayed.',
-    sonnet: 'Ledger queried\u2014\ndata retrieved successfully.\nResults available.',
-    haiku: 'Data read.\nLedger queried.',
   },
   'transact': {
     opus: 'AGNTC transfer initiated.\nTransaction broadcast to network.\nConfirmation pending.',
@@ -330,10 +162,8 @@ const CATEGORY_DESIGN: Record<string, {
 }> = {
   expansion: { color: 'text-orange-400', bg: 'bg-orange-400/8', border: 'border-orange-400/15', icon: '\u2604', label: 'DEPLOY' },
   blockchain: { color: 'text-emerald-400', bg: 'bg-emerald-400/8', border: 'border-emerald-400/15', icon: '\u26D3', label: 'BLOCKCHAIN PROTOCOLS' },
-  economy: { color: 'text-yellow-400', bg: 'bg-yellow-400/8', border: 'border-yellow-400/15', icon: '\u26A1', label: 'NETWORK PARAMETERS' },
   intel: { color: 'text-accent-cyan', bg: 'bg-accent-cyan/8', border: 'border-accent-cyan/15', icon: '\u25CE', label: 'INTEL' },
   social: { color: 'text-accent-purple', bg: 'bg-accent-purple/8', border: 'border-accent-purple/15', icon: '\u25C7', label: 'SOCIAL' },
-  settings: { color: 'text-text-secondary', bg: 'bg-white/5', border: 'border-white/8', icon: '\u2699', label: 'SETTINGS' },
 };
 
 /* ── Deploy Step Indicator ────────────────────────────────── */
@@ -415,20 +245,20 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
   const [msgStep, setMsgStep] = useState<null | 'pick-target' | 'compose'>(null);
   const [msgTarget, setMsgTarget] = useState<{ id: string; x: number; y: number } | null>(null);
   const [msgText, setMsgText] = useState('');
-  const [menuLevel, setMenuLevel] = useState<'top' | 'blockchain' | 'network-params' | 'settings' | 'secure-flow' | 'transact-flow' | null>(null);
-  const [secureConfig, setSecureConfig] = useState<{ cycles: number } | null>(null);
+  const [menuLevel, setMenuLevel] = useState<'top' | 'blockchain' | 'cpu-allocation' | 'transact-flow' | null>(null);
   const [transactRecipient, setTransactRecipient] = useState<string>('');
   const [transactAmount, setTransactAmount] = useState<string>('');
+  const [miningCpu, setMiningCpu] = useState(0);
+  const [securingCpu, setSecuringCpu] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const energy = useGameStore((s) => s.energy);
   const minerals = useGameStore((s) => s.minerals);
   const allAgents = useGameStore((s) => s.agents);
   const maxDeployTier = useGameStore((s) => s.maxDeployTier);
-  const setBorderPressure = useGameStore((s) => s.setBorderPressure);
-  const setMiningRate = useGameStore((s) => s.setMiningRate);
-  const setEnergyLimit = useGameStore((s) => s.setEnergyLimit);
-  const setStakedCpu = useGameStore((s) => s.setStakedCpu);
+  const cpuRegenPerTurn = useGameStore((s) => s.cpuRegenPerTurn);
+  const miningCpuPerBlock = useGameStore((s) => s.miningCpuPerBlock);
+  const securingCpuPerBlock = useGameStore((s) => s.securingCpuPerBlock);
 
   const actions = AGENT_ACTIONS[agent.tier];
 
@@ -514,52 +344,9 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
     }]);
   }, []);
 
-  const performAction = useCallback((actionId: string, choiceId?: string) => {
-    const baseMining = TIER_MINING_RATE[agent.tier];
-    switch (actionId) {
-      case 'set-mining': {
-        if (choiceId === 'mining-low') setMiningRate(agent.id, Math.max(1, Math.floor(baseMining * 0.25)));
-        else if (choiceId === 'mining-boost') setMiningRate(agent.id, baseMining * 2);
-        else setMiningRate(agent.id, baseMining);
-        break;
-      }
-      case 'adjust-staked-cpu': {
-        const stake = choiceId === 'stake-high' ? 20
-          : choiceId === 'stake-medium' ? 10
-          : choiceId === 'stake-low' ? (agent.tier === 'haiku' ? 3 : 5)
-          : 0;
-        setStakedCpu(agent.id, stake);
-        break;
-      }
-      case 'expand-border':
-      case 'fortify': {
-        const pressure = choiceId === 'pressure-2' ? 2
-          : choiceId === 'pressure-6' ? 6
-          : choiceId === 'pressure-12' ? 12
-          : 0;
-        setBorderPressure(agent.id, pressure);
-        break;
-      }
-      case 'empire-color': {
-        const colorMap: Record<string, number> = {
-          'color-purple': 0x8b5cf6,
-          'color-cyan': 0x00d4ff,
-          'color-gold': 0xf5a623,
-          'color-green': 0x22c55e,
-        };
-        if (choiceId && colorMap[choiceId]) {
-          useGameStore.getState().setEmpireColor(colorMap[choiceId]);
-        }
-        break;
-      }
-      case 'secure': {
-        // Handled via secure-flow menu with postSecure API — no local action here
-        break;
-      }
-      default:
-        break;
-    }
-  }, [agent, setBorderPressure, setMiningRate, setEnergyLimit, setStakedCpu]);
+  const performAction = useCallback((_actionId: string, _choiceId?: string) => {
+    // All actions now use direct API calls or custom menu flows
+  }, []);
 
   const selectAction = async (action: AgentAction) => {
     logAction('click', `Action: ${action.label}`, `id=${action.id} cpu=${action.cpuCost} tier=${agent.tier}`);
@@ -567,6 +354,13 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
     if (energy < action.cpuCost) {
       logAction('chain-err', `Insufficient energy`, `need=${action.cpuCost} have=${energy.toFixed(0)}`);
       addMsg('system', `Insufficient energy. Need ${action.cpuCost} CPU, have ${energy.toFixed(0)}.`);
+      return;
+    }
+
+    if (action.id === 'cpu-allocation') {
+      setMenuLevel('cpu-allocation');
+      setMiningCpu(miningCpuPerBlock);
+      setSecuringCpu(securingCpuPerBlock);
       return;
     }
 
@@ -890,7 +684,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
               <div className="flex items-center gap-2 py-1.5">
                 <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
                 <span
-                  className="text-[9px] text-text-muted/60 tracking-[0.15em] uppercase shrink-0"
+                  className="text-[12px] text-text-muted/60 tracking-[0.15em] uppercase shrink-0"
                   style={{ fontFamily: "'Fira Code', monospace" }}
                 >
                   {msg.content}
@@ -908,7 +702,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                       cmd
                     </span>
                   </div>
-                  <span className="whitespace-pre-wrap text-text-primary text-[11px] leading-relaxed" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <span className="whitespace-pre-wrap text-text-primary text-[13px] leading-relaxed" style={{ fontFamily: "'Fira Code', monospace" }}>
                     {msg.content}
                   </span>
                 </div>
@@ -931,7 +725,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                       {tier.label}
                     </span>
                   </div>
-                  <span className="whitespace-pre-wrap text-text-secondary text-[11px] leading-[1.6]" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <span className="whitespace-pre-wrap text-text-secondary text-[13px] leading-[1.6]" style={{ fontFamily: "'Fira Code', monospace" }}>
                     {msg.content}
                   </span>
                 </div>
@@ -965,7 +759,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
         {/* ─── Message flow: Pick target ─── */}
         {msgStep === 'pick-target' ? (
           <div className="p-2 space-y-0.5">
-            <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+            <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
               SELECT TARGET
             </div>
             {nearbyAgents.map(target => {
@@ -992,13 +786,13 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                 </button>
               );
             })}
-            <button onClick={() => { setMsgStep(null); setMsgTarget(null); }} className="w-full px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+            <button onClick={() => { setMsgStep(null); setMsgTarget(null); }} className="w-full px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
               {'\u2190'} back
             </button>
           </div>
         ) : msgStep === 'compose' ? (
           <div className="p-3 space-y-2.5">
-            <div className="text-[9px] text-text-muted/60 tracking-[0.15em]" style={{ fontFamily: "'Fira Code', monospace" }}>
+            <div className="text-[11px] text-text-muted/60 tracking-[0.15em]" style={{ fontFamily: "'Fira Code', monospace" }}>
               COMPOSE NCP
             </div>
             <input
@@ -1014,7 +808,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
             <div className="flex justify-between items-center">
               <span className="text-[9px] text-text-muted/30" style={{ fontFamily: "'Fira Code', monospace" }}>{msgText.length}/140</span>
               <div className="flex gap-2">
-                <button onClick={() => { setMsgStep('pick-target'); setMsgText(''); }} className="px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                <button onClick={() => { setMsgStep('pick-target'); setMsgText(''); }} className="px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                   {'\u2190'} back
                 </button>
                 <button
@@ -1036,7 +830,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
 
             {deployStep === 'pick-star' && (
               <div className="px-2 pb-2 space-y-0.5">
-                <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+                <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
                   NEARBY NEURAL NODES
                 </div>
                 {nearbyUnclaimed.length === 0 ? (
@@ -1089,7 +883,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                     );
                   })
                 )}
-                <button onClick={() => { setDeployStep(null); setDeployTarget(null); }} className="w-full px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                <button onClick={() => { setDeployStep(null); setDeployTarget(null); }} className="w-full px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                   {'\u2190'} cancel
                 </button>
               </div>
@@ -1132,7 +926,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                     </button>
                   );
                 })}
-                <button onClick={() => { setDeployStep('pick-star'); setDeployTarget(null); }} className="w-full px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                <button onClick={() => { setDeployStep('pick-star'); setDeployTarget(null); }} className="w-full px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                   {'\u2190'} back
                 </button>
               </div>
@@ -1152,7 +946,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                 <div className="flex justify-between items-center">
                   <span className="text-[9px] text-text-muted/30" style={{ fontFamily: "'Fira Code', monospace" }}>{deployIntro.length}/140</span>
                   <div className="flex gap-2">
-                    <button onClick={() => { setDeployStep('pick-model'); setDeployIntro(''); }} className="px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    <button onClick={() => { setDeployStep('pick-model'); setDeployIntro(''); }} className="px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                       {'\u2190'} back
                     </button>
                     <button
@@ -1177,7 +971,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
         /* ─── Sub-choice menu ─── */
         ) : pendingAction?.subChoices ? (
           <div className="p-2 space-y-0.5">
-            <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+            <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
               CONFIGURE
             </div>
             {pendingAction.subChoices.map(choice => (
@@ -1193,7 +987,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                 </div>
               </button>
             ))}
-            <button onClick={() => setPendingAction(null)} className="w-full px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+            <button onClick={() => setPendingAction(null)} className="w-full px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
               {'\u2190'} back
             </button>
           </div>
@@ -1218,12 +1012,12 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-orange-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u2604'}</span>
-                        <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                        <span className="text-[12px] text-orange-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u2604'}</span>
+                        <span className="text-[13px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                           Deploy Agent
                         </span>
                       </div>
-                      <span className="text-[9px] text-yellow-400/40 group-hover:text-yellow-400/70 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      <span className="text-[11px] text-yellow-400/40 group-hover:text-yellow-400/70 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                         {deployAction.cpuCost}cpu
                       </span>
                     </button>
@@ -1236,77 +1030,16 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                     className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-emerald-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u26D3'}</span>
-                      <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      <span className="text-[12px] text-emerald-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u26D3'}</span>
+                      <span className="text-[13px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                         Blockchain Protocols
                       </span>
                     </div>
-                    <span className="text-[9px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    <span className="text-[11px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                       {'\u203A'}
                     </span>
                   </button>
 
-                  {/* Adjust Securing Operations Rate */}
-                  {(() => {
-                    const stakingAction = actions.find(a => a.id === 'adjust-staked-cpu');
-                    if (!stakingAction) return null;
-                    const affordable = energy >= stakingAction.cpuCost;
-                    return (
-                      <button
-                        onClick={() => affordable && selectAction(stakingAction)}
-                        disabled={processing || !affordable}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
-                          !affordable ? 'opacity-20 cursor-not-allowed' : 'hover:bg-white/[0.03] cursor-pointer'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-yellow-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u26A1'}</span>
-                          <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                            Adjust Securing Ops Rate
-                          </span>
-                        </div>
-                        {stakingAction.cpuCost > 0 && (
-                          <span className="text-[9px] text-yellow-400/40 group-hover:text-yellow-400/70 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                            {stakingAction.cpuCost}cpu
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })()}
-
-                  {/* Adjust Network Parameters */}
-                  <button
-                    onClick={() => setMenuLevel('network-params')}
-                    disabled={processing}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-orange-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u2699'}</span>
-                      <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                        Adjust Network Parameters
-                      </span>
-                    </div>
-                    <span className="text-[9px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      {'\u203A'}
-                    </span>
-                  </button>
-
-                  {/* Settings */}
-                  <button
-                    onClick={() => setMenuLevel('settings')}
-                    disabled={processing}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-text-secondary opacity-50 group-hover:opacity-90 transition-opacity">{'\u2699'}</span>
-                      <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                        Settings
-                      </span>
-                    </div>
-                    <span className="text-[9px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      {'\u203A'}
-                    </span>
-                  </button>
                 </>
               );
             })()}
@@ -1314,245 +1047,172 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
             {/* ── Blockchain Protocols sub-menu ── */}
             {menuLevel === 'blockchain' && (
               <>
-                <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+                <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
                   BLOCKCHAIN PROTOCOLS
                 </div>
 
-                {/* Secure */}
+                {/* CPU Allocation */}
                 <button
-                  onClick={() => { setMenuLevel('secure-flow'); setSecureConfig(null); }}
+                  onClick={() => { setMenuLevel('cpu-allocation'); setMiningCpu(miningCpuPerBlock); setSecuringCpu(securingCpuPerBlock); }}
                   disabled={processing}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-green-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u26E8'}</span>
-                    <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      Secure
+                    <span className="text-[12px] text-yellow-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u26A1'}</span>
+                    <span className="text-[13px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      CPU Allocation
                     </span>
                   </div>
-                  <span className="text-[9px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <span className="text-[11px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                     {'\u203A'}
                   </span>
                 </button>
-
-                {/* Write Data On Chain (NCP / send-message) */}
-                {(() => {
-                  const writeAction = actions.find(a => a.id === 'send-message' || a.id === 'diplomatic-msg');
-                  if (!writeAction) return null;
-                  const affordable = energy >= writeAction.cpuCost;
-                  return (
-                    <button
-                      onClick={() => { setMenuLevel(null); selectAction(writeAction); }}
-                      disabled={processing || !affordable}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
-                        !affordable ? 'opacity-20 cursor-not-allowed' : 'hover:bg-white/[0.03] cursor-pointer'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-accent-purple opacity-50 group-hover:opacity-90 transition-opacity">{'\u25A3'}</span>
-                        <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                          Write Data On Chain
-                        </span>
-                      </div>
-                      {writeAction.cpuCost > 0 && (
-                        <span className="text-[9px] text-yellow-400/40 group-hover:text-yellow-400/70 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                          {writeAction.cpuCost}cpu
-                        </span>
-                      )}
-                    </button>
-                  );
-                })()}
-
-                {/* Read Data On Chain (scan / ping) */}
-                {(() => {
-                  const readAction = actions.find(a => a.id === 'deep-scan' || a.id === 'scan-local' || a.id === 'ping');
-                  if (!readAction) {
-                    const fallback = actions.find(a => a.id === 'report-status');
-                    if (!fallback) return null;
-                    return (
-                      <button
-                        onClick={() => { setMenuLevel(null); selectAction(fallback); }}
-                        disabled={processing}
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-accent-cyan opacity-50 group-hover:opacity-90 transition-opacity">{'\u25CE'}</span>
-                          <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                            Read Data On Chain
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  }
-                  const affordable = energy >= readAction.cpuCost;
-                  return (
-                    <button
-                      onClick={() => { setMenuLevel(null); selectAction(readAction); }}
-                      disabled={processing || !affordable}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
-                        !affordable ? 'opacity-20 cursor-not-allowed' : 'hover:bg-white/[0.03] cursor-pointer'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-accent-cyan opacity-50 group-hover:opacity-90 transition-opacity">{'\u25CE'}</span>
-                        <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                          Read Data On Chain
-                        </span>
-                      </div>
-                      {readAction.cpuCost > 0 && (
-                        <span className="text-[9px] text-yellow-400/40 group-hover:text-yellow-400/70 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                          {readAction.cpuCost}cpu
-                        </span>
-                      )}
-                    </button>
-                  );
-                })()}
 
                 {/* Transact */}
                 <button
                   onClick={() => { setMenuLevel('transact-flow'); setTransactRecipient(''); setTransactAmount(''); }}
                   disabled={processing}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-yellow-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u25C6'}</span>
-                    <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    <span className="text-[12px] text-yellow-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u25C6'}</span>
+                    <span className="text-[13px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                       Transact
                     </span>
                   </div>
-                  <span className="text-[9px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <span className="text-[11px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                     {'\u203A'}
                   </span>
                 </button>
 
-                {/* Stats */}
+                {/* Chain Stats */}
                 {(() => {
-                  const statsAction = actions.find(a => a.id === 'chain-stats') || actions.find(a => a.id === 'report-status');
+                  const statsAction = actions.find(a => a.id === 'chain-stats');
                   if (!statsAction) return null;
                   return (
                     <button
                       onClick={() => { setMenuLevel(null); selectAction(statsAction); }}
                       disabled={processing}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-accent-cyan opacity-50 group-hover:opacity-90 transition-opacity">{'\u2588'}</span>
-                        <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                          Stats
+                        <span className="text-[12px] text-accent-cyan opacity-50 group-hover:opacity-90 transition-opacity">{'\u25A3'}</span>
+                        <span className="text-[13px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                          Chain Stats
                         </span>
                       </div>
                     </button>
                   );
                 })()}
 
-                <button onClick={() => setMenuLevel(null)} className="w-full px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                <button onClick={() => setMenuLevel(null)} className="w-full px-3 py-2 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                   {'\u2190'} back
                 </button>
               </>
             )}
 
-            {/* ── Secure flow: pick block duration ── */}
-            {menuLevel === 'secure-flow' && secureConfig === null && (
+            {/* ── CPU Allocation: Mining + Securing ── */}
+            {menuLevel === 'cpu-allocation' && (
               <>
-                <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
-                  SECURE {'\u2014'} BLOCK GENERATION CYCLES
+                <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  CPU ALLOCATION {'\u2014'} PER BLOCK
                 </div>
-                {[10, 25, 50, 100, 250].map(blocks => {
-                  const estCpu = blocks * 50; // BASE_CPU_PER_SECURE_BLOCK = 50
-                  return (
-                    <button
-                      key={blocks}
-                      onClick={() => setSecureConfig({ cycles: blocks })}
-                      disabled={processing}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-green-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u26E8'}</span>
-                        <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                          {blocks} blocks {'\u2192'} Secure
-                        </span>
-                      </div>
-                      <span className="text-[9px] text-text-muted/30 group-hover:text-text-muted/50 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                        ~{estCpu} CPU
-                      </span>
-                    </button>
-                  );
-                })}
-                <button onClick={() => setMenuLevel('blockchain')} className="w-full px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                  {'\u2190'} back
-                </button>
+
+                {/* Mining Operations */}
+                <div className="px-3 py-2">
+                  <div className="text-[13px] text-yellow-400 font-semibold mb-2" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    Mining Operations
+                  </div>
+                  <div className="text-[11px] text-text-muted/50 mb-2">CPU per block {'\u2192'} earns AGNTC from block subsidy</div>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {[0, 50, 100, 200, 500].map(val => (
+                      <button
+                        key={`mine-${val}`}
+                        onClick={() => setMiningCpu(val)}
+                        className={`px-3 py-1.5 rounded-md text-[13px] font-mono transition-all ${
+                          miningCpu === val
+                            ? 'bg-yellow-400/15 text-yellow-400 border border-yellow-400/40'
+                            : 'bg-white/[0.03] text-text-muted border border-card-border hover:text-text-primary'
+                        }`}
+                      >
+                        {val}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="h-px bg-card-border/30 mx-3" />
+
+                {/* Securing Operations */}
+                <div className="px-3 py-2">
+                  <div className="text-[13px] text-emerald-400 font-semibold mb-2" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    Securing Operations
+                  </div>
+                  <div className="text-[11px] text-text-muted/50 mb-2">CPU per block {'\u2192'} earns AGNTC from fee pool</div>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {[0, 50, 100, 200, 500].map(val => (
+                      <button
+                        key={`sec-${val}`}
+                        onClick={() => setSecuringCpu(val)}
+                        className={`px-3 py-1.5 rounded-md text-[13px] font-mono transition-all ${
+                          securingCpu === val
+                            ? 'bg-emerald-400/15 text-emerald-400 border border-emerald-400/40'
+                            : 'bg-white/[0.03] text-text-muted border border-card-border hover:text-text-primary'
+                        }`}
+                      >
+                        {val}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="h-px bg-card-border/30 mx-3" />
+
+                {/* Summary */}
+                <div className="px-3 py-2 space-y-1">
+                  <div className="flex justify-between text-[13px] font-mono">
+                    <span className="text-text-muted">Total committed</span>
+                    <span className="text-text-primary">{miningCpu + securingCpu} CPU/block</span>
+                  </div>
+                  <div className="flex justify-between text-[13px] font-mono">
+                    <span className="text-text-muted">CPU regen</span>
+                    <span className="text-green-400">+{cpuRegenPerTurn}/turn</span>
+                  </div>
+                  {miningCpu + securingCpu > cpuRegenPerTurn && (
+                    <div className="flex justify-between text-[13px] font-mono">
+                      <span className="text-text-muted">Depleted in</span>
+                      <span className="text-red-400">~{Math.ceil(energy / Math.max(1, miningCpu + securingCpu - cpuRegenPerTurn))} turns</span>
+                    </div>
+                  )}
+                  {miningCpu + securingCpu > 0 && miningCpu + securingCpu <= cpuRegenPerTurn && (
+                    <div className="text-[11px] text-green-400/70">{'\u2714'} Sustainable {'\u2014'} regen covers commitment</div>
+                  )}
+                </div>
+
+                <div className="flex gap-2 px-3 pt-1 pb-2">
+                  <button onClick={() => setMenuLevel('blockchain')} className="px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    {'\u2190'} back
+                  </button>
+                  <button
+                    onClick={() => {
+                      useGameStore.getState().setCpuAllocation(miningCpu, securingCpu);
+                      addMsg('agent', `CPU allocation updated.\nMining: ${miningCpu} CPU/block\nSecuring: ${securingCpu} CPU/block\nTotal: ${miningCpu + securingCpu}/block (regen: +${cpuRegenPerTurn}/turn)`);
+                      setMenuLevel(null);
+                    }}
+                    disabled={processing}
+                    className="flex-1 px-4 py-1.5 rounded-lg text-[13px] font-semibold bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20 hover:bg-accent-cyan/20 hover:border-accent-cyan/40 disabled:opacity-15 disabled:cursor-not-allowed transition-all duration-300"
+                    style={{ fontFamily: "'Outfit', sans-serif" }}
+                  >
+                    Apply
+                  </button>
+                </div>
               </>
             )}
-
-            {/* ── Secure flow: confirm ── */}
-            {menuLevel === 'secure-flow' && secureConfig !== null && (() => {
-              const durationBlocks = secureConfig.cycles;
-              const estCpu = durationBlocks * 50; // BASE_CPU_PER_SECURE_BLOCK = 50
-              return (
-                <>
-                  <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
-                    CONFIRM SECURING OPERATION
-                  </div>
-                  <div className="px-3 py-2 space-y-1.5">
-                    <div className="text-[11px] text-text-primary" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      {durationBlocks} block cycles {'\u2192'} Secure
-                    </div>
-                    <div className="text-[9px] text-yellow-400/70" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      Est. CPU cost: ~{estCpu} Energy
-                    </div>
-                    <div className="text-[9px] text-green-400/70" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      Rewards accrue each block (~60s) from fee pool
-                    </div>
-                  </div>
-                  <div className="flex gap-2 px-2 pt-1 pb-1">
-                    <button onClick={() => setSecureConfig(null)} className="px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      {'\u2190'} back
-                    </button>
-                    <button
-                      onClick={async () => {
-                        logAction('click', 'Execute Secure', `duration=${durationBlocks} blocks`);
-                        setMenuLevel(null);
-                        setSecureConfig(null);
-                        setProcessing(true);
-                        try {
-                          logAction('chain-call', 'POST /api/secure', `wallet=0 duration=${durationBlocks}`);
-                          const result = await postSecure(0, durationBlocks);
-                          logAction('chain-ok', 'Secure created', `pos=${result.position_id} cpu=${result.cpu_cost} density=${result.density}`);
-                          const store = useGameStore.getState();
-                          store.spendEnergy(result.cpu_cost, 'secure');
-                          store.flashDelta('energy', -result.cpu_cost);
-                          store.addSecuredChain();
-                          store.flashDelta('securedChains', 1);
-                          const lines = [
-                            `Securing position created.`,
-                            `Duration: ${result.duration_blocks} blocks (${result.start_block}\u2192${result.end_block})`,
-                            `CPU committed: ${result.cpu_cost}`,
-                            `Node density: ${(result.density * 100).toFixed(1)}%`,
-                            `Est. reward/block: ${result.estimated_reward_per_block.toFixed(6)} AGNTC`,
-                          ];
-                          addMsg('agent', lines.join('\n'));
-                        } catch (err: unknown) {
-                          const msg = err instanceof Error ? err.message : 'Securing failed';
-                          logAction('chain-err', 'Secure failed', msg);
-                          addMsg('agent', `Securing failed: ${msg}`);
-                        }
-                        setProcessing(false);
-                      }}
-                      disabled={processing}
-                      className="flex-1 px-4 py-1.5 rounded-lg text-[10px] font-semibold bg-green-400/10 text-green-400 border border-green-400/20 hover:bg-green-400/20 hover:border-green-400/40 disabled:opacity-15 disabled:cursor-not-allowed transition-all duration-300"
-                      style={{ fontFamily: "'Outfit', sans-serif" }}
-                    >
-                      Execute Secure
-                    </button>
-                  </div>
-                </>
-              );
-            })()}
 
             {/* ── Transact flow ── */}
             {menuLevel === 'transact-flow' && (
               <>
-                <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+                <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
                   TRANSACT {'\u2014'} AGNTC TRANSFER
                 </div>
                 <div className="px-3 py-2 space-y-2">
@@ -1586,7 +1246,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                   </div>
                 </div>
                 <div className="flex gap-2 px-2 pt-1 pb-1">
-                  <button onClick={() => setMenuLevel('blockchain')} className="px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <button onClick={() => setMenuLevel('blockchain')} className="px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                     {'\u2190'} back
                   </button>
                   <button
@@ -1636,127 +1296,6 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
               </>
             )}
 
-            {/* ── Network Parameters sub-menu ── */}
-            {menuLevel === 'network-params' && (
-              <>
-                <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
-                  NETWORK PARAMETERS
-                </div>
-
-                {/* Mining Rate */}
-                {(() => {
-                  const miningAction = actions.find(a => a.id === 'set-mining');
-                  if (!miningAction) return null;
-                  const affordable = energy >= miningAction.cpuCost;
-                  return (
-                    <button
-                      onClick={() => { setMenuLevel(null); selectAction(miningAction); }}
-                      disabled={processing || !affordable}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
-                        !affordable ? 'opacity-20 cursor-not-allowed' : 'hover:bg-white/[0.03] cursor-pointer'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-yellow-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u26CF'}</span>
-                        <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                          Mining Rate
-                        </span>
-                      </div>
-                      {miningAction.cpuCost > 0 && (
-                        <span className="text-[9px] text-yellow-400/40 group-hover:text-yellow-400/70 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                          {miningAction.cpuCost}cpu
-                        </span>
-                      )}
-                    </button>
-                  );
-                })()}
-
-                {/* Border Pressure */}
-                {(() => {
-                  const borderAction = actions.find(a => a.id === 'expand-border' || a.id === 'fortify');
-                  if (!borderAction) return null;
-                  const affordable = energy >= borderAction.cpuCost;
-                  return (
-                    <button
-                      onClick={() => { setMenuLevel(null); selectAction(borderAction); }}
-                      disabled={processing || !affordable}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group ${
-                        !affordable ? 'opacity-20 cursor-not-allowed' : 'hover:bg-white/[0.03] cursor-pointer'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-orange-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u2B22'}</span>
-                        <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                          Border Pressure
-                        </span>
-                      </div>
-                      {borderAction.cpuCost > 0 && (
-                        <span className="text-[9px] text-yellow-400/40 group-hover:text-yellow-400/70 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                          {borderAction.cpuCost}cpu
-                        </span>
-                      )}
-                    </button>
-                  );
-                })()}
-
-                <button onClick={() => setMenuLevel(null)} className="w-full px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                  {'\u2190'} back
-                </button>
-              </>
-            )}
-
-            {/* ── Settings sub-menu ── */}
-            {menuLevel === 'settings' && (
-              <>
-                <div className="text-[9px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
-                  SETTINGS
-                </div>
-
-                {/* Network Color -- opus only */}
-                {(() => {
-                  const colorAction = actions.find(a => a.id === 'empire-color');
-                  if (!colorAction) return null;
-                  return (
-                    <button
-                      onClick={() => { setMenuLevel(null); selectAction(colorAction); }}
-                      disabled={processing}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-accent-purple opacity-50 group-hover:opacity-90 transition-opacity">{'\u25CF'}</span>
-                        <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                          Network Color
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })()}
-
-                {/* Status Report */}
-                {(() => {
-                  const statusAction = actions.find(a => a.id === 'report-status');
-                  if (!statusAction) return null;
-                  return (
-                    <button
-                      onClick={() => { setMenuLevel(null); selectAction(statusAction); }}
-                      disabled={processing}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-accent-cyan opacity-50 group-hover:opacity-90 transition-opacity">{'\u2588'}</span>
-                        <span className="text-[11px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                          Status Report
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })()}
-
-                <button onClick={() => setMenuLevel(null)} className="w-full px-3 py-1.5 text-[10px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                  {'\u2190'} back
-                </button>
-              </>
-            )}
 
           </div>
         )}

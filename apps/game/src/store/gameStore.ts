@@ -47,6 +47,11 @@ interface GameState {
   agntcBalance: number;
   securedChains: number;
 
+  // CPU allocation (per-block commitments)
+  miningCpuPerBlock: number;
+  securingCpuPerBlock: number;
+  cpuRegenPerTurn: number;
+
   // Resource deltas (flash indicators)
   resourceDeltas: Record<string, { value: number; ts: number }>;
 
@@ -142,6 +147,8 @@ interface GameState {
     miningRate: number;
     effectiveStake: number;
   }) => void;
+  setCpuAllocation: (mining: number, securing: number) => void;
+  setCpuRegen: (regen: number) => void;
   setInitializing: (v: boolean) => void;
   setEmpireColor: (color: number) => void;
   setActiveDockPanel: (panel: DockPanelId | null) => void;
@@ -180,6 +187,9 @@ const initialState = {
   minerals: 50,
   agntcBalance: 50,
   securedChains: 0,
+  miningCpuPerBlock: 0,
+  securingCpuPerBlock: 0,
+  cpuRegenPerTurn: 100,
   resourceDeltas: {} as Record<string, { value: number; ts: number }>,
   turn: 0,
   turnInterval: null as number | null,
@@ -478,50 +488,27 @@ export const useGameStore = create<GameState>((set) => ({
       },
     })),
 
-  /**
-   * Advance one turn. Calculate net resource production:
-   *   netEnergy = sum(miningRate) - sum(cpuPerTurn)
-   *   minerals grow slowly (+1 per claimed agent per turn)
-   *   agntcCost = sum of border pressure costs (0.1 AGNTC per pressure point per turn)
-   *   borderRadius grows by (pressure * 0.5) per turn, capped at 3x base radius
-   */
   tick: () =>
     set((s) => {
       if (!s.currentUserId) return s;
-      const ownAgents = Object.values(s.agents).filter((a) => a.userId === s.currentUserId);
-      const ownedNodes = Object.values(s.blocknodes).filter((n) => n.ownerId === s.currentUserId);
-      const totalMining = ownAgents.reduce((sum, a) => sum + (a.miningRate ?? 0), 0);
-      const totalCpuCost = ownAgents.reduce((sum, a) => sum + a.cpuPerTurn, 0);
-      // Owned blocknodes cost NODE_CPU_PER_TURN each to maintain per turn
-      const nodeMaintenance = ownedNodes.length * NODE_CPU_PER_TURN;
-      const netEnergy = totalMining - totalCpuCost - nodeMaintenance;
-      const mineralGain = ownAgents.length; // 1 mineral per claimed system per turn
-      // Border pressure costs AGNTC — 0.1 AGNTC per pressure point per turn
-      const totalPressureCost = ownAgents.reduce(
-        (sum, a) => sum + (a.borderPressure ?? 0) * 0.1,
-        0
-      );
 
-      // Territory expansion: border pressure grows borderRadius permanently
-      // Rate: 0.5 radius units per pressure point per turn, capped at 3x base
-      const updatedAgents = { ...s.agents };
-      for (const a of ownAgents) {
-        if (a.borderPressure > 0) {
-          const maxRadius = TIER_BASE_BORDER[a.tier] * 3;
-          const growth = a.borderPressure * 0.5;
-          const newRadius = Math.min(maxRadius, a.borderRadius + growth);
-          if (newRadius !== a.borderRadius) {
-            updatedAgents[a.id] = { ...a, borderRadius: Math.round(newRadius * 10) / 10 };
-          }
-        }
-      }
+      // CPU regen (passive income per turn)
+      const regen = s.cpuRegenPerTurn;
+
+      // CPU deductions (per-block commitments, applied each turn)
+      const totalCommitted = s.miningCpuPerBlock + s.securingCpuPerBlock;
+
+      // Owned blocknodes cost NODE_CPU_PER_TURN each
+      const ownedNodes = Object.values(s.blocknodes).filter((n) => n.ownerId === s.currentUserId);
+      const nodeMaintenance = ownedNodes.length * NODE_CPU_PER_TURN;
+
+      const netEnergy = regen - totalCommitted - nodeMaintenance;
 
       return {
         turn: s.turn + 1,
         energy: Math.max(0, s.energy + netEnergy),
-        minerals: s.minerals + mineralGain,
-        agntcBalance: Math.round((s.agntcBalance - totalPressureCost) * 100) / 100,
-        agents: updatedAgents,
+        minerals: s.minerals + Object.values(s.agents).filter((a) => a.userId === s.currentUserId).length,
+        agntcBalance: s.agntcBalance,
       };
     }),
 
@@ -571,6 +558,9 @@ export const useGameStore = create<GameState>((set) => ({
           : {}),
       };
     }),
+
+  setCpuAllocation: (mining, securing) => set({ miningCpuPerBlock: mining, securingCpuPerBlock: securing }),
+  setCpuRegen: (regen) => set({ cpuRegenPerTurn: regen }),
 
   setInitializing: (v) => set({ isInitializing: v }),
 
