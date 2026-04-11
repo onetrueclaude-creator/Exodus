@@ -46,6 +46,7 @@ interface GameState {
   minerals: number;
   agntcBalance: number;
   securedChains: number;
+  minedChains: number;
 
   // CPU allocation (per-block commitments)
   miningCpuPerBlock: number;
@@ -187,6 +188,7 @@ const initialState = {
   minerals: 50,
   agntcBalance: 50,
   securedChains: 0,
+  minedChains: 0,
   miningCpuPerBlock: 0,
   securingCpuPerBlock: 0,
   cpuRegenPerTurn: 100,
