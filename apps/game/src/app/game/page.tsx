@@ -65,7 +65,6 @@ export default function GamePage() {
   const setActiveDockPanel = useGameStore((s) => s.setActiveDockPanel);
   const switchAgent = useGameStore((s) => s.switchAgent);
   const [tooltip, setTooltip] = useState<{ cx: number; cy: number; screenX: number; screenY: number } | null>(null);
-  const [serverStartTime] = useState(() => Date.now() - 24 * 60 * 60 * 1000);
 
   const chainRef = useRef<ChainService | null>(null);
 
@@ -297,10 +296,6 @@ export default function GamePage() {
               if (node) {
                 useGameStore.getState().requestFocus(nodeId);
               }
-            }}
-            serverStartTime={serverStartTime}
-            onTimeChange={() => {
-              /* TODO: Load historical state */
             }}
           />
 

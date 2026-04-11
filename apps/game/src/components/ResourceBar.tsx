@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useGameStore } from "@/store";
-import { NODE_CPU_PER_TURN } from "@/store/gameStore";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { sciFormat, sciRate } from "@/lib/format";
+import { sciFormat } from "@/lib/format";
 import type { FactionId } from "@/types";
 
 function LiveClock() {
@@ -49,19 +48,12 @@ function DeltaFlash({ resourceKey }: { resourceKey: string }) {
   );
 }
 
-/** Faction dot color and label */
+/** Faction colors and labels */
 const FACTION_DOT: Record<FactionId, string> = {
   community: "bg-teal-400",
   treasury: "bg-pink-400",
   founder: "bg-amber-400",
   "pro-max": "bg-blue-400",
-};
-
-const FACTION_TEXT: Record<FactionId, string> = {
-  community: "text-teal-400",
-  treasury: "text-pink-400",
-  founder: "text-amber-400",
-  "pro-max": "text-blue-400",
 };
 
 const FACTION_LABEL: Record<FactionId, string> = {
@@ -71,34 +63,43 @@ const FACTION_LABEL: Record<FactionId, string> = {
   "pro-max": "Professional",
 };
 
+/** Turn countdown — ticks down from 10s to 0 each turn */
+function TurnCountdown() {
+  const turn = useGameStore((s) => s.turn);
+  const [seconds, setSeconds] = useState(10);
+
+  useEffect(() => {
+    setSeconds(10);
+  }, [turn]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSeconds((s) => Math.max(0, s - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <span className="text-text-muted/50 tabular-nums">({seconds}s)</span>
+  );
+}
+
 export default function ResourceBar() {
   const { publicKey } = useWallet();
   const energy = useGameStore((s) => s.energy);
   const minerals = useGameStore((s) => s.minerals);
   const agntcBalance = useGameStore((s) => s.agntcBalance);
   const securedChains = useGameStore((s) => s.securedChains);
+  const minedChains = useGameStore((s) => s.minedChains);
   const turn = useGameStore((s) => s.turn);
-  const currentUserId = useGameStore((s) => s.currentUserId);
   const currentUserFaction = useGameStore((s) => s.currentUserFaction);
-  const agents = useGameStore((s) => s.agents);
   const blocknodes = useGameStore((s) => s.blocknodes);
+  const currentUserId = useGameStore((s) => s.currentUserId);
   const chainMode = useGameStore((s) => s.chainMode);
   const testnetBlocks = useGameStore((s) => s.testnetBlocks);
+  const cpuRegenPerTurn = useGameStore((s) => s.cpuRegenPerTurn);
 
-  // Agent-based resource rates (still relevant if agents exist)
-  const ownAgents = Object.values(agents).filter((a) => a.userId === currentUserId);
-  const totalMining = ownAgents.reduce((sum, a) => sum + (a.miningRate ?? 0), 0);
-  const totalCpuCost = ownAgents.reduce((sum, a) => sum + a.cpuPerTurn, 0);
-  const mineralGain = ownAgents.length;
-  const totalPressureCost = ownAgents.reduce((sum, a) => sum + (a.borderPressure ?? 0) * 0.1, 0);
-
-  // Blocknode maintenance
   const ownedBlocknodes = Object.values(blocknodes).filter((n) => n.ownerId === currentUserId);
-  const nodeMaintenance = ownedBlocknodes.length * NODE_CPU_PER_TURN;
-
-  // Net energy: mining minus all costs (agents + node maintenance)
-  const netEnergy = totalMining - totalCpuCost - nodeMaintenance;
-
   const faction = currentUserFaction ?? "community";
 
   return (
@@ -133,7 +134,7 @@ export default function ResourceBar() {
         <div className={`w-2 h-2 rounded-full animate-pulse ${FACTION_DOT[faction]}`} suppressHydrationWarning />
         <span className="text-sm font-heading text-text-primary" suppressHydrationWarning>{FACTION_LABEL[faction]} Faction</span>
         {ownedBlocknodes.length > 0 && (
-          <span className={`text-[10px] font-mono ${FACTION_TEXT[faction]}`}>
+          <span className="text-[10px] font-mono text-text-muted/60">
             {ownedBlocknodes.length} node{ownedBlocknodes.length !== 1 ? "s" : ""}
           </span>
         )}
@@ -141,59 +142,58 @@ export default function ResourceBar() {
 
       <div className="h-4 w-px bg-card-border" />
 
+      {/* ── Resources (spendable) ── */}
+
       {/* CPU Energy — yellow */}
-      <div className="flex items-center gap-1 group">
+      <div className="flex items-center gap-1">
         <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
         <span className="text-xs font-mono text-yellow-300 tabular-nums">{sciFormat(energy)}</span>
+        <span className="text-[9px] font-mono text-text-muted/40">CPU</span>
+        <span className="text-[9px] font-mono text-green-400/70">+{cpuRegenPerTurn}/t</span>
         <sup className="text-[9px] leading-none">
           <DeltaFlash resourceKey="energy" />
         </sup>
-        <span
-          className={`text-[9px] font-mono hidden group-hover:inline ${netEnergy >= 0 ? "text-green-400" : "text-red-400"}`}
-        >
-          {sciRate(netEnergy)}/t
-        </span>
-        {nodeMaintenance > 0 && (
-          <span className="text-[9px] font-mono hidden group-hover:inline text-yellow-400/50 ml-0.5">
-            −{nodeMaintenance}↓
-          </span>
-        )}
       </div>
 
-      {/* Secured Chains — green */}
+      {/* AGNTC — cyan */}
       <div className="flex items-center gap-1">
-        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-        <span className="text-xs font-mono text-emerald-300 tabular-nums">{securedChains}</span>
+        <div className="w-1.5 h-1.5 rounded-full bg-accent-cyan shrink-0" />
+        <span className="text-xs font-mono text-accent-cyan tabular-nums">
+          {sciFormat(agntcBalance)}
+        </span>
+        <span className="text-[9px] font-mono text-text-muted/40">AGNTC</span>
+        <sup className="text-[9px] leading-none">
+          <DeltaFlash resourceKey="agntc" />
+        </sup>
+      </div>
+
+      {/* Data on Chain — blue */}
+      <div className="flex items-center gap-1">
+        <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
+        <span className="text-xs font-mono text-blue-300 tabular-nums">{sciFormat(minerals)}</span>
+        <span className="text-[9px] font-mono text-text-muted/40">Data</span>
+      </div>
+
+      {/* ── Separator ── */}
+      <div className="h-4 w-px bg-card-border/50" />
+
+      {/* ── Scores (accumulating) ── */}
+
+      {/* Secured Chains — green, dimmer */}
+      <div className="flex items-center gap-1">
+        <span className="text-[10px] text-emerald-400/50">{'\u26D3'}</span>
+        <span className="text-xs font-mono text-emerald-300/60 tabular-nums">{securedChains}</span>
+        <span className="text-[9px] font-mono text-text-muted/30">Secured</span>
         <sup className="text-[9px] leading-none">
           <DeltaFlash resourceKey="securedChains" />
         </sup>
       </div>
 
-      {/* AGNTC */}
-      <div className="flex items-center gap-1 group">
-        <div className="w-1.5 h-1.5 rounded-full bg-accent-cyan shrink-0" />
-        <span className="text-xs font-mono text-accent-cyan tabular-nums">
-          {sciFormat(agntcBalance)}
-        </span>
-        <sup className="text-[9px] leading-none">
-          <DeltaFlash resourceKey="agntc" />
-        </sup>
-        {totalPressureCost > 0 && (
-          <span className="text-[9px] font-mono hidden group-hover:inline text-red-400">
-            {sciRate(-totalPressureCost)}/t
-          </span>
-        )}
-      </div>
-
-      {/* Data Frags */}
-      <div className="flex items-center gap-1 group">
-        <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
-        <span className="text-xs font-mono text-blue-300 tabular-nums">{sciFormat(minerals)}</span>
-        {mineralGain > 0 && (
-          <span className="text-[9px] font-mono hidden group-hover:inline text-blue-400">
-            {sciRate(mineralGain)}/t
-          </span>
-        )}
+      {/* Mined Chains — orange, dimmer */}
+      <div className="flex items-center gap-1">
+        <span className="text-[10px] text-orange-400/50">{'\u26CF'}</span>
+        <span className="text-xs font-mono text-orange-300/60 tabular-nums">{minedChains}</span>
+        <span className="text-[9px] font-mono text-text-muted/30">Mined</span>
       </div>
 
       {/* Spacer */}
@@ -218,10 +218,11 @@ export default function ResourceBar() {
 
       <div className="h-4 w-px bg-card-border" />
 
-      {/* Turn counter */}
+      {/* Turn counter with countdown */}
       <div className="flex items-center gap-1 mr-2">
         <span className="text-xs text-text-muted font-semibold">Turn</span>
         <span className="text-sm font-mono text-text-primary tabular-nums">{turn}</span>
+        <TurnCountdown />
       </div>
 
       {/* Live clock */}

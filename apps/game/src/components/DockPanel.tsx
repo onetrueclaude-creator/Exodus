@@ -6,7 +6,6 @@ import type { DockPanelId } from '@/store/gameStore';
 import NetworkChatRoom from '@/components/NetworkChatRoom';
 import AgentChat from '@/components/AgentChat';
 import TimechainStats from '@/components/TimechainStats';
-import TimeRewind from '@/components/TimeRewind';
 import type { Agent } from '@/types';
 import type { ChainService } from '@/services/chainService';
 
@@ -16,15 +15,12 @@ interface DockPanelProps {
   chainService: ChainService | null;
   onAgentDeploy: (newId: string) => void;
   onFocusNode: (nodeId: string) => void;
-  serverStartTime: number;
-  onTimeChange: (ts: number) => void;
 }
 
 const DOCK_ITEMS: { id: DockPanelId; icon: string; label: string }[] = [
-  { id: 'chat',       icon: '\u25C8', label: 'Network Chat' },
   { id: 'terminal',   icon: '\u25A3', label: 'Agent Terminal' },
   { id: 'stats',      icon: '\u25EB', label: 'Chain Stats' },
-  { id: 'timeRewind', icon: '\u25F7', label: 'Time Rewind' },
+  { id: 'chat',       icon: '\u25C8', label: 'Network Chat' },
 ];
 
 export default function DockPanel({
@@ -33,8 +29,6 @@ export default function DockPanel({
   chainService,
   onAgentDeploy,
   onFocusNode,
-  serverStartTime,
-  onTimeChange,
 }: DockPanelProps) {
   const activeDockPanel = useGameStore((s) => s.activeDockPanel);
   const setActiveDockPanel = useGameStore((s) => s.setActiveDockPanel);
@@ -68,19 +62,10 @@ export default function DockPanel({
         );
       case 'stats':
         return <TimechainStats />;
-      case 'timeRewind':
-        return (
-          <TimeRewind
-            serverStartTime={serverStartTime}
-            currentTime={Date.now()}
-            onTimeChange={onTimeChange}
-            alwaysExpanded
-          />
-        );
       default:
         return null;
     }
-  }, [activeDockPanel, onHaikuSubmit, currentAgent, chainService, onAgentDeploy, onFocusNode, serverStartTime, onTimeChange, setActiveDockPanel]);
+  }, [activeDockPanel, onHaikuSubmit, currentAgent, chainService, onAgentDeploy, onFocusNode, setActiveDockPanel]);
 
   return (
     <>

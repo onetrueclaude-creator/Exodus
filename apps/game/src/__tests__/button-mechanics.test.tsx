@@ -45,14 +45,6 @@ vi.mock("@/components/TimechainStats", () => ({
   default: () => <div data-testid="timechain-stats">TimechainStats</div>,
 }));
 
-vi.mock("@/components/TimeRewind", () => ({
-  default: ({ onTimeChange }: { onTimeChange: (ts: number) => void }) => (
-    <div data-testid="time-rewind">
-      <button onClick={() => onTimeChange(Date.now())}>TimeChangeMock</button>
-    </div>
-  ),
-}));
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -84,8 +76,6 @@ const defaultDockProps = {
   chainService: null,
   onAgentDeploy: vi.fn(),
   onFocusNode: vi.fn(),
-  serverStartTime: Date.now() - 60_000,
-  onTimeChange: vi.fn(),
 };
 
 // ===========================================================================
@@ -104,21 +94,19 @@ describe("DockPanel", () => {
 
   // ── Button rendering ──────────────────────────────────────────────────────
 
-  it("renders all 4 dock icon buttons", () => {
+  it("renders all 3 dock icon buttons", () => {
     render(<DockPanel {...defaultDockProps} />);
-    expect(screen.getByRole("button", { name: "Network Chat" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Agent Terminal" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Chain Stats" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "Time Rewind" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Network Chat" })).toBeDefined();
   });
 
   it("each dock button has a correct aria-label", () => {
     render(<DockPanel {...defaultDockProps} />);
     const labels = [
-      "Network Chat",
       "Agent Terminal",
       "Chain Stats",
-      "Time Rewind",
+      "Network Chat",
     ];
     for (const label of labels) {
       const btn = screen.getByRole("button", { name: label });
@@ -156,31 +144,18 @@ describe("DockPanel", () => {
     expect(useGameStore.getState().activeDockPanel).toBe("terminal");
   });
 
-  it("clicking Time Rewind sets activeDockPanel to timeRewind", () => {
-    render(<DockPanel {...defaultDockProps} />);
-    fireEvent.click(screen.getByRole("button", { name: "Time Rewind" }));
-    expect(useGameStore.getState().activeDockPanel).toBe("timeRewind");
-  });
-
   // ── Panel content rendering ───────────────────────────────────────────────
 
   it("no floating panel renders when activeDockPanel is null", () => {
     render(<DockPanel {...defaultDockProps} />);
     expect(screen.queryByTestId("network-chat-room")).toBeNull();
     expect(screen.queryByTestId("timechain-stats")).toBeNull();
-    expect(screen.queryByTestId("time-rewind")).toBeNull();
   });
 
   it("NetworkChatRoom panel renders when chat is active", () => {
     render(<DockPanel {...defaultDockProps} />);
     fireEvent.click(screen.getByRole("button", { name: "Network Chat" }));
     expect(screen.getByTestId("network-chat-room")).toBeDefined();
-  });
-
-  it("TimeRewind panel renders when timeRewind is active", () => {
-    render(<DockPanel {...defaultDockProps} />);
-    fireEvent.click(screen.getByRole("button", { name: "Time Rewind" }));
-    expect(screen.getByTestId("time-rewind")).toBeDefined();
   });
 
   it('shows "No agent selected" message for terminal/deploy when no currentAgent', () => {
@@ -530,12 +505,8 @@ describe("Integration — dock panel and tab navigation independence", () => {
     render(<DockPanel {...defaultDockProps} />);
     fireEvent.click(screen.getByRole("button", { name: "Network Chat" }));
     fireEvent.click(screen.getByRole("button", { name: "Chain Stats" }));
-    fireEvent.click(screen.getByRole("button", { name: "Time Rewind" }));
-    expect(useGameStore.getState().activeDockPanel).toBe("timeRewind");
-    // Only the Time Rewind panel should be visible
-    expect(screen.getByTestId("time-rewind")).toBeDefined();
+    expect(useGameStore.getState().activeDockPanel).toBe("stats");
     expect(screen.queryByTestId("network-chat-room")).toBeNull();
-    expect(screen.queryByTestId("timechain-stats")).toBeNull();
   });
 
   it("tab state and dock panel state are fully independent", () => {
@@ -547,12 +518,12 @@ describe("Integration — dock panel and tab navigation independence", () => {
     );
     // Set both to non-default values
     fireEvent.click(screen.getByText("Account View").closest("button")!);
-    fireEvent.click(screen.getByRole("button", { name: "Time Rewind" }));
+    fireEvent.click(screen.getByRole("button", { name: "Chain Stats" }));
     expect(useGameStore.getState().activeTab).toBe("account");
-    expect(useGameStore.getState().activeDockPanel).toBe("timeRewind");
+    expect(useGameStore.getState().activeDockPanel).toBe("stats");
 
     // Toggle dock panel off — tab unchanged
-    fireEvent.click(screen.getByRole("button", { name: "Time Rewind" }));
+    fireEvent.click(screen.getByRole("button", { name: "Chain Stats" }));
     expect(useGameStore.getState().activeDockPanel).toBeNull();
     expect(useGameStore.getState().activeTab).toBe("account");
 
