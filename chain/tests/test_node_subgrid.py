@@ -149,3 +149,9 @@ def test_zero_allocations_returns_zero_output():
     assert out.dev_points == 0.0
     assert out.research_points == 0.0
     assert out.storage_units == 0.0
+
+
+def test_coord_from_node_id_is_inverse_of_node_id_from_coord():
+    from agentic.lattice.node_subgrid import node_id_from_coord, coord_from_node_id
+    for x, y in [(0, 0), (10, 10), (-5, 7), (-20, -20), (999, -1000)]:
+        assert coord_from_node_id(node_id_from_coord(x, y)) == (x, y)

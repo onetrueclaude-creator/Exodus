@@ -24,6 +24,12 @@ def node_id_from_coord(x: int, y: int) -> str:
     return f"{x},{y}"
 
 
+def coord_from_node_id(node_id: str) -> tuple[int, int]:
+    """Parse a canonical node_id 'x,y' back into (x, y) integer coordinates."""
+    x_str, y_str = node_id.split(",")
+    return int(x_str), int(y_str)
+
+
 # NOTE: CellType and CellState are deliberately distinct from the legacy
 # SubcellType in chain/agentic/lattice/subgrid.py. The per-node model here
 # coexists with the per-wallet SubgridAllocator until PR C removes the legacy

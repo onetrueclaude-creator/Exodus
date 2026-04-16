@@ -67,6 +67,7 @@ from agentic.consensus.validator import Validator
 from agentic.lattice.allocator import CoordinateAllocator
 from agentic.lattice.claims import claim_cost
 from agentic.lattice.coordinate import GridCoordinate, resource_density, storage_slots
+from agentic.lattice.node_subgrid import compute_node_output, NodeOutput, coord_from_node_id
 from agentic.ledger.transaction import BirthTx, validate_birth
 from agentic.params import (
     ALPHA, BASE_BIRTH_COST, BASE_CPU_PER_SECURE_BLOCK, BETA, BLOCK_TIME_MS,
@@ -523,15 +524,11 @@ def _compute_per_wallet_yields(g: "GenesisState") -> dict:
     Returns an empty dict when LEGACY_PER_WALLET_SUBGRID is True (the default),
     so the caller can distinguish "legacy path" from "no active cells".
     """
-    from agentic.lattice.node_subgrid import compute_node_output, NodeOutput
-    from agentic.lattice.coordinate import resource_density
-
     totals: dict[bytes, NodeOutput] = {}
     if LEGACY_PER_WALLET_SUBGRID:
         return totals
     for node_id, ns in g.node_subgrids.items():
-        x_str, y_str = node_id.split(",")
-        x, y = int(x_str), int(y_str)
+        x, y = coord_from_node_id(node_id)
         d = resource_density(x, y)
         # Per-node ring = Chebyshev distance from origin (whitepaper §17, per-coord hardness)
         r = max(abs(x), abs(y))
