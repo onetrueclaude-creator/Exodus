@@ -1,6 +1,7 @@
 import pytest
 from agentic.lattice.node_subgrid import (
     NodeSubgrid, Cell, CellState, CellType, WARMUP_BLOCKS,
+    compute_node_output,
 )
 
 
@@ -95,3 +96,46 @@ def test_commit_diff_reassigning_warmup_cell_resets_clock_and_pending_type():
     assert ns.cells[0].state is CellState.ACTIVE
     assert ns.cells[0].type is CellType.DEVELOP
     assert ns.cells[0].pending_type is None
+
+
+def test_whitepaper_example_1_balanced_ring_1():
+    # §17.2 Example 1: ring 1, density 0.6, 16 of each at level 1
+    ns = NodeSubgrid.new(node_id="c", owner=b"w", created_at_block=0)
+    diffs = []
+    for i in range(16):
+        diffs.append((i, CellType.SECURE))
+    for i in range(16, 32):
+        diffs.append((i, CellType.DEVELOP))
+    for i in range(32, 48):
+        diffs.append((i, CellType.RESEARCH))
+    for i in range(48, 64):
+        diffs.append((i, CellType.STORAGE))
+    ns.commit_diff(diffs, current_block=0)
+    ns.tick(current_block=WARMUP_BLOCKS)
+
+    out = compute_node_output(ns, density=0.6, ring=1)
+    assert out.agntc == pytest.approx(0.300, abs=1e-4)
+    assert out.dev_points == pytest.approx(16.000, abs=1e-4)
+    assert out.research_points == pytest.approx(8.000, abs=1e-4)
+    assert out.storage_units == pytest.approx(16.000, abs=1e-4)
+
+
+def test_whitepaper_example_2_max_secure_ring_10():
+    # §17.2 Example 2: ring 10, density 0.5, 64 Secure level 5
+    ns = NodeSubgrid.new(node_id="c", owner=b"w", created_at_block=0)
+    diffs = [(i, CellType.SECURE) for i in range(64)]
+    ns.commit_diff(diffs, current_block=0)
+    ns.tick(current_block=WARMUP_BLOCKS)
+    ns.set_type_level(CellType.SECURE, 5)
+
+    out = compute_node_output(ns, density=0.5, ring=10)
+    # 0.5 × 64 × 5^0.8 × 0.5 / 160
+    assert out.agntc == pytest.approx(0.362, abs=1e-3)
+
+
+def test_warmup_cells_do_not_yield():
+    ns = NodeSubgrid.new(node_id="c", owner=b"w", created_at_block=0)
+    ns.commit_diff([(i, CellType.SECURE) for i in range(16)], current_block=0)
+    # Still in warmup — no yield
+    out = compute_node_output(ns, density=1.0, ring=1)
+    assert out.agntc == 0.0

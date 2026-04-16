@@ -5,11 +5,16 @@ via commit_diff() enter WARMUP for 100 blocks before producing output.
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from enum import Enum
 from typing import Iterable
 
-from agentic.params import SUBGRID_SIZE
+from agentic.params import (
+    SUBGRID_SIZE,
+    BASE_SECURE_RATE, BASE_DEVELOP_RATE, BASE_RESEARCH_RATE, BASE_STORAGE_RATE,
+    LEVEL_EXPONENT, HARDNESS_MULTIPLIER,
+)
 
 WARMUP_BLOCKS: int = 100
 
@@ -90,3 +95,31 @@ class NodeSubgrid:
         if level < 1:
             raise ValueError(f"level must be >= 1, got {level}")
         self.type_levels[cell_type] = level
+
+
+@dataclass
+class NodeOutput:
+    agntc: float = 0.0
+    dev_points: float = 0.0
+    research_points: float = 0.0
+    storage_units: float = 0.0
+
+
+def _mult(level: int) -> float:
+    return math.pow(max(1, level), LEVEL_EXPONENT)
+
+
+def compute_node_output(ns: NodeSubgrid, *, density: float, ring: int) -> NodeOutput:
+    """Per-block yield for a single node. Only ACTIVE cells produce output."""
+    hardness = max(1, HARDNESS_MULTIPLIER * max(1, ring))
+    n_sec = ns.count_active(CellType.SECURE)
+    n_dev = ns.count_active(CellType.DEVELOP)
+    n_res = ns.count_active(CellType.RESEARCH)
+    n_sto = ns.count_active(CellType.STORAGE)
+    return NodeOutput(
+        agntc=BASE_SECURE_RATE * n_sec * _mult(ns.type_levels[CellType.SECURE])
+              * density / hardness,
+        dev_points=BASE_DEVELOP_RATE * n_dev * _mult(ns.type_levels[CellType.DEVELOP]),
+        research_points=BASE_RESEARCH_RATE * n_res * _mult(ns.type_levels[CellType.RESEARCH]),
+        storage_units=BASE_STORAGE_RATE * n_sto * _mult(ns.type_levels[CellType.STORAGE]),
+    )
