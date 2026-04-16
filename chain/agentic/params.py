@@ -130,3 +130,8 @@ CANONICAL_CLAUDE_HASH = "823c3f76b2b13ae2a9d50c84c51c2610146279e2eacf424d3c08e1e
 NODE_HASH_LENGTH = 64
 NODE_SESSION_TIMEOUT_S = 3600
 MAX_SESSIONS_PER_WALLET = 1
+
+# ── Empire Panel rollout (remove in PR C) ──
+# While ON, yield computation still reads per-wallet SubgridAllocator.
+# When OFF, reads per-node NodeSubgrid and ignores the legacy field.
+LEGACY_PER_WALLET_SUBGRID: bool = True
