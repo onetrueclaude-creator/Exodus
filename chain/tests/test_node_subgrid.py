@@ -139,3 +139,13 @@ def test_warmup_cells_do_not_yield():
     # Still in warmup — no yield
     out = compute_node_output(ns, density=1.0, ring=1)
     assert out.agntc == 0.0
+
+
+def test_zero_allocations_returns_zero_output():
+    ns = NodeSubgrid.new(node_id="c", owner=b"w", created_at_block=0)
+    # Never assign any cells — all 64 remain ACTIVE but untyped.
+    out = compute_node_output(ns, density=1.0, ring=1)
+    assert out.agntc == 0.0
+    assert out.dev_points == 0.0
+    assert out.research_points == 0.0
+    assert out.storage_units == 0.0

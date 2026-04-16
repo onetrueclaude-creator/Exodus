@@ -19,6 +19,10 @@ from agentic.params import (
 WARMUP_BLOCKS: int = 100
 
 
+# NOTE: CellType and CellState are deliberately distinct from the legacy
+# SubcellType in chain/agentic/lattice/subgrid.py. The per-node model here
+# coexists with the per-wallet SubgridAllocator until PR C removes the legacy
+# file entirely.
 class CellType(Enum):
     SECURE = "secure"
     DEVELOP = "develop"
@@ -99,6 +103,7 @@ class NodeSubgrid:
 
 @dataclass
 class NodeOutput:
+    """Per-block resource output for a single node."""
     agntc: float = 0.0
     dev_points: float = 0.0
     research_points: float = 0.0
