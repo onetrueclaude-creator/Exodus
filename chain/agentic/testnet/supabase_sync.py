@@ -32,7 +32,7 @@ load_dotenv(_CHAIN_ROOT / ".env")
 load_dotenv(_CHAIN_ROOT.parent / ".env.local")
 
 from agentic.lattice.coordinate import resource_density, storage_slots
-from agentic.params import GENESIS_FACTION_MASTERS, GENESIS_HOMENODES, GENESIS_ORIGIN
+from agentic.params import GENESIS_FACTION_MASTERS, GENESIS_HOMENODES, GENESIS_ORIGIN, LEGACY_PER_WALLET_SUBGRID
 from agentic.testnet.genesis import GenesisState
 
 # Sets for fast O(1) lookup during sync
@@ -108,6 +108,11 @@ def sync_to_supabase(g: GenesisState, next_block_in: float = 60.0) -> None:
 
     try:
         _sync_subgrid_allocations(g)
+    except Exception:
+        pass
+
+    try:
+        _sync_node_subgrids(g)
     except Exception:
         pass
 
@@ -290,6 +295,41 @@ def _sync_subgrid_allocations(g: GenesisState) -> None:
 
     if rows:
         client.table("subgrid_allocations").upsert(rows).execute()
+
+
+def _sync_node_subgrids(g: GenesisState) -> None:
+    """Upsert per-node cell arrays to the node_subgrids Supabase table.
+
+    No-op when LEGACY_PER_WALLET_SUBGRID is on — in that mode, the legacy
+    _sync_subgrid_allocations path is authoritative.
+    """
+    if LEGACY_PER_WALLET_SUBGRID:
+        return
+    client = _get_client()
+    if client is None:
+        return
+    wallet_index_by_pubkey = {w.public_key: i for i, w in enumerate(g.wallets)}
+    rows = []
+    for node_id, ns in g.node_subgrids.items():
+        owner_idx = wallet_index_by_pubkey.get(ns.owner)
+        if owner_idx is None:
+            continue
+        rows.append({
+            "node_id": node_id,
+            "owner_wallet": owner_idx,
+            "cells": [
+                {
+                    "type": c.type.value if c.type else None,
+                    "state": c.state.value,
+                    "since_block": c.since_block,
+                    "pending_type": c.pending_type.value if c.pending_type else None,
+                }
+                for c in ns.cells
+            ],
+            "type_levels": {ct.value: lvl for ct, lvl in ns.type_levels.items()},
+        })
+    if rows:
+        client.table("node_subgrids").upsert(rows).execute()
 
 
 def _sync_resource_rewards(g: GenesisState) -> None:
