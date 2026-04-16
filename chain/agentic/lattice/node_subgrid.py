@@ -19,6 +19,11 @@ from agentic.params import (
 WARMUP_BLOCKS: int = 100
 
 
+def node_id_from_coord(x: int, y: int) -> str:
+    """Canonical node_id format for per-node subgrids: 'x,y' (comma-separated)."""
+    return f"{x},{y}"
+
+
 # NOTE: CellType and CellState are deliberately distinct from the legacy
 # SubcellType in chain/agentic/lattice/subgrid.py. The per-node model here
 # coexists with the per-wallet SubgridAllocator until PR C removes the legacy

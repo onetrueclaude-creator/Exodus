@@ -1,4 +1,5 @@
 from agentic.testnet.genesis import create_genesis
+from agentic.lattice.node_subgrid import node_id_from_coord
 from agentic.params import GENESIS_HOMENODES
 
 
@@ -21,7 +22,7 @@ def test_genesis_creates_one_node_subgrid_per_homenode_claim():
     ]
     assert len(homenode_claims) > 0
     for claim in homenode_claims:
-        claim_id = f"{claim.coordinate.x},{claim.coordinate.y}"
+        claim_id = node_id_from_coord(claim.coordinate.x, claim.coordinate.y)
         assert claim_id in g.node_subgrids, f"Missing node_subgrid for homenode {claim_id}"
         ns = g.node_subgrids[claim_id]
         assert ns.owner == claim.owner
@@ -37,7 +38,7 @@ def test_genesis_non_homenode_claims_have_no_node_subgrid():
         if (c.coordinate.x, c.coordinate.y) not in homenode_coords
     ]
     for claim in non_homenode_claims:
-        claim_id = f"{claim.coordinate.x},{claim.coordinate.y}"
+        claim_id = node_id_from_coord(claim.coordinate.x, claim.coordinate.y)
         assert claim_id not in g.node_subgrids, (
             f"node_subgrid unexpectedly present for non-homenode {claim_id}"
         )
