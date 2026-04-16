@@ -5,7 +5,7 @@ via commit_diff() enter WARMUP for 100 blocks before producing output.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Iterable
 
