@@ -73,3 +73,20 @@ def test_commit_subgrid_rejects_unknown_node():
             json={"wallet_index": 0, "diffs": []},
         )
     assert resp.status_code == 404
+
+
+def test_commit_subgrid_rejects_invalid_new_type():
+    client.post("/api/reset")
+    g = _g()
+    node_id = next(iter(g.node_subgrids))
+    wallet_index = next(
+        i for i, w in enumerate(g.wallets) if w.public_key == g.node_subgrids[node_id].owner
+    )
+    resp = client.post(
+        f"/api/resources/node/{node_id}/commit",
+        json={
+            "wallet_index": wallet_index,
+            "diffs": [{"index": 0, "new_type": "mine"}],  # "mine" is not a valid CellType
+        },
+    )
+    assert resp.status_code == 422, f"expected 422, got {resp.status_code}: {resp.text}"

@@ -11,7 +11,7 @@ import asyncio
 import json as _json
 import os as _os
 import time
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -1153,7 +1153,7 @@ def assign_subgrid(request: Request, wallet_index: int, req: SubgridAssignReques
 
 class NodeSubgridDiff(BaseModel):
     index: int
-    new_type: str | None  # "secure" | "develop" | "research" | "storage" | null
+    new_type: Literal["secure", "develop", "research", "storage"] | None
 
 
 class CommitSubgridRequest(BaseModel):

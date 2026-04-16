@@ -327,6 +327,7 @@ def _sync_node_subgrids(g: GenesisState) -> None:
                 for c in ns.cells
             ],
             "type_levels": {ct.value: lvl for ct, lvl in ns.type_levels.items()},
+            "updated_at": _iso_now(),
         })
     if rows:
         client.table("node_subgrids").upsert(rows).execute()

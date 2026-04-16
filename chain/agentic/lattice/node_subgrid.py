@@ -107,6 +107,13 @@ class NodeSubgrid:
         )
 
     def set_type_level(self, cell_type: CellType, level: int) -> None:
+        """Set the level for a cell type (affects yield via level^0.8).
+
+        NOTE(Phase 3.1): Level-up action is not yet exposed via an API endpoint.
+        The UI (PR B) shows levels and costs but the commit path is disabled
+        pending a dedicated design for Dev Point spending. See
+        docs/superpowers/specs/2026-04-16-empire-panel-design.md "Open Items".
+        """
         if level < 1:
             raise ValueError(f"level must be >= 1, got {level}")
         self.type_levels[cell_type] = level
