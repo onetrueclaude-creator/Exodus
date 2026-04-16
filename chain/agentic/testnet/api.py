@@ -1147,6 +1147,51 @@ def assign_subgrid(request: Request, wallet_index: int, req: SubgridAssignReques
     return {"status": "ok", "free_cells": alloc.free_cells}
 
 
+# ---------------------------------------------------------------------------
+# Node subgrid commit endpoint (per-node 64-cell lifecycle, whitepaper §16)
+# ---------------------------------------------------------------------------
+
+class NodeSubgridDiff(BaseModel):
+    index: int
+    new_type: str | None  # "secure" | "develop" | "research" | "storage" | null
+
+
+class CommitSubgridRequest(BaseModel):
+    wallet_index: int
+    diffs: list[NodeSubgridDiff]
+
+
+@app.post("/api/resources/node/{node_id}/commit")
+def commit_subgrid(node_id: str, req: CommitSubgridRequest) -> dict:
+    """Commit a cell-level diff to a node's subgrid. Cells enter WARMUP."""
+    from agentic.lattice.node_subgrid import CellType, WARMUP_BLOCKS
+
+    g = _g()
+    ns = g.node_subgrids.get(node_id)
+    if ns is None:
+        raise HTTPException(status_code=404, detail=f"No subgrid for node {node_id}")
+
+    if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=403, detail="Not the owner")
+    wallet = g.wallets[req.wallet_index]
+    if wallet.public_key != ns.owner:
+        raise HTTPException(status_code=403, detail="Not the owner")
+
+    parsed: list[tuple[int, CellType | None]] = []
+    for d in req.diffs:
+        t = CellType(d.new_type) if d.new_type else None
+        parsed.append((d.index, t))
+
+    current_block = g.mining_engine.total_blocks_processed
+    ns.commit_diff(parsed, current_block=current_block)
+
+    return {
+        "node_id": node_id,
+        "warmup_until_block": current_block + WARMUP_BLOCKS,
+        "cells_changed": len(parsed),
+    }
+
+
 @app.get("/api/coordinate/{x}/{y}", response_model=CoordinateInfo)
 def get_coordinate(x: int, y: int) -> CoordinateInfo:
     g = _g()
