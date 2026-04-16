@@ -1162,8 +1162,14 @@ class CommitSubgridRequest(BaseModel):
 
 
 @app.post("/api/resources/node/{node_id}/commit")
-def commit_subgrid(node_id: str, req: CommitSubgridRequest) -> dict:
-    """Commit a cell-level diff to a node's subgrid. Cells enter WARMUP."""
+@limiter.limit("5/10seconds")
+def commit_subgrid(request: Request, node_id: str, req: CommitSubgridRequest) -> dict:
+    """Commit a cell-level diff to a node's subgrid. Cells enter WARMUP.
+
+    warmup_until_block is the first block at which warmup cells may
+    transition to ACTIVE (not the last warmup block).
+    """
+    _check_node_hash(request)
     from agentic.lattice.node_subgrid import CellType, WARMUP_BLOCKS
 
     g = _g()
