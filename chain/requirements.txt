@@ -1,7 +1,7 @@
 # Production dependencies (used by the API server)
 fastapi>=0.136.0
 uvicorn>=0.34
-supabase>=2.0
+supabase>=2.28.3
 python-dotenv>=1.2.2
 slowapi>=0.1.9
 pydantic>=2.13.3
