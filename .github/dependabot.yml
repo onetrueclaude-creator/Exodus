@@ -27,6 +27,11 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      # eslint 10+ blocked by eslint-config-next bundling an older
+      # eslint-plugin-react that uses pre-ESLint-10 rule context APIs
+      # (PR #58 closed 2026-04-22). Revisit when upstream releases.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
