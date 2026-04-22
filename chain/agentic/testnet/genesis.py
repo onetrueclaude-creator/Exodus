@@ -22,10 +22,13 @@ from agentic.verification.agent import VerificationAgent, AgentState
 from agentic.verification.pipeline import VerificationPipeline
 from agentic.lattice.epoch import EpochTracker
 from agentic.lattice.subgrid import SubgridAllocator
+from agentic.lattice.node_subgrid import NodeSubgrid, node_id_from_coord
 from agentic.params import (
     GENESIS_BALANCE, BIRTH_PROGRAM_ID,
     GENESIS_ORIGIN, GENESIS_FACTION_MASTERS, GENESIS_HOMENODES,
 )
+
+_GENESIS_HOMENODE_COORDS: frozenset[tuple[int, int]] = frozenset(GENESIS_HOMENODES)
 
 
 @dataclass
@@ -40,6 +43,7 @@ class GenesisState:
     agents: list[VerificationAgent] = field(default_factory=list)
     epoch_tracker: EpochTracker = field(default_factory=EpochTracker)
     subgrid_allocators: dict = field(default_factory=dict)
+    node_subgrids: dict[str, NodeSubgrid] = field(default_factory=dict)
     resource_totals: dict = field(default_factory=dict)
     viewing_keys: dict = None
     fee_engine: FeeEngine = field(default_factory=FeeEngine)
@@ -171,6 +175,17 @@ def create_genesis(
         if claim.owner not in subgrid_allocators:
             subgrid_allocators[claim.owner] = SubgridAllocator(owner=claim.owner)
 
+    # -- NodeSubgrid (one per homenode claim, keyed by "x,y" string) ----------
+    node_subgrids = {}
+    for claim in claim_registry.all_active_claims():
+        coord_tuple = (claim.coordinate.x, claim.coordinate.y)
+        if coord_tuple not in _GENESIS_HOMENODE_COORDS:
+            continue
+        node_id = node_id_from_coord(claim.coordinate.x, claim.coordinate.y)
+        node_subgrids[node_id] = NodeSubgrid.new(
+            node_id=node_id, owner=claim.owner, created_at_block=0,
+        )
+
     # -- Resource totals (one per wallet, all zeroed at genesis) --------------
     resource_totals = {
         w.public_key: {
@@ -193,5 +208,6 @@ def create_genesis(
         viewing_keys=viewing_keys,
         epoch_tracker=epoch_tracker,
         subgrid_allocators=subgrid_allocators,
+        node_subgrids=node_subgrids,
         resource_totals=resource_totals,
     )

@@ -11,7 +11,7 @@ import asyncio
 import json as _json
 import os as _os
 import time
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -67,10 +67,12 @@ from agentic.consensus.validator import Validator
 from agentic.lattice.allocator import CoordinateAllocator
 from agentic.lattice.claims import claim_cost
 from agentic.lattice.coordinate import GridCoordinate, resource_density, storage_slots
+from agentic.lattice.node_subgrid import compute_node_output, NodeOutput, coord_from_node_id
 from agentic.ledger.transaction import BirthTx, validate_birth
 from agentic.params import (
     ALPHA, BASE_BIRTH_COST, BASE_CPU_PER_SECURE_BLOCK, BETA, BLOCK_TIME_MS,
-    CANONICAL_CLAUDE_HASH, NODE_GRID_SPACING, SECURE_REWARD_IMMEDIATE,
+    CANONICAL_CLAUDE_HASH, LEGACY_PER_WALLET_SUBGRID, NODE_GRID_SPACING,
+    SECURE_REWARD_IMMEDIATE,
 )
 from agentic.testnet.genesis import GenesisState, create_genesis
 from agentic.testnet.node_session import (
@@ -499,6 +501,47 @@ async def _auto_mine_loop() -> None:
             pass  # auto-miner never crashes
 
 
+def _apply_subgrid_yields(g: "GenesisState", owner: bytes, out: "object") -> None:
+    """Credit per-node (or per-wallet) resource outputs to g.resource_totals.
+
+    Intentionally does NOT credit AGNTC — block AGNTC rewards are handled
+    upstream by g.mining_engine.mint_block_rewards, matching legacy semantics.
+    """
+    if owner not in g.resource_totals:
+        g.resource_totals[owner] = {
+            "dev_points": 0.0,
+            "research_points": 0.0,
+            "storage_units": 0.0,
+        }
+    g.resource_totals[owner]["dev_points"] += out.dev_points
+    g.resource_totals[owner]["research_points"] += out.research_points
+    g.resource_totals[owner]["storage_units"] += out.storage_units
+
+
+def _compute_per_wallet_yields(g: "GenesisState") -> dict:
+    """Sum per-node outputs into a per-wallet total.
+
+    Returns an empty dict when LEGACY_PER_WALLET_SUBGRID is True (the default),
+    so the caller can distinguish "legacy path" from "no active cells".
+    """
+    totals: dict[bytes, NodeOutput] = {}
+    if LEGACY_PER_WALLET_SUBGRID:
+        return totals
+    for node_id, ns in g.node_subgrids.items():
+        x, y = coord_from_node_id(node_id)
+        d = resource_density(x, y)
+        # Per-node ring = Chebyshev distance from origin (whitepaper §17, per-coord hardness)
+        r = max(abs(x), abs(y))
+        out = compute_node_output(ns, density=d, ring=r)
+        if ns.owner not in totals:
+            totals[ns.owner] = NodeOutput()
+        totals[ns.owner].agntc += out.agntc
+        totals[ns.owner].dev_points += out.dev_points
+        totals[ns.owner].research_points += out.research_points
+        totals[ns.owner].storage_units += out.storage_units
+    return totals
+
+
 def _do_mine(g: GenesisState) -> dict:
     """Core mining logic shared by auto-miner and /api/mine."""
     global _last_block_time
@@ -585,26 +628,27 @@ def _do_mine(g: GenesisState) -> dict:
                             amount=micro, slot=block_slot,
                         ), g.ledger_state)
 
-        # Distribute subgrid outputs for all allocators
-        for owner, alloc in g.subgrid_allocators.items():
-            claims_for_owner = [c for c in claims_input if c["owner"] == owner]
-            if not claims_for_owner:
-                continue
-            density = resource_density(
-                claims_for_owner[0]["coordinate"].x,
-                claims_for_owner[0]["coordinate"].y,
-            )
-            epoch_h = g.epoch_tracker.hardness(g.epoch_tracker.current_ring)
-            out = alloc.compute_output(density=density, epoch_hardness=epoch_h)
-            if owner not in g.resource_totals:
-                g.resource_totals[owner] = {
-                    "dev_points": 0.0,
-                    "research_points": 0.0,
-                    "storage_units": 0.0,
-                }
-            g.resource_totals[owner]["dev_points"] += out.dev_points
-            g.resource_totals[owner]["research_points"] += out.research_points
-            g.resource_totals[owner]["storage_units"] += out.storage_units
+        # Distribute subgrid outputs — legacy per-wallet path or new per-node path
+        if LEGACY_PER_WALLET_SUBGRID:
+            for owner, alloc in g.subgrid_allocators.items():
+                claims_for_owner = [c for c in claims_input if c["owner"] == owner]
+                if not claims_for_owner:
+                    continue
+                density = resource_density(
+                    claims_for_owner[0]["coordinate"].x,
+                    claims_for_owner[0]["coordinate"].y,
+                )
+                epoch_h = g.epoch_tracker.hardness(g.epoch_tracker.current_ring)
+                out = alloc.compute_output(density=density, epoch_hardness=epoch_h)
+                _apply_subgrid_yields(g, owner, out)
+        else:
+            yields = _compute_per_wallet_yields(g)
+            for owner, out in yields.items():
+                _apply_subgrid_yields(g, owner, out)
+            # Tick all node subgrids so warmup cells promote to ACTIVE
+            current_block = g.mining_engine.total_blocks_processed
+            for ns in g.node_subgrids.values():
+                ns.tick(current_block=current_block)
 
     # --- Machine faction auto-expansion tick ---------------------------------
     if _machine_behavior is not None:
@@ -1101,6 +1145,57 @@ def assign_subgrid(request: Request, wallet_index: int, req: SubgridAssignReques
     alloc.assign(SubcellType.RESEARCH, req.research)
     alloc.assign(SubcellType.STORAGE, req.storage)
     return {"status": "ok", "free_cells": alloc.free_cells}
+
+
+# ---------------------------------------------------------------------------
+# Node subgrid commit endpoint (per-node 64-cell lifecycle, whitepaper §16)
+# ---------------------------------------------------------------------------
+
+class NodeSubgridDiff(BaseModel):
+    index: int
+    new_type: Literal["secure", "develop", "research", "storage"] | None
+
+
+class CommitSubgridRequest(BaseModel):
+    wallet_index: int
+    diffs: list[NodeSubgridDiff]
+
+
+@app.post("/api/resources/node/{node_id}/commit")
+@limiter.limit("5/10seconds")
+def commit_subgrid(request: Request, node_id: str, req: CommitSubgridRequest) -> dict:
+    """Commit a cell-level diff to a node's subgrid. Cells enter WARMUP.
+
+    warmup_until_block is the first block at which warmup cells may
+    transition to ACTIVE (not the last warmup block).
+    """
+    _check_node_hash(request)
+    from agentic.lattice.node_subgrid import CellType, WARMUP_BLOCKS
+
+    g = _g()
+    ns = g.node_subgrids.get(node_id)
+    if ns is None:
+        raise HTTPException(status_code=404, detail=f"No subgrid for node {node_id}")
+
+    if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=403, detail="Not the owner")
+    wallet = g.wallets[req.wallet_index]
+    if wallet.public_key != ns.owner:
+        raise HTTPException(status_code=403, detail="Not the owner")
+
+    parsed: list[tuple[int, CellType | None]] = []
+    for d in req.diffs:
+        t = CellType(d.new_type) if d.new_type else None
+        parsed.append((d.index, t))
+
+    current_block = g.mining_engine.total_blocks_processed
+    ns.commit_diff(parsed, current_block=current_block)
+
+    return {
+        "node_id": node_id,
+        "warmup_until_block": current_block + WARMUP_BLOCKS,
+        "cells_changed": len(parsed),
+    }
 
 
 @app.get("/api/coordinate/{x}/{y}", response_model=CoordinateInfo)
