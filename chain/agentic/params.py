@@ -131,6 +131,22 @@ NODE_HASH_LENGTH = 64
 NODE_SESSION_TIMEOUT_S = 3600
 MAX_SESSIONS_PER_WALLET = 1
 
+# ── Treasury Operator HMAC Hooks (Phase 2 of zkagentic-treasury integration) ──
+# The Treasury operator (separate process — see github.com/onetrueclaude-creator/
+# zkagentic-treasury TIP-0) authenticates to the chain via HMAC-SHA256 over
+# (method + path + timestamp_ms + sha256_hex(body)).  These constants govern
+# the verification window and registered operator identity.
+#
+# TREASURY_OPERATOR_PUBKEY_HASH and TREASURY_OPERATOR_SECRET_ENV are intentionally
+# environment-driven; they MUST be set per deployment, not committed to the
+# repository.  In testnet, missing config disables Treasury hooks (404 on the
+# heartbeat endpoint) — chain operates identically without an operator.
+TREASURY_HMAC_HEADER_SIGNATURE = "X-Treasury-Signature"
+TREASURY_HMAC_HEADER_TIMESTAMP = "X-Treasury-Timestamp"
+TREASURY_HMAC_HEADER_PUBKEY_HASH = "X-Treasury-Pubkey-Hash"
+TREASURY_HMAC_TIMESTAMP_WINDOW_MS = 5 * 60 * 1000   # ±5 min window for replay resistance
+TREASURY_HEARTBEAT_FRESH_BLOCKS = 2                  # operator considered online if heartbeat ≤ N blocks old
+
 # ── Empire Panel rollout (remove in PR C) ──
 # While ON, yield computation still reads per-wallet SubgridAllocator.
 # When OFF, reads per-node NodeSubgrid and ignores the legacy field.

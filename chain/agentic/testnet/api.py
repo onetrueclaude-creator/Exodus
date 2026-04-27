@@ -8,6 +8,8 @@ Run with:
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import hmac
 import json as _json
 import os as _os
 import time
@@ -1996,6 +1998,173 @@ def node_session_status(wallet_index: int) -> NodeSessionResponse:
         expires_at=session.expires_at.isoformat() + "Z",
         claude_hash=session.claude_hash,
     )
+
+
+# ---------------------------------------------------------------------------
+# Treasury operator HMAC hooks (Phase 2 of zkagentic-treasury integration)
+#
+# Per TIP-0 §5 of github.com/onetrueclaude-creator/zkagentic-treasury, the
+# Treasury operator runs as a separate process and authenticates via HMAC
+# over (method + path + timestamp_ms + sha256_hex(body)). Two endpoints:
+#   - POST /api/treasury/heartbeat — operator submits liveness + balance
+#   - GET  /api/treasury/health    — public health view (no auth)
+#
+# Configuration (environment variables — never committed):
+#   TREASURY_OPERATOR_PUBKEY_HASH  — registered operator pubkey hash
+#   TREASURY_OPERATOR_SECRET       — shared HMAC secret
+# Both must be set; otherwise the heartbeat endpoint returns 404 and the
+# chain operates identically without an operator (existing
+# MachineAgentBehavior stub continues the East walk).
+# ---------------------------------------------------------------------------
+
+from agentic.params import (  # noqa: E402  (placed near use site)
+    TREASURY_HEARTBEAT_FRESH_BLOCKS,
+    TREASURY_HMAC_HEADER_PUBKEY_HASH,
+    TREASURY_HMAC_HEADER_SIGNATURE,
+    TREASURY_HMAC_HEADER_TIMESTAMP,
+    TREASURY_HMAC_TIMESTAMP_WINDOW_MS,
+)
+
+_last_treasury_heartbeat: dict | None = None
+
+
+class TreasuryHeartbeatRequest(BaseModel):
+    """Heartbeat payload from a registered Treasury operator."""
+
+    type: str = "treasury.heartbeat"
+    block: int
+    blocks_since_last_action: int
+    balance_agntc: float
+    claims: int
+    timestamp: float
+
+
+class TreasuryHealthResponse(BaseModel):
+    """Public health view of the registered Treasury operator."""
+
+    operator_online: bool
+    last_heartbeat_block: Optional[int] = None
+    last_heartbeat_timestamp_ms: Optional[int] = None
+    blocks_since_last_heartbeat: Optional[int] = None
+    operator_pubkey_hash: Optional[str] = None
+    last_balance_agntc: Optional[float] = None
+    last_claims_count: Optional[int] = None
+
+
+def _treasury_config() -> tuple[str, bytes] | None:
+    """Return (pubkey_hash, secret_bytes) if Treasury hooks are configured.
+
+    Both env vars must be set; otherwise None is returned and Treasury
+    endpoints respond 404. This is the operator-offline mode.
+    """
+    expected_pkh = _os.environ.get("TREASURY_OPERATOR_PUBKEY_HASH", "").strip()
+    secret = _os.environ.get("TREASURY_OPERATOR_SECRET", "").encode()
+    if not expected_pkh or not secret:
+        return None
+    return expected_pkh, secret
+
+
+def _verify_treasury_hmac(request: Request, body: bytes) -> dict:
+    """Verify Treasury HMAC headers per TIP-0 §5. Raises HTTPException on failure.
+
+    Returns: {"operator_pubkey_hash", "timestamp_ms"} on success.
+    """
+    cfg = _treasury_config()
+    if cfg is None:
+        raise HTTPException(status_code=404, detail="Treasury hooks not configured")
+    expected_pkh, secret = cfg
+
+    sig = request.headers.get(TREASURY_HMAC_HEADER_SIGNATURE, "")
+    ts_str = request.headers.get(TREASURY_HMAC_HEADER_TIMESTAMP, "")
+    pkh = request.headers.get(TREASURY_HMAC_HEADER_PUBKEY_HASH, "")
+    if not sig or not ts_str or not pkh:
+        raise HTTPException(status_code=401, detail="Missing Treasury HMAC headers")
+
+    if not hmac.compare_digest(pkh, expected_pkh):
+        raise HTTPException(status_code=403, detail="Treasury pubkey not registered")
+
+    try:
+        ts_ms = int(ts_str)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail="Invalid Treasury timestamp") from exc
+    now_ms = int(time.time() * 1000)
+    if abs(now_ms - ts_ms) > TREASURY_HMAC_TIMESTAMP_WINDOW_MS:
+        raise HTTPException(status_code=401, detail="Treasury timestamp outside window")
+
+    body_hash = hashlib.sha256(body).hexdigest()
+    method = request.method.upper()
+    path = request.url.path
+    payload = f"{method}\n{path}\n{ts_ms}\n{body_hash}".encode()
+    expected_sig = hmac.new(secret, payload, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(sig, expected_sig):
+        raise HTTPException(status_code=401, detail="Invalid Treasury signature")
+
+    return {"operator_pubkey_hash": pkh, "timestamp_ms": ts_ms}
+
+
+@app.post("/api/treasury/heartbeat")
+async def treasury_heartbeat(request: Request) -> dict:
+    """Receive a heartbeat from the registered Treasury operator.
+
+    HMAC-signed; pubkey hash must match the registered operator. On success,
+    caches the latest heartbeat in memory (for /api/treasury/health) and
+    re-broadcasts the event over WebSocket so monitor + game UI subscribers
+    can render it in real time.
+    """
+    body = await request.body()
+    auth = _verify_treasury_hmac(request, body)
+    try:
+        payload = TreasuryHeartbeatRequest.model_validate_json(body)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid heartbeat payload: {exc}") from exc
+
+    record = {
+        "block": payload.block,
+        "timestamp_ms": auth["timestamp_ms"],
+        "operator_pubkey_hash": auth["operator_pubkey_hash"],
+        "balance_agntc": float(payload.balance_agntc),
+        "claims": int(payload.claims),
+        "blocks_since_last_action": int(payload.blocks_since_last_action),
+    }
+    global _last_treasury_heartbeat
+    _last_treasury_heartbeat = record
+
+    try:
+        await _ws_manager.broadcast("treasury.heartbeat", record)
+    except Exception:  # noqa: BLE001 — non-fatal best-effort broadcast
+        pass
+
+    return {"status": "ok", "block": payload.block}
+
+
+@app.get("/api/treasury/health", response_model=TreasuryHealthResponse)
+def treasury_health(request: Request) -> TreasuryHealthResponse:
+    """Public health view of the registered Treasury operator. No auth."""
+    if _treasury_config() is None:
+        return TreasuryHealthResponse(operator_online=False)
+    if _last_treasury_heartbeat is None:
+        return TreasuryHealthResponse(operator_online=False)
+
+    last = _last_treasury_heartbeat
+    g = _g()
+    current_block = int(g.mining_engine.total_blocks_processed)
+    blocks_since = max(0, current_block - int(last["block"]))
+    fresh = blocks_since <= TREASURY_HEARTBEAT_FRESH_BLOCKS
+    return TreasuryHealthResponse(
+        operator_online=fresh,
+        last_heartbeat_block=int(last["block"]),
+        last_heartbeat_timestamp_ms=int(last["timestamp_ms"]),
+        blocks_since_last_heartbeat=blocks_since,
+        operator_pubkey_hash=str(last["operator_pubkey_hash"]),
+        last_balance_agntc=float(last["balance_agntc"]),
+        last_claims_count=int(last["claims"]),
+    )
+
+
+def _reset_treasury_heartbeat_for_tests() -> None:
+    """Test-only: clear cached heartbeat between cases."""
+    global _last_treasury_heartbeat
+    _last_treasury_heartbeat = None
 
 
 # ---------------------------------------------------------------------------
