@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/*
+ * Minimal dark crypto theme. No third-party font imports — privacy posture
+ * forbids googleapis.com requests. System fonts only at this stage; a future
+ * commit imports the full theme from @exodus/lattice-core/theme/globals.css
+ * once that file lives in lattice-core.
+ */
+
+@theme inline {
+  --color-background: #0A0A0F;
+  --color-background-light: #12121A;
+  --color-background-lighter: #1A1A28;
+  --color-accent-cyan: #00D4FF;
+  --color-accent-cyan-dim: #00A8CC;
+  --color-accent-amber: #F5A623;
+  --color-accent-gold: #FFD700;
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
+  --color-card-border: rgba(255, 255, 255, 0.06);
+  --color-card-border-hover: rgba(255, 255, 255, 0.12);
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
+  --shadow-glow-amber: 0 0 24px rgba(245, 166, 35, 0.25);
+  --shadow-glow-cyan: 0 0 24px rgba(0, 212, 255, 0.25);
+  --shadow-glow-gold: 0 0 24px rgba(255, 215, 0, 0.30);
+}
+
+html, body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+}
+
+body {
+  min-height: 100dvh;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 1.0; }
+}
+
+@keyframes drift-in {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
