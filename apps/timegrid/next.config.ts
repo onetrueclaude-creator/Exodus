@@ -1,21 +1,14 @@
 import type { NextConfig } from 'next';
-import path from 'node:path';
 
 const nextConfig: NextConfig = {
   // Static export for the in-development landing page. Cloudflare Pages
-  // serves the resulting `out/` directory as plain HTML/CSS/JS — no SSR
-  // needed yet. Switch to `output: 'standalone'` once the canvas + adapter
-  // need server features (e.g. SSE tail for live block notifications).
+  // serves the resulting `out/` directory as plain HTML/CSS/JS. Switch to
+  // 'standalone' once the canvas + adapter need server features.
   output: 'export',
   trailingSlash: true,
   images: { unoptimized: true },
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@exodus/lattice-core': path.resolve(__dirname, '../../packages/lattice-core/src'),
-    };
-    return config;
-  },
+  // @exodus/lattice-core is resolved via tsconfig.json `paths`. Next.js 16
+  // (Turbopack) honors tsconfig paths natively — no bundler aliasing needed.
 };
 
 export default nextConfig;
