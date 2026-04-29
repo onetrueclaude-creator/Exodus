@@ -1,4 +1,4 @@
-# Timechain Lattice (`apps/timegrid`)
+# Timechain Grid (`apps/timegrid`)
 
 Public, privacy-first Bitcoin wallet civilization viewer. A 2D-lattice rendering of the Bitcoin blockchain across time — every miner and economically significant wallet appears as a node, the network grows as new wallets emerge, transactions form transient bonds that fade over ~10 blocks, and force-directed gravity keeps high-mass wallets (e.g. Satoshi) anchored to the origin.
 

@@ -2,14 +2,51 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import './globals.css';
 
+const SITE_URL = 'https://timechaingrid.com';
+
 export const metadata: Metadata = {
-  title: 'Timechain Lattice',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'Timechain Grid',
+    template: '%s · Timechain Grid',
+  },
   description:
-    'Bitcoin wallet civilization viewer. 2D-lattice rendering of the Bitcoin blockchain across time, from genesis to current block. Public, privacy-first, no third-party scripts.',
+    'A 2D-grid rendering of the Bitcoin blockchain across time. Every miner and economically significant wallet, anchored by mass and activity, Satoshi at the origin. Public, privacy-first, no third-party scripts.',
+  keywords: [
+    'Bitcoin',
+    'blockchain visualization',
+    'timechain',
+    'wallet network',
+    'on-chain analytics',
+    'privacy-first',
+  ],
+  authors: [{ name: 'Timechain Grid' }],
+  creator: 'Timechain Grid',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    url: SITE_URL,
+    title: 'Timechain Grid',
+    description:
+      'A 2D-grid rendering of the Bitcoin blockchain across time. Public, privacy-first, no third-party scripts.',
+    siteName: 'Timechain Grid',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Timechain Grid',
+    description:
+      'A 2D-grid rendering of the Bitcoin blockchain across time. Public, privacy-first.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0A0A0F',
+  themeColor: '#08080C',
   width: 'device-width',
   initialScale: 1,
 };
