@@ -4,16 +4,31 @@
 //   - apps/game     (zkagenticnetwork: agentic chain testnet game UI)
 //   - apps/timegrid (Bitcoin wallet civilization viewer)
 //
-// At bootstrap (this commit) the package is empty. Subsequent commits
-// migrate code from apps/game/src/ in this order:
-//   1. util/format, util/proximity                  (zero-coupling helpers)
-//   2. coords/chainToVisual, coords/lattice         (pure functions)
-//   3. data/ChainAdapter (interface only)           (contract type)
-//   4. theme/globals.css                            (CSS, no logic)
-//   5. ui/DockPanel, ui/TabNavigation, ui/HoverTooltip
-//   6. canvas/SphereNode, canvas/LatticeCanvas      (parameterized renderers)
-//   7. data/useChainSync                            (hoisted hook)
-//
-// The contract: apps/game's behavior must be unchanged at every step.
+// Migration of files from apps/game/src/ proceeds bottom-up: leaf utilities
+// and contract types first, then UI components, then PixiJS canvas, then the
+// hoisted sync hook. apps/game retains its working duplicates until a
+// later commit flips its imports — no behavior change at any step.
 
-export {};
+// Types
+export type { GridPosition, LatticeNode, LatticeStatus } from './types';
+
+// Data adapters
+export type { ChainAdapter } from './data/ChainAdapter';
+
+// Coordinate mapping
+export {
+  chainToVisual,
+  visualToChain,
+  makeCoordMap,
+  DEFAULT_CHAIN_GRID_MIN,
+  DEFAULT_CHAIN_GRID_MAX,
+  DEFAULT_CHAIN_GRID_SPAN,
+  DEFAULT_VISUAL_HALF,
+  DEFAULT_VISUAL_SPAN,
+  type CoordMapConfig,
+  type CoordMap,
+} from './coords/chainToVisual';
+
+// Utilities
+export { sciFormat, sciRate } from './util/format';
+export { getDistance, getConnectionStrength } from './util/proximity';
