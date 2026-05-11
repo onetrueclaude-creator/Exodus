@@ -30,7 +30,21 @@ export default function TimechainStats() {
     return () => clearInterval(timer);
   }, [nextBlockIn]);
 
-  if (chainMode !== 'testnet') return null;
+  if (chainMode !== 'testnet') {
+    return (
+      <div className="w-full bg-background-light/90 border border-card-border rounded-lg p-3">
+        <div className="text-[10px] font-bold tracking-wider text-text-muted mb-2">
+          TIMECHAIN STATS
+        </div>
+        <div className="text-[11px] text-text-muted/70 py-2">
+          Offline.
+        </div>
+        <div className="text-[10px] text-text-muted/40 leading-relaxed">
+          Connect to the local testnet (<span className="font-mono text-text-muted/70">localhost:8080</span>) to view block production, mining stats, and chain state.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-background-light/90 border border-card-border rounded-lg p-3">
