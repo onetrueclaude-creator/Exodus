@@ -885,13 +885,11 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                               </span>
                             </div>
                             <div className="flex items-center gap-2 text-[9px] text-text-muted/40" style={{ fontFamily: "'Fira Code', monospace" }}>
-                              <span>({star.x.toFixed(0)}, {star.y.toFixed(0)})</span>
-                              <span className="text-text-muted/20">{'\u00B7'}</span>
                               <span>d:{(star.density * 100).toFixed(0)}%</span>
                               <span className="text-text-muted/20">{'\u00B7'}</span>
                               <span>v:{star.volume}</span>
                               <span className="text-text-muted/20">{'\u00B7'}</span>
-                              <span>{star.dist.toFixed(0)}u</span>
+                              <span>{star.dist.toFixed(1)}u</span>
                             </div>
                           </div>
                         </div>

@@ -243,16 +243,23 @@ export function createBlockNode(
     container.addChild(claimRing);
   }
 
-  // Homenode ring — subscription-tier-colored border for the current player's own node
+  // Homenode ring — subscription-tier-colored border for the current player's own node.
+  // Layered for prominence: a soft outer halo + a crisp inner ring make the player's
+  // home unmistakable on a screen full of similar cells.
   if (
     node.ownerId &&
     currentUserId &&
     node.ownerId === currentUserId &&
     empireColor !== undefined
   ) {
+    const outerHalo = new Graphics();
+    outerHalo.circle(0, 0, baseRadius * 3.2);
+    outerHalo.stroke({ width: 1, color: empireColor, alpha: 0.25 });
+    container.addChild(outerHalo);
+
     const homeRing = new Graphics();
-    homeRing.circle(0, 0, baseRadius * 1.8);
-    homeRing.stroke({ width: 2, color: empireColor, alpha: 0.85 });
+    homeRing.circle(0, 0, baseRadius * 2.2);
+    homeRing.stroke({ width: 2.5, color: empireColor, alpha: 0.9 });
     container.addChild(homeRing);
   }
 
