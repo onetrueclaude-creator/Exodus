@@ -8,6 +8,7 @@ import { getDistance } from '@/lib/proximity';
 import { visualToChain } from '@/services/testnetChainService';
 import { postTransact, getStatus as fetchChainStats } from '@/services/testnetApi';
 import { logAction } from '@/lib/actionLogger';
+import { CELL_SIZE } from '@/lib/lattice';
 
 /* ── Agent Action Definitions ─────────────────────────────── */
 
@@ -255,6 +256,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
   const energy = useGameStore((s) => s.energy);
   const minerals = useGameStore((s) => s.minerals);
   const allAgents = useGameStore((s) => s.agents);
+  const allBlocknodes = useGameStore((s) => s.blocknodes);
   const maxDeployTier = useGameStore((s) => s.maxDeployTier);
   const cpuRegenPerTurn = useGameStore((s) => s.cpuRegenPerTurn);
   const miningCpuPerBlock = useGameStore((s) => s.miningCpuPerBlock);
@@ -262,21 +264,33 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
 
   const actions = AGENT_ACTIONS[agent.tier];
 
+  // Deploy targets are unclaimed blocknodes — the cells actually rendered on the
+  // lattice. Sorting by cell-space distance from the agent gives "nearest first",
+  // and clicking/hovering uses blocknode IDs so the focus useEffect's path A
+  // (cellToPixel) centers the camera on a *visible* cell.
   const nearbyUnclaimed = useMemo(() => {
-    return Object.values(allAgents)
-      .filter(a => !a.userId)
-      .map(a => ({
-        id: a.id,
-        name: a.username || `Node-${a.id.slice(0, 6)}`,
-        x: a.position.x,
-        y: a.position.y,
-        density: a.density ?? 0,
-        volume: a.storageSlots ?? 1,
-        dist: getDistance(agent.position, a.position),
-      }))
+    const agentCx = Math.round(agent.position.x / CELL_SIZE);
+    const agentCy = Math.round(agent.position.y / CELL_SIZE);
+    return Object.values(allBlocknodes)
+      .filter(b => b.ownerId === null && !(b.cx === agentCx && b.cy === agentCy))
+      .map(b => {
+        const dx = b.cx - agentCx;
+        const dy = b.cy - agentCy;
+        // Quality heuristic: inner-ring (low ringIndex) nodes are richer
+        const density = Math.max(0.1, Math.min(1, 1 - b.ringIndex * 0.15));
+        return {
+          id: b.id,
+          name: `Node ${b.cx},${b.cy}`,
+          x: b.cx * CELL_SIZE,
+          y: b.cy * CELL_SIZE,
+          density,
+          volume: Math.max(1, Math.round(b.secureStrength)),
+          dist: Math.sqrt(dx * dx + dy * dy),
+        };
+      })
       .sort((a, b) => a.dist - b.dist)
       .slice(0, 8);
-  }, [allAgents, agent.position]);
+  }, [allBlocknodes, agent.position]);
 
   const nearbyAgents = useMemo(() => {
     return Object.values(allAgents)

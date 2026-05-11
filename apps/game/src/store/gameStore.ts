@@ -283,8 +283,33 @@ export const useGameStore = create<GameState>((set) => ({
 
   claimNode: (slotId, tier, parentAgentId) => {
     const state = useGameStore.getState();
-    const slot = state.agents[slotId];
-    if (!slot || slot.userId) return false;
+    let slot = state.agents[slotId];
+
+    // Polymorphic lookup: if no agent exists with this id, fall back to blocknodes.
+    // The deploy flow in AgentChat now targets unclaimed blocknodes (the cells actually
+    // rendered on the lattice) and uses their ids — synthesize a slot from the blocknode
+    // so the existing claim logic keeps working without a separate code path.
+    if (!slot) {
+      const blocknode = state.blocknodes[slotId];
+      if (!blocknode || blocknode.ownerId) return false;
+      slot = {
+        id: slotId,
+        userId: "",
+        position: { x: blocknode.cx * 64, y: blocknode.cy * 64 },
+        tier: "haiku",
+        isPrimary: false,
+        planets: [],
+        createdAt: 0,
+        username: `Node ${blocknode.cx},${blocknode.cy}`,
+        borderRadius: 0,
+        borderPressure: 0,
+        cpuPerTurn: 0,
+        miningRate: 0,
+        energyLimit: 0,
+        stakedCpu: 0,
+      };
+    }
+    if (slot.userId) return false;
 
     const energyCost = TIER_CLAIM_COST[tier];
     const mineralCost = Math.ceil(TIER_CLAIM_COST[tier] * 0.3);
@@ -304,11 +329,24 @@ export const useGameStore = create<GameState>((set) => ({
       parentAgentId,
     };
 
-    set((s) => ({
-      agents: { ...s.agents, [slotId]: claimed },
-      energy: s.energy - energyCost,
-      minerals: s.minerals - mineralCost,
-    }));
+    set((s) => {
+      const existingBlocknode = s.blocknodes[slotId];
+      return {
+        agents: { ...s.agents, [slotId]: claimed },
+        energy: s.energy - energyCost,
+        minerals: s.minerals - mineralCost,
+        // If this id maps to a blocknode, mark it owned in the same set() so the
+        // map renders the new ownership and the cell can't be re-deployed to.
+        ...(existingBlocknode && existingBlocknode.ownerId === null
+          ? {
+              blocknodes: {
+                ...s.blocknodes,
+                [slotId]: { ...existingBlocknode, ownerId: state.currentUserId || "unknown" },
+              },
+            }
+          : {}),
+      };
+    });
 
     return true;
   },
