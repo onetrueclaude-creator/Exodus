@@ -388,20 +388,10 @@ describe("ResourceBar", () => {
     expect(screen.getByText("1")).toBeDefined();
   });
 
-  it("renders securedChains value (initial 0)", () => {
+  it("does NOT render Secured/Mined chain labels (moved to ScoresWidget)", () => {
     render(<ResourceBar />);
-    // securedChains = 0 on reset; the value appears as "0"
-    // Turn is also 0 — there are two "0" elements, that's fine
-    const zeros = screen.getAllByText("0");
-    expect(zeros.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it("securedChains count updates when addSecuredChain is called", () => {
-    render(<ResourceBar />);
-    act(() => {
-      useGameStore.getState().addSecuredChain();
-    });
-    expect(useGameStore.getState().securedChains).toBe(1);
+    expect(screen.queryByText("Secured")).toBeNull();
+    expect(screen.queryByText("Mined")).toBeNull();
   });
 
   it("renders faction label", () => {

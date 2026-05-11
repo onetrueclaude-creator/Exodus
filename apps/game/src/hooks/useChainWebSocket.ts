@@ -66,13 +66,11 @@ export function useChainWebSocket(enabled: boolean) {
           });
         }).catch(() => {});
 
-        // Refresh wallet resources (secured chains, rates)
-        Promise.all([
-          api.getSettings(0),
-          api.getRewards(0),
-        ]).then(([settings]) => {
+        // Refresh wallet resources (secured chains, mined chains, rates)
+        api.getSettings(0).then(settings => {
           useGameStore.getState().setWalletState({
             securedChains: settings.total_secured_chains,
+            minedChains: settings.total_mined_chains,
             securingRate: settings.securing_rate,
             miningRate: settings.mining_rate,
             effectiveStake: settings.effective_stake,

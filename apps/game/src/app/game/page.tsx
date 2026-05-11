@@ -9,6 +9,7 @@ import ResearchPanel from "@/components/ResearchPanel";
 import SkillsPanel from "@/components/SkillsPanel";
 import DockPanel from "@/components/DockPanel";
 import CellTooltip from "@/components/CellTooltip";
+import ScoresWidget from "@/components/ScoresWidget";
 import { startDebugListener } from "@/lib/debugListener";
 import dynamic from "next/dynamic";
 const DebugOverlay = dynamic(() => import("@/components/DebugOverlay"), { ssr: false });
@@ -16,7 +17,7 @@ import { useGameStore } from "@/store";
 import { MockChainService } from "@/services/chainService";
 import type { ChainService } from "@/services/chainService";
 import { TestnetChainService } from "@/services/testnetChainService";
-import { isTestnetOnline, getSettings, getRewards } from "@/services/testnetApi";
+import { isTestnetOnline, getSettings } from "@/services/testnetApi";
 import { useChainWebSocket } from "@/hooks/useChainWebSocket";
 import type { SubscriptionTier } from "@/types";
 import type { FactionId } from "@/types";
@@ -113,14 +114,12 @@ export default function GamePage() {
       }
     }
 
-    // Sync wallet state (secured chains, rates, effective stake)
+    // Sync wallet state (secured chains, mined chains, rates, effective stake)
     try {
-      const [settings, rewards] = await Promise.all([
-        getSettings(0),  // wallet 0 for testnet
-        getRewards(0),
-      ]);
+      const settings = await getSettings(0);  // wallet 0 for testnet
       store.setWalletState({
         securedChains: settings.total_secured_chains,
+        minedChains: settings.total_mined_chains,
         securingRate: settings.securing_rate,
         miningRate: settings.mining_rate,
         effectiveStake: settings.effective_stake,
@@ -275,6 +274,9 @@ export default function GamePage() {
 
       {/* Tab navigation */}
       <TabNavigation />
+
+      {/* Floating scores widget — upper-right, testnet only */}
+      <ScoresWidget />
 
       {/* Tab content area — fills remaining space */}
       <div className="flex-1 relative overflow-hidden">

@@ -202,6 +202,7 @@ export interface WalletSettingsResponse {
   mining_rate: number;
   subgrid_allocation: { secure: number; develop: number; research: number; storage: number };
   total_secured_chains: number;
+  total_mined_chains: number;
   effective_stake: number;
 }
 

@@ -144,6 +144,7 @@ interface GameState {
   }) => void;
   setWalletState: (state: {
     securedChains: number;
+    minedChains: number;
     securingRate: number;
     miningRate: number;
     effectiveStake: number;
@@ -549,14 +550,27 @@ export const useGameStore = create<GameState>((set) => ({
 
   setWalletState: (state) =>
     set((s) => {
-      const delta = state.securedChains - s.securedChains;
+      const securedDelta = state.securedChains - s.securedChains;
+      const minedDelta = state.minedChains - s.minedChains;
+      const hasDelta = securedDelta !== 0 || minedDelta !== 0;
       return {
         securedChains: state.securedChains,
+        minedChains: state.minedChains,
         walletSecuringRate: state.securingRate,
         walletMiningRate: state.miningRate,
         walletEffectiveStake: state.effectiveStake,
-        ...(delta !== 0
-          ? { resourceDeltas: { ...s.resourceDeltas, securedChains: { value: delta, ts: Date.now() } } }
+        ...(hasDelta
+          ? {
+              resourceDeltas: {
+                ...s.resourceDeltas,
+                ...(securedDelta !== 0
+                  ? { securedChains: { value: securedDelta, ts: Date.now() } }
+                  : {}),
+                ...(minedDelta !== 0
+                  ? { minedChains: { value: minedDelta, ts: Date.now() } }
+                  : {}),
+              },
+            }
           : {}),
       };
     }),
