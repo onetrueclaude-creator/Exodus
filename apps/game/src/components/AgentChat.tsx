@@ -1214,7 +1214,10 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                     onClick={() => {
                       useGameStore.getState().setCpuAllocation(miningCpu, securingCpu);
                       addMsg('agent', `CPU allocation updated.\nMining: ${miningCpu} CPU/block\nSecuring: ${securingCpu} CPU/block\nTotal: ${miningCpu + securingCpu}/block (regen: +${cpuRegenPerTurn}/turn)`);
-                      setMenuLevel(null);
+                      // Return to the blockchain sub-menu where CPU Allocation lives so
+                      // the action stays visible — going back to the top menu hides it
+                      // under "Blockchain Protocols" and looks like the choice was removed.
+                      setMenuLevel('blockchain');
                     }}
                     disabled={processing}
                     className="flex-1 px-4 py-1.5 rounded-lg text-[13px] font-semibold bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20 hover:bg-accent-cyan/20 hover:border-accent-cyan/40 disabled:opacity-15 disabled:cursor-not-allowed transition-all duration-300"

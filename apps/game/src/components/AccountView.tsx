@@ -7,13 +7,24 @@ import type { RewardsResponse, SecuringStatusResponse, VestingResponse, WalletSe
 
 export default function AccountView() {
   const currentAgentId = useGameStore((s) => s.currentAgentId);
+  const currentUserId = useGameStore((s) => s.currentUserId);
   const agents = useGameStore((s) => s.agents);
   const planets = useGameStore((s) => s.planets);
   const energy = useGameStore((s) => s.energy);
   const agntcBalance = useGameStore((s) => s.agntcBalance);
   const securedChains = useGameStore((s) => s.securedChains);
   const chainMode = useGameStore((s) => s.chainMode);
-  const agent = currentAgentId ? agents[currentAgentId] : null;
+  const switchAgent = useGameStore((s) => s.switchAgent);
+
+  // Every agent the player owns — primary (homenode) first, sub-agents next.
+  // Replaces the single-agent "Network Overview" view which only ever showed
+  // the currentAgentId (and thus only the *latest* deploy).
+  const ownedAgents = Object.values(agents)
+    .filter((a) => a.userId === currentUserId)
+    .sort((a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
+
+  const planetCountFor = (agentId: string) =>
+    Object.values(planets).filter((p) => p.agentId === agentId).length;
 
   const agentPlanets = Object.values(planets).filter(
     (p) => p.agentId === currentAgentId,
@@ -51,28 +62,62 @@ export default function AccountView() {
   return (
     <div className="flex-1 overflow-y-auto p-6">
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Network overview */}
+        {/* Owned agents \u2014 one entry per agent, click to switch terminal context */}
         <div className="glass-card p-6">
           <div className="flex items-center gap-2 mb-5">
             <span className="text-accent-cyan text-sm">{'\u25C8'}</span>
-            <h2 className="text-lg font-heading font-bold text-text-primary tracking-wide">Network Overview</h2>
+            <h2 className="text-lg font-heading font-bold text-text-primary tracking-wide">
+              My Agents <span className="text-text-muted/40 font-mono text-sm">({ownedAgents.length})</span>
+            </h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard label="Neural Node" value={agent?.username || '\u2014'} />
-            <StatCard
-              label="Tier"
-              value={agent?.tier?.toUpperCase() || '\u2014'}
-              valueClass={
-                agent?.tier === 'opus' ? 'text-accent-purple' :
-                agent?.tier === 'haiku' ? 'text-yellow-400' : 'text-accent-cyan'
-              }
-            />
-            <StatCard
-              label="Coordinates"
-              value={agent ? `(${Math.round(agent.position.x)}, ${Math.round(agent.position.y)})` : '\u2014'}
-            />
-            <StatCard label="Data Packets" value={String(agentPlanets.length)} />
-          </div>
+          {ownedAgents.length === 0 ? (
+            <p className="text-sm text-text-muted/60">No agents claimed yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {ownedAgents.map((a) => {
+                const isActive = a.id === currentAgentId;
+                const tierClass =
+                  a.tier === 'opus' ? 'text-accent-purple' :
+                  a.tier === 'haiku' ? 'text-yellow-400' : 'text-accent-cyan';
+                return (
+                  <button
+                    key={a.id}
+                    onClick={() => switchAgent(a.id)}
+                    className={`w-full flex items-center justify-between p-3 rounded-lg border text-left transition-all duration-200 ${
+                      isActive
+                        ? 'border-accent-cyan/50 bg-accent-cyan/[0.06] shadow-[0_0_12px_rgba(0,212,255,0.08)]'
+                        : 'border-card-border bg-white/[0.02] hover:bg-white/[0.04] hover:border-card-border-hover'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className={`text-base ${a.isPrimary ? 'text-yellow-400' : 'text-text-muted/60'}`}>
+                        {a.isPrimary ? '\u2605' : '\u25C6'}
+                      </span>
+                      <div>
+                        <div className="text-sm font-mono text-text-primary">{a.username || a.id.slice(0, 12)}</div>
+                        <div className="text-[10px] text-text-muted font-mono">
+                          <span className={tierClass}>{a.tier.toUpperCase()}</span>
+                          <span className="mx-1.5 text-text-muted/40">{'\u00B7'}</span>
+                          <span>({Math.round(a.position.x)}, {Math.round(a.position.y)})</span>
+                          <span className="mx-1.5 text-text-muted/40">{'\u00B7'}</span>
+                          <span>{planetCountFor(a.id)} packets</span>
+                        </div>
+                      </div>
+                    </div>
+                    {isActive ? (
+                      <span className="text-[9px] text-accent-cyan font-mono tracking-wider px-2 py-0.5 rounded border border-accent-cyan/30 bg-accent-cyan/5">
+                        ACTIVE
+                      </span>
+                    ) : (
+                      <span className="text-[9px] text-text-muted/40 font-mono tracking-wider">
+                        switch {'\u2192'}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Resources — live from store */}

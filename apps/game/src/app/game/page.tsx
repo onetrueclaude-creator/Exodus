@@ -64,7 +64,6 @@ export default function GamePage() {
   useChainWebSocket(chainMode === "testnet");
 
   const setActiveDockPanel = useGameStore((s) => s.setActiveDockPanel);
-  const switchAgent = useGameStore((s) => s.switchAgent);
   const [tooltip, setTooltip] = useState<{ cx: number; cy: number; screenX: number; screenY: number } | null>(null);
 
   const chainRef = useRef<ChainService | null>(null);
@@ -294,8 +293,10 @@ export default function GamePage() {
             onHaikuSubmit={handleHaikuSubmit}
             currentAgent={currentAgentId ? (agents[currentAgentId] ?? null) : null}
             chainService={chainRef.current}
-            onAgentDeploy={(newId) => {
-              switchAgent(newId);
+            onAgentDeploy={() => {
+              // Don't auto-switch to the new sub-agent — the homenode is the player's
+              // command center and the deploy was issued from it. Sub-agent is now
+              // visible on the lattice and switchable via the Account View list.
               setActiveDockPanel("terminal");
             }}
             onFocusNode={(nodeId) => {
