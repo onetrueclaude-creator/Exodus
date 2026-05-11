@@ -257,6 +257,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
   const minerals = useGameStore((s) => s.minerals);
   const allAgents = useGameStore((s) => s.agents);
   const allBlocknodes = useGameStore((s) => s.blocknodes);
+  const currentUserFaction = useGameStore((s) => s.currentUserFaction);
   const maxDeployTier = useGameStore((s) => s.maxDeployTier);
   const cpuRegenPerTurn = useGameStore((s) => s.cpuRegenPerTurn);
   const miningCpuPerBlock = useGameStore((s) => s.miningCpuPerBlock);
@@ -272,7 +273,11 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
     const agentCx = Math.round(agent.position.x / CELL_SIZE);
     const agentCy = Math.round(agent.position.y / CELL_SIZE);
     return Object.values(allBlocknodes)
-      .filter(b => b.ownerId === null && !(b.cx === agentCx && b.cy === agentCy))
+      .filter(b =>
+        b.ownerId === null
+        && (currentUserFaction === null || b.faction === currentUserFaction)
+        && !(b.cx === agentCx && b.cy === agentCy)
+      )
       .map(b => {
         const dx = b.cx - agentCx;
         const dy = b.cy - agentCy;
@@ -290,7 +295,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
       })
       .sort((a, b) => a.dist - b.dist)
       .slice(0, 8);
-  }, [allBlocknodes, agent.position]);
+  }, [allBlocknodes, currentUserFaction, agent.position]);
 
   const nearbyAgents = useMemo(() => {
     return Object.values(allAgents)
