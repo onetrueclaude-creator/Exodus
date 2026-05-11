@@ -4,7 +4,9 @@ import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import { startDebugListener, stopDebugListener, subscribeDebug, getDebugEntries } from '@/lib/debugListener';
 
 export default function DebugOverlay() {
-  const [visible, setVisible] = useState(true);
+  // Default collapsed — the 480×320 panel was obscuring the map in dev mode.
+  // Press the "DBG" pill bottom-right to expand on demand.
+  const [visible, setVisible] = useState(false);
   const [paused, setPaused] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 

@@ -216,7 +216,12 @@ export default function GamePage() {
           addAgent(homenodeAgent);
           setCurrentUser(newUserId, frontierNode.id);
           useGameStore.getState().requestFocus(frontierNode.id);
-          setActiveDockPanel("terminal");
+          // In production this auto-opens the agent terminal for first-time onboarding.
+          // In dev mode every reload re-triggers "new user" and would slam the panel open,
+          // covering the map; leave the dock closed and let the developer open it manually.
+          if (!isDev) {
+            setActiveDockPanel("terminal");
+          }
         } else {
           setCurrentUser(newUserId, "");
         }
