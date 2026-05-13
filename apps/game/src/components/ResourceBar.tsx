@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useGameStore } from "@/store";
+import { NODE_CPU_PER_TURN } from "@/store/gameStore";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { sciFormat } from "@/lib/format";
 import { DeltaFlash } from "@/components/DeltaFlash";
@@ -70,9 +71,22 @@ export default function ResourceBar() {
   const chainMode = useGameStore((s) => s.chainMode);
   const testnetBlocks = useGameStore((s) => s.testnetBlocks);
   const cpuRegenPerTurn = useGameStore((s) => s.cpuRegenPerTurn);
+  const miningCpuPerBlock = useGameStore((s) => s.miningCpuPerBlock);
+  const securingCpuPerBlock = useGameStore((s) => s.securingCpuPerBlock);
 
   const ownedBlocknodes = Object.values(blocknodes).filter((n) => n.ownerId === currentUserId);
   const faction = currentUserFaction ?? "community";
+
+  // Match the tick() formula so the bar reflects what actually happens each turn.
+  const nodeMaintenance = ownedBlocknodes.length * NODE_CPU_PER_TURN;
+  const committed = miningCpuPerBlock + securingCpuPerBlock;
+  const netCpuPerTurn = cpuRegenPerTurn - committed - nodeMaintenance;
+  const netSign = netCpuPerTurn > 0 ? "+" : netCpuPerTurn < 0 ? "−" : "±";
+  const netColor =
+    netCpuPerTurn > 0 ? "text-green-400/70"
+    : netCpuPerTurn < 0 ? "text-red-400/80"
+    : "text-text-muted/60";
+  const netTooltip = `Regen +${cpuRegenPerTurn} · Mining −${miningCpuPerBlock} · Securing −${securingCpuPerBlock} · Maintenance −${nodeMaintenance}`;
 
   return (
     <div className="h-8 bg-background-light border-b border-card-border flex items-center px-3 gap-3 shrink-0">
@@ -121,7 +135,12 @@ export default function ResourceBar() {
         <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
         <span className="text-xs font-mono text-yellow-300 tabular-nums">{sciFormat(energy)}</span>
         <span className="text-[9px] font-mono text-text-muted/40">CPU</span>
-        <span className="text-[9px] font-mono text-green-400/70">+{cpuRegenPerTurn}/t</span>
+        <span
+          className={`text-[9px] font-mono ${netColor} tabular-nums`}
+          title={netTooltip}
+        >
+          {netSign}{Math.abs(netCpuPerTurn)}/t
+        </span>
         <sup className="text-[9px] leading-none">
           <DeltaFlash resourceKey="energy" />
         </sup>

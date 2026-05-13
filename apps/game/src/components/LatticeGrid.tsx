@@ -287,6 +287,15 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
         lastNodeTapMsRef.current = Date.now();
         setSelectedBlocknodeId(node.id);
         setSelectedGridCell(null); // close grid panel when an arm node is selected
+        // If the player clicks one of their own cells, route the Agent Terminal to it
+        // so CPU Allocation / Secure / Stats target THIS node, not just the homenode.
+        if (node.ownerId && node.ownerId === currentUserId) {
+          const store = useGameStore.getState();
+          if (store.agents[node.id]) {
+            store.switchAgent(node.id);
+            store.setActiveDockPanel("terminal");
+          }
+        }
       });
       layer.addChild(nodeContainer);
     }
