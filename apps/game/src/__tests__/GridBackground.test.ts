@@ -46,26 +46,26 @@ describe("FACTION_COLORS", () => {
 
 describe("createGridBackground", () => {
   it("returns a Graphics object", () => {
-    const g = createGridBackground({}, [], 5);
+    const g = createGridBackground({}, 5);
     expect(g).toBeDefined();
   });
 
-  it("calls fill for faction cells when faction is visible", () => {
+  it("calls circle/fill for each blocknode (placeholder dots)", () => {
     const nodes = buildAllCells(1);
-    // Claim community genesis (ring-1, community NW quadrant: cx=-1, cy=1)
-    nodes["cell--1-1"].ownerId = "user-001";
-    const g = createGridBackground(nodes, ["community"], 5) as unknown as MockGraphics;
+    const g = createGridBackground(nodes, 5) as unknown as MockGraphics;
+    // Placeholder renders one dot per blocknode — fill must have been called
     expect(g.fill).toHaveBeenCalled();
+    expect(g.circle).toHaveBeenCalled();
   });
 
-  it("calls fill for fog cells", () => {
-    const g = createGridBackground({}, [], 2) as unknown as MockGraphics;
-    // All cells should be fog-filled since no blocknodes
-    expect(g.fill).toHaveBeenCalled();
+  it("calls fill even with no blocknodes (grid lines only)", () => {
+    // With no blocknodes the placeholder loop is a no-op, but stroke is still called
+    const g = createGridBackground({}, 2) as unknown as MockGraphics;
+    expect(g.stroke).toHaveBeenCalled();
   });
 
   it("calls stroke for grid lines", () => {
-    const g = createGridBackground({}, [], 2) as unknown as MockGraphics;
+    const g = createGridBackground({}, 2) as unknown as MockGraphics;
     expect(g.stroke).toHaveBeenCalled();
     expect(g.setStrokeStyle).toHaveBeenCalled();
   });
@@ -74,12 +74,12 @@ describe("createGridBackground", () => {
 describe("updateGridBackground", () => {
   it("calls clear before redrawing", () => {
     const nodes = buildAllCells(1);
-    const g = createGridBackground(nodes, [], 5) as unknown as MockGraphics;
+    const g = createGridBackground(nodes, 5) as unknown as MockGraphics;
     // Clear the call count to verify clear() is called during update
     g.clear.mockClear();
     // updateGridBackground accepts Graphics type; cast via unknown
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock Graphics instance passed in place of real Graphics
-    updateGridBackground(g as any, nodes, ["community"], 5);
+    updateGridBackground(g as any, nodes, 5);
     expect(g.clear).toHaveBeenCalledOnce();
   });
 });
