@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { getNodeTier } from "@/lib/nodeTier";
 import type {
   Agent,
   Planet,
@@ -16,7 +17,11 @@ describe("Type definitions", () => {
       id: "agent-001",
       userId: "user-001",
       position: { x: 100, y: 200 },
-      tier: "opus",
+      level: 7,
+      miningAlloc: 50,
+      securingAlloc: 50,
+      selfDevAlloc: 0,
+      levelingUntilTurn: null,
       isPrimary: true,
       planets: [],
       createdAt: Date.now(),
@@ -27,7 +32,7 @@ describe("Type definitions", () => {
       energyLimit: 40,
       stakedCpu: 0,
     };
-    expect(agent.tier).toBe("opus");
+    expect(getNodeTier(agent.level)).toBe("lattice");
     expect(agent.isPrimary).toBe(true);
   });
 

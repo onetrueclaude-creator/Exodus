@@ -31,7 +31,7 @@ describe('Testnet integration', () => {
     // First agent should be the claimed one
     const claimed = agents.find(a => a.userId !== '');
     expect(claimed).toBeDefined();
-    expect(claimed!.tier).toBe('opus'); // stake >= 80
+    expect(claimed!.level).toBeGreaterThanOrEqual(7); // stake >= 80 → lattice (L7+)
   });
 
   it('TestnetChainService.mine returns block data', async () => {

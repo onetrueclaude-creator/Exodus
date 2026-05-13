@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { useGameStore } from '@/store';
 import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE, TIER_CLAIM_COST } from '@/types/agent';
-import type { Agent, AgentTier } from '@/types';
+import type { Agent } from '@/types';
+import type { NodeTier } from '@/lib/nodeTier';
 
 /* ── Helpers ──────────────────────────────────────────── */
 
@@ -11,15 +12,19 @@ function makeAgent(overrides: Partial<Agent> = {}): Agent {
     id: 'a1',
     userId: 'u1',
     position: { x: 100, y: 200 },
-    tier: 'opus',
+    level: 7,
+    miningAlloc: 50,
+    securingAlloc: 50,
+    selfDevAlloc: 0,
+    levelingUntilTurn: null,
     isPrimary: true,
     planets: [],
     createdAt: Date.now(),
-    borderRadius: TIER_BASE_BORDER.opus,
+    borderRadius: TIER_BASE_BORDER.lattice,
     borderPressure: 0,
-    cpuPerTurn: TIER_CPU_COST.opus,
-    miningRate: TIER_MINING_RATE.opus,
-    energyLimit: TIER_CPU_COST.opus * 5,
+    cpuPerTurn: TIER_CPU_COST.lattice,
+    miningRate: TIER_MINING_RATE.lattice,
+    energyLimit: TIER_CPU_COST.lattice * 5,
     stakedCpu: 0,
     ...overrides,
   };
@@ -62,11 +67,11 @@ const mockNodes = [
 
 describe('AgentCreator', () => {
   let AgentCreator: React.ComponentType<{
-    currentAgentTier: AgentTier;
+    currentAgentLevel: number;
     energy: number;
     minerals: number;
     unclaimedNodes: { id: string; x: number; y: number; dist: number }[];
-    onClaimNode: (slotId: string, tier: AgentTier) => void;
+    onClaimNode: (slotId: string, tier: NodeTier) => void;
     onClose: () => void;
   }>;
 
@@ -77,73 +82,73 @@ describe('AgentCreator', () => {
   });
 
   it('renders node selection as first step', () => {
-    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
+    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
     expect(screen.getByText('Claim Neural Node')).toBeDefined();
     expect(screen.getByText('SELECT TARGET:')).toBeDefined();
   });
 
   it('shows unclaimed nodes with coordinates', () => {
-    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
+    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
     expect(screen.getByText('[node-alp]')).toBeDefined();
     expect(screen.getByText('80u')).toBeDefined();
   });
 
   it('shows empty message when no unclaimed nodes', () => {
-    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={[]} onClaimNode={() => {}} onClose={() => {}} />);
+    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={[]} onClaimNode={() => {}} onClose={() => {}} />);
     expect(screen.getByText('No unclaimed neural nodes in range.')).toBeDefined();
   });
 
   it('advances to tier selection after picking a node', () => {
-    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
+    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
     fireEvent.click(screen.getByText('[node-alp]'));
     expect(screen.getByText('Select Model')).toBeDefined();
   });
 
-  it('opus agent shows sonnet and haiku tiers', () => {
-    // Set maxDeployTier to sonnet so both sonnet and haiku are available
-    useGameStore.getState().setMaxDeployTier('sonnet');
-    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
+  it('lattice agent (L7) shows cortex and synapse tiers', () => {
+    // Set maxDeployTier to cortex so both cortex and synapse are available
+    useGameStore.getState().setMaxDeployTier('cortex');
+    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
     fireEvent.click(screen.getByText('[node-alp]'));
-    expect(screen.getByText('sonnet')).toBeDefined();
-    expect(screen.getByText('haiku')).toBeDefined();
-    // Should NOT show opus (can't deploy same tier)
-    expect(screen.queryByText('opus')).toBeNull();
+    expect(screen.getByText('Cortex')).toBeDefined();
+    expect(screen.getByText('Synapse')).toBeDefined();
+    // Should NOT show Lattice (can't deploy same tier as deployer)
+    expect(screen.queryByText('Lattice')).toBeNull();
   });
 
-  it('sonnet agent shows only haiku tier', () => {
-    render(<AgentCreator currentAgentTier="sonnet" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
+  it('cortex agent (L4) shows only synapse tier', () => {
+    render(<AgentCreator currentAgentLevel={4} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
     fireEvent.click(screen.getByText('[node-alp]'));
-    expect(screen.getByText('haiku')).toBeDefined();
-    expect(screen.queryByText('sonnet')).toBeNull();
-    expect(screen.queryByText('opus')).toBeNull();
+    expect(screen.getByText('Synapse')).toBeDefined();
+    expect(screen.queryByText('Cortex')).toBeNull();
+    expect(screen.queryByText('Lattice')).toBeNull();
   });
 
   it('calls onClaimNode with correct slotId and tier', () => {
     const onClaimNode = vi.fn();
-    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={onClaimNode} onClose={() => {}} />);
+    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={onClaimNode} onClose={() => {}} />);
     fireEvent.click(screen.getByText('[node-alp]'));
-    fireEvent.click(screen.getByText('haiku'));
-    expect(onClaimNode).toHaveBeenCalledWith('node-alpha-001', 'haiku');
+    fireEvent.click(screen.getByText('Synapse'));
+    expect(onClaimNode).toHaveBeenCalledWith('node-alpha-001', 'synapse');
   });
 
   it('shows cost for each tier', () => {
-    const eCost = TIER_CLAIM_COST.haiku;
+    const eCost = TIER_CLAIM_COST.synapse;
     const mCost = Math.ceil(eCost * 0.3);
-    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
+    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
     fireEvent.click(screen.getByText('[node-alp]'));
     expect(screen.getByText(`${eCost}E + ${mCost}M`)).toBeDefined();
   });
 
   it('disables tier when insufficient resources', () => {
     const onClaimNode = vi.fn();
-    render(<AgentCreator currentAgentTier="opus" energy={0} minerals={0} unclaimedNodes={mockNodes} onClaimNode={onClaimNode} onClose={() => {}} />);
+    render(<AgentCreator currentAgentLevel={7} energy={0} minerals={0} unclaimedNodes={mockNodes} onClaimNode={onClaimNode} onClose={() => {}} />);
     fireEvent.click(screen.getByText('[node-alp]'));
-    fireEvent.click(screen.getByText('haiku'));
+    fireEvent.click(screen.getByText('Synapse'));
     expect(onClaimNode).not.toHaveBeenCalled();
   });
 
   it('back button returns to node selection', () => {
-    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
+    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
     fireEvent.click(screen.getByText('[node-alp]'));
     expect(screen.getByText('Select Model')).toBeDefined();
     fireEvent.click(screen.getByText('\u2190 Back'));
@@ -152,7 +157,7 @@ describe('AgentCreator', () => {
 
   it('calls onClose when close button is clicked', () => {
     const onClose = vi.fn();
-    render(<AgentCreator currentAgentTier="opus" energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={onClose} />);
+    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={onClose} />);
     const closeBtn = screen.getByText('\u2715');
     fireEvent.click(closeBtn);
     expect(onClose).toHaveBeenCalled();

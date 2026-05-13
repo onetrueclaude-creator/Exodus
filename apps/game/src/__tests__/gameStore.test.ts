@@ -274,7 +274,7 @@ describe("gameStore — grid node territory (mineGridNode / claimGridNode)", () 
   });
 });
 
-describe("gameStore — CPU regen and allocation", () => {
+describe("gameStore — CPU regen (subscription-based)", () => {
   beforeEach(() => {
     useGameStore.getState().reset();
     useGameStore.setState({ currentUserId: "user-001", energy: 1000, cpuRegenPerTurn: 100 });
@@ -285,25 +285,76 @@ describe("gameStore — CPU regen and allocation", () => {
     expect(useGameStore.getState().energy).toBe(1100); // 1000 + 100 regen
   });
 
-  it("tick deducts mining + securing commitments from energy", () => {
-    useGameStore.getState().setCpuAllocation(50, 30);
+  it("tick aggregates per-node mining/securing from agents with setNodeAllocation", () => {
+    // Add an agent owned by user-001 with 50/30/20 allocation at L1 (10 CPU/turn)
+    useGameStore.setState({
+      agents: {
+        "agent-001": {
+          id: "agent-001",
+          userId: "user-001",
+          level: 1,
+          miningAlloc: 50,
+          securingAlloc: 30,
+          selfDevAlloc: 20,
+          levelingUntilTurn: null,
+          position: { x: 0, y: 0 },
+          isPrimary: true,
+          planets: [],
+          createdAt: 0,
+          username: "test",
+          borderRadius: 64,
+          borderPressure: 0,
+          cpuPerTurn: 10,
+          miningRate: 1,
+          energyLimit: 50,
+          stakedCpu: 0,
+        },
+      },
+    });
     useGameStore.getState().tick();
-    // 1000 + 100 regen - 50 mining - 30 securing = 1020
-    expect(useGameStore.getState().energy).toBe(1020);
-  });
-
-  it("energy does not go below 0", () => {
-    useGameStore.setState({ energy: 10, cpuRegenPerTurn: 0 });
-    useGameStore.getState().setCpuAllocation(500, 500);
-    useGameStore.getState().tick();
-    expect(useGameStore.getState().energy).toBe(0);
-  });
-
-  it("setCpuAllocation updates both fields", () => {
-    useGameStore.getState().setCpuAllocation(200, 100);
     const s = useGameStore.getState();
-    expect(s.miningCpuPerBlock).toBe(200);
-    expect(s.securingCpuPerBlock).toBe(100);
+    // L1 at 50/30/20: 10 * 0.5 = 5 mining, 10 * 0.3 = 3 securing
+    expect(s.miningCpuPerBlock).toBe(5);
+    expect(s.securingCpuPerBlock).toBe(3);
+  });
+
+  it("energy grows from subscription regen only (no node maintenance deduction)", () => {
+    const before = useGameStore.getState().energy;
+    useGameStore.getState().tick();
+    expect(useGameStore.getState().energy).toBe(before + 100);
+  });
+
+  it("setNodeAllocation updates agent allocation fields", () => {
+    useGameStore.setState({
+      agents: {
+        "agent-001": {
+          id: "agent-001",
+          userId: "user-001",
+          level: 1,
+          miningAlloc: 50,
+          securingAlloc: 50,
+          selfDevAlloc: 0,
+          levelingUntilTurn: null,
+          position: { x: 0, y: 0 },
+          isPrimary: true,
+          planets: [],
+          createdAt: 0,
+          username: "test",
+          borderRadius: 64,
+          borderPressure: 0,
+          cpuPerTurn: 10,
+          miningRate: 1,
+          energyLimit: 50,
+          stakedCpu: 0,
+        },
+      },
+    });
+    const ok = useGameStore.getState().setNodeAllocation("agent-001", 25, 50, 25);
+    expect(ok).toBe(true);
+    const agent = useGameStore.getState().agents["agent-001"];
+    expect(agent.miningAlloc).toBe(25);
+    expect(agent.securingAlloc).toBe(50);
+    expect(agent.selfDevAlloc).toBe(25);
   });
 });
 

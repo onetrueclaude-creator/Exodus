@@ -1,24 +1,32 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { useGameStore } from "@/store";
 import type { Agent, HaikuMessage, Planet, DiplomaticState } from "@/types";
-import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE, TIER_CLAIM_COST } from "@/types/agent";
+import { TIER_BASE_BORDER, TIER_MINING_RATE, TIER_CLAIM_COST } from "@/types/agent";
+import { getNodeCpuPerTurn } from "@/lib/nodeTier";
 
 /* ── Helpers ──────────────────────────────────────────── */
+
+// L7 (lattice) base CPU: getNodeCpuPerTurn(7) = floor((5 + 7*5) * 1.5) = floor(60) = 60
+const L7_CPU = getNodeCpuPerTurn(7);
 
 function makeAgent(overrides: Partial<Agent> = {}): Agent {
   return {
     id: "a1",
     userId: "u1",
     position: { x: 0, y: 0 },
-    tier: "opus",
+    level: 7,
+    miningAlloc: 50,
+    securingAlloc: 50,
+    selfDevAlloc: 0,
+    levelingUntilTurn: null,
     isPrimary: true,
     planets: [],
     createdAt: Date.now(),
-    borderRadius: TIER_BASE_BORDER.opus,
+    borderRadius: TIER_BASE_BORDER.lattice,
     borderPressure: 0,
-    cpuPerTurn: TIER_CPU_COST.opus,
-    miningRate: TIER_MINING_RATE.opus,
-    energyLimit: TIER_CPU_COST.opus * 5,
+    cpuPerTurn: L7_CPU,
+    miningRate: TIER_MINING_RATE.lattice,
+    energyLimit: L7_CPU * 5,
     stakedCpu: 0,
     ...overrides,
   };
@@ -97,33 +105,35 @@ describe("gameStore", () => {
     it("creates an agent and deducts energy", () => {
       const state = useGameStore.getState();
       const energyBefore = state.energy;
-      const id = state.createAgent("sonnet", { x: 10, y: 20 });
+      const id = state.createAgent("cortex", { x: 10, y: 20 });
       expect(id).toBeTruthy();
       const after = useGameStore.getState();
       expect(after.agents[id!]).toBeDefined();
-      expect(after.agents[id!].tier).toBe("sonnet");
+      expect(after.agents[id!].level).toBe(4); // cortex starts at L4
       expect(after.agents[id!].position).toEqual({ x: 10, y: 20 });
-      expect(after.energy).toBe(energyBefore - TIER_CPU_COST.sonnet * 5);
+      // createAgent deducts getNodeCpuPerTurn(startLevel) * 5
+      const l4Cpu = getNodeCpuPerTurn(4);
+      expect(after.energy).toBe(energyBefore - l4Cpu * 5);
     });
 
     it("returns null if not enough energy", () => {
       useGameStore.setState({ energy: 0 });
-      const id = useGameStore.getState().createAgent("opus", { x: 0, y: 0 });
+      const id = useGameStore.getState().createAgent("lattice", { x: 0, y: 0 });
       expect(id).toBeNull();
     });
 
     it("sets correct tier-specific stats", () => {
-      const id = useGameStore.getState().createAgent("haiku", { x: 5, y: 5 })!;
+      const id = useGameStore.getState().createAgent("synapse", { x: 5, y: 5 })!;
       const agent = useGameStore.getState().agents[id];
-      expect(agent.borderRadius).toBe(TIER_BASE_BORDER.haiku);
-      expect(agent.cpuPerTurn).toBe(TIER_CPU_COST.haiku);
-      expect(agent.miningRate).toBe(TIER_MINING_RATE.haiku);
+      expect(agent.borderRadius).toBe(TIER_BASE_BORDER.synapse);
+      expect(agent.cpuPerTurn).toBe(getNodeCpuPerTurn(1)); // synapse starts at L1
+      expect(agent.miningRate).toBe(TIER_MINING_RATE.synapse);
     });
 
     it("assigns parent agent ID when provided", () => {
       const id = useGameStore
         .getState()
-        .createAgent("sonnet", { x: 0, y: 0 }, undefined, "parent-1")!;
+        .createAgent("cortex", { x: 0, y: 0 }, undefined, "parent-1")!;
       expect(useGameStore.getState().agents[id].parentAgentId).toBe("parent-1");
     });
   });
@@ -134,54 +144,58 @@ describe("gameStore", () => {
     beforeEach(() => {
       useGameStore.getState().setCurrentUser("u1", "a1");
       // Add an unclaimed node (userId is empty string)
-      useGameStore.getState().addAgent(makeAgent({ id: "unclaimed-1", userId: "", tier: "haiku" }));
+      useGameStore.getState().addAgent(makeAgent({
+        id: "unclaimed-1", userId: "",
+        level: 1, miningAlloc: 50, securingAlloc: 50, selfDevAlloc: 0, levelingUntilTurn: null,
+      }));
     });
 
     it("claims an unclaimed node", () => {
-      const result = useGameStore.getState().claimNode("unclaimed-1", "sonnet");
+      const result = useGameStore.getState().claimNode("unclaimed-1", "synapse");
       expect(result).toBe(true);
       const claimed = useGameStore.getState().agents["unclaimed-1"];
       expect(claimed.userId).toBe("u1");
-      expect(claimed.tier).toBe("sonnet");
-      expect(claimed.borderRadius).toBe(TIER_BASE_BORDER.sonnet);
+      expect(claimed.level).toBe(1); // claimNode always starts at L1
+      expect(claimed.borderRadius).toBe(64); // fixed L1 border radius
     });
 
     it("deducts energy and minerals on claim", () => {
       const before = useGameStore.getState();
       const eBefore = before.energy;
       const mBefore = before.minerals;
-      useGameStore.getState().claimNode("unclaimed-1", "haiku");
+      useGameStore.getState().claimNode("unclaimed-1", "synapse");
       const after = useGameStore.getState();
-      expect(after.energy).toBe(eBefore - TIER_CLAIM_COST.haiku);
-      expect(after.minerals).toBe(mBefore - Math.ceil(TIER_CLAIM_COST.haiku * 0.3));
+      // Fixed L1 claim cost: energy=10, minerals=3
+      expect(after.energy).toBe(eBefore - 10);
+      expect(after.minerals).toBe(mBefore - 3);
     });
 
     it("fails if node is already claimed", () => {
       useGameStore.getState().addAgent(makeAgent({ id: "owned", userId: "u2" }));
-      const result = useGameStore.getState().claimNode("owned", "haiku");
+      const result = useGameStore.getState().claimNode("owned", "synapse");
       expect(result).toBe(false);
     });
 
     it("fails if not enough energy", () => {
       useGameStore.setState({ energy: 0 });
-      const result = useGameStore.getState().claimNode("unclaimed-1", "opus");
+      const result = useGameStore.getState().claimNode("unclaimed-1", "synapse");
       expect(result).toBe(false);
     });
 
     it("fails if not enough minerals", () => {
       useGameStore.setState({ minerals: 0 });
-      const result = useGameStore.getState().claimNode("unclaimed-1", "opus");
+      const result = useGameStore.getState().claimNode("unclaimed-1", "synapse");
       expect(result).toBe(false);
     });
 
     it("sets parentAgentId when provided", () => {
-      const result = useGameStore.getState().claimNode("unclaimed-1", "haiku", "parent-opus");
+      const result = useGameStore.getState().claimNode("unclaimed-1", "synapse", "parent-lattice");
       expect(result).toBe(true);
-      expect(useGameStore.getState().agents["unclaimed-1"].parentAgentId).toBe("parent-opus");
+      expect(useGameStore.getState().agents["unclaimed-1"].parentAgentId).toBe("parent-lattice");
     });
 
     it("leaves parentAgentId undefined when not provided", () => {
-      const result = useGameStore.getState().claimNode("unclaimed-1", "haiku");
+      const result = useGameStore.getState().claimNode("unclaimed-1", "synapse");
       expect(result).toBe(true);
       expect(useGameStore.getState().agents["unclaimed-1"].parentAgentId).toBeUndefined();
     });
@@ -190,10 +204,13 @@ describe("gameStore", () => {
       // Simulate new user with userId but no currentAgentId
       useGameStore.getState().reset();
       useGameStore.setState({ currentUserId: "new-user" });
-      useGameStore.getState().addAgent(makeAgent({ id: "slot-first", userId: "", tier: "haiku" }));
+      useGameStore.getState().addAgent(makeAgent({
+        id: "slot-first", userId: "",
+        level: 1, miningAlloc: 50, securingAlloc: 50, selfDevAlloc: 0, levelingUntilTurn: null,
+      }));
 
-      // Claim as sonnet (community default)
-      const success = useGameStore.getState().claimNode("slot-first", "sonnet");
+      // Claim with synapse (L1 — everyone starts at L1)
+      const success = useGameStore.getState().claimNode("slot-first", "synapse");
       expect(success).toBe(true);
 
       // Set as primary — this also sets currentAgentId
@@ -202,7 +219,7 @@ describe("gameStore", () => {
       expect(state.currentAgentId).toBe("slot-first");
       expect(state.agents["slot-first"].isPrimary).toBe(true);
       expect(state.agents["slot-first"].userId).toBe("new-user");
-      expect(state.agents["slot-first"].tier).toBe("sonnet");
+      expect(state.agents["slot-first"].level).toBe(1);
     });
   });
 
@@ -214,7 +231,7 @@ describe("gameStore", () => {
       useGameStore.getState().setBorderPressure("a1", 6);
       const agent = useGameStore.getState().agents["a1"];
       expect(agent.borderPressure).toBe(6);
-      expect(agent.cpuPerTurn).toBe(TIER_CPU_COST.opus + 6); // base + pressure
+      expect(agent.cpuPerTurn).toBe(L7_CPU + 6); // base (L7) + pressure
     });
 
     it("clamps pressure to 0-20 range", () => {
@@ -229,13 +246,13 @@ describe("gameStore", () => {
   describe("setMiningRate", () => {
     it("sets mining rate and updates cpuPerTurn for extra mining", () => {
       useGameStore.getState().addAgent(makeAgent());
-      const baseMining = TIER_MINING_RATE.opus;
+      const baseMining = TIER_MINING_RATE.lattice;
       const boostedRate = baseMining * 2;
       useGameStore.getState().setMiningRate("a1", boostedRate);
       const agent = useGameStore.getState().agents["a1"];
       expect(agent.miningRate).toBe(boostedRate);
-      // extra mining = boostedRate - baseMining
-      expect(agent.cpuPerTurn).toBe(TIER_CPU_COST.opus + baseMining);
+      // base cpuPerTurn (L7) + extra mining = L7_CPU + baseMining
+      expect(agent.cpuPerTurn).toBe(L7_CPU + baseMining);
     });
 
     it("clamps mining rate to 0-50", () => {
@@ -267,7 +284,7 @@ describe("gameStore", () => {
       useGameStore.getState().setStakedCpu("a1", 10);
       const agent = useGameStore.getState().agents["a1"];
       expect(agent.stakedCpu).toBe(10);
-      expect(agent.cpuPerTurn).toBe(TIER_CPU_COST.opus + 10);
+      expect(agent.cpuPerTurn).toBe(L7_CPU + 10); // base (L7) + staked
     });
 
     it("clamps staked CPU to 0-30", () => {
@@ -421,13 +438,13 @@ describe("gameStore", () => {
       expect(useGameStore.getState().turn).toBe(1);
     });
 
-    it("increases energy by regen minus commitments", () => {
-      useGameStore.setState({ cpuRegenPerTurn: 100, miningCpuPerBlock: 30, securingCpuPerBlock: 20 });
+    it("increases energy by subscription regen (node maintenance removed)", () => {
+      useGameStore.setState({ cpuRegenPerTurn: 100, miningCpuPerBlock: 0, securingCpuPerBlock: 0 });
       const before = useGameStore.getState().energy;
       useGameStore.getState().tick();
       const after = useGameStore.getState().energy;
-      // regen(100) - mining(30) - securing(20) = +50
-      expect(after).toBe(before + 50);
+      // regen(100) only — per-node CPU aggregation via setNodeAllocation
+      expect(after).toBe(before + 100);
     });
 
     it("increases minerals by 1 per owned agent", () => {
