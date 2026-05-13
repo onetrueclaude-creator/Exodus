@@ -11,14 +11,14 @@ describe("gameStore — lattice/blocknode state", () => {
     useGameStore.getState().initLattice(3);
     const s = useGameStore.getState();
     expect(s.totalBlocksMined).toBe(3);
-    expect(Object.keys(s.blocknodes)).toHaveLength(36); // ring 1=4, ring 2=12, ring 3=20 → total 36
+    expect(Object.keys(s.blocknodes)).toHaveLength(48); // ring 1=8, ring 2=16, ring 3=24 → total 48
   });
 
   it("addBlocknodesForBlock adds 4 new nodes", () => {
     useGameStore.getState().initLattice(1);
     useGameStore.getState().addBlocknodesForBlock(2);
     const s = useGameStore.getState();
-    expect(Object.keys(s.blocknodes)).toHaveLength(16); // ring 1 (4) + ring 2 (12) = 16
+    expect(Object.keys(s.blocknodes)).toHaveLength(24); // ring 1 (8) + ring 2 (16) = 24
   });
 
   it("claimBlocknode sets ownerId but does NOT auto-add to visibleFactions", () => {
