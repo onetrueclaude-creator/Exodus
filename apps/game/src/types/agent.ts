@@ -1,13 +1,28 @@
 export type { FactionId } from "./grid";
 import type { GridPosition } from "./grid";
+import type { NodeTier } from "@/lib/nodeTier";
 
-export type AgentTier = "opus" | "sonnet" | "haiku";
+// Re-export NodeTier as AgentTier for transitional compatibility.
+// New code should import NodeTier from @/lib/nodeTier directly.
+// This alias is removed in sub-project B (chain pivot).
+export type AgentTier = NodeTier;
 
 export interface Agent {
   id: string;
   userId: string;
   position: GridPosition;
-  tier: AgentTier;
+
+  // NEW: numeric level replacing the old tier field. Always ≥ 1.
+  level: number;
+
+  // NEW: per-node CPU allocation. Must sum to 100 at all times.
+  miningAlloc: number;
+  securingAlloc: number;
+  selfDevAlloc: number;
+
+  // NEW: level-up state. null = idle. Otherwise: the absolute turn index when leveling completes.
+  levelingUntilTurn: number | null;
+
   isPrimary: boolean;
   planets: string[]; // planet IDs
   createdAt: number;
@@ -25,39 +40,50 @@ export interface Agent {
   storageSlots?: number; // data packet capacity at this coordinate (volume)
 }
 
-/** CPU cost per turn by tier */
-export const TIER_CPU_COST: Record<AgentTier, number> = {
-  haiku: 1,
-  sonnet: 3,
-  opus: 8,
+// === Tier-keyed cost tables, re-keyed by NodeTier ===
+// Numbers mirror the legacy haiku/sonnet/opus values, mapped:
+// synapse ← haiku, cortex ← sonnet, lattice ← opus, nexus = lattice * scale.
+// These tables are referenced by AgentChat's per-tier action menus and by the
+// chain compatibility shim. Sub-project B will swap these for level-based formulas.
+
+/** CPU cost per turn by tier (kept for legacy menu shaping in AgentChat) */
+export const TIER_CPU_COST: Record<NodeTier, number> = {
+  synapse: 1,
+  cortex: 3,
+  lattice: 8,
+  nexus: 16,
 };
 
 /** Base border radius by tier */
-export const TIER_BASE_BORDER: Record<AgentTier, number> = {
-  haiku: 60,
-  sonnet: 90,
-  opus: 130,
+export const TIER_BASE_BORDER: Record<NodeTier, number> = {
+  synapse: 60,
+  cortex: 90,
+  lattice: 130,
+  nexus: 180,
 };
 
 /** Base mining rate (energy produced per turn) by tier */
-export const TIER_MINING_RATE: Record<AgentTier, number> = {
-  haiku: 2,
-  sonnet: 5,
-  opus: 12,
+export const TIER_MINING_RATE: Record<NodeTier, number> = {
+  synapse: 2,
+  cortex: 5,
+  lattice: 12,
+  nexus: 24,
 };
 
 /** Max child agents each tier can control */
-export const TIER_MAX_CHILDREN: Record<AgentTier, number> = {
-  opus: 3, // Opus controls up to 3 Sonnets
-  sonnet: 3, // Sonnet controls up to 3 Haikus
-  haiku: 0, // Haiku is the leaf tier — can claim distant nodes but controls nothing
+export const TIER_MAX_CHILDREN: Record<NodeTier, number> = {
+  nexus: 5,
+  lattice: 3,
+  cortex: 3,
+  synapse: 0,
 };
 
 /** Claim cost multiplier by tier (energy = multiplier * base, minerals = multiplier * 0.3) */
-export const TIER_CLAIM_COST: Record<AgentTier, number> = {
-  haiku: 10, // cheapest to claim
-  sonnet: 30, // mid-range
-  opus: 80, // most expensive
+export const TIER_CLAIM_COST: Record<NodeTier, number> = {
+  synapse: 10,
+  cortex: 30,
+  lattice: 80,
+  nexus: 160,
 };
 
 export interface Planet {
