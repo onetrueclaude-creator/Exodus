@@ -460,7 +460,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
         return;
       }
       if (nearbyUnclaimed.length === 0) {
-        addMsg('system', 'No unclaimed nodes in range.');
+        addMsg('system', 'Empire fully expanded — no adjacent unclaimed cells.');
         return;
       }
       addMsg('user', 'Deploy Agent');
@@ -844,7 +844,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                 </div>
                 {nearbyUnclaimed.length === 0 ? (
                   <div className="text-[10px] text-text-muted/40 px-2 py-3 text-center" style={{ fontFamily: "'Fira Code', monospace" }}>
-                    No unclaimed nodes in range
+                    Empire fully expanded — no adjacent unclaimed cells.
                   </div>
                 ) : (
                   nearbyUnclaimed.map(star => {

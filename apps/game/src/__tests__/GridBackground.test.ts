@@ -44,7 +44,7 @@ vi.mock("pixi.js", () => {
   }
 
   function Sprite() {
-    return { anchor: { set: vi.fn() }, position: { set: vi.fn() } };
+    return { anchor: { set: vi.fn() }, position: { set: vi.fn() }, scale: { set: vi.fn() } };
   }
 
   const Texture = { from: vi.fn(() => ({})) };

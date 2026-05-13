@@ -19,24 +19,29 @@ const GRID_LINE_ALPHA = 0.03;
  * Drawn once at startup — faint cyan glow that fades to transparent at MAX_LATTICE_RING.
  */
 function createDensityHeatmapSprite(): Sprite {
-  const radius = MAX_LATTICE_RING * CELL_SIZE; // half-extent in pixels
-  const diameter = radius * 2;
+  // Fixed 2048×2048 canvas — safe for all GPUs. The sprite scales to lattice size.
+  const TEXTURE_SIZE = 2048;
+  const center = TEXTURE_SIZE / 2;
   const canvas = document.createElement("canvas");
-  canvas.width = diameter;
-  canvas.height = diameter;
+  canvas.width = TEXTURE_SIZE;
+  canvas.height = TEXTURE_SIZE;
   const ctx = canvas.getContext("2d");
   if (ctx) {
     // ctx may be null in non-browser environments (e.g. jsdom in tests) — skip gradient there
-    const gradient = ctx.createRadialGradient(radius, radius, 0, radius, radius, radius);
-    gradient.addColorStop(0, "rgba(34, 211, 238, 0.18)");   // accent-cyan at center
-    gradient.addColorStop(1, "rgba(34, 211, 238, 0.00)");   // transparent at edge
+    const gradient = ctx.createRadialGradient(center, center, 0, center, center, center);
+    gradient.addColorStop(0, "rgba(34, 211, 238, 0.18)");
+    gradient.addColorStop(1, "rgba(34, 211, 238, 0.00)");
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, diameter, diameter);
+    ctx.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE);
   }
   const tex = Texture.from(canvas);
   const sprite = new Sprite(tex);
   sprite.anchor.set(0.5);
-  sprite.position.set(0, 0); // origin in lattice coords
+  sprite.position.set(0, 0);
+  // Scale sprite so its drawn radius matches MAX_LATTICE_RING * CELL_SIZE
+  const targetRadius = MAX_LATTICE_RING * CELL_SIZE;
+  const spriteScale = (targetRadius * 2) / TEXTURE_SIZE;
+  sprite.scale.set(spriteScale);
   return sprite;
 }
 
