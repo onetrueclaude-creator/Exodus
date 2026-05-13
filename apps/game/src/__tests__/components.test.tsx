@@ -292,6 +292,139 @@ describe('NetworkChatRoom', () => {
   });
 });
 
+/* ── AgentChat — Configure Node + Develop Node ─────────── */
+
+vi.mock('@/services/testnetApi', () => ({
+  postTransact: vi.fn().mockResolvedValue({ amount: 0, fee: 0 }),
+  getStatus: vi.fn().mockResolvedValue({}),
+}));
+
+vi.mock('@/lib/actionLogger', () => ({
+  logAction: vi.fn(),
+}));
+
+describe('AgentChat — Configure Node + Develop Node', () => {
+  let AgentChat: React.ComponentType<{
+    agent: Agent;
+    chainService: null;
+    onClose: () => void;
+    onDeploy?: (newAgentId: string) => void;
+    onFocusNode?: (nodeId: string) => void;
+    initialDeployTarget?: string;
+  }>;
+
+  function makeAgentChat(overrides: Partial<Agent> = {}): Agent {
+    return {
+      id: 'agent-test',
+      userId: 'u-1',
+      level: 3,
+      miningAlloc: 50,
+      securingAlloc: 50,
+      selfDevAlloc: 0,
+      levelingUntilTurn: null,
+      position: { x: 0, y: 0 },
+      isPrimary: true,
+      planets: [],
+      createdAt: 0,
+      borderRadius: 64,
+      borderPressure: 0,
+      cpuPerTurn: 20,
+      miningRate: 1,
+      energyLimit: 50,
+      stakedCpu: 0,
+      ...overrides,
+    };
+  }
+
+  beforeEach(async () => {
+    // jsdom does not implement scrollIntoView — stub it to avoid TypeError
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
+    useGameStore.getState().reset();
+    const mod = await import('@/components/AgentChat');
+    AgentChat = mod.default;
+  });
+
+  it('Configure Node menu shows allocation sliders', async () => {
+    const agent = makeAgentChat();
+    useGameStore.setState({ agents: { [agent.id]: agent } });
+    render(
+      <AgentChat
+        agent={agent}
+        chainService={null}
+        onClose={() => {}}
+        onDeploy={() => {}}
+        onFocusNode={() => {}}
+        initialDeployTarget={undefined}
+      />
+    );
+    // Navigate: Blockchain Protocols → Configure Node
+    fireEvent.click(screen.getByText('Blockchain Protocols'));
+    fireEvent.click(screen.getByText('Configure Node'));
+    expect(screen.getAllByRole('slider').length).toBe(3);
+  });
+
+  it('Develop Node menu shows level and next-level preview', async () => {
+    const agent = makeAgentChat({ level: 3 });
+    useGameStore.setState({ agents: { [agent.id]: agent } });
+    render(
+      <AgentChat
+        agent={agent}
+        chainService={null}
+        onClose={() => {}}
+        onDeploy={() => {}}
+        onFocusNode={() => {}}
+        initialDeployTarget={undefined}
+      />
+    );
+    fireEvent.click(screen.getByText('Blockchain Protocols'));
+    fireEvent.click(screen.getByText('Develop Node'));
+    // Line 1323: "Lv {agent.level} {TIER_DISPLAY_NAME[nodeTierCurrent]}" — level 3 = Synapse
+    expect(screen.getByText(/Lv 3 Synapse/)).toBeInTheDocument();
+    // Line 1326: "Level {nextLevel} {TIER_DISPLAY_NAME[nextTier]}" — level 4 = Cortex
+    expect(screen.getByText(/Level 4 Cortex/)).toBeInTheDocument();
+  });
+
+  it('Begin level-up triggers beginNodeLevelUp action', async () => {
+    const agent = makeAgentChat({ level: 2 });
+    useGameStore.setState({ turn: 5, agents: { [agent.id]: agent } });
+    render(
+      <AgentChat
+        agent={agent}
+        chainService={null}
+        onClose={() => {}}
+        onDeploy={() => {}}
+        onFocusNode={() => {}}
+        initialDeployTarget={undefined}
+      />
+    );
+    fireEvent.click(screen.getByText('Blockchain Protocols'));
+    fireEvent.click(screen.getByText('Develop Node'));
+    fireEvent.click(screen.getByRole('button', { name: /Begin level-up/i }));
+    const updated = useGameStore.getState().agents['agent-test'];
+    expect(updated.levelingUntilTurn).toBe(7); // turn 5 + level 2
+  });
+
+  it('Develop Node shows cancel button when already leveling', async () => {
+    const agent = makeAgentChat({ level: 3, levelingUntilTurn: 10 });
+    useGameStore.setState({ turn: 5, agents: { [agent.id]: agent } });
+    render(
+      <AgentChat
+        agent={agent}
+        chainService={null}
+        onClose={() => {}}
+        onDeploy={() => {}}
+        onFocusNode={() => {}}
+        initialDeployTarget={undefined}
+      />
+    );
+    fireEvent.click(screen.getByText('Blockchain Protocols'));
+    fireEvent.click(screen.getByText('Develop Node'));
+    // When leveling, the header shows "DEVELOPING — X TURNS REMAINING"
+    expect(screen.getByText(/DEVELOPING/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Cancel upgrade/i })).toBeInTheDocument();
+  });
+});
+
 /* ── ResourceBar ──────────────────────────────────────── */
 
 describe('ResourceBar', () => {
