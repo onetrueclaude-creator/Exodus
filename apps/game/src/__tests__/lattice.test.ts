@@ -9,6 +9,7 @@ import {
   getCellDensity,
   getFrontierCell,
   FACTIONS,
+  createCellInternal,
 } from "@/lib/lattice";
 
 // Math convention: +X = right, +Y = up
@@ -116,5 +117,27 @@ describe("cellToPixel", () => {
   });
   it("(1,-1) maps to (CELL_SIZE, CELL_SIZE) — negative Y renders downward", () => {
     expect(cellToPixel(1, -1)).toEqual({ px: CELL_SIZE, py: CELL_SIZE });
+  });
+});
+
+describe("createCell — open grid", () => {
+  it("creates an origin cell (0,0) with faction null", () => {
+    const cell = createCellInternal(0, 0, 0);
+    expect(cell.cx).toBe(0);
+    expect(cell.cy).toBe(0);
+    expect(cell.faction).toBeNull();
+    expect(cell.ownerId).toBeNull();
+    expect(cell.secureStrength).toBeCloseTo(100, 0); // density 1.0 at origin
+  });
+
+  it("creates axis cells with faction null", () => {
+    expect(createCellInternal(0, 5, 5).faction).toBeNull();
+    expect(createCellInternal(5, 0, 5).faction).toBeNull();
+    expect(createCellInternal(-3, 0, 3).faction).toBeNull();
+  });
+
+  it("creates non-axis cells with faction null (no quadrant binding)", () => {
+    expect(createCellInternal(1, 1, 1).faction).toBeNull();
+    expect(createCellInternal(-2, 3, 3).faction).toBeNull();
   });
 });
