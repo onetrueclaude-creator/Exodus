@@ -702,14 +702,11 @@ export const useGameStore = create<GameState>((set) => ({
     const s = useGameStore.getState();
     const node = s.blocknodes[nodeId];
     if (!node || node.ownerId !== null) return false;
-    // Arm nodes are faction infrastructure — only assignable during init/dev-seed
-    // (when currentUserFaction is null, before setCurrentUserFaction is called).
-    // Regular users cannot claim arm nodes; they expand via mineGridNode/claimGridNode.
-    if (s.currentUserFaction !== null) return false;
+    if (s.currentUserFaction === null) return false; // need faction to tag the cell
     set((state) => ({
       blocknodes: {
         ...state.blocknodes,
-        [nodeId]: { ...node, ownerId: userId },
+        [nodeId]: { ...node, ownerId: userId, faction: s.currentUserFaction },
       },
       // visibleFactions NOT updated here — call revealFaction() explicitly
     }));
