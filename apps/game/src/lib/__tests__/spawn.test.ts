@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { cellsInChebyshevRing } from "@/lib/spawn";
+import { cellsInChebyshevRing, getNextSpawnCell } from "@/lib/spawn";
+import { buildAllCells, setCellOwner, cellId, createCellInternal } from "@/lib/lattice";
+import type { BlockNode } from "@/types";
 
 describe("cellsInChebyshevRing", () => {
   it("ring 0 returns [(0,0)]", () => {
@@ -29,5 +31,66 @@ describe("cellsInChebyshevRing", () => {
 
   it("negative ring returns []", () => {
     expect(cellsInChebyshevRing(-1)).toEqual([]);
+  });
+});
+
+function setOwner(
+  map: Record<string, BlockNode>,
+  cx: number,
+  cy: number,
+  ownerId: string
+): Record<string, BlockNode> {
+  const id = cellId(cx, cy);
+  const cell = map[id] ?? createCellInternal(cx, cy, 0);
+  return { ...map, [id]: setCellOwner(cell, ownerId, "community") };
+}
+
+describe("getNextSpawnCell", () => {
+  it("empty grid returns origin (0,0)", () => {
+    const cells = buildAllCells(3);
+    const spawn = getNextSpawnCell(cells);
+    expect(spawn).toEqual({ cx: 0, cy: 0, chebyshev: 0 });
+  });
+
+  it("origin claimed returns (-1,-1) (lex-first in ring 1)", () => {
+    let cells = buildAllCells(3);
+    cells = setOwner(cells, 0, 0, "u-1");
+    expect(getNextSpawnCell(cells)).toEqual({ cx: -1, cy: -1, chebyshev: 1 });
+  });
+
+  it("origin + first 3 ring-1 cells claimed returns (-1, 1)", () => {
+    let cells = buildAllCells(3);
+    cells = setOwner(cells, 0, 0, "u-1");
+    cells = setOwner(cells, -1, -1, "u-2");
+    cells = setOwner(cells, -1, 0, "u-3");
+    expect(getNextSpawnCell(cells)).toEqual({ cx: -1, cy: 1, chebyshev: 1 });
+  });
+
+  it("origin + all 8 ring-1 cells claimed returns (-2,-2)", () => {
+    let cells = buildAllCells(3);
+    const ring1 = [
+      [0, 0],
+      [-1, -1],
+      [-1, 0],
+      [-1, 1],
+      [0, -1],
+      [0, 1],
+      [1, -1],
+      [1, 0],
+      [1, 1],
+    ];
+    for (const [cx, cy] of ring1) cells = setOwner(cells, cx, cy, "u-1");
+    expect(getNextSpawnCell(cells)).toEqual({ cx: -2, cy: -2, chebyshev: 2 });
+  });
+
+  it("sparse claims (only origin and (1,1)) — next is still (-1,-1)", () => {
+    let cells = buildAllCells(3);
+    cells = setOwner(cells, 0, 0, "u-1");
+    cells = setOwner(cells, 1, 1, "u-2");
+    expect(getNextSpawnCell(cells)).toEqual({ cx: -1, cy: -1, chebyshev: 1 });
+  });
+
+  it("works even when blocknodes map is empty (algorithm doesn't depend on cells existing)", () => {
+    expect(getNextSpawnCell({})).toEqual({ cx: 0, cy: 0, chebyshev: 0 });
   });
 });
