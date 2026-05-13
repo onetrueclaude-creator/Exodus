@@ -4,23 +4,6 @@ export const CELL_SIZE = 64;
 export const DENSITY_DECAY = 0.15;
 export const FACTIONS: FactionId[] = ["community", "treasury", "founder", "pro-max"];
 
-/** Quadrant signs — math convention: +Y = up (NW top-left, NE top-right, etc.) */
-const QUADRANT_SIGNS: Record<FactionId, { sx: number; sy: number }> = {
-  community: { sx: -1, sy: 1 },   // NW (top-left)
-  treasury: { sx: 1, sy: 1 },     // NE (top-right)
-  founder: { sx: 1, sy: -1 },     // SE (bottom-right)
-  "pro-max": { sx: -1, sy: -1 },  // SW (bottom-left)
-};
-
-/** Determine which faction owns a cell. Math convention: +Y = up. */
-export function getFactionForCell(cx: number, cy: number): FactionId | null {
-  if (cx === 0 || cy === 0) return null;
-  if (cx < 0 && cy > 0) return "community";   // NW
-  if (cx > 0 && cy > 0) return "treasury";    // NE
-  if (cx > 0 && cy < 0) return "founder";     // SE
-  return "pro-max";                            // SW
-}
-
 export function getCellDensity(cx: number, cy: number): number {
   const dist = Math.sqrt(cx * cx + cy * cy);
   return 1.0 / (1 + dist * DENSITY_DECAY);
@@ -83,13 +66,20 @@ export function buildAllCells(totalRings: number): Record<string, BlockNode> {
   return result;
 }
 
-export function getFrontierCell(faction: FactionId, cells: Record<string, BlockNode>): BlockNode | null {
-  const candidates = Object.values(cells)
-    .filter((c) => c.faction === faction && c.ownerId === null)
-    .sort((a, b) => (a.cx * a.cx + a.cy * a.cy) - (b.cx * b.cx + b.cy * b.cy));
-  return candidates[0] ?? null;
-}
-
 export function getCellAt(cx: number, cy: number, cells: Record<string, BlockNode>): BlockNode | null {
   return cells[cellId(cx, cy)] ?? null;
+}
+
+/** Apply ownership to a cell. Returns a new cell with ownerId and faction set. Pure. */
+export function setCellOwner(
+  cell: BlockNode,
+  ownerId: string,
+  ownerFaction: FactionId
+): BlockNode {
+  return { ...cell, ownerId, faction: ownerFaction };
+}
+
+/** Release a cell back to unclaimed. Pure. */
+export function clearCellOwner(cell: BlockNode): BlockNode {
+  return { ...cell, ownerId: null, faction: null };
 }
