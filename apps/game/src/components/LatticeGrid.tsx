@@ -276,7 +276,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
 
     // Draw blocknode circles
     for (const node of nodes) {
-      const isVisible = effectiveVisible.includes(node.faction);
+      const isVisible = node.faction !== null && effectiveVisible.includes(node.faction);
       const nodeContainer = createBlockNode(
         node,
         isVisible,
@@ -292,7 +292,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
     }
 
     // Auto-zoom-to-fit on first blocknode render — centers on visible faction arms
-    const visibleNodes = nodes.filter((n) => effectiveVisible.includes(n.faction));
+    const visibleNodes = nodes.filter((n) => n.faction !== null && effectiveVisible.includes(n.faction));
     if (visibleNodes.length > 0 && !hasBlocknodeZoomedRef.current) {
       hasBlocknodeZoomedRef.current = true;
       // Only use inner rings (0–2) for the initial zoom calculation.
