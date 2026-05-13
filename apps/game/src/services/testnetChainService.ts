@@ -16,6 +16,34 @@ import { getNodeTier, getNodeCpuPerTurn } from '@/lib/nodeTier';
 import type { ChainService } from './chainService';
 import * as api from './testnetApi';
 
+// === Chain compatibility shim ===
+// Translates between the legacy on-chain tier strings (opus/sonnet/haiku) and
+// the new local level model. Sub-project B will retire this shim by adopting
+// level-based types on the chain side directly.
+
+type LegacyTier = 'opus' | 'sonnet' | 'haiku';
+
+/**
+ * Map a numeric level to the legacy tier string the chain still expects.
+ * Synapse band (L1-3) → haiku; Cortex band (L4-6) → sonnet; Lattice+ (L7+) → opus.
+ */
+export function levelToLegacyTier(level: number): LegacyTier {
+  if (level >= 7) return 'opus';
+  if (level >= 4) return 'sonnet';
+  return 'haiku';
+}
+
+/**
+ * Inverse: map a legacy tier from chain responses to a starting level.
+ * Roughly: haiku→L1, sonnet→L4, opus→L7. Loses information for high-level
+ * nodes (a L12 node sent to chain as "opus" comes back as L7).
+ */
+export function legacyTierToLevel(tier: LegacyTier): number {
+  if (tier === 'opus') return 7;
+  if (tier === 'sonnet') return 4;
+  return 1;
+}
+
 /** Visual grid extent (matches LatticeGrid GRID_EXTENT / 2) */
 const VISUAL_HALF = 4000;
 const VISUAL_SPAN = VISUAL_HALF * 2; // 8000
