@@ -1,9 +1,21 @@
 import { Graphics, Text, Container } from "pixi.js";
 import type { Agent, FogLevel, BlockNode } from "@/types";
 import { CELL_SIZE, cellToPixel } from "@/lib/lattice";
+import { getNodeTier, type NodeTier } from "@/lib/nodeTier";
 
-const TIER_RADIUS = { opus: 10, sonnet: 7, haiku: 4 };
-const TIER_COLOR = { opus: 0xf97316, sonnet: 0x9333ea, haiku: 0xffffff };
+const TIER_RADIUS: Record<NodeTier, number> = {
+  synapse: 4,
+  cortex: 7,
+  lattice: 10,
+  nexus: 14,
+};
+
+const TIER_COLOR: Record<NodeTier, number> = {
+  synapse: 0xffffff,
+  cortex: 0x9333ea,
+  lattice: 0xf97316,
+  nexus: 0x22d3ee,
+};
 
 const FOG_ALPHA: Record<FogLevel, number> = {
   clear: 1.0,
@@ -46,10 +58,11 @@ export function createStarNode(agent: Agent, fogLevel: FogLevel): Container {
   container.position.set(agent.position.x, agent.position.y);
 
   const alpha = FOG_ALPHA[fogLevel];
-  const radius = TIER_RADIUS[agent.tier];
+  const tier = getNodeTier(agent.level);
+  const radius = TIER_RADIUS[tier];
   const isUnclaimed = !agent.userId;
   const showColor = !isUnclaimed && (fogLevel === "clear" || fogLevel === "hazy");
-  const color = isUnclaimed ? 0x3a4556 : showColor ? TIER_COLOR[agent.tier] : 0x3a4556;
+  const color = isUnclaimed ? 0x3a4556 : showColor ? TIER_COLOR[tier] : 0x3a4556;
 
   // Hit area (invisible, larger than visual for easier clicking)
   const hitArea = new Graphics();

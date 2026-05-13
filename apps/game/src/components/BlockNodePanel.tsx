@@ -1,7 +1,7 @@
 "use client";
 
 import { useGameStore } from "@/store";
-import { NODE_CPU_PER_TURN } from "@/store/gameStore";
+import { getNodeTier, TIER_DISPLAY_NAME } from "@/lib/nodeTier";
 import type { BlockNode } from "@/types";
 
 const FACTION_STYLE: Record<string, { text: string; border: string; bg: string; label: string }> = {
@@ -46,6 +46,11 @@ interface BlockNodePanelProps {
 /** Info-only panel for a clicked blocknode. No actions — all actions via Terminal. */
 export default function BlockNodePanel({ node, onClose }: BlockNodePanelProps) {
   const currentUserId = useGameStore((s) => s.currentUserId);
+  const agents = useGameStore((s) => s.agents);
+  const agentAtCell = agents[node.id];
+  const levelLabel = agentAtCell
+    ? ` · Lv ${agentAtCell.level} ${TIER_DISPLAY_NAME[getNodeTier(agentAtCell.level)]}`
+    : "";
   const style = node.faction ? (FACTION_STYLE[node.faction] ?? UNCLAIMED_STYLE) : UNCLAIMED_STYLE;
   const isOwned = node.ownerId !== null;
   const isOwnedByMe = node.ownerId === currentUserId;
@@ -79,7 +84,7 @@ export default function BlockNodePanel({ node, onClose }: BlockNodePanelProps) {
       <div className="mt-2 pt-2 border-t border-card-border/30 text-[10px] font-mono">
         {isOwnedByMe ? (
           <span className={style.text}>
-            {'\u25C8'} Your {node.ringIndex === 1 ? 'Homenode' : 'Node'} · {NODE_CPU_PER_TURN} CPU/turn
+            {'\u25C8'} Your {agentAtCell?.isPrimary ? "Homenode" : "Node"}{levelLabel}
           </span>
         ) : isOwned ? (
           <span className="text-text-muted">
