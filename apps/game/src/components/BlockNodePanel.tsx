@@ -31,6 +31,13 @@ const FACTION_STYLE: Record<string, { text: string; border: string; bg: string; 
   },
 };
 
+const UNCLAIMED_STYLE = {
+  text: "text-text-muted",
+  border: "border-card-border/50",
+  bg: "bg-card-border/10",
+  label: "Unclaimed",
+} as const;
+
 interface BlockNodePanelProps {
   node: BlockNode;
   onClose: () => void;
@@ -39,7 +46,7 @@ interface BlockNodePanelProps {
 /** Info-only panel for a clicked blocknode. No actions — all actions via Terminal. */
 export default function BlockNodePanel({ node, onClose }: BlockNodePanelProps) {
   const currentUserId = useGameStore((s) => s.currentUserId);
-  const style = (node.faction ? FACTION_STYLE[node.faction] : null) ?? FACTION_STYLE.community;
+  const style = node.faction ? (FACTION_STYLE[node.faction] ?? UNCLAIMED_STYLE) : UNCLAIMED_STYLE;
   const isOwned = node.ownerId !== null;
   const isOwnedByMe = node.ownerId === currentUserId;
 

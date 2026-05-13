@@ -341,7 +341,14 @@ export const useGameStore = create<GameState>((set) => ({
           ? {
               blocknodes: {
                 ...s.blocknodes,
-                [slotId]: { ...existingBlocknode, ownerId: state.currentUserId || "unknown" },
+                [slotId]: {
+                  ...existingBlocknode,
+                  ownerId: state.currentUserId || "unknown",
+                  // Tag the cell with the claimant's faction so the BlockNodePanel,
+                  // GridBackground tint, and CellTooltip all show the correct identity.
+                  // Falls back to existing tag (null for unclaimed) if faction unset.
+                  faction: state.currentUserFaction ?? existingBlocknode.faction,
+                },
               },
             }
           : {}),
