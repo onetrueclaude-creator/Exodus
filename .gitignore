@@ -40,6 +40,9 @@ screenshots/
 # Playwright MCP temp data
 .playwright-mcp/
 
+# Local visual-debug probes (one-off Playwright/canvas scripts)
+apps/game/scripts/visual-debug/
+
 # Auto-generated TypeScript declarations
 next-env.d.ts
 
