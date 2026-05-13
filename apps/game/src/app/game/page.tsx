@@ -22,7 +22,8 @@ import { useChainWebSocket } from "@/hooks/useChainWebSocket";
 import type { SubscriptionTier } from "@/types";
 import type { FactionId } from "@/types";
 import { SUBSCRIPTION_PLANS } from "@/types/subscription";
-import { getFrontierCell, getFactionForCell, getCellDensity } from "@/lib/lattice";
+import { createCellInternal, getCellDensity, CELL_SIZE } from "@/lib/lattice";
+import { getNextSpawnCell } from "@/lib/spawn";
 import { visualToChain } from "@/services/testnetChainService";
 
 /** Map subscription tier to faction arm */
@@ -185,44 +186,59 @@ export default function GamePage() {
           empireColor: DEV_FACTION_COLOR[newUserFaction],
           cpuRegenPerTurn: plan.cpuRegen,
         });
-        // Claim homenode FIRST while currentUserFaction is still null (init/dev-seed mode).
-        // claimBlocknode requires faction === null to assign arm nodes — this is intentional:
-        // arm nodes are faction infrastructure, not user territory. The claim here marks the
-        // ring-0 node as the user's "Homenode" starting reference. setCurrentUserFaction is
-        // called AFTER so future arm-node claim attempts are blocked for regular users.
-        const freshStore = useGameStore.getState();
-        const frontierNode = getFrontierCell(newUserFaction, freshStore.blocknodes);
-        if (frontierNode) {
-          claimBlocknode(frontierNode.id, newUserId);
+        // Open-grid spawn: faction first, then claim the next available origin-out cell.
+        useGameStore.setState({ currentUserFaction: newUserFaction });
+        let blocknodes = useGameStore.getState().blocknodes;
+        const spawn = getNextSpawnCell(blocknodes);
+        if (!spawn) {
+          throw new Error("Lattice saturated: no spawn cell available");
+        }
+        const homeCellId = `cell-${spawn.cx}-${spawn.cy}`;
+        // Ensure the cell exists in store; if outside built rings, create it.
+        if (!blocknodes[homeCellId]) {
+          const newCell = createCellInternal(spawn.cx, spawn.cy, spawn.chebyshev);
+          useGameStore.setState((s) => ({
+            blocknodes: { ...s.blocknodes, [homeCellId]: newCell },
+          }));
+          blocknodes = useGameStore.getState().blocknodes;
+        }
+        const claimed = useGameStore.getState().claimBlocknode(homeCellId, newUserId);
+        if (!claimed) {
+          throw new Error(`Failed to claim spawn cell ${homeCellId}`);
+        }
+        const claimedCell = useGameStore.getState().blocknodes[homeCellId];
 
-          // Create a homenode agent so the terminal works immediately
-          const homenodeAgent: import("@/types").Agent = {
-            id: frontierNode.id,
-            userId: newUserId,
-            position: { x: frontierNode.cx * 64, y: frontierNode.cy * 64 },
-            tier: "opus" as const,
-            isPrimary: true,
-            planets: [],
-            createdAt: Date.now(),
-            username: `Homenode`,
-            borderRadius: 30,
-            borderPressure: 0,
-            cpuPerTurn: 0,
-            miningRate: 0,
-            energyLimit: 0,
-            stakedCpu: 0,
-          };
-          addAgent(homenodeAgent);
-          setCurrentUser(newUserId, frontierNode.id);
-          useGameStore.getState().requestFocus(frontierNode.id);
-          // In production this auto-opens the agent terminal for first-time onboarding.
-          // In dev mode every reload re-triggers "new user" and would slam the panel open,
-          // covering the map; leave the dock closed and let the developer open it manually.
-          if (!isDev) {
-            setActiveDockPanel("terminal");
-          }
-        } else {
-          setCurrentUser(newUserId, "");
+        // Create a homenode agent so the terminal works immediately
+        const homenodeAgent: import("@/types").Agent = {
+          id: homeCellId,
+          userId: newUserId,
+          position: { x: claimedCell.cx * CELL_SIZE, y: -claimedCell.cy * CELL_SIZE },
+          tier: "opus" as const,
+          isPrimary: true,
+          planets: [],
+          createdAt: Date.now(),
+          username: "Homenode",
+          borderRadius: 30,
+          borderPressure: 0,
+          cpuPerTurn: 0,
+          miningRate: 0,
+          energyLimit: 0,
+          stakedCpu: 0,
+          density: getCellDensity(claimedCell.cx, claimedCell.cy),
+          storageSlots: 1,
+        };
+        addAgent(homenodeAgent);
+        setCurrentUser(newUserId, homeCellId);
+        useGameStore.getState().setCamera(
+          { x: claimedCell.cx * CELL_SIZE, y: -claimedCell.cy * CELL_SIZE },
+          2
+        );
+        useGameStore.getState().requestFocus(homeCellId);
+        // In production this auto-opens the agent terminal for first-time onboarding.
+        // In dev mode every reload re-triggers "new user" and would slam the panel open,
+        // covering the map; leave the dock closed and let the developer open it manually.
+        if (!isDev) {
+          setActiveDockPanel("terminal");
         }
         setCurrentUserFaction(newUserFaction);
         revealFaction(newUserFaction);
@@ -326,11 +342,12 @@ export default function GamePage() {
 
           {/* Cell tooltip */}
           {tooltip && (() => {
-            const faction = getFactionForCell(tooltip.cx, tooltip.cy);
-            if (!faction) return null;
             const density = getCellDensity(tooltip.cx, tooltip.cy);
             const cellKey = `cell-${tooltip.cx}-${tooltip.cy}`;
             const node = useGameStore.getState().blocknodes[cellKey];
+            // faction comes from the cell itself (open-grid: no spatial faction zones)
+            const faction = node?.faction ?? null;
+            if (!faction) return null;
             return (
               <CellTooltip
                 cx={tooltip.cx}
