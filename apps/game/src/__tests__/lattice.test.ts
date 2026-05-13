@@ -120,6 +120,41 @@ describe("cellToPixel", () => {
   });
 });
 
+describe("getCellsForRing — open grid", () => {
+  it("ring 0 is just origin (0,0)", () => {
+    const cells = getCellsForRing(0);
+    expect(cells).toHaveLength(1);
+    expect(cells[0].cx).toBe(0);
+    expect(cells[0].cy).toBe(0);
+  });
+
+  it("ring 1 has 8 cells (3x3 minus origin)", () => {
+    const cells = getCellsForRing(1);
+    expect(cells).toHaveLength(8);
+    const coords = cells.map(c => `${c.cx},${c.cy}`).sort();
+    expect(coords).toEqual([
+      "-1,-1", "-1,0", "-1,1",
+      "0,-1",          "0,1",
+      "1,-1",  "1,0",  "1,1",
+    ].sort());
+  });
+
+  it("ring 2 has 16 cells (5x5 minus 3x3 inner)", () => {
+    const cells = getCellsForRing(2);
+    expect(cells).toHaveLength(16);
+    // verify all cells have max(|cx|, |cy|) === 2
+    for (const cell of cells) {
+      expect(Math.max(Math.abs(cell.cx), Math.abs(cell.cy))).toBe(2);
+    }
+  });
+
+  it("ring N has 8*N cells for N >= 1", () => {
+    for (let n = 1; n <= 5; n++) {
+      expect(getCellsForRing(n)).toHaveLength(8 * n);
+    }
+  });
+});
+
 describe("createCell — open grid", () => {
   it("creates an origin cell (0,0) with faction null", () => {
     const cell = createCellInternal(0, 0, 0);

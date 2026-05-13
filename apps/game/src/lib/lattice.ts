@@ -53,17 +53,20 @@ function createCell(cx: number, cy: number, ringIndex: number): BlockNode {
 /** Exposed for tests only — production code uses buildCellsForRing/buildAllCells. */
 export const createCellInternal = createCell;
 
+/** Returns all cells at exactly Chebyshev distance `ring` from origin. Ring 0 = [(0,0)]. */
 export function getCellsForRing(ring: number): BlockNode[] {
-  if (ring <= 0) return [];
+  if (ring < 0) return [];
+  if (ring === 0) return [createCell(0, 0, 0)];
   const cells: BlockNode[] = [];
-  for (const faction of FACTIONS) {
-    const { sx, sy } = QUADRANT_SIGNS[faction];
-    if (ring === 1) {
-      cells.push(createCell(sx, sy, ring));
-    } else {
-      for (let i = 1; i <= ring; i++) { cells.push(createCell(sx * i, sy * ring, ring)); }
-      for (let i = 1; i < ring; i++) { cells.push(createCell(sx * ring, sy * i, ring)); }
-    }
+  // Top and bottom edges (cy = ±ring), full width including corners
+  for (let cx = -ring; cx <= ring; cx++) {
+    cells.push(createCell(cx, -ring, ring));
+    cells.push(createCell(cx, ring, ring));
+  }
+  // Left and right edges (cx = ±ring), excluding corners (already added)
+  for (let cy = -ring + 1; cy <= ring - 1; cy++) {
+    cells.push(createCell(-ring, cy, ring));
+    cells.push(createCell(ring, cy, ring));
   }
   return cells;
 }
