@@ -342,3 +342,191 @@ describe("claimBlocknode — open grid", () => {
     expect(ok).toBe(false);
   });
 });
+
+describe("setNodeAllocation", () => {
+  beforeEach(() => {
+    useGameStore.setState({
+      currentUserId: "u-1",
+      currentUserFaction: "community",
+      agents: {
+        "agent-1": {
+          id: "agent-1",
+          userId: "u-1",
+          level: 1,
+          miningAlloc: 50,
+          securingAlloc: 50,
+          selfDevAlloc: 0,
+          levelingUntilTurn: null,
+          position: { x: 0, y: 0 },
+          isPrimary: true,
+          planets: [],
+          createdAt: 0,
+          username: "test",
+          borderRadius: 64,
+          borderPressure: 0,
+          cpuPerTurn: 10,
+          miningRate: 1,
+          energyLimit: 50,
+          stakedCpu: 0,
+        },
+      },
+    });
+  });
+
+  it("updates allocation when percentages sum to 100", () => {
+    const ok = useGameStore.getState().setNodeAllocation("agent-1", 25, 50, 25);
+    expect(ok).toBe(true);
+    const agent = useGameStore.getState().agents["agent-1"];
+    expect(agent.miningAlloc).toBe(25);
+    expect(agent.securingAlloc).toBe(50);
+    expect(agent.selfDevAlloc).toBe(25);
+  });
+
+  it("rejects allocation that doesn't sum to 100", () => {
+    const ok = useGameStore.getState().setNodeAllocation("agent-1", 50, 50, 25);
+    expect(ok).toBe(false);
+    const agent = useGameStore.getState().agents["agent-1"];
+    expect(agent.miningAlloc).toBe(50); // unchanged
+  });
+
+  it("rejects unknown agent id", () => {
+    expect(useGameStore.getState().setNodeAllocation("agent-nonexistent", 50, 25, 25)).toBe(false);
+  });
+});
+
+describe("beginNodeLevelUp / cancelNodeLevelUp", () => {
+  beforeEach(() => {
+    useGameStore.setState({
+      currentUserId: "u-1",
+      turn: 5,
+      agents: {
+        "agent-1": {
+          id: "agent-1",
+          userId: "u-1",
+          level: 3,
+          miningAlloc: 50,
+          securingAlloc: 50,
+          selfDevAlloc: 0,
+          levelingUntilTurn: null,
+          position: { x: 0, y: 0 },
+          isPrimary: true,
+          planets: [],
+          createdAt: 0,
+          username: "test",
+          borderRadius: 64,
+          borderPressure: 0,
+          cpuPerTurn: 20,
+          miningRate: 1,
+          energyLimit: 50,
+          stakedCpu: 0,
+        },
+      },
+    });
+  });
+
+  it("beginNodeLevelUp sets levelingUntilTurn = currentTurn + level", () => {
+    useGameStore.getState().beginNodeLevelUp("agent-1");
+    const agent = useGameStore.getState().agents["agent-1"];
+    expect(agent.levelingUntilTurn).toBe(5 + 3); // turn 5 + 3-turn upgrade from L3
+  });
+
+  it("cancelNodeLevelUp clears the timer without refunding", () => {
+    useGameStore.getState().beginNodeLevelUp("agent-1");
+    useGameStore.getState().cancelNodeLevelUp("agent-1");
+    expect(useGameStore.getState().agents["agent-1"].levelingUntilTurn).toBeNull();
+  });
+});
+
+describe("tick — per-node aggregation", () => {
+  beforeEach(() => {
+    useGameStore.setState({
+      currentUserId: "u-1",
+      currentUserFaction: "community",
+      turn: 0,
+      energy: 1000,
+      minerals: 100,
+      agntcBalance: 50,
+      cpuRegenPerTurn: 100,
+      miningCpuPerBlock: 0,
+      securingCpuPerBlock: 0,
+      agents: {
+        "agent-1": {
+          id: "agent-1",
+          userId: "u-1",
+          level: 1, // generates 10 CPU/turn at L1
+          miningAlloc: 60,
+          securingAlloc: 40,
+          selfDevAlloc: 0,
+          levelingUntilTurn: null,
+          position: { x: 0, y: 0 },
+          isPrimary: true,
+          planets: [],
+          createdAt: 0,
+          username: "test",
+          borderRadius: 64,
+          borderPressure: 0,
+          cpuPerTurn: 10,
+          miningRate: 1,
+          energyLimit: 50,
+          stakedCpu: 0,
+        },
+      },
+    });
+  });
+
+  it("aggregates mining and securing from a single node", () => {
+    useGameStore.getState().tick();
+    const s = useGameStore.getState();
+    // L1 node generates 10 CPU/turn at 60/40 split → 6 mining, 4 securing
+    expect(s.miningCpuPerBlock).toBe(6);
+    expect(s.securingCpuPerBlock).toBe(4);
+  });
+
+  it("snaps allocation to (0,0,100) while leveling", () => {
+    useGameStore.setState((s) => ({
+      agents: {
+        ...s.agents,
+        "agent-1": { ...s.agents["agent-1"], levelingUntilTurn: 10 },
+      },
+    }));
+    useGameStore.getState().tick();
+    const s = useGameStore.getState();
+    expect(s.miningCpuPerBlock).toBe(0);
+    expect(s.securingCpuPerBlock).toBe(0);
+  });
+
+  it("resolves level-up when timer reaches current turn", () => {
+    useGameStore.setState((s) => ({
+      turn: 0,
+      agents: {
+        ...s.agents,
+        "agent-1": { ...s.agents["agent-1"], level: 3, levelingUntilTurn: 1 },
+      },
+    }));
+    useGameStore.getState().tick();
+    const agent = useGameStore.getState().agents["agent-1"];
+    expect(agent.level).toBe(4);
+    expect(agent.levelingUntilTurn).toBeNull();
+  });
+
+  it("does not resolve level-up when timer is in the future", () => {
+    useGameStore.setState((s) => ({
+      turn: 0,
+      agents: {
+        ...s.agents,
+        "agent-1": { ...s.agents["agent-1"], level: 3, levelingUntilTurn: 5 },
+      },
+    }));
+    useGameStore.getState().tick();
+    const agent = useGameStore.getState().agents["agent-1"];
+    expect(agent.level).toBe(3);
+    expect(agent.levelingUntilTurn).toBe(5);
+  });
+
+  it("energy grows only from subscription regen", () => {
+    const before = useGameStore.getState().energy;
+    useGameStore.getState().tick();
+    const after = useGameStore.getState().energy;
+    expect(after).toBe(before + 100); // cpuRegenPerTurn only, no node maintenance
+  });
+});
