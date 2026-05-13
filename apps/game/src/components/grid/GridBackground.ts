@@ -47,8 +47,7 @@ function createDensityHeatmapSprite(): Sprite {
  *   [0] density heatmap Sprite (radial cyan gradient from origin)
  *   [1] Graphics layer with placeholder dots + grid lines
  *
- * Pass 1: Neutral dot per blocknode cell (temporary placeholder — Task 14 replaces
- *         with faction-tinted owned-cell rendering).
+ * Pass 1: Faction-tinted dot per owned blocknode cell; neutral dot for unclaimed cells.
  * Pass 2: Grid lines on top.
  *
  * @param blocknodes All current blocknodes (keyed by id)
@@ -64,18 +63,25 @@ export function createGridBackground(
   const heatmap = createDensityHeatmapSprite();
   container.addChild(heatmap);
 
-  // Layer 1: placeholder dots + grid lines
+  // Layer 1: owned-cell dots + grid lines
   const graphics = new Graphics();
   container.addChild(graphics);
 
   const range = viewportCells;
 
-  // TEMPORARY placeholder — Task 14 replaces with faction-tinted owned cells.
   for (const node of Object.values(blocknodes)) {
     const { px, py } = cellToPixel(node.cx, node.cy);
-    graphics
-      .circle(px, py, 2)
-      .fill({ color: 0xffffff, alpha: 0.30 });
+    if (node.faction !== null) {
+      // Owned: faction-tinted dot, slightly larger, higher alpha
+      graphics
+        .circle(px, py, 3)
+        .fill({ color: FACTION_COLORS[node.faction], alpha: 0.85 });
+    } else {
+      // Unclaimed: neutral off-white, smaller, lower alpha
+      graphics
+        .circle(px, py, 2)
+        .fill({ color: 0xffffff, alpha: 0.30 });
+    }
   }
 
   // Grid lines
@@ -112,12 +118,19 @@ export function updateGridBackground(
 
   const range = viewportCells;
 
-  // TEMPORARY placeholder — Task 14 replaces with faction-tinted owned cells.
   for (const node of Object.values(blocknodes)) {
     const { px, py } = cellToPixel(node.cx, node.cy);
-    graphics
-      .circle(px, py, 2)
-      .fill({ color: 0xffffff, alpha: 0.30 });
+    if (node.faction !== null) {
+      // Owned: faction-tinted dot, slightly larger, higher alpha
+      graphics
+        .circle(px, py, 3)
+        .fill({ color: FACTION_COLORS[node.faction], alpha: 0.85 });
+    } else {
+      // Unclaimed: neutral off-white, smaller, lower alpha
+      graphics
+        .circle(px, py, 2)
+        .fill({ color: 0xffffff, alpha: 0.30 });
+    }
   }
 
   // Grid lines
