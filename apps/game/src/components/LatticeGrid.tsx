@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useState } from "react";
-import { Application, Container, Graphics } from "pixi.js";
+import { Application, Container } from "pixi.js";
 import { useGameStore } from "@/store";
 import { createGridBackground, updateGridBackground } from "./grid/GridBackground";
 import { createBlockNode } from "./grid/StarNode";
@@ -25,7 +25,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
   const worldRef = useRef<Container | null>(null);
   /** Tracks whether initial blocknode auto-zoom has already fired */
   const hasBlocknodeZoomedRef = useRef(false);
-  const bgRef = useRef<Graphics | null>(null);
+  const bgRef = useRef<Container | null>(null);
   const blocknodesLayerRef = useRef<Container | null>(null);
   /** Tracks when a node was last tapped — avoids deselecting on node clicks */
   const lastNodeTapMsRef = useRef(0);

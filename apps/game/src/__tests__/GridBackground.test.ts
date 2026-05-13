@@ -12,7 +12,14 @@ interface MockGraphics {
   destroy: ReturnType<typeof vi.fn>;
 }
 
-// Mock PixiJS - Graphics is not available in jsdom
+interface MockContainer {
+  children: unknown[];
+  addChild: ReturnType<typeof vi.fn>;
+  getChildAt: ReturnType<typeof vi.fn>;
+  removeChildren: ReturnType<typeof vi.fn>;
+}
+
+// Mock PixiJS — Canvas/WebGL not available in jsdom
 vi.mock("pixi.js", () => {
   function Graphics(this: MockGraphics) {
     this.rect = vi.fn().mockReturnThis();
@@ -25,7 +32,24 @@ vi.mock("pixi.js", () => {
     this.clear = vi.fn().mockReturnThis();
     this.destroy = vi.fn();
   }
-  return { Graphics };
+
+  function Container(this: MockContainer) {
+    this.children = [];
+    this.addChild = vi.fn((child: unknown) => {
+      this.children.push(child);
+      return child;
+    });
+    this.getChildAt = vi.fn((index: number) => this.children[index]);
+    this.removeChildren = vi.fn(() => { this.children = []; });
+  }
+
+  function Sprite() {
+    return { anchor: { set: vi.fn() }, position: { set: vi.fn() } };
+  }
+
+  const Texture = { from: vi.fn(() => ({})) };
+
+  return { Graphics, Container, Sprite, Texture };
 });
 
 import {
@@ -45,41 +69,39 @@ describe("FACTION_COLORS", () => {
 });
 
 describe("createGridBackground", () => {
-  it("returns a Graphics object", () => {
-    const g = createGridBackground({}, 5);
-    expect(g).toBeDefined();
+  it("returns a Container with two children (heatmap + graphics)", () => {
+    const container = createGridBackground({}, 5) as unknown as MockContainer;
+    expect(container).toBeDefined();
+    // children[0] = heatmap sprite, children[1] = graphics layer
+    expect(container.children).toHaveLength(2);
   });
 
-  it("calls circle/fill for each blocknode (placeholder dots)", () => {
+  it("calls circle/fill for each blocknode (placeholder dots) on the graphics layer", () => {
     const nodes = buildAllCells(1);
-    const g = createGridBackground(nodes, 5) as unknown as MockGraphics;
+    const container = createGridBackground(nodes, 5) as unknown as MockContainer;
+    const graphics = container.children[1] as MockGraphics;
     // Placeholder renders one dot per blocknode — fill must have been called
-    expect(g.fill).toHaveBeenCalled();
-    expect(g.circle).toHaveBeenCalled();
+    expect(graphics.fill).toHaveBeenCalled();
+    expect(graphics.circle).toHaveBeenCalled();
   });
 
-  it("calls fill even with no blocknodes (grid lines only)", () => {
-    // With no blocknodes the placeholder loop is a no-op, but stroke is still called
-    const g = createGridBackground({}, 2) as unknown as MockGraphics;
-    expect(g.stroke).toHaveBeenCalled();
-  });
-
-  it("calls stroke for grid lines", () => {
-    const g = createGridBackground({}, 2) as unknown as MockGraphics;
-    expect(g.stroke).toHaveBeenCalled();
-    expect(g.setStrokeStyle).toHaveBeenCalled();
+  it("calls stroke for grid lines even with no blocknodes", () => {
+    const container = createGridBackground({}, 2) as unknown as MockContainer;
+    const graphics = container.children[1] as MockGraphics;
+    expect(graphics.stroke).toHaveBeenCalled();
+    expect(graphics.setStrokeStyle).toHaveBeenCalled();
   });
 });
 
 describe("updateGridBackground", () => {
-  it("calls clear before redrawing", () => {
+  it("calls clear before redrawing the graphics layer", () => {
     const nodes = buildAllCells(1);
-    const g = createGridBackground(nodes, 5) as unknown as MockGraphics;
+    const container = createGridBackground(nodes, 5) as unknown as MockContainer;
+    const graphics = container.children[1] as MockGraphics;
     // Clear the call count to verify clear() is called during update
-    g.clear.mockClear();
-    // updateGridBackground accepts Graphics type; cast via unknown
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock Graphics instance passed in place of real Graphics
-    updateGridBackground(g as any, nodes, 5);
-    expect(g.clear).toHaveBeenCalledOnce();
+    graphics.clear.mockClear();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock Container passed in place of real Container
+    updateGridBackground(container as any, nodes, 5);
+    expect(graphics.clear).toHaveBeenCalledOnce();
   });
 });
