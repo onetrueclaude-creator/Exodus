@@ -84,6 +84,17 @@ export function createGridBackground(
     }
   }
 
+  // Origin marker: faint cyan cross at (0,0), half a cell wide on each axis
+  const armLength = CELL_SIZE / 2;
+  graphics
+    .moveTo(-armLength, 0)
+    .lineTo(armLength, 0)
+    .stroke({ color: 0x22d3ee, alpha: 0.4, width: 2 });
+  graphics
+    .moveTo(0, -armLength)
+    .lineTo(0, armLength)
+    .stroke({ color: 0x22d3ee, alpha: 0.4, width: 2 });
+
   // Grid lines
   graphics.setStrokeStyle({ width: 1, color: GRID_LINE_COLOR, alpha: GRID_LINE_ALPHA });
   const pixelRange = range * CELL_SIZE;
@@ -132,6 +143,17 @@ export function updateGridBackground(
         .fill({ color: 0xffffff, alpha: 0.30 });
     }
   }
+
+  // Origin marker: faint cyan cross at (0,0), half a cell wide on each axis
+  const armLength = CELL_SIZE / 2;
+  graphics
+    .moveTo(-armLength, 0)
+    .lineTo(armLength, 0)
+    .stroke({ color: 0x22d3ee, alpha: 0.4, width: 2 });
+  graphics
+    .moveTo(0, -armLength)
+    .lineTo(0, armLength)
+    .stroke({ color: 0x22d3ee, alpha: 0.4, width: 2 });
 
   // Grid lines
   graphics.setStrokeStyle({ width: 1, color: GRID_LINE_COLOR, alpha: GRID_LINE_ALPHA });
