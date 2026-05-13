@@ -67,7 +67,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
     worldRef.current = world;
 
     // Grid background (index 0)
-    const bg = createGridBackground({}, []);
+    const bg = createGridBackground({});
     bgRef.current = bg;
     world.addChild(bg);
 
@@ -262,7 +262,6 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
       updateGridBackground(
         bgRef.current,
         blocknodes,
-        effectiveVisible,
         Math.min(30, Math.max(1, totalBlocksMined + 1))
       );
     }
