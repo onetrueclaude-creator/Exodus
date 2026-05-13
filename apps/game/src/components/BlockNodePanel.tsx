@@ -39,7 +39,7 @@ interface BlockNodePanelProps {
 /** Info-only panel for a clicked blocknode. No actions — all actions via Terminal. */
 export default function BlockNodePanel({ node, onClose }: BlockNodePanelProps) {
   const currentUserId = useGameStore((s) => s.currentUserId);
-  const style = FACTION_STYLE[node.faction] ?? FACTION_STYLE.community;
+  const style = (node.faction ? FACTION_STYLE[node.faction] : null) ?? FACTION_STYLE.community;
   const isOwned = node.ownerId !== null;
   const isOwnedByMe = node.ownerId === currentUserId;
 

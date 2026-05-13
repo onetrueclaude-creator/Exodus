@@ -184,7 +184,7 @@ export function createBlockNode(
   const { px, py } = cellToPixel(node.cx, node.cy);
   container.position.set(px, py);
 
-  const color = BLOCKNODE_COLORS[node.faction] ?? 0xffffff;
+  const color = (node.faction ? BLOCKNODE_COLORS[node.faction] : null) ?? 0xffffff;
   const strengthFraction = Math.min(1, node.secureStrength / 100);
 
   // Scale radius 3px (min strength) to 8px (max strength)
