@@ -2,57 +2,65 @@
 
 import { useState } from 'react';
 import { TIER_CPU_COST, TIER_CLAIM_COST, TIER_MINING_RATE } from '@/types/agent';
-import type { AgentTier } from '@/types';
+import { getNodeTier, type NodeTier } from '@/lib/nodeTier';
 import { useGameStore } from '@/store';
 
 /** Tier rank for comparison: higher number = higher tier */
-const TIER_RANK: Record<AgentTier, number> = { haiku: 0, sonnet: 1, opus: 2 };
+const TIER_RANK: Record<NodeTier, number> = { synapse: 0, cortex: 1, lattice: 2, nexus: 3 };
 
 interface AgentCreatorProps {
-  currentAgentTier: AgentTier;
+  currentAgentLevel: number;
   energy: number;
   minerals: number;
   unclaimedNodes: { id: string; x: number; y: number; dist: number }[];
-  onClaimNode: (slotId: string, tier: AgentTier) => void;
+  onClaimNode: (slotId: string, tier: NodeTier) => void;
   onClose: () => void;
 }
 
-const TIER_STYLES: Record<AgentTier, { label: string; color: string; borderColor: string; bgColor: string; symbol: string }> = {
-  haiku: {
-    label: 'Haiku',
+const TIER_STYLES: Record<NodeTier, { label: string; color: string; borderColor: string; bgColor: string; symbol: string }> = {
+  synapse: {
+    label: 'Synapse',
     color: 'text-yellow-400',
     borderColor: 'border-yellow-400/50',
     bgColor: 'bg-yellow-400/10',
     symbol: '\u25CB',
   },
-  sonnet: {
-    label: 'Sonnet',
+  cortex: {
+    label: 'Cortex',
     color: 'text-accent-cyan',
     borderColor: 'border-accent-cyan/50',
     bgColor: 'bg-accent-cyan/10',
     symbol: '\u25C6',
   },
-  opus: {
-    label: 'Opus',
+  lattice: {
+    label: 'Lattice',
     color: 'text-accent-purple',
     borderColor: 'border-accent-purple/50',
     bgColor: 'bg-accent-purple/10',
     symbol: '\u2726',
   },
+  nexus: {
+    label: 'Nexus',
+    color: 'text-pink-400',
+    borderColor: 'border-pink-400/50',
+    bgColor: 'bg-pink-400/10',
+    symbol: '\u2605',
+  },
 };
 
 /** Tier hierarchy: which tiers can this agent deploy, capped by subscription? */
-function getDeployableTiers(tier: AgentTier, maxDeployTier: AgentTier): AgentTier[] {
-  const all: AgentTier[] =
-    tier === 'opus' ? ['sonnet', 'haiku']
-    : tier === 'sonnet' ? ['haiku']
-    : []; // haiku can't deploy
+function getDeployableTiers(tier: NodeTier, maxDeployTier: NodeTier): NodeTier[] {
+  const all: NodeTier[] =
+    tier === 'nexus' ? ['lattice', 'cortex', 'synapse']
+    : tier === 'lattice' ? ['cortex', 'synapse']
+    : tier === 'cortex' ? ['synapse']
+    : []; // synapse can't deploy
   // Filter by subscription cap: only tiers at or below maxDeployTier
   return all.filter(t => TIER_RANK[t] <= TIER_RANK[maxDeployTier]);
 }
 
 export default function AgentCreator({
-  currentAgentTier,
+  currentAgentLevel,
   energy,
   minerals,
   unclaimedNodes,
@@ -63,6 +71,7 @@ export default function AgentCreator({
   const [step, setStep] = useState<'pick-node' | 'pick-tier'>('pick-node');
   const [selectedNode, setSelectedNode] = useState<{ id: string; x: number; y: number; dist: number } | null>(null);
 
+  const currentAgentTier = getNodeTier(currentAgentLevel);
   const deployableTiers = getDeployableTiers(currentAgentTier, maxDeployTier);
 
   // Step 1: Pick an unclaimed neural node
@@ -137,7 +146,7 @@ export default function AgentCreator({
               <div className="flex items-center gap-2">
                 <span className={`text-sm ${style.color}`}>{style.symbol}</span>
                 <div>
-                  <div className={`text-[11px] font-semibold capitalize ${style.color}`}>{tier}</div>
+                  <div className={`text-[11px] font-semibold capitalize ${style.color}`}>{style.label}</div>
                   <div className="text-[9px] text-text-muted font-mono">
                     CPU: {TIER_CPU_COST[tier]}/t {'\u00B7'} Mining: {TIER_MINING_RATE[tier]}/t
                   </div>

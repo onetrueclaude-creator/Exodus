@@ -2,11 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useGameStore } from '@/store';
+import { getNodeTier, type NodeTier } from '@/lib/nodeTier';
 
-const TIER_COLOR: Record<string, string> = {
-  opus: 'text-accent-purple',
-  sonnet: 'text-accent-cyan',
-  haiku: 'text-yellow-400',
+const TIER_COLOR: Record<NodeTier, string> = {
+  nexus:   'text-pink-400',
+  lattice: 'text-accent-purple',
+  cortex:  'text-accent-cyan',
+  synapse: 'text-yellow-400',
 };
 
 interface NetworkChatRoomProps {
@@ -91,7 +93,7 @@ export default function NetworkChatRoom({ onSend }: NetworkChatRoomProps) {
           messages.map((msg, idx) => {
             const sender = agents[msg.senderAgentId];
             const senderName = sender?.username || msg.senderAgentId;
-            const tierClass = sender ? (TIER_COLOR[sender.tier] || 'text-text-muted') : 'text-text-muted';
+            const tierClass = sender ? TIER_COLOR[getNodeTier(sender.level)] : 'text-text-muted';
             const isOwn = msg.senderAgentId === currentAgentId;
 
             return (

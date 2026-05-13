@@ -3,11 +3,13 @@
 import { useMemo } from 'react';
 import { useGameStore } from '@/store';
 import type { Agent } from '@/types';
+import { getNodeTier, TIER_DISPLAY_NAME, type NodeTier } from '@/lib/nodeTier';
 
-const TIER_COLOR: Record<string, { dot: string; text: string; border: string }> = {
-  opus:   { dot: 'bg-accent-purple', text: 'text-accent-purple', border: 'border-accent-purple/25' },
-  sonnet: { dot: 'bg-accent-cyan',   text: 'text-accent-cyan',   border: 'border-accent-cyan/25' },
-  haiku:  { dot: 'bg-yellow-400',    text: 'text-yellow-400',    border: 'border-yellow-400/20' },
+const TIER_COLOR: Record<NodeTier, { dot: string; text: string; border: string }> = {
+  nexus:   { dot: 'bg-pink-400',       text: 'text-pink-400',       border: 'border-pink-400/25' },
+  lattice: { dot: 'bg-accent-purple',  text: 'text-accent-purple',  border: 'border-accent-purple/25' },
+  cortex:  { dot: 'bg-accent-cyan',    text: 'text-accent-cyan',    border: 'border-accent-cyan/25' },
+  synapse: { dot: 'bg-yellow-400',     text: 'text-yellow-400',     border: 'border-yellow-400/20' },
 };
 
 interface SecuredNodesProps {
@@ -24,11 +26,10 @@ export default function SecuredNodes({ onFocusNode }: SecuredNodesProps) {
     return Object.values(agents)
       .filter((a: Agent) => a.userId !== null && a.userId === currentUserId)
       .sort((a, b) => {
-        // Primary agent first, then by tier rank, then by name
+        // Primary agent first, then by level (desc), then by name
         if (a.isPrimary) return -1;
         if (b.isPrimary) return 1;
-        const tierRank: Record<string, number> = { opus: 0, sonnet: 1, haiku: 2 };
-        return (tierRank[a.tier] ?? 9) - (tierRank[b.tier] ?? 9);
+        return b.level - a.level;
       });
   }, [agents, currentUserId]);
 
@@ -58,7 +59,7 @@ export default function SecuredNodes({ onFocusNode }: SecuredNodesProps) {
       <div className="flex-1 overflow-y-auto px-2 py-1.5 space-y-0.5">
         {ownedAgents.map((agent) => {
           const isActive = agent.id === currentAgentId;
-          const colors = TIER_COLOR[agent.tier] ?? TIER_COLOR.sonnet;
+          const colors = TIER_COLOR[getNodeTier(agent.level)];
           return (
             <button
               key={agent.id}
@@ -84,7 +85,7 @@ export default function SecuredNodes({ onFocusNode }: SecuredNodesProps) {
                       {agent.username || `Node-${agent.id.slice(0, 6)}`}
                     </span>
                     <span className={`text-[8px] ${colors.text} tracking-wider uppercase`} style={{ fontFamily: "'Fira Code', monospace" }}>
-                      {agent.tier}
+                      {TIER_DISPLAY_NAME[getNodeTier(agent.level)]}
                     </span>
                   </div>
                   <div className="text-[9px] text-text-muted/40" style={{ fontFamily: "'Fira Code', monospace" }}>

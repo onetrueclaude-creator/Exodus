@@ -6,7 +6,7 @@ import type { FactionId, BlockNode, GridNode } from "@/types";
 import type { ResearchProgress } from "@/types/research";
 import { RESEARCH_TREES } from "@/lib/research";
 import { buildCellsForRing, buildAllCells } from "@/lib/lattice";
-import { getNodeCpuPerTurn } from "@/lib/nodeTier";
+import { getNodeCpuPerTurn, getNodeTier as getNodeTierFromStore } from "@/lib/nodeTier";
 
 /** CPU Energy deducted per turn for each owned blocknode (maintenance cost) */
 export const NODE_CPU_PER_TURN = 1;
@@ -220,7 +220,7 @@ const initialState = {
   researchProgress: {} as Record<string, ResearchProgress>,
   completedResearch: [] as string[],
   unlockedSkills: [] as string[],
-  maxDeployTier: "haiku" as AgentTier, // default: Community tier (haiku only)
+  maxDeployTier: "synapse" as AgentTier, // default: Community tier (synapse only)
   activeTab: "network" as GameTab,
   empireColor: 0xffffff, // default: Community faction white
   activeDockPanel: null as DockPanelId | null,
@@ -253,32 +253,41 @@ export const useGameStore = create<GameState>((set) => ({
   addAgent: (agent) => set((s) => ({ agents: { ...s.agents, [agent.id]: agent } })),
 
   createAgent: (tier, position, name, parentAgentId) => {
-    const cost = TIER_CPU_COST[tier] * 5;
+    // Map tier → starting level: synapse→1, cortex→4, lattice→7, nexus→10
+    const TIER_START_LEVEL: Record<AgentTier, number> = {
+      synapse: 1, cortex: 4, lattice: 7, nexus: 10,
+    };
+    const startLevel = TIER_START_LEVEL[tier] ?? 1;
+    const cpuCost = getNodeCpuPerTurn(startLevel) * 5;
     const state = useGameStore.getState();
-    if (state.energy < cost) return null;
+    if (state.energy < cpuCost) return null;
 
     const id = `agent-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const agent: Agent = {
       id,
       userId: state.currentUserId || "unknown",
       position,
-      tier,
+      level: startLevel,
+      miningAlloc: 50,
+      securingAlloc: 50,
+      selfDevAlloc: 0,
+      levelingUntilTurn: null,
       isPrimary: false,
       planets: [],
       createdAt: Date.now(),
       username: name || `Agent-${id.slice(-4)}`,
       borderRadius: TIER_BASE_BORDER[tier],
       borderPressure: 0,
-      cpuPerTurn: TIER_CPU_COST[tier],
+      cpuPerTurn: getNodeCpuPerTurn(startLevel),
       miningRate: TIER_MINING_RATE[tier],
-      energyLimit: TIER_CPU_COST[tier] * 5,
+      energyLimit: getNodeCpuPerTurn(startLevel) * 5,
       stakedCpu: 0,
       parentAgentId,
     };
 
     set((s) => ({
       agents: { ...s.agents, [id]: agent },
-      energy: s.energy - cost,
+      energy: s.energy - cpuCost,
     }));
 
     return id;
@@ -394,8 +403,8 @@ export const useGameStore = create<GameState>((set) => ({
       const agent = s.agents[agentId];
       if (!agent) return s;
       const clampedPressure = Math.max(0, Math.min(20, pressure));
-      const baseCost = TIER_CPU_COST[agent.tier];
-      const baseMining = TIER_MINING_RATE[agent.tier];
+      const baseCost = getNodeCpuPerTurn(agent.level);
+      const baseMining = TIER_MINING_RATE[getNodeTierFromStore(agent.level)];
       const extraMining = Math.max(0, (agent.miningRate ?? baseMining) - baseMining);
       return {
         agents: {
@@ -411,15 +420,15 @@ export const useGameStore = create<GameState>((set) => ({
 
   /**
    * Adjust mining rate — extra mining above base tier rate costs 1 CPU per point.
-   * cpuPerTurn = baseTierCost + borderPressure + max(0, miningRate - baseMining)
+   * cpuPerTurn = baseLevelCost + borderPressure + max(0, miningRate - baseMining)
    */
   setMiningRate: (agentId, rate) =>
     set((s) => {
       const agent = s.agents[agentId];
       if (!agent) return s;
       const clampedRate = Math.max(0, Math.min(50, rate));
-      const baseCost = TIER_CPU_COST[agent.tier];
-      const baseMining = TIER_MINING_RATE[agent.tier];
+      const baseCost = getNodeCpuPerTurn(agent.level);
+      const baseMining = TIER_MINING_RATE[getNodeTierFromStore(agent.level)];
       const extraMining = Math.max(0, clampedRate - baseMining);
       return {
         agents: {
@@ -457,8 +466,8 @@ export const useGameStore = create<GameState>((set) => ({
       const agent = s.agents[agentId];
       if (!agent) return s;
       const clampedStake = Math.max(0, Math.min(30, staked));
-      const baseCost = TIER_CPU_COST[agent.tier];
-      const baseMining = TIER_MINING_RATE[agent.tier];
+      const baseCost = getNodeCpuPerTurn(agent.level);
+      const baseMining = TIER_MINING_RATE[getNodeTierFromStore(agent.level)];
       const extraMining = Math.max(0, (agent.miningRate ?? baseMining) - baseMining);
       return {
         agents: {

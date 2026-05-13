@@ -1,4 +1,4 @@
-import type { AgentTier } from '@/types';
+import type { NodeTier } from '@/lib/nodeTier';
 
 export type SkillCategory = 'mining' | 'communication' | 'defense' | 'expansion';
 
@@ -7,7 +7,7 @@ export interface SkillItem {
   category: SkillCategory;
   name: string;
   description: string;
-  tierRequired: AgentTier;
+  tierRequired: NodeTier;
   prerequisiteResearchIds: string[];
   effect: string;
 }

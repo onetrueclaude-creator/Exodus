@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useGameStore } from '@/store';
 import { getRewards, getStaking, getSecuringStatus, getVesting, getSettings } from '@/services/testnetApi';
 import type { RewardsResponse, SecuringStatusResponse, VestingResponse, WalletSettingsResponse } from '@/types';
+import { getNodeTier, TIER_DISPLAY_NAME } from '@/lib/nodeTier';
 
 export default function AccountView() {
   const currentAgentId = useGameStore((s) => s.currentAgentId);
@@ -76,9 +77,10 @@ export default function AccountView() {
             <div className="space-y-2">
               {ownedAgents.map((a) => {
                 const isActive = a.id === currentAgentId;
+                const tier = getNodeTier(a.level);
                 const tierClass =
-                  a.tier === 'opus' ? 'text-accent-purple' :
-                  a.tier === 'haiku' ? 'text-yellow-400' : 'text-accent-cyan';
+                  tier === 'nexus' || tier === 'lattice' ? 'text-accent-purple' :
+                  tier === 'synapse' ? 'text-yellow-400' : 'text-accent-cyan';
                 return (
                   <button
                     key={a.id}
@@ -96,7 +98,7 @@ export default function AccountView() {
                       <div>
                         <div className="text-sm font-mono text-text-primary">{a.username || a.id.slice(0, 12)}</div>
                         <div className="text-[10px] text-text-muted font-mono">
-                          <span className={tierClass}>{a.tier.toUpperCase()}</span>
+                          <span className={tierClass}>{TIER_DISPLAY_NAME[tier]}</span>
                           <span className="mx-1.5 text-text-muted/40">{'\u00B7'}</span>
                           <span>({Math.round(a.position.x)}, {Math.round(a.position.y)})</span>
                           <span className="mx-1.5 text-text-muted/40">{'\u00B7'}</span>

@@ -1,10 +1,12 @@
 import { Graphics } from 'pixi.js';
 import type { Agent } from '@/types';
+import { getNodeTier, type NodeTier } from '@/lib/nodeTier';
 
-const TIER_BORDER_COLOR: Record<string, number> = {
-  opus: 0x8b5cf6,
-  sonnet: 0x00d4ff,
-  haiku: 0xfacc15,
+const TIER_BORDER_COLOR: Record<NodeTier, number> = {
+  nexus:   0xff60a8,
+  lattice: 0x8b5cf6,
+  cortex:  0x00d4ff,
+  synapse: 0xfacc15,
 };
 
 const SEGMENTS = 48;
@@ -218,7 +220,7 @@ export function createEmpireBorders(
   // Draw other empires first (behind) — subdued
   for (const [userId, empireAgents] of empires) {
     if (userId === viewerUserId) continue;
-    const primaryColor = TIER_BORDER_COLOR[empireAgents[0].tier] ?? 0x64748b;
+    const primaryColor = TIER_BORDER_COLOR[getNodeTier(empireAgents[0].level)] ?? 0x64748b;
     drawMergedEmpire(gfx, empireAgents, agents, primaryColor, 0.3);
   }
 

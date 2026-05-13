@@ -1,5 +1,6 @@
 import type { Agent, AgentTier, HaikuMessage, GridPosition, MessageResult, MessageInfo, ClaimNodeResult } from '@/types';
-import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
+import { TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
+import { getNodeCpuPerTurn, getNodeTier } from '@/lib/nodeTier';
 import { generateMockAgents, generateMockHaiku } from './mockData';
 
 export interface ChainService {
@@ -33,19 +34,28 @@ export class MockChainService implements ChainService {
   }
 
   async registerAgent(userId: string, tier: AgentTier): Promise<Agent> {
+    // Map tier → starting level for the chain shim (T7 will replace this entirely)
+    const TIER_START_LEVEL: Record<AgentTier, number> = {
+      synapse: 1, cortex: 4, lattice: 7, nexus: 10,
+    };
+    const startLevel = TIER_START_LEVEL[tier] ?? 1;
     const agent: Agent = {
       id: `agent-${Date.now()}`,
       userId,
       position: { x: 0, y: 0 },
-      tier,
+      level: startLevel,
+      miningAlloc: 50,
+      securingAlloc: 50,
+      selfDevAlloc: 0,
+      levelingUntilTurn: null,
       isPrimary: true,
       planets: [],
       createdAt: Date.now(),
-      borderRadius: TIER_BASE_BORDER[tier],
+      borderRadius: TIER_BASE_BORDER[getNodeTier(startLevel)],
       borderPressure: 0,
-      cpuPerTurn: TIER_CPU_COST[tier],
-      miningRate: TIER_MINING_RATE[tier],
-      energyLimit: TIER_CPU_COST[tier] * 5,
+      cpuPerTurn: getNodeCpuPerTurn(startLevel),
+      miningRate: TIER_MINING_RATE[getNodeTier(startLevel)],
+      energyLimit: getNodeCpuPerTurn(startLevel) * 5,
       stakedCpu: 0,
     };
     this.agents.push(agent);

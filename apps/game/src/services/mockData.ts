@@ -1,5 +1,5 @@
 import type { Agent, HaikuMessage } from '@/types';
-import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
+import { getNodeCpuPerTurn } from '@/lib/nodeTier';
 
 const GRID_SIZE = 8000;
 
@@ -24,33 +24,39 @@ const UNCLAIMED_SLOT_COUNT = 1000; // blockchain-minted nodes scattered across t
  * Unclaimed slots have userId = '' — they're on-chain space waiting to be claimed.
  */
 export function generateMockAgents(count: number = 3): Agent[] {
-  // 1. User-owned agents — each user gets 1 Sonnet
-  const userAgents: Agent[] = Array.from({ length: count }, (_, i) => {
-    const tier = 'sonnet' as const;
-    return {
-      id: `agent-${String(i).padStart(3, '0')}`,
-      userId: `user-${String(i).padStart(3, '0')}`,
-      position: randomPosition(),
-      tier,
-      isPrimary: i === 0,
-      planets: [],
-      createdAt: Date.now() - Math.floor(Math.random() * 86400000),
-      username: i === 0 ? 'You' : (names[i] || `User-${i}`),
-      borderRadius: TIER_BASE_BORDER[tier],
-      borderPressure: 0,
-      cpuPerTurn: TIER_CPU_COST[tier],
-      miningRate: TIER_MINING_RATE[tier],
-      energyLimit: TIER_CPU_COST[tier] * 5,
-      stakedCpu: 0,
-    };
-  });
+  // 1. User-owned agents — each user starts at L4 (cortex band)
+  const START_LEVEL = 4;
+  const userAgents: Agent[] = Array.from({ length: count }, (_, i) => ({
+    id: `agent-${String(i).padStart(3, '0')}`,
+    userId: `user-${String(i).padStart(3, '0')}`,
+    position: randomPosition(),
+    level: START_LEVEL,
+    miningAlloc: 50,
+    securingAlloc: 50,
+    selfDevAlloc: 0,
+    levelingUntilTurn: null,
+    isPrimary: i === 0,
+    planets: [],
+    createdAt: Date.now() - Math.floor(Math.random() * 86400000),
+    username: i === 0 ? 'You' : (names[i] || `User-${i}`),
+    borderRadius: 90,   // cortex base border
+    borderPressure: 0,
+    cpuPerTurn: getNodeCpuPerTurn(START_LEVEL),
+    miningRate: 5,      // cortex base mining rate
+    energyLimit: getNodeCpuPerTurn(START_LEVEL) * 5,
+    stakedCpu: 0,
+  }));
 
   // 2. Unclaimed CPU slots — blockchain-minted, no owner
   const unclaimedSlots: Agent[] = Array.from({ length: UNCLAIMED_SLOT_COUNT }, (_, i) => ({
     id: `slot-${String(i).padStart(4, '0')}`,
     userId: '',       // no owner — governed by testnet
     position: randomPosition(),
-    tier: 'haiku' as const, // placeholder tier — reassigned on claim
+    level: 1,         // unclaimed nodes start at L1 (synapse), reassigned on claim
+    miningAlloc: 50,
+    securingAlloc: 50,
+    selfDevAlloc: 0,
+    levelingUntilTurn: null,
     isPrimary: false,
     planets: [],
     createdAt: Date.now() - 86400000, // minted at server start

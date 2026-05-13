@@ -7,7 +7,7 @@ import {
   type SkillCategory,
 } from '@/lib/skills';
 import { useGameStore } from '@/store/gameStore';
-import type { AgentTier } from '@/types';
+import { type NodeTier, TIER_DISPLAY_NAME } from '@/lib/nodeTier';
 
 const CATEGORY_COLORS: Record<SkillCategory, string> = {
   mining: 'text-yellow-400',
@@ -30,10 +30,11 @@ const CATEGORY_BG: Record<SkillCategory, string> = {
   expansion: 'bg-purple-400/10 border-purple-400/20',
 };
 
-const TIER_LABELS: Record<AgentTier, { label: string; color: string }> = {
-  haiku: { label: 'Haiku', color: 'text-amber-400' },
-  sonnet: { label: 'Sonnet', color: 'text-cyan-400' },
-  opus: { label: 'Opus', color: 'text-purple-400' },
+const TIER_LABELS: Record<NodeTier, { label: string; color: string }> = {
+  synapse: { label: TIER_DISPLAY_NAME.synapse, color: 'text-amber-400' },
+  cortex:  { label: TIER_DISPLAY_NAME.cortex,  color: 'text-cyan-400' },
+  lattice: { label: TIER_DISPLAY_NAME.lattice, color: 'text-purple-400' },
+  nexus:   { label: TIER_DISPLAY_NAME.nexus,   color: 'text-pink-400' },
 };
 
 export default function SkillsPanel() {
@@ -154,13 +155,14 @@ export default function SkillsPanel() {
         </div>
 
         {/* Tier upgrade hint */}
-        {maxDeployTier !== 'opus' && (
+        {maxDeployTier !== 'nexus' && (
           <div className="mt-6 glass-card p-4 border border-card-border">
             <p className="text-xs text-text-muted">
               <span className="text-accent-cyan">{'\u2191'}</span>{' '}
-              Upgrade your subscription tier to unlock higher-tier skills.
-              {maxDeployTier === 'haiku' && ' Sonnet and Opus skills require Professional or Max tier.'}
-              {maxDeployTier === 'sonnet' && ' Opus skills require Max tier.'}
+              Level up your nodes to unlock higher-tier skills.
+              {maxDeployTier === 'synapse' && ' Cortex, Lattice and Nexus skills require higher node levels.'}
+              {maxDeployTier === 'cortex' && ' Lattice and Nexus skills require higher node levels.'}
+              {maxDeployTier === 'lattice' && ' Nexus skills require level 10+ nodes.'}
             </p>
           </div>
         )}
