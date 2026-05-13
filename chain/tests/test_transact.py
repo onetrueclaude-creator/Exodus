@@ -100,6 +100,9 @@ class TestSettingsEndpoint:
         assert "mining_rate" in data
         assert "subgrid_allocation" in data
         assert "total_secured_chains" in data
+        assert "total_mined_chains" in data
+        assert isinstance(data["total_mined_chains"], int)
+        assert data["total_mined_chains"] >= 0
         assert "effective_stake" in data
 
     def test_settings_invalid_wallet(self):

@@ -1715,6 +1715,7 @@ class WalletSettingsResponse(BaseModel):
     mining_rate: float        # per-block AGNTC yield estimate
     subgrid_allocation: dict  # {secure, develop, research, storage} cell counts
     total_secured_chains: int
+    total_mined_chains: int   # blocks where this wallet earned mining yield
     effective_stake: float
 
 
@@ -1778,6 +1779,7 @@ def get_wallet_settings(wallet_index: int) -> WalletSettingsResponse:
         mining_rate=round(mining_rate, 8),
         subgrid_allocation=subgrid,
         total_secured_chains=g.securing_registry.get_secured_chains(wallet_index),
+        total_mined_chains=g.mining_engine.get_mined_chains(wallet.public_key),
         effective_stake=round(effective, 4),
     )
 

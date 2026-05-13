@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useGameStore } from "@/store";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { sciFormat } from "@/lib/format";
+import { DeltaFlash } from "@/components/DeltaFlash";
 import type { FactionId } from "@/types";
 
 function LiveClock() {
@@ -17,33 +18,6 @@ function LiveClock() {
   return (
     <span className="text-xs font-mono text-text-muted tabular-nums" suppressHydrationWarning>
       {time.toLocaleTimeString("en-GB", { hour12: false })}
-    </span>
-  );
-}
-
-/** Flash delta indicator — shows +N or -N for 3 seconds after a resource change */
-function DeltaFlash({ resourceKey }: { resourceKey: string }) {
-  const delta = useGameStore((s) => s.resourceDeltas[resourceKey]);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    if (!delta) return;
-    setVisible(true);
-    const timer = setTimeout(() => setVisible(false), 3000);
-    return () => clearTimeout(timer);
-  }, [delta?.ts]);
-
-  if (!visible || !delta) return null;
-
-  const isPositive = delta.value > 0;
-  return (
-    <span
-      className={`text-[10px] font-mono font-bold animate-pulse ${
-        isPositive ? "text-green-400" : "text-red-400"
-      }`}
-    >
-      {isPositive ? "+" : ""}
-      {delta.value}
     </span>
   );
 }
@@ -89,8 +63,6 @@ export default function ResourceBar() {
   const energy = useGameStore((s) => s.energy);
   const minerals = useGameStore((s) => s.minerals);
   const agntcBalance = useGameStore((s) => s.agntcBalance);
-  const securedChains = useGameStore((s) => s.securedChains);
-  const minedChains = useGameStore((s) => s.minedChains);
   const turn = useGameStore((s) => s.turn);
   const currentUserFaction = useGameStore((s) => s.currentUserFaction);
   const blocknodes = useGameStore((s) => s.blocknodes);
@@ -142,7 +114,7 @@ export default function ResourceBar() {
 
       <div className="h-4 w-px bg-card-border" />
 
-      {/* ── Resources (spendable) ── */}
+      {/* Resources (spendable) */}
 
       {/* CPU Energy — yellow */}
       <div className="flex items-center gap-1">
@@ -172,28 +144,6 @@ export default function ResourceBar() {
         <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
         <span className="text-xs font-mono text-blue-300 tabular-nums">{sciFormat(minerals)}</span>
         <span className="text-[9px] font-mono text-text-muted/40">Data</span>
-      </div>
-
-      {/* ── Separator ── */}
-      <div className="h-4 w-px bg-card-border/50" />
-
-      {/* ── Scores (accumulating) ── */}
-
-      {/* Secured Chains — green, dimmer */}
-      <div className="flex items-center gap-1">
-        <span className="text-[10px] text-emerald-400/50">{'\u26D3'}</span>
-        <span className="text-xs font-mono text-emerald-300/60 tabular-nums">{securedChains}</span>
-        <span className="text-[9px] font-mono text-text-muted/30">Secured</span>
-        <sup className="text-[9px] leading-none">
-          <DeltaFlash resourceKey="securedChains" />
-        </sup>
-      </div>
-
-      {/* Mined Chains — orange, dimmer */}
-      <div className="flex items-center gap-1">
-        <span className="text-[10px] text-orange-400/50">{'\u26CF'}</span>
-        <span className="text-xs font-mono text-orange-300/60 tabular-nums">{minedChains}</span>
-        <span className="text-[9px] font-mono text-text-muted/30">Mined</span>
       </div>
 
       {/* Spacer */}

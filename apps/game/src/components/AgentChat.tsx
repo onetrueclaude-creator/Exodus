@@ -8,6 +8,7 @@ import { getDistance } from '@/lib/proximity';
 import { visualToChain } from '@/services/testnetChainService';
 import { postTransact, getStatus as fetchChainStats } from '@/services/testnetApi';
 import { logAction } from '@/lib/actionLogger';
+import { CELL_SIZE } from '@/lib/lattice';
 
 /* ── Agent Action Definitions ─────────────────────────────── */
 
@@ -255,6 +256,8 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
   const energy = useGameStore((s) => s.energy);
   const minerals = useGameStore((s) => s.minerals);
   const allAgents = useGameStore((s) => s.agents);
+  const allBlocknodes = useGameStore((s) => s.blocknodes);
+  const currentUserFaction = useGameStore((s) => s.currentUserFaction);
   const maxDeployTier = useGameStore((s) => s.maxDeployTier);
   const cpuRegenPerTurn = useGameStore((s) => s.cpuRegenPerTurn);
   const miningCpuPerBlock = useGameStore((s) => s.miningCpuPerBlock);
@@ -262,21 +265,37 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
 
   const actions = AGENT_ACTIONS[agent.tier];
 
+  // Deploy targets are unclaimed blocknodes — the cells actually rendered on the
+  // lattice. Sorting by cell-space distance from the agent gives "nearest first",
+  // and clicking/hovering uses blocknode IDs so the focus useEffect's path A
+  // (cellToPixel) centers the camera on a *visible* cell.
   const nearbyUnclaimed = useMemo(() => {
-    return Object.values(allAgents)
-      .filter(a => !a.userId)
-      .map(a => ({
-        id: a.id,
-        name: a.username || `Node-${a.id.slice(0, 6)}`,
-        x: a.position.x,
-        y: a.position.y,
-        density: a.density ?? 0,
-        volume: a.storageSlots ?? 1,
-        dist: getDistance(agent.position, a.position),
-      }))
+    const agentCx = Math.round(agent.position.x / CELL_SIZE);
+    const agentCy = Math.round(agent.position.y / CELL_SIZE);
+    return Object.values(allBlocknodes)
+      .filter(b =>
+        b.ownerId === null
+        && (currentUserFaction === null || b.faction === currentUserFaction)
+        && !(b.cx === agentCx && b.cy === agentCy)
+      )
+      .map(b => {
+        const dx = b.cx - agentCx;
+        const dy = b.cy - agentCy;
+        // Quality heuristic: inner-ring (low ringIndex) nodes are richer
+        const density = Math.max(0.1, Math.min(1, 1 - b.ringIndex * 0.15));
+        return {
+          id: b.id,
+          name: `Node ${b.cx},${b.cy}`,
+          x: b.cx * CELL_SIZE,
+          y: b.cy * CELL_SIZE,
+          density,
+          volume: Math.max(1, Math.round(b.secureStrength)),
+          dist: Math.sqrt(dx * dx + dy * dy),
+        };
+      })
       .sort((a, b) => a.dist - b.dist)
       .slice(0, 8);
-  }, [allAgents, agent.position]);
+  }, [allBlocknodes, currentUserFaction, agent.position]);
 
   const nearbyAgents = useMemo(() => {
     return Object.values(allAgents)
@@ -866,13 +885,11 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                               </span>
                             </div>
                             <div className="flex items-center gap-2 text-[9px] text-text-muted/40" style={{ fontFamily: "'Fira Code', monospace" }}>
-                              <span>({star.x.toFixed(0)}, {star.y.toFixed(0)})</span>
-                              <span className="text-text-muted/20">{'\u00B7'}</span>
                               <span>d:{(star.density * 100).toFixed(0)}%</span>
                               <span className="text-text-muted/20">{'\u00B7'}</span>
                               <span>v:{star.volume}</span>
                               <span className="text-text-muted/20">{'\u00B7'}</span>
-                              <span>{star.dist.toFixed(0)}u</span>
+                              <span>{star.dist.toFixed(1)}u</span>
                             </div>
                           </div>
                         </div>
@@ -1197,7 +1214,10 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                     onClick={() => {
                       useGameStore.getState().setCpuAllocation(miningCpu, securingCpu);
                       addMsg('agent', `CPU allocation updated.\nMining: ${miningCpu} CPU/block\nSecuring: ${securingCpu} CPU/block\nTotal: ${miningCpu + securingCpu}/block (regen: +${cpuRegenPerTurn}/turn)`);
-                      setMenuLevel(null);
+                      // Return to the blockchain sub-menu where CPU Allocation lives so
+                      // the action stays visible — going back to the top menu hides it
+                      // under "Blockchain Protocols" and looks like the choice was removed.
+                      setMenuLevel('blockchain');
                     }}
                     disabled={processing}
                     className="flex-1 px-4 py-1.5 rounded-lg text-[13px] font-semibold bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20 hover:bg-accent-cyan/20 hover:border-accent-cyan/40 disabled:opacity-15 disabled:cursor-not-allowed transition-all duration-300"

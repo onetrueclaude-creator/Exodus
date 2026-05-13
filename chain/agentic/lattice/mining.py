@@ -28,6 +28,7 @@ class MiningEngine:
     total_blocks_processed: int = 0
     total_rewards_distributed: float = 0.0
     _last_newly_opened: list[int] = field(default_factory=list, repr=False)
+    _blocks_mined_per_owner: dict[bytes, int] = field(default_factory=dict, repr=False)
 
     def compute_block_yields(
         self, claims: list[dict], *, epoch_tracker=None,
@@ -102,6 +103,14 @@ class MiningEngine:
             raw_yields = {k: v * scale for k, v in raw_yields.items()}
             total_minted = sum(raw_yields.values())
 
+        # Track per-owner block participation — count blocks where this owner earned yield.
+        # Mirrors SecuringRegistry.get_secured_chains for symmetry on the player HUD.
+        for owner, amount in raw_yields.items():
+            if amount > 0:
+                self._blocks_mined_per_owner[owner] = (
+                    self._blocks_mined_per_owner.get(owner, 0) + 1
+                )
+
         # Notify epoch tracker of mined amount — may trigger ring expansion
         if epoch_tracker is not None:
             self._last_newly_opened = epoch_tracker.record_mined(total_minted)
@@ -111,6 +120,10 @@ class MiningEngine:
         self.total_blocks_processed += 1
         self.total_rewards_distributed += total_minted
         return raw_yields
+
+    def get_mined_chains(self, owner: bytes) -> int:
+        """Count of blocks where this owner has earned mining yield."""
+        return self._blocks_mined_per_owner.get(owner, 0)
 
     def mint_block_rewards(
         self,

@@ -9,6 +9,7 @@ import ResearchPanel from "@/components/ResearchPanel";
 import SkillsPanel from "@/components/SkillsPanel";
 import DockPanel from "@/components/DockPanel";
 import CellTooltip from "@/components/CellTooltip";
+import ScoresWidget from "@/components/ScoresWidget";
 import { startDebugListener } from "@/lib/debugListener";
 import dynamic from "next/dynamic";
 const DebugOverlay = dynamic(() => import("@/components/DebugOverlay"), { ssr: false });
@@ -16,7 +17,7 @@ import { useGameStore } from "@/store";
 import { MockChainService } from "@/services/chainService";
 import type { ChainService } from "@/services/chainService";
 import { TestnetChainService } from "@/services/testnetChainService";
-import { isTestnetOnline, getSettings, getRewards } from "@/services/testnetApi";
+import { isTestnetOnline, getSettings } from "@/services/testnetApi";
 import { useChainWebSocket } from "@/hooks/useChainWebSocket";
 import type { SubscriptionTier } from "@/types";
 import type { FactionId } from "@/types";
@@ -63,7 +64,6 @@ export default function GamePage() {
   useChainWebSocket(chainMode === "testnet");
 
   const setActiveDockPanel = useGameStore((s) => s.setActiveDockPanel);
-  const switchAgent = useGameStore((s) => s.switchAgent);
   const [tooltip, setTooltip] = useState<{ cx: number; cy: number; screenX: number; screenY: number } | null>(null);
 
   const chainRef = useRef<ChainService | null>(null);
@@ -113,14 +113,12 @@ export default function GamePage() {
       }
     }
 
-    // Sync wallet state (secured chains, rates, effective stake)
+    // Sync wallet state (secured chains, mined chains, rates, effective stake)
     try {
-      const [settings, rewards] = await Promise.all([
-        getSettings(0),  // wallet 0 for testnet
-        getRewards(0),
-      ]);
+      const settings = await getSettings(0);  // wallet 0 for testnet
       store.setWalletState({
         securedChains: settings.total_secured_chains,
+        minedChains: settings.total_mined_chains,
         securingRate: settings.securing_rate,
         miningRate: settings.mining_rate,
         effectiveStake: settings.effective_stake,
@@ -217,7 +215,12 @@ export default function GamePage() {
           addAgent(homenodeAgent);
           setCurrentUser(newUserId, frontierNode.id);
           useGameStore.getState().requestFocus(frontierNode.id);
-          setActiveDockPanel("terminal");
+          // In production this auto-opens the agent terminal for first-time onboarding.
+          // In dev mode every reload re-triggers "new user" and would slam the panel open,
+          // covering the map; leave the dock closed and let the developer open it manually.
+          if (!isDev) {
+            setActiveDockPanel("terminal");
+          }
         } else {
           setCurrentUser(newUserId, "");
         }
@@ -276,6 +279,9 @@ export default function GamePage() {
       {/* Tab navigation */}
       <TabNavigation />
 
+      {/* Floating scores widget — upper-right, testnet only */}
+      <ScoresWidget />
+
       {/* Tab content area — fills remaining space */}
       <div className="flex-1 relative overflow-hidden">
         {/* Network tab — always mounted, hidden when inactive to preserve PixiJS canvas */}
@@ -287,8 +293,10 @@ export default function GamePage() {
             onHaikuSubmit={handleHaikuSubmit}
             currentAgent={currentAgentId ? (agents[currentAgentId] ?? null) : null}
             chainService={chainRef.current}
-            onAgentDeploy={(newId) => {
-              switchAgent(newId);
+            onAgentDeploy={() => {
+              // Don't auto-switch to the new sub-agent — the homenode is the player's
+              // command center and the deploy was issued from it. Sub-agent is now
+              // visible on the lattice and switchable via the Account View list.
               setActiveDockPanel("terminal");
             }}
             onFocusNode={(nodeId) => {

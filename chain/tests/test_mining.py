@@ -62,6 +62,32 @@ class TestMiningEngine:
         assert engine.total_blocks_processed == 2
         assert engine.total_rewards_distributed > 0
 
+    def test_get_mined_chains_tracks_per_owner_block_count(self):
+        """get_mined_chains() counts blocks where each owner earned mining yield.
+
+        Mirrors SecuringRegistry.get_secured_chains for player-HUD symmetry —
+        powers the ScoresWidget Mined counter in the game frontend.
+        """
+        from agentic.lattice.mining import MiningEngine
+        from agentic.lattice.coordinate import GridCoordinate
+        engine = MiningEngine()
+        claims_alice_only = [
+            {"owner": b"alice", "coordinate": GridCoordinate(x=0, y=0), "stake": 100},
+        ]
+        claims_both = [
+            {"owner": b"alice", "coordinate": GridCoordinate(x=0, y=0), "stake": 100},
+            {"owner": b"bob", "coordinate": GridCoordinate(x=5, y=5), "stake": 100},
+        ]
+        # Block 1: alice only
+        engine.compute_block_yields(claims_alice_only)
+        # Block 2 + 3: alice + bob
+        engine.compute_block_yields(claims_both)
+        engine.compute_block_yields(claims_both)
+        assert engine.get_mined_chains(b"alice") == 3
+        assert engine.get_mined_chains(b"bob") == 2
+        # Unknown owner returns 0 (not KeyError)
+        assert engine.get_mined_chains(b"unknown") == 0
+
     def test_epoch_hardness_halves_yield_at_ring_2(self):
         """Ring-2 epoch hardness (32) should reduce yield vs ring-1 (16).
 

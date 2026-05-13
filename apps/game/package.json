@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "visual-debug": "node scripts/visual-debug/game-flow.mjs",
+    "visual-debug:panels": "node scripts/visual-debug/panel-inventory.mjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
