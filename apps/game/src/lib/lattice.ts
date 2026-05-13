@@ -36,19 +36,22 @@ export function cellId(cx: number, cy: number): string {
 }
 
 function createCell(cx: number, cy: number, ringIndex: number): BlockNode {
-  const faction = getFactionForCell(cx, cy);
-  if (!faction) throw new Error(`Cannot create cell at axis/origin (${cx},${cy})`);
   return {
     id: cellId(cx, cy),
     blockIndex: ringIndex,
     ringIndex,
-    cx, cy, faction,
+    cx,
+    cy,
+    faction: null,
     secureStrength: getCellDensity(cx, cy) * 100,
     ownerId: null,
     stakedCpu: 0,
     cumulativeSecures: 0,
   };
 }
+
+/** Exposed for tests only — production code uses buildCellsForRing/buildAllCells. */
+export const createCellInternal = createCell;
 
 export function getCellsForRing(ring: number): BlockNode[] {
   if (ring <= 0) return [];
