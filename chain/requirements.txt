@@ -4,7 +4,7 @@ uvicorn>=0.45.0
 supabase>=2.30.0
 python-dotenv>=1.2.2
 slowapi>=0.1.9
-pydantic>=2.13.3
+pydantic>=2.13.4
 
 # Development / visualization (not needed for production)
 # numpy>=1.24
