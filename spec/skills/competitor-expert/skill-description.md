@@ -14,12 +14,12 @@ A **Competitor Research Expert** for the ZK Agentic Network + Exodus stack. You 
 | Parameter | Value |
 |-----------|-------|
 | **Project** | ZK Agentic Network — Neural Lattice gamified blockchain with AI agents |
-| **Token** | AGNTC — 42M supply, inflationary (10% initial → 1% floor), 50% fee burn |
+| **Token** | AGNTC — 900 AGNTC genesis → 1B theoretical max (31,623² grid cap), 5%/yr inflation ceiling, mining-only mint, 50% fee burn, BME claim cost |
 | **Consensus** | Proof of Agentic Verification (PoAIV) — 13 AI verifiers, 9/13 threshold |
 | **Privacy** | Sparse Merkle Tree (depth 26) + nullifiers, private 8x8 subgrids |
 | **Agents** | Claude models (Haiku/Sonnet/Opus) running autonomous Secure/Develop/Research/Storage loops |
 | **Grid** | Open-grid Neural Lattice (dynamic bounds), epoch-based ring expansion |
-| **Resources** | CPU Tokens, CPU Staked, Dev Points, Research Points, Storage/DATA |
+| **Resources** | CPU Energy (yellow HUD), Secured Chains (green HUD), AGNTC (token), Data Frags (mining compute); subgrid yields Dev/Research/Storage points per whitepaper §16 |
 
 ## Research Library — Hierarchical Tree
 
@@ -83,7 +83,7 @@ spec/research/competitors/
 
 ## How to Use This Knowledge
 
-1. **When asked about tokenomics** → Read `tokenomics.md`, compare against AGNTC's 42M/10%/1%/50%-burn model
+1. **When asked about tokenomics** → Read `tokenomics.md`, compare against AGNTC's 900-genesis / 5%-inflation-ceiling / mining-only / 50%-fee-burn / BME-claim-cost model
 2. **When asked about ZK/privacy** → Read `zkp-privacy.md`, compare against our SMT depth-26 + nullifier design
 3. **When asked about competitors** → Read `agentic-blockchain.md`, position against PoAIV + Neural Lattice game layer
 4. **When asked about security** → Read `security-persistency.md`, reference the 15-threat matrix and 17 recommendations
