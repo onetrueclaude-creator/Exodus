@@ -31,9 +31,8 @@ export function generateMockAgents(count: number = 3): Agent[] {
     userId: `user-${String(i).padStart(3, '0')}`,
     position: randomPosition(),
     level: START_LEVEL,
-    miningAlloc: 50,
-    securingAlloc: 50,
-    selfDevAlloc: 0,
+    miningCpu: 0,
+    securingCpu: 0,
     levelingUntilTurn: null,
     isPrimary: i === 0,
     planets: [],
@@ -53,9 +52,8 @@ export function generateMockAgents(count: number = 3): Agent[] {
     userId: '',       // no owner — governed by testnet
     position: randomPosition(),
     level: 1,         // unclaimed nodes start at L1 (synapse), reassigned on claim
-    miningAlloc: 50,
-    securingAlloc: 50,
-    selfDevAlloc: 0,
+    miningCpu: 0,
+    securingCpu: 0,
     levelingUntilTurn: null,
     isPrimary: false,
     planets: [],

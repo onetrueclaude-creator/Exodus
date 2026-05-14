@@ -15,9 +15,8 @@ function makeAgent(overrides: Partial<Agent> = {}): Agent {
     userId: "u1",
     position: { x: 0, y: 0 },
     level: 7,
-    miningAlloc: 50,
-    securingAlloc: 50,
-    selfDevAlloc: 0,
+    miningCpu: 0,
+    securingCpu: 0,
     levelingUntilTurn: null,
     isPrimary: true,
     planets: [],
@@ -146,7 +145,7 @@ describe("gameStore", () => {
       // Add an unclaimed node (userId is empty string)
       useGameStore.getState().addAgent(makeAgent({
         id: "unclaimed-1", userId: "",
-        level: 1, miningAlloc: 50, securingAlloc: 50, selfDevAlloc: 0, levelingUntilTurn: null,
+        level: 1, miningCpu: 0, securingCpu: 0, levelingUntilTurn: null,
       }));
     });
 
@@ -206,7 +205,7 @@ describe("gameStore", () => {
       useGameStore.setState({ currentUserId: "new-user" });
       useGameStore.getState().addAgent(makeAgent({
         id: "slot-first", userId: "",
-        level: 1, miningAlloc: 50, securingAlloc: 50, selfDevAlloc: 0, levelingUntilTurn: null,
+        level: 1, miningCpu: 0, securingCpu: 0, levelingUntilTurn: null,
       }));
 
       // Claim with synapse (L1 — everyone starts at L1)
@@ -438,13 +437,13 @@ describe("gameStore", () => {
       expect(useGameStore.getState().turn).toBe(1);
     });
 
-    it("increases energy by subscription regen (node maintenance removed)", () => {
+    it("increases energy by subscription regen + per-node production", () => {
       useGameStore.setState({ cpuRegenPerTurn: 100, miningCpuPerBlock: 0, securingCpuPerBlock: 0 });
       const before = useGameStore.getState().energy;
       useGameStore.getState().tick();
       const after = useGameStore.getState().energy;
-      // regen(100) only — per-node CPU aggregation via setNodeAllocation
-      expect(after).toBe(before + 100);
+      // regen(100) + getNodeCpuPerTurn(7)=60, no mining/securing expenditure
+      expect(after).toBe(before + 160);
     });
 
     it("increases minerals by 1 per owned agent", () => {

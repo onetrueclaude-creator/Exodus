@@ -32,17 +32,17 @@ describe('getVisibleAgents', () => {
   it('filters agents by fog radius', () => {
     const viewer: Agent = {
       id: 'v', userId: 'u', position: { x: 0, y: 0 },
-      level: 7, miningAlloc: 50, securingAlloc: 50, selfDevAlloc: 0, levelingUntilTurn: null,
+      level: 7, miningCpu: 0, securingCpu: 0, levelingUntilTurn: null,
       isPrimary: true, planets: [], createdAt: 0, borderRadius: 130, borderPressure: 0, cpuPerTurn: 8, miningRate: 12, energyLimit: 40, stakedCpu: 0,
     };
     const near: Agent = {
       id: 'n', userId: 'u2', position: { x: 50, y: 50 },
-      level: 1, miningAlloc: 50, securingAlloc: 50, selfDevAlloc: 0, levelingUntilTurn: null,
+      level: 1, miningCpu: 0, securingCpu: 0, levelingUntilTurn: null,
       isPrimary: true, planets: [], createdAt: 0, borderRadius: 60, borderPressure: 0, cpuPerTurn: 1, miningRate: 2, energyLimit: 5, stakedCpu: 0,
     };
     const far: Agent = {
       id: 'f', userId: 'u3', position: { x: 9000, y: 9000 },
-      level: 1, miningAlloc: 50, securingAlloc: 50, selfDevAlloc: 0, levelingUntilTurn: null,
+      level: 1, miningCpu: 0, securingCpu: 0, levelingUntilTurn: null,
       isPrimary: true, planets: [], createdAt: 0, borderRadius: 60, borderPressure: 0, cpuPerTurn: 1, miningRate: 2, energyLimit: 5, stakedCpu: 0,
     };
     const visible = getVisibleAgents(viewer, [near, far]);

@@ -285,17 +285,16 @@ describe("gameStore — CPU regen (subscription-based)", () => {
     expect(useGameStore.getState().energy).toBe(1100); // 1000 + 100 regen
   });
 
-  it("tick aggregates per-node mining/securing from agents with setNodeAllocation", () => {
-    // Add an agent owned by user-001 with 50/30/20 allocation at L1 (10 CPU/turn)
+  it("tick aggregates per-node miningCpu/securingCpu from agents", () => {
+    // Add an agent owned by user-001 with preset miningCpu=100, securingCpu=200
     useGameStore.setState({
       agents: {
         "agent-001": {
           id: "agent-001",
           userId: "user-001",
           level: 1,
-          miningAlloc: 50,
-          securingAlloc: 30,
-          selfDevAlloc: 20,
+          miningCpu: 100,
+          securingCpu: 200,
           levelingUntilTurn: null,
           position: { x: 0, y: 0 },
           isPrimary: true,
@@ -313,9 +312,9 @@ describe("gameStore — CPU regen (subscription-based)", () => {
     });
     useGameStore.getState().tick();
     const s = useGameStore.getState();
-    // L1 at 50/30/20: 10 * 0.5 = 5 mining, 10 * 0.3 = 3 securing
-    expect(s.miningCpuPerBlock).toBe(5);
-    expect(s.securingCpuPerBlock).toBe(3);
+    // absolute preset values are summed directly
+    expect(s.miningCpuPerBlock).toBe(100);
+    expect(s.securingCpuPerBlock).toBe(200);
   });
 
   it("energy grows from subscription regen only (no node maintenance deduction)", () => {
@@ -324,38 +323,6 @@ describe("gameStore — CPU regen (subscription-based)", () => {
     expect(useGameStore.getState().energy).toBe(before + 100);
   });
 
-  it("setNodeAllocation updates agent allocation fields", () => {
-    useGameStore.setState({
-      agents: {
-        "agent-001": {
-          id: "agent-001",
-          userId: "user-001",
-          level: 1,
-          miningAlloc: 50,
-          securingAlloc: 50,
-          selfDevAlloc: 0,
-          levelingUntilTurn: null,
-          position: { x: 0, y: 0 },
-          isPrimary: true,
-          planets: [],
-          createdAt: 0,
-          username: "test",
-          borderRadius: 64,
-          borderPressure: 0,
-          cpuPerTurn: 10,
-          miningRate: 1,
-          energyLimit: 50,
-          stakedCpu: 0,
-        },
-      },
-    });
-    const ok = useGameStore.getState().setNodeAllocation("agent-001", 25, 50, 25);
-    expect(ok).toBe(true);
-    const agent = useGameStore.getState().agents["agent-001"];
-    expect(agent.miningAlloc).toBe(25);
-    expect(agent.securingAlloc).toBe(50);
-    expect(agent.selfDevAlloc).toBe(25);
-  });
 });
 
 describe("claimBlocknode — open grid", () => {
