@@ -11,7 +11,7 @@
 
 ZK Agentic Chain (AGNTC) is a Layer-1 blockchain protocol that introduces Proof of AI Verification (PoAIV) -- a novel consensus mechanism in which a committee of 13 AI agents verifies each block through reasoning-based audits, requiring a 9/13 supermajority for consensus. The protocol combines this with a dual-staking model (40% token weight, 60% CPU weight), zero-knowledge privacy at every layer, and a spatial coordinate economy where each of 1 billion AGNTC tokens maps to a specific grid coordinate.
 
-**What exists today.** The project has a functional Python testnet (72 source modules, 59 test files, 593+ tests passing) implementing the full protocol simulation: mining engine, staking, rewards, fee model, slashing, galaxy coordinate system, epoch expansion, subgrid allocation, and a FastAPI server with 10+ API endpoints. The frontend is a Next.js application with a PixiJS 2D galaxy grid, Google OAuth onboarding, subscription tiers, and agent terminal interface. AGNTC is deployed as a Solana SPL token (1 billion units minted, address: `3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd`).
+**What exists today.** The project has a functional Python testnet (72 source modules, 59 test files, 593+ tests passing) implementing the full protocol simulation: mining engine, staking, rewards, fee model, slashing, Neural Lattice coordinate system, epoch expansion, subgrid allocation, and a FastAPI server with 10+ API endpoints. The frontend is a Next.js application with a PixiJS 2D Neural Lattice canvas, Google OAuth onboarding, subscription tiers, and agent terminal interface. AGNTC is deployed as a Solana SPL token (1 billion units minted, address: `3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd`).
 
 **What is simulated.** Zero-knowledge proofs use SHA-256 stand-ins (SimulatedZKProof), not real Groth16 circuits. AI verification uses heuristic checks, not live Claude API calls. Consensus runs with synthetic validators. The enforced ZK L1 architecture has been designed and an implementation plan exists (13 tasks), but circuit code is not yet written.
 
@@ -47,7 +47,7 @@ The following components exist as working, tested code:
 | Consensus pipeline | `consensus/` | 6 action types, verification | Complete (simulated) |
 | FastAPI testnet | `testnet/api.py` | 10+ endpoints, genesis init | Complete |
 | Genesis system | `testnet/genesis.py` | 9-node deterministic genesis | Complete |
-| PixiJS galaxy grid | `GalaxyGrid.tsx` | Faction coloring, connections | Complete |
+| PixiJS Neural Lattice | `GalaxyGrid.tsx` | Open-grid rendering, density heatmap, connections | Complete |
 | Google OAuth flow | NextAuth v5 | JWT strategy, Prisma adapter | Complete |
 | Subscription tiers | Onboarding flow | 3 tiers, username validation | Complete |
 | Agent terminal UI | Game page | Command tree, resource bar | Complete |
@@ -480,7 +480,7 @@ The dual staking formula S_eff = 0.40T + 0.60C produces anti-plutocratic propert
 | ZK Circuit Engineer | 2 | Circom/Noir circuit development, Poseidon migration, proving pipeline |
 | Rust Blockchain Developer | 2-3 | Production L1 implementation, consensus, networking |
 | AI/ML Engineer | 1-2 | Verification pipeline hardening, prompt injection defense, multi-model integration |
-| Frontend Developer | 1-2 | PixiJS galaxy grid, NoirJS browser proving, game UX |
+| Frontend Developer | 1-2 | PixiJS Neural Lattice rendering, NoirJS browser proving, game UX |
 | DevOps/Infrastructure | 1 | Testnet infrastructure, CI/CD, monitoring |
 | Security Engineer | 1 | Audit coordination, threat modeling, formal verification |
 | **Total** | **8-11** | |
@@ -575,7 +575,7 @@ All values from `spec/agentic-chain/agentic/params.py` -- the canonical source o
 | MAX_TXS_PER_BLOCK | 50 | Ledger |
 | HARDNESS_MULTIPLIER | 16 | Mining |
 | BASE_MINING_RATE_PER_BLOCK | 0.5 | Mining |
-| NODE_GRID_SPACING | 10 | Galaxy Grid |
+| NODE_GRID_SPACING | 10 | Neural Lattice |
 | SUBGRID_SIZE | 64 | Subgrid |
 | LEVEL_EXPONENT | 0.8 | Subgrid |
 | SAFE_MODE_THRESHOLD | 0.20 | Safety |
