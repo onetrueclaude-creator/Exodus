@@ -13,7 +13,7 @@ describe('MockChainService', () => {
     const agents = await service.getAgents();
     expect(agents.length).toBeGreaterThan(0);
     expect(agents[0]).toHaveProperty('id');
-    expect(agents[0]).toHaveProperty('tier');
+    expect(agents[0]).toHaveProperty('level');
     // All agents should be unclaimed (userId is empty)
     const owned = agents.filter(a => a.userId !== '');
     expect(owned).toHaveLength(0);
@@ -25,9 +25,9 @@ describe('MockChainService', () => {
   });
 
   it('registers a new agent', async () => {
-    const agent = await service.registerAgent('new-user', 'opus');
+    const agent = await service.registerAgent('new-user', 'lattice');
     expect(agent.userId).toBe('new-user');
-    expect(agent.tier).toBe('opus');
+    expect(agent.level).toBe(7); // lattice tier starts at L7
     expect(agent.isPrimary).toBe(true);
   });
 

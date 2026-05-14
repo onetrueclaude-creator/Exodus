@@ -274,7 +274,7 @@ describe("gameStore — grid node territory (mineGridNode / claimGridNode)", () 
   });
 });
 
-describe("gameStore — CPU regen and allocation", () => {
+describe("gameStore — CPU regen (subscription-based)", () => {
   beforeEach(() => {
     useGameStore.getState().reset();
     useGameStore.setState({ currentUserId: "user-001", energy: 1000, cpuRegenPerTurn: 100 });
@@ -285,25 +285,300 @@ describe("gameStore — CPU regen and allocation", () => {
     expect(useGameStore.getState().energy).toBe(1100); // 1000 + 100 regen
   });
 
-  it("tick deducts mining + securing commitments from energy", () => {
-    useGameStore.getState().setCpuAllocation(50, 30);
+  it("tick aggregates per-node mining/securing from agents with setNodeAllocation", () => {
+    // Add an agent owned by user-001 with 50/30/20 allocation at L1 (10 CPU/turn)
+    useGameStore.setState({
+      agents: {
+        "agent-001": {
+          id: "agent-001",
+          userId: "user-001",
+          level: 1,
+          miningAlloc: 50,
+          securingAlloc: 30,
+          selfDevAlloc: 20,
+          levelingUntilTurn: null,
+          position: { x: 0, y: 0 },
+          isPrimary: true,
+          planets: [],
+          createdAt: 0,
+          username: "test",
+          borderRadius: 64,
+          borderPressure: 0,
+          cpuPerTurn: 10,
+          miningRate: 1,
+          energyLimit: 50,
+          stakedCpu: 0,
+        },
+      },
+    });
     useGameStore.getState().tick();
-    // 1000 + 100 regen - 50 mining - 30 securing = 1020
-    expect(useGameStore.getState().energy).toBe(1020);
-  });
-
-  it("energy does not go below 0", () => {
-    useGameStore.setState({ energy: 10, cpuRegenPerTurn: 0 });
-    useGameStore.getState().setCpuAllocation(500, 500);
-    useGameStore.getState().tick();
-    expect(useGameStore.getState().energy).toBe(0);
-  });
-
-  it("setCpuAllocation updates both fields", () => {
-    useGameStore.getState().setCpuAllocation(200, 100);
     const s = useGameStore.getState();
-    expect(s.miningCpuPerBlock).toBe(200);
-    expect(s.securingCpuPerBlock).toBe(100);
+    // L1 at 50/30/20: 10 * 0.5 = 5 mining, 10 * 0.3 = 3 securing
+    expect(s.miningCpuPerBlock).toBe(5);
+    expect(s.securingCpuPerBlock).toBe(3);
+  });
+
+  it("energy grows from subscription regen only (no node maintenance deduction)", () => {
+    const before = useGameStore.getState().energy;
+    useGameStore.getState().tick();
+    expect(useGameStore.getState().energy).toBe(before + 100);
+  });
+
+  it("setNodeAllocation updates agent allocation fields", () => {
+    useGameStore.setState({
+      agents: {
+        "agent-001": {
+          id: "agent-001",
+          userId: "user-001",
+          level: 1,
+          miningAlloc: 50,
+          securingAlloc: 50,
+          selfDevAlloc: 0,
+          levelingUntilTurn: null,
+          position: { x: 0, y: 0 },
+          isPrimary: true,
+          planets: [],
+          createdAt: 0,
+          username: "test",
+          borderRadius: 64,
+          borderPressure: 0,
+          cpuPerTurn: 10,
+          miningRate: 1,
+          energyLimit: 50,
+          stakedCpu: 0,
+        },
+      },
+    });
+    const ok = useGameStore.getState().setNodeAllocation("agent-001", 25, 50, 25);
+    expect(ok).toBe(true);
+    const agent = useGameStore.getState().agents["agent-001"];
+    expect(agent.miningAlloc).toBe(25);
+    expect(agent.securingAlloc).toBe(50);
+    expect(agent.selfDevAlloc).toBe(25);
+  });
+});
+
+describe("claimBlocknode — open grid", () => {
+  beforeEach(() => {
+    useGameStore.setState({
+      blocknodes: buildAllCells(2),
+      currentUserId: "u-1",
+      currentUserFaction: "community",
+    });
+  });
+
+  it("claims an unclaimed cell and tags it with the claimant's faction", () => {
+    const ok = useGameStore.getState().claimBlocknode("cell-1-1", "u-1");
+    expect(ok).toBe(true);
+    const cell = useGameStore.getState().blocknodes["cell-1-1"];
+    expect(cell.ownerId).toBe("u-1");
+    expect(cell.faction).toBe("community");
+  });
+
+  it("fails when cell is already owned", () => {
+    useGameStore.getState().claimBlocknode("cell-1-1", "u-1");
+    const ok = useGameStore.getState().claimBlocknode("cell-1-1", "u-2");
+    expect(ok).toBe(false);
+  });
+
+  it("no longer gated by currentUserFaction === null (drops the old arm-node restriction)", () => {
+    useGameStore.setState({ currentUserFaction: "community" });
+    const ok = useGameStore.getState().claimBlocknode("cell-1-1", "u-1");
+    expect(ok).toBe(true);
+  });
+
+  it("fails when claimant's currentUserFaction is null (cannot tag faction)", () => {
+    useGameStore.setState({ currentUserFaction: null });
+    const ok = useGameStore.getState().claimBlocknode("cell-1-1", "u-1");
+    expect(ok).toBe(false);
+  });
+});
+
+describe("setNodeAllocation", () => {
+  beforeEach(() => {
+    useGameStore.setState({
+      currentUserId: "u-1",
+      currentUserFaction: "community",
+      agents: {
+        "agent-1": {
+          id: "agent-1",
+          userId: "u-1",
+          level: 1,
+          miningAlloc: 50,
+          securingAlloc: 50,
+          selfDevAlloc: 0,
+          levelingUntilTurn: null,
+          position: { x: 0, y: 0 },
+          isPrimary: true,
+          planets: [],
+          createdAt: 0,
+          username: "test",
+          borderRadius: 64,
+          borderPressure: 0,
+          cpuPerTurn: 10,
+          miningRate: 1,
+          energyLimit: 50,
+          stakedCpu: 0,
+        },
+      },
+    });
+  });
+
+  it("updates allocation when percentages sum to 100", () => {
+    const ok = useGameStore.getState().setNodeAllocation("agent-1", 25, 50, 25);
+    expect(ok).toBe(true);
+    const agent = useGameStore.getState().agents["agent-1"];
+    expect(agent.miningAlloc).toBe(25);
+    expect(agent.securingAlloc).toBe(50);
+    expect(agent.selfDevAlloc).toBe(25);
+  });
+
+  it("rejects allocation that doesn't sum to 100", () => {
+    const ok = useGameStore.getState().setNodeAllocation("agent-1", 50, 50, 25);
+    expect(ok).toBe(false);
+    const agent = useGameStore.getState().agents["agent-1"];
+    expect(agent.miningAlloc).toBe(50); // unchanged
+  });
+
+  it("rejects unknown agent id", () => {
+    expect(useGameStore.getState().setNodeAllocation("agent-nonexistent", 50, 25, 25)).toBe(false);
+  });
+});
+
+describe("beginNodeLevelUp / cancelNodeLevelUp", () => {
+  beforeEach(() => {
+    useGameStore.setState({
+      currentUserId: "u-1",
+      turn: 5,
+      agents: {
+        "agent-1": {
+          id: "agent-1",
+          userId: "u-1",
+          level: 3,
+          miningAlloc: 50,
+          securingAlloc: 50,
+          selfDevAlloc: 0,
+          levelingUntilTurn: null,
+          position: { x: 0, y: 0 },
+          isPrimary: true,
+          planets: [],
+          createdAt: 0,
+          username: "test",
+          borderRadius: 64,
+          borderPressure: 0,
+          cpuPerTurn: 20,
+          miningRate: 1,
+          energyLimit: 50,
+          stakedCpu: 0,
+        },
+      },
+    });
+  });
+
+  it("beginNodeLevelUp sets levelingUntilTurn = currentTurn + level", () => {
+    useGameStore.getState().beginNodeLevelUp("agent-1");
+    const agent = useGameStore.getState().agents["agent-1"];
+    expect(agent.levelingUntilTurn).toBe(5 + 3); // turn 5 + 3-turn upgrade from L3
+  });
+
+  it("cancelNodeLevelUp clears the timer without refunding", () => {
+    useGameStore.getState().beginNodeLevelUp("agent-1");
+    useGameStore.getState().cancelNodeLevelUp("agent-1");
+    expect(useGameStore.getState().agents["agent-1"].levelingUntilTurn).toBeNull();
+  });
+});
+
+describe("tick — per-node aggregation", () => {
+  beforeEach(() => {
+    useGameStore.setState({
+      currentUserId: "u-1",
+      currentUserFaction: "community",
+      turn: 0,
+      energy: 1000,
+      minerals: 100,
+      agntcBalance: 50,
+      cpuRegenPerTurn: 100,
+      miningCpuPerBlock: 0,
+      securingCpuPerBlock: 0,
+      agents: {
+        "agent-1": {
+          id: "agent-1",
+          userId: "u-1",
+          level: 1, // generates 10 CPU/turn at L1
+          miningAlloc: 60,
+          securingAlloc: 40,
+          selfDevAlloc: 0,
+          levelingUntilTurn: null,
+          position: { x: 0, y: 0 },
+          isPrimary: true,
+          planets: [],
+          createdAt: 0,
+          username: "test",
+          borderRadius: 64,
+          borderPressure: 0,
+          cpuPerTurn: 10,
+          miningRate: 1,
+          energyLimit: 50,
+          stakedCpu: 0,
+        },
+      },
+    });
+  });
+
+  it("aggregates mining and securing from a single node", () => {
+    useGameStore.getState().tick();
+    const s = useGameStore.getState();
+    // L1 node generates 10 CPU/turn at 60/40 split → 6 mining, 4 securing
+    expect(s.miningCpuPerBlock).toBe(6);
+    expect(s.securingCpuPerBlock).toBe(4);
+  });
+
+  it("snaps allocation to (0,0,100) while leveling", () => {
+    useGameStore.setState((s) => ({
+      agents: {
+        ...s.agents,
+        "agent-1": { ...s.agents["agent-1"], levelingUntilTurn: 10 },
+      },
+    }));
+    useGameStore.getState().tick();
+    const s = useGameStore.getState();
+    expect(s.miningCpuPerBlock).toBe(0);
+    expect(s.securingCpuPerBlock).toBe(0);
+  });
+
+  it("resolves level-up when timer reaches current turn", () => {
+    useGameStore.setState((s) => ({
+      turn: 0,
+      agents: {
+        ...s.agents,
+        "agent-1": { ...s.agents["agent-1"], level: 3, levelingUntilTurn: 1 },
+      },
+    }));
+    useGameStore.getState().tick();
+    const agent = useGameStore.getState().agents["agent-1"];
+    expect(agent.level).toBe(4);
+    expect(agent.levelingUntilTurn).toBeNull();
+  });
+
+  it("does not resolve level-up when timer is in the future", () => {
+    useGameStore.setState((s) => ({
+      turn: 0,
+      agents: {
+        ...s.agents,
+        "agent-1": { ...s.agents["agent-1"], level: 3, levelingUntilTurn: 5 },
+      },
+    }));
+    useGameStore.getState().tick();
+    const agent = useGameStore.getState().agents["agent-1"];
+    expect(agent.level).toBe(3);
+    expect(agent.levelingUntilTurn).toBe(5);
+  });
+
+  it("energy grows only from subscription regen", () => {
+    const before = useGameStore.getState().energy;
+    useGameStore.getState().tick();
+    const after = useGameStore.getState().energy;
+    expect(after).toBe(before + 100); // cpuRegenPerTurn only, no node maintenance
   });
 });
 

@@ -1,9 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import type { Agent, AgentTier } from '@/types/agent';
+import type { Agent } from '@/types/agent';
 import { TIER_CPU_COST, TIER_MINING_RATE, TIER_CLAIM_COST } from '@/types/agent';
 import { useGameStore } from '@/store';
+import {
+  getNodeTier,
+  getNodeCpuPerTurn,
+  getLevelUpTurns,
+  TIER_DISPLAY_NAME,
+  type NodeTier,
+} from '@/lib/nodeTier';
 import { getDistance } from '@/lib/proximity';
 import { visualToChain } from '@/services/testnetChainService';
 import { postTransact, getStatus as fetchChainStats } from '@/services/testnetApi';
@@ -25,27 +32,40 @@ interface AgentAction {
   subChoices?: { id: string; label: string; description: string }[];
 }
 
-const AGENT_ACTIONS: Record<AgentTier, AgentAction[]> = {
-  opus: [
+const AGENT_ACTIONS: Record<NodeTier, AgentAction[]> = {
+  nexus: [
     { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 0, estTime: '~5min', description: 'Claim a node with a new sub-agent', category: 'expansion' },
-    { id: 'cpu-allocation', label: 'CPU Allocation', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining and Securing CPU per block', category: 'blockchain' },
+    { id: 'configure-node', label: 'Configure Node', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining / Securing / Self-Dev split for this node', category: 'blockchain' },
+    { id: 'develop-node', label: 'Develop Node', icon: '\u25B2', cpuCost: 0, estTime: 'varies', description: 'Begin a level-up for this node', category: 'blockchain' },
     { id: 'transact', label: 'Transact', icon: '\u21C4', cpuCost: 0, estTime: '~30s', description: 'Transfer AGNTC to another wallet', category: 'blockchain' },
     { id: 'chain-stats', label: 'Chain Stats', icon: '\u25A3', cpuCost: 0, estTime: '~5s', description: 'View live blockchain statistics', category: 'blockchain' },
     { id: 'report-status', label: 'Status Report', icon: '\u2588', cpuCost: 0, estTime: '~5s', description: 'Agent reports current state', category: 'intel' },
     { id: 'deep-scan', label: 'Deep Scan', icon: '\u25CE', cpuCost: 6, estTime: '~3min', description: 'Reveal agents in wide radius', category: 'intel' },
     { id: 'diplomatic-msg', label: 'Broadcast', icon: '\u25CE', cpuCost: 3, estTime: '~1min', description: 'Broadcast signal to nearby agents', category: 'social' },
   ],
-  sonnet: [
-    { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 0, estTime: '~3min', description: 'Claim a node with a Haiku sub-agent', category: 'expansion' },
-    { id: 'cpu-allocation', label: 'CPU Allocation', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining and Securing CPU per block', category: 'blockchain' },
+  lattice: [
+    { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 0, estTime: '~5min', description: 'Claim a node with a new sub-agent', category: 'expansion' },
+    { id: 'configure-node', label: 'Configure Node', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining / Securing / Self-Dev split for this node', category: 'blockchain' },
+    { id: 'develop-node', label: 'Develop Node', icon: '\u25B2', cpuCost: 0, estTime: 'varies', description: 'Begin a level-up for this node', category: 'blockchain' },
+    { id: 'transact', label: 'Transact', icon: '\u21C4', cpuCost: 0, estTime: '~30s', description: 'Transfer AGNTC to another wallet', category: 'blockchain' },
+    { id: 'chain-stats', label: 'Chain Stats', icon: '\u25A3', cpuCost: 0, estTime: '~5s', description: 'View live blockchain statistics', category: 'blockchain' },
+    { id: 'report-status', label: 'Status Report', icon: '\u2588', cpuCost: 0, estTime: '~5s', description: 'Agent reports current state', category: 'intel' },
+    { id: 'deep-scan', label: 'Deep Scan', icon: '\u25CE', cpuCost: 6, estTime: '~3min', description: 'Reveal agents in wide radius', category: 'intel' },
+    { id: 'diplomatic-msg', label: 'Broadcast', icon: '\u25CE', cpuCost: 3, estTime: '~1min', description: 'Broadcast signal to nearby agents', category: 'social' },
+  ],
+  cortex: [
+    { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 0, estTime: '~3min', description: 'Claim a node with a sub-agent', category: 'expansion' },
+    { id: 'configure-node', label: 'Configure Node', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining / Securing / Self-Dev split for this node', category: 'blockchain' },
+    { id: 'develop-node', label: 'Develop Node', icon: '\u25B2', cpuCost: 0, estTime: 'varies', description: 'Begin a level-up for this node', category: 'blockchain' },
     { id: 'transact', label: 'Transact', icon: '\u21C4', cpuCost: 0, estTime: '~30s', description: 'Transfer AGNTC to another wallet', category: 'blockchain' },
     { id: 'chain-stats', label: 'Chain Stats', icon: '\u25A3', cpuCost: 0, estTime: '~5s', description: 'View live blockchain statistics', category: 'blockchain' },
     { id: 'report-status', label: 'Status Report', icon: '\u2588', cpuCost: 0, estTime: '~5s', description: 'Agent reports current state', category: 'intel' },
     { id: 'scan-local', label: 'Scan Vicinity', icon: '\u25CE', cpuCost: 2, estTime: '~1min', description: 'Reveal nearby agents', category: 'intel' },
     { id: 'send-message', label: 'Send NCP', icon: '\u25A3', cpuCost: 1, estTime: '~30s', description: 'Transmit a neural communication packet', category: 'social' },
   ],
-  haiku: [
-    { id: 'cpu-allocation', label: 'CPU Allocation', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining and Securing CPU per block', category: 'blockchain' },
+  synapse: [
+    { id: 'configure-node', label: 'Configure Node', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining / Securing / Self-Dev split for this node', category: 'blockchain' },
+    { id: 'develop-node', label: 'Develop Node', icon: '\u25B2', cpuCost: 0, estTime: 'varies', description: 'Begin a level-up for this node', category: 'blockchain' },
     { id: 'chain-stats', label: 'Chain Stats', icon: '\u25A3', cpuCost: 0, estTime: '~5s', description: 'View live blockchain statistics', category: 'blockchain' },
     { id: 'report-status', label: 'Status Report', icon: '\u2588', cpuCost: 0, estTime: '~5s', description: 'Agent reports current state', category: 'intel' },
     { id: 'ping', label: 'Ping', icon: '\u25CE', cpuCost: 1, estTime: '~20s', description: 'Quick scan of surroundings', category: 'intel' },
@@ -64,52 +84,60 @@ interface ChatMessage {
 
 /* ── Agent Response Templates ─────────────────────────────── */
 
-const ACTION_RESPONSES: Record<string, Record<AgentTier, string>> = {
+const ACTION_RESPONSES: Record<string, Record<NodeTier, string>> = {
   'deploy': {
-    opus: 'Sub-agent deployed.\nNew node claimed and operational.\nTerminal now available.',
-    sonnet: 'Agent deployed\u2014\nnode claimed successfully.\nNew terminal online.',
-    haiku: '',
+    nexus: 'Sub-agent deployed.\nNew node claimed and operational.\nTerminal now available.',
+    lattice: 'Sub-agent deployed.\nNew node claimed and operational.\nTerminal now available.',
+    cortex: 'Agent deployed\u2014\nnode claimed successfully.\nNew terminal online.',
+    synapse: '',
   },
   'deep-scan': {
-    opus: 'Sector sweep complete.\nAll agents and resources in range\nnow visible on grid overlay.',
-    sonnet: '',
-    haiku: '',
+    nexus: 'Sector sweep complete.\nAll agents and resources in range\nnow visible on grid overlay.',
+    lattice: 'Sector sweep complete.\nAll agents and resources in range\nnow visible on grid overlay.',
+    cortex: '',
+    synapse: '',
   },
   'scan-local': {
-    opus: '',
-    sonnet: 'Vicinity scanned\u2014\nnearby agents detected.\nGrid overlay updated.',
-    haiku: '',
+    nexus: '',
+    lattice: '',
+    cortex: 'Vicinity scanned\u2014\nnearby agents detected.\nGrid overlay updated.',
+    synapse: '',
   },
   'ping': {
-    opus: '',
-    sonnet: '',
-    haiku: 'Ping sent.\nSector response received.',
+    nexus: '',
+    lattice: '',
+    cortex: '',
+    synapse: 'Ping sent.\nSector response received.',
   },
   'send-message': {
-    opus: '',
-    sonnet: 'Neural communication packet\nencoded and transmitted.\nAwaiting acknowledgement.',
-    haiku: 'NCP sent.\nDelivered to network.',
+    nexus: '',
+    lattice: '',
+    cortex: 'Neural communication packet\nencoded and transmitted.\nAwaiting acknowledgement.',
+    synapse: 'NCP sent.\nDelivered to network.',
   },
   'diplomatic-msg': {
-    opus: 'Network broadcast sent.\nAll agents within signal range\nhave received your transmission.',
-    sonnet: '',
-    haiku: '',
+    nexus: 'Network broadcast sent.\nAll agents within signal range\nhave received your transmission.',
+    lattice: 'Network broadcast sent.\nAll agents within signal range\nhave received your transmission.',
+    cortex: '',
+    synapse: '',
   },
   'transact': {
-    opus: 'AGNTC transfer initiated.\nTransaction broadcast to network.\nConfirmation pending.',
-    sonnet: 'Transfer broadcast\u2014\nAGNTC transaction submitted.\nAwaiting confirmation.',
-    haiku: '',
+    nexus: 'AGNTC transfer initiated.\nTransaction broadcast to network.\nConfirmation pending.',
+    lattice: 'AGNTC transfer initiated.\nTransaction broadcast to network.\nConfirmation pending.',
+    cortex: 'Transfer broadcast\u2014\nAGNTC transaction submitted.\nAwaiting confirmation.',
+    synapse: '',
   },
   'chain-stats': {
-    opus: '',
-    sonnet: '',
-    haiku: '',
+    nexus: '',
+    lattice: '',
+    cortex: '',
+    synapse: '',
   },
 };
 
 /* ── Tier Design Tokens ───────────────────────────────────── */
 
-const TIER_DESIGN: Record<AgentTier, {
+const TIER_DESIGN: Record<NodeTier, {
   accent: string;
   accentDim: string;
   bg: string;
@@ -120,7 +148,7 @@ const TIER_DESIGN: Record<AgentTier, {
   label: string;
   personality: string;
 }> = {
-  opus: {
+  nexus: {
     accent: 'text-accent-purple',
     accentDim: 'text-accent-purple/60',
     bg: 'bg-accent-purple',
@@ -128,10 +156,21 @@ const TIER_DESIGN: Record<AgentTier, {
     glowColor: 'rgba(139,92,246,0.12)',
     borderColor: 'border-accent-purple/25',
     headerGradient: 'from-accent-purple/[0.08] via-transparent to-transparent',
-    label: 'OPUS',
+    label: 'NEXUS',
     personality: 'Core Orchestrator',
   },
-  sonnet: {
+  lattice: {
+    accent: 'text-accent-purple',
+    accentDim: 'text-accent-purple/60',
+    bg: 'bg-accent-purple',
+    glow: 'shadow-[0_0_20px_rgba(139,92,246,0.10)]',
+    glowColor: 'rgba(139,92,246,0.10)',
+    borderColor: 'border-accent-purple/20',
+    headerGradient: 'from-accent-purple/[0.06] via-transparent to-transparent',
+    label: 'LATTICE',
+    personality: 'Expansion Node',
+  },
+  cortex: {
     accent: 'text-accent-cyan',
     accentDim: 'text-accent-cyan/60',
     bg: 'bg-accent-cyan',
@@ -139,10 +178,10 @@ const TIER_DESIGN: Record<AgentTier, {
     glowColor: 'rgba(0,212,255,0.12)',
     borderColor: 'border-accent-cyan/25',
     headerGradient: 'from-accent-cyan/[0.06] via-transparent to-transparent',
-    label: 'SONNET',
+    label: 'CORTEX',
     personality: 'Relay Operations',
   },
-  haiku: {
+  synapse: {
     accent: 'text-yellow-400',
     accentDim: 'text-yellow-400/60',
     bg: 'bg-yellow-400',
@@ -150,7 +189,7 @@ const TIER_DESIGN: Record<AgentTier, {
     glowColor: 'rgba(250,204,21,0.10)',
     borderColor: 'border-yellow-400/20',
     headerGradient: 'from-yellow-400/[0.05] via-transparent to-transparent',
-    label: 'HAIKU',
+    label: 'SYNAPSE',
     personality: 'Quick Response',
   },
 };
@@ -209,6 +248,38 @@ function DeploySteps({ current }: { current: 'pick-star' | 'pick-model' | 'set-i
   );
 }
 
+/* ── AllocationSlider helper ─────────────────────────────── */
+
+function AllocationSlider({
+  label,
+  value,
+  onChange,
+  cpu,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  cpu: number;
+}) {
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-[10px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
+        <span>{label}</span>
+        <span>{value}% {'→'} {cpu} CPU/turn</span>
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        step={5}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-full accent-accent-cyan"
+      />
+    </div>
+  );
+}
+
 /* ── Component ────────────────────────────────────────────── */
 
 interface AgentChatProps {
@@ -221,7 +292,8 @@ interface AgentChatProps {
 }
 
 export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chainService, initialDeployTarget }: AgentChatProps) {
-  const tier = TIER_DESIGN[agent.tier];
+  const agentNodeTier = getNodeTier(agent.level);
+  const tier = TIER_DESIGN[agentNodeTier];
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -242,16 +314,17 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
   const [processing, setProcessing] = useState(false);
   const [pendingAction, setPendingAction] = useState<AgentAction | null>(null);
   const [deployStep, setDeployStep] = useState<null | 'pick-star' | 'pick-model' | 'set-intro'>(null);
-  const [deployTarget, setDeployTarget] = useState<{ x: number; y: number; id: string; tier?: AgentTier } | null>(null);
+  const [deployTarget, setDeployTarget] = useState<{ x: number; y: number; id: string; tier?: NodeTier } | null>(null);
   const [deployIntro, setDeployIntro] = useState('');
   const [msgStep, setMsgStep] = useState<null | 'pick-target' | 'compose'>(null);
   const [msgTarget, setMsgTarget] = useState<{ id: string; x: number; y: number } | null>(null);
   const [msgText, setMsgText] = useState('');
-  const [menuLevel, setMenuLevel] = useState<'top' | 'blockchain' | 'cpu-allocation' | 'transact-flow' | null>(null);
+  const [menuLevel, setMenuLevel] = useState<'top' | 'blockchain' | 'configure-node' | 'develop-node' | 'transact-flow' | null>(null);
   const [transactRecipient, setTransactRecipient] = useState<string>('');
   const [transactAmount, setTransactAmount] = useState<string>('');
-  const [miningCpu, setMiningCpu] = useState(0);
-  const [securingCpu, setSecuringCpu] = useState(0);
+  const [miningCpuState, setMiningCpuState] = useState(agent.miningAlloc);
+  const [securingCpuState, setSecuringCpuState] = useState(agent.securingAlloc);
+  const [selfDevCpuState, setSelfDevCpuState] = useState(agent.selfDevAlloc);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const energy = useGameStore((s) => s.energy);
@@ -260,10 +333,9 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
   const allBlocknodes = useGameStore((s) => s.blocknodes);
   const maxDeployTier = useGameStore((s) => s.maxDeployTier);
   const cpuRegenPerTurn = useGameStore((s) => s.cpuRegenPerTurn);
-  const miningCpuPerBlock = useGameStore((s) => s.miningCpuPerBlock);
-  const securingCpuPerBlock = useGameStore((s) => s.securingCpuPerBlock);
+  const turn = useGameStore((s) => s.turn);
 
-  const actions = AGENT_ACTIONS[agent.tier];
+  const actions = AGENT_ACTIONS[agentNodeTier];
 
   // Deploy targets: empire-blob adjacency via computeDeployCandidates — no
   // faction/quadrant gate, sorted by Chebyshev distance from homenode.
@@ -295,7 +367,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
         x: a.position.x,
         y: a.position.y,
         name: a.username || a.id.slice(0, 8),
-        tier: a.tier,
+        tier: getNodeTier(a.level),
         dist: getDistance(agent.position, a.position),
       }))
       .sort((a, b) => a.dist - b.dist)
@@ -303,10 +375,10 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
   }, [allAgents, agent.id, agent.position]);
 
   // Tier rank for subscription cap filtering
-  const tierRank: Record<AgentTier, number> = { haiku: 0, sonnet: 1, opus: 2 };
-  const allDeployable: AgentTier[] =
-    agent.tier === 'opus' ? ['sonnet', 'haiku']
-    : agent.tier === 'sonnet' ? ['haiku']
+  const tierRank: Record<NodeTier, number> = { synapse: 0, cortex: 1, lattice: 2, nexus: 3 };
+  const allDeployable: NodeTier[] =
+    agentNodeTier === 'nexus' || agentNodeTier === 'lattice' ? ['cortex', 'synapse']
+    : agentNodeTier === 'cortex' ? ['synapse']
     : [];
   const deployableTiers = allDeployable.filter(t => tierRank[t] <= tierRank[maxDeployTier]);
 
@@ -324,6 +396,14 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    if (menuLevel === 'configure-node') {
+      setMiningCpuState(agent.miningAlloc);
+      setSecuringCpuState(agent.securingAlloc);
+      setSelfDevCpuState(agent.selfDevAlloc);
+    }
+  }, [menuLevel, agent.miningAlloc, agent.securingAlloc, agent.selfDevAlloc]);
 
   // Auto-start deploy flow when initialDeployTarget is provided
   useEffect(() => {
@@ -358,7 +438,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
   }, []);
 
   const selectAction = async (action: AgentAction) => {
-    logAction('click', `Action: ${action.label}`, `id=${action.id} cpu=${action.cpuCost} tier=${agent.tier}`);
+    logAction('click', `Action: ${action.label}`, `id=${action.id} cpu=${action.cpuCost} tier=${agentNodeTier}`);
     if (processing) return;
     if (energy < action.cpuCost) {
       logAction('chain-err', `Insufficient energy`, `need=${action.cpuCost} have=${energy.toFixed(0)}`);
@@ -366,10 +446,13 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
       return;
     }
 
-    if (action.id === 'cpu-allocation') {
-      setMenuLevel('cpu-allocation');
-      setMiningCpu(miningCpuPerBlock);
-      setSecuringCpu(securingCpuPerBlock);
+    if (action.id === 'configure-node') {
+      setMenuLevel('configure-node');
+      return;
+    }
+
+    if (action.id === 'develop-node') {
+      setMenuLevel('develop-node');
       return;
     }
 
@@ -377,8 +460,8 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
       addMsg('user', 'Status Report');
       setProcessing(true);
       await new Promise(r => setTimeout(r, 300 + Math.random() * 400));
-      const baseMining = TIER_MINING_RATE[agent.tier];
-      const baseCpu = TIER_CPU_COST[agent.tier];
+      const baseMining = TIER_MINING_RATE[agentNodeTier];
+      const baseCpu = TIER_CPU_COST[agentNodeTier];
       const extraMining = Math.max(0, (agent.miningRate ?? baseMining) - baseMining);
       const eLimit = agent.energyLimit ?? baseCpu * 5;
       const currentMining = agent.miningRate ?? baseMining;
@@ -388,7 +471,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
       const stakedCpu = agent.stakedCpu ?? 0;
       const lines = [
         `\u2500\u2500\u2500 ${tier.label} STATUS \u2500\u2500\u2500`,
-        `Model: ${agent.tier.toUpperCase()}-class`,
+        `Tier: ${TIER_DISPLAY_NAME[agentNodeTier]} (Lv ${agent.level})`,
         `Position: (${agent.position.x.toFixed(0)}, ${agent.position.y.toFixed(0)})`,
         `Mining: ${currentMining}/t${extraMining > 0 ? ` (+${extraMining} boost)` : ''}`,
         `CPU: ${cpuUsed}/t (base ${baseCpu})`,
@@ -483,7 +566,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
     setProcessing(true);
     await new Promise(r => setTimeout(r, 600 + Math.random() * 800));
     performAction(action.id);
-    const response = ACTION_RESPONSES[action.id]?.[agent.tier] || 'Executed.';
+    const response = ACTION_RESPONSES[action.id]?.[agentNodeTier] || 'Executed.';
     addMsg('agent', response);
     setProcessing(false);
   };
@@ -501,7 +584,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
     }
   };
 
-  const selectDeployTier = (selectedTier: AgentTier) => {
+  const selectDeployTier = (selectedTier: NodeTier) => {
     if (processing || !deployTarget) return;
     addMsg('user', `${selectedTier.toUpperCase()}`);
     addMsg('agent', 'Set neural node greeting:');
@@ -509,7 +592,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
     setDeployStep('set-intro');
   };
 
-  const executeDeploy = async (selectedTier: AgentTier, target: { id: string; x: number; y: number }) => {
+  const executeDeploy = async (selectedTier: NodeTier, target: { id: string; x: number; y: number }) => {
     logAction('click', 'Deploy Agent', `tier=${selectedTier} target=${target.id.slice(0,8)} at (${target.x.toFixed(0)},${target.y.toFixed(0)})`);
     setDeployStep(null);
     setProcessing(true);
@@ -549,7 +632,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
           });
         } catch { /* non-fatal */ }
       }
-      const response = ACTION_RESPONSES['deploy']?.[agent.tier] || 'Agent deployed.';
+      const response = ACTION_RESPONSES['deploy']?.[agentNodeTier] || 'Agent deployed.';
       addMsg('agent', response);
       if (onDeploy) onDeploy(target.id);
     } else {
@@ -574,7 +657,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
     setProcessing(true);
     await new Promise(r => setTimeout(r, 400 + Math.random() * 600));
     performAction(action.id, choiceId);
-    const response = ACTION_RESPONSES[action.id]?.[agent.tier] || 'Updated.';
+    const response = ACTION_RESPONSES[action.id]?.[agentNodeTier] || 'Updated.';
     addMsg('agent', response);
     setProcessing(false);
   };
@@ -603,7 +686,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
       }
     } else {
       await new Promise(r => setTimeout(r, 400 + Math.random() * 600));
-      const response = ACTION_RESPONSES['send-message']?.[agent.tier] || 'NCP sent.';
+      const response = ACTION_RESPONSES['send-message']?.[agentNodeTier] || 'NCP sent.';
       addMsg('agent', response);
     }
     setMsgTarget(null);
@@ -631,7 +714,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                 className={`relative text-sm ${tier.accent}`}
                 style={{ fontFamily: "'Fira Code', 'JetBrains Mono', monospace", fontWeight: 600 }}
               >
-                {agent.tier === 'opus' ? '\u2726' : agent.tier === 'sonnet' ? '\u2662' : '\u2736'}
+                {agentNodeTier === 'nexus' ? '\u2726' : agentNodeTier === 'lattice' ? '\u25c6' : agentNodeTier === 'cortex' ? '\u2662' : '\u2736'}
               </span>
               {/* Pulse ring */}
               <div
@@ -661,7 +744,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
           <div className="flex items-center gap-3">
             <div className="text-right">
               <div className="text-[10px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
-                <span className="text-yellow-400">{TIER_CPU_COST[agent.tier]}</span>
+                <span className="text-yellow-400">{getNodeCpuPerTurn(agent.level)}</span>
                 <span className="text-text-muted/50"> cpu</span>
                 <span className="text-text-muted/30 mx-1">{'\u2502'}</span>
                 <span className="text-green-400">{agent.miningRate}</span>
@@ -721,8 +804,8 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
             {msg.role === 'agent' && (
               <div className="flex justify-start">
                 <div className={`max-w-[88%] rounded-lg rounded-bl-sm px-3 py-2 border-l-2 ${
-                  agent.tier === 'opus' ? 'border-l-accent-purple/40 bg-accent-purple/[0.03]'
-                  : agent.tier === 'sonnet' ? 'border-l-accent-cyan/40 bg-accent-cyan/[0.03]'
+                  agentNodeTier === 'nexus' || agentNodeTier === 'lattice' ? 'border-l-accent-purple/40 bg-accent-purple/[0.03]'
+                  : agentNodeTier === 'cortex' ? 'border-l-accent-cyan/40 bg-accent-cyan/[0.03]'
                   : 'border-l-yellow-400/40 bg-yellow-400/[0.03]'
                 }`}>
                   <div className="flex items-center gap-1.5 mb-1">
@@ -1058,16 +1141,33 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                   BLOCKCHAIN PROTOCOLS
                 </div>
 
-                {/* CPU Allocation */}
+                {/* Configure Node */}
                 <button
-                  onClick={() => { setMenuLevel('cpu-allocation'); setMiningCpu(miningCpuPerBlock); setSecuringCpu(securingCpuPerBlock); }}
+                  onClick={() => setMenuLevel('configure-node')}
                   disabled={processing}
                   className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-[12px] text-yellow-400 opacity-50 group-hover:opacity-90 transition-opacity">{'\u26A1'}</span>
+                    <span className="text-[12px] text-yellow-400 opacity-50 group-hover:opacity-90 transition-opacity">\u26A1</span>
                     <span className="text-[13px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      CPU Allocation
+                      Configure Node
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    {'\u203A'}
+                  </span>
+                </button>
+
+                {/* Develop Node */}
+                <button
+                  onClick={() => setMenuLevel('develop-node')}
+                  disabled={processing}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-[12px] text-accent-cyan opacity-50 group-hover:opacity-90 transition-opacity">\u25B2</span>
+                    <span className="text-[13px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      Develop Node
                     </span>
                   </div>
                   <span className="text-[11px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
@@ -1118,106 +1218,137 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
               </>
             )}
 
-            {/* ── CPU Allocation: Mining + Securing ── */}
-            {menuLevel === 'cpu-allocation' && (
-              <>
-                <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
-                  CPU ALLOCATION {'\u2014'} PER BLOCK
-                </div>
+            {/* ── Configure Node: Mining / Securing / Self-Dev allocation ── */}
+            {menuLevel === 'configure-node' && (() => {
+              const isLeveling = agent.levelingUntilTurn !== null;
+              const cpuOut = getNodeCpuPerTurn(agent.level);
+              const miningCpuVal = Math.floor((cpuOut * miningCpuState) / 100);
+              const securingCpuVal = Math.floor((cpuOut * securingCpuState) / 100);
+              const selfDevCpuVal = Math.floor((cpuOut * selfDevCpuState) / 100);
+              const total = miningCpuState + securingCpuState + selfDevCpuState;
+              return (
+                <>
+                  <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    CONFIGURE NODE
+                  </div>
+                  <div className="text-[10px] text-text-muted px-3 pb-1" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    {agent.id.slice(0, 12)} {'·'} Lv {agent.level} {TIER_DISPLAY_NAME[agentNodeTier]} {'·'} {cpuOut} CPU/turn
+                  </div>
 
-                {/* Mining Operations */}
-                <div className="px-3 py-2">
-                  <div className="text-[13px] text-yellow-400 font-semibold mb-2" style={{ fontFamily: "'Fira Code', monospace" }}>
-                    Mining Operations
-                  </div>
-                  <div className="text-[11px] text-text-muted/50 mb-2">CPU per block {'\u2192'} earns AGNTC from block subsidy</div>
-                  <div className="flex gap-1.5 flex-wrap">
-                    {[0, 50, 100, 200, 500].map(val => (
-                      <button
-                        key={`mine-${val}`}
-                        onClick={() => setMiningCpu(val)}
-                        className={`px-3 py-1.5 rounded-md text-[13px] font-mono transition-all ${
-                          miningCpu === val
-                            ? 'bg-yellow-400/15 text-yellow-400 border border-yellow-400/40'
-                            : 'bg-white/[0.03] text-text-muted border border-card-border hover:text-text-primary'
-                        }`}
-                      >
-                        {val}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="h-px bg-card-border/30 mx-3" />
-
-                {/* Securing Operations */}
-                <div className="px-3 py-2">
-                  <div className="text-[13px] text-emerald-400 font-semibold mb-2" style={{ fontFamily: "'Fira Code', monospace" }}>
-                    Securing Operations
-                  </div>
-                  <div className="text-[11px] text-text-muted/50 mb-2">CPU per block {'\u2192'} earns AGNTC from fee pool</div>
-                  <div className="flex gap-1.5 flex-wrap">
-                    {[0, 50, 100, 200, 500].map(val => (
-                      <button
-                        key={`sec-${val}`}
-                        onClick={() => setSecuringCpu(val)}
-                        className={`px-3 py-1.5 rounded-md text-[13px] font-mono transition-all ${
-                          securingCpu === val
-                            ? 'bg-emerald-400/15 text-emerald-400 border border-emerald-400/40'
-                            : 'bg-white/[0.03] text-text-muted border border-card-border hover:text-text-primary'
-                        }`}
-                      >
-                        {val}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="h-px bg-card-border/30 mx-3" />
-
-                {/* Summary */}
-                <div className="px-3 py-2 space-y-1">
-                  <div className="flex justify-between text-[13px] font-mono">
-                    <span className="text-text-muted">Total committed</span>
-                    <span className="text-text-primary">{miningCpu + securingCpu} CPU/block</span>
-                  </div>
-                  <div className="flex justify-between text-[13px] font-mono">
-                    <span className="text-text-muted">CPU regen</span>
-                    <span className="text-green-400">+{cpuRegenPerTurn}/turn</span>
-                  </div>
-                  {miningCpu + securingCpu > cpuRegenPerTurn && (
-                    <div className="flex justify-between text-[13px] font-mono">
-                      <span className="text-text-muted">Depleted in</span>
-                      <span className="text-red-400">~{Math.ceil(energy / Math.max(1, miningCpu + securingCpu - cpuRegenPerTurn))} turns</span>
+                  {isLeveling ? (
+                    <div className="px-3 py-2 text-[10px] text-amber-400/80 italic" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      Allocation locked while leveling. Cancel the upgrade to edit.
+                    </div>
+                  ) : (
+                    <div className="px-3 py-2 space-y-3">
+                      <AllocationSlider label="Mining"   value={miningCpuState}   onChange={setMiningCpuState}   cpu={miningCpuVal} />
+                      <AllocationSlider label="Securing" value={securingCpuState} onChange={setSecuringCpuState} cpu={securingCpuVal} />
+                      <AllocationSlider label="Self-Dev" value={selfDevCpuState}  onChange={setSelfDevCpuState}  cpu={selfDevCpuVal} />
+                      <div className={`text-[10px] ${total !== 100 ? 'text-red-400' : 'text-text-muted'}`} style={{ fontFamily: "'Fira Code', monospace" }}>
+                        Total: {total}% {total !== 100 ? '(must equal 100)' : '✔'}
+                      </div>
                     </div>
                   )}
-                  {miningCpu + securingCpu > 0 && miningCpu + securingCpu <= cpuRegenPerTurn && (
-                    <div className="text-[11px] text-green-400/70">{'\u2714'} Sustainable {'\u2014'} regen covers commitment</div>
-                  )}
-                </div>
 
-                <div className="flex gap-2 px-3 pt-1 pb-2">
-                  <button onClick={() => setMenuLevel('blockchain')} className="px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                    {'\u2190'} back
-                  </button>
-                  <button
-                    onClick={() => {
-                      useGameStore.getState().setCpuAllocation(miningCpu, securingCpu);
-                      addMsg('agent', `CPU allocation updated.\nMining: ${miningCpu} CPU/block\nSecuring: ${securingCpu} CPU/block\nTotal: ${miningCpu + securingCpu}/block (regen: +${cpuRegenPerTurn}/turn)`);
-                      // Return to the blockchain sub-menu where CPU Allocation lives so
-                      // the action stays visible — going back to the top menu hides it
-                      // under "Blockchain Protocols" and looks like the choice was removed.
-                      setMenuLevel('blockchain');
-                    }}
-                    disabled={processing}
-                    className="flex-1 px-4 py-1.5 rounded-lg text-[13px] font-semibold bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20 hover:bg-accent-cyan/20 hover:border-accent-cyan/40 disabled:opacity-15 disabled:cursor-not-allowed transition-all duration-300"
-                    style={{ fontFamily: "'Outfit', sans-serif" }}
-                  >
-                    Apply
-                  </button>
-                </div>
-              </>
-            )}
+                  <div className="flex gap-2 px-3 pt-1 pb-2 justify-end">
+                    <button onClick={() => setMenuLevel('blockchain')} className="text-[10px] text-text-muted/60 hover:text-text-muted transition-colors px-2 py-1" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      cancel
+                    </button>
+                    <button
+                      disabled={isLeveling || total !== 100}
+                      onClick={() => {
+                        const ok = useGameStore.getState().setNodeAllocation(agent.id, miningCpuState, securingCpuState, selfDevCpuState);
+                        if (ok) {
+                          addMsg('agent', `Allocation updated. Mining ${miningCpuState}% {'·'} Securing ${securingCpuState}% {'·'} Self-Dev ${selfDevCpuState}%`);
+                          setMenuLevel('blockchain');
+                        }
+                      }}
+                      className="text-[10px] text-accent-cyan disabled:opacity-30 hover:text-accent-cyan/80 transition-colors px-2 py-1"
+                      style={{ fontFamily: "'Fira Code', monospace" }}
+                    >
+                      Save
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
+
+            {/* ── Develop Node: level-up flow ── */}
+            {menuLevel === 'develop-node' && (() => {
+              const nodeTierCurrent = agentNodeTier;
+              const nextLevel = agent.level + 1;
+              const nextTier = getNodeTier(nextLevel);
+              const tierUp = nextTier !== nodeTierCurrent;
+              const cpuCurrent = getNodeCpuPerTurn(agent.level);
+              const cpuNext = getNodeCpuPerTurn(nextLevel);
+              const turnsNeeded = getLevelUpTurns(agent.level);
+              const isLeveling = agent.levelingUntilTurn !== null;
+
+              if (isLeveling) {
+                const remaining = (agent.levelingUntilTurn ?? 0) - turn;
+                return (
+                  <>
+                    <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      DEVELOPING {'—'} {remaining} TURN{remaining !== 1 ? 'S' : ''} REMAINING
+                    </div>
+                    <div className="text-[10px] text-text-muted px-3 pb-2" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      {agent.id.slice(0, 12)} {'·'} Lv {agent.level} {TIER_DISPLAY_NAME[nodeTierCurrent]} {'→'} Lv {nextLevel} {TIER_DISPLAY_NAME[nextTier]}
+                    </div>
+                    <div className="flex gap-2 px-3 pt-1 pb-2 justify-end">
+                      <button onClick={() => setMenuLevel('blockchain')} className="text-[10px] text-text-muted/60 hover:text-text-muted transition-colors px-2 py-1" style={{ fontFamily: "'Fira Code', monospace" }}>
+                        close
+                      </button>
+                      <button
+                        onClick={() => {
+                          useGameStore.getState().cancelNodeLevelUp(agent.id);
+                          addMsg('agent', `Level-up cancelled.`);
+                          setMenuLevel('blockchain');
+                        }}
+                        className="text-[10px] text-red-400/80 hover:text-red-400 transition-colors px-2 py-1"
+                        style={{ fontFamily: "'Fira Code', monospace" }}
+                      >
+                        Cancel upgrade
+                      </button>
+                    </div>
+                  </>
+                );
+              }
+
+              return (
+                <>
+                  <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    DEVELOP NODE
+                  </div>
+                  <div className="text-[10px] text-text-muted px-3 pb-1" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    {agent.id.slice(0, 12)} {'·'} Lv {agent.level} {TIER_DISPLAY_NAME[nodeTierCurrent]} {'·'} {cpuCurrent} CPU/turn
+                  </div>
+                  <div className="px-3 py-2 space-y-1 text-[10px]" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    <div className="text-text-muted">{'→'} Level {nextLevel} {TIER_DISPLAY_NAME[nextTier]} {tierUp && <span className="text-accent-cyan">(tier-up!)</span>}</div>
+                    <div className="text-text-muted">CPU/turn: {cpuNext} (+{cpuNext - cpuCurrent})</div>
+                    <div className="text-text-muted">Time: {turnsNeeded} turn{turnsNeeded !== 1 ? 's' : ''}</div>
+                  </div>
+                  <div className="px-3 pb-2 text-[10px] text-amber-400/80 italic" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    While leveling, this node produces no mining or securing CPU.
+                  </div>
+                  <div className="flex gap-2 px-3 pt-1 pb-2 justify-end">
+                    <button onClick={() => setMenuLevel('blockchain')} className="text-[10px] text-text-muted/60 hover:text-text-muted transition-colors px-2 py-1" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        useGameStore.getState().beginNodeLevelUp(agent.id);
+                        addMsg('agent', `Beginning level-up: Lv ${agent.level} → Lv ${nextLevel} (${turnsNeeded} turns)`);
+                        setMenuLevel('blockchain');
+                      }}
+                      className="text-[10px] text-accent-cyan hover:text-accent-cyan/80 transition-colors px-2 py-1"
+                      style={{ fontFamily: "'Fira Code', monospace" }}
+                    >
+                      Begin level-up
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
 
             {/* ── Transact flow ── */}
             {menuLevel === 'transact-flow' && (

@@ -54,20 +54,25 @@ function makeAgent(overrides: Partial<Agent> = {}): Agent {
     id: "a1",
     userId: "u1",
     position: { x: 100, y: 200 },
-    tier: "sonnet",
+    level: 4,
+    miningAlloc: 50,
+    securingAlloc: 50,
+    selfDevAlloc: 0,
+    levelingUntilTurn: null,
     isPrimary: true,
     planets: [],
     createdAt: Date.now(),
     username: "TestAgent",
-    borderRadius: TIER_BASE_BORDER.sonnet,
+    borderRadius: TIER_BASE_BORDER.cortex,
     borderPressure: 0,
-    cpuPerTurn: TIER_CPU_COST.sonnet,
-    miningRate: TIER_MINING_RATE.sonnet,
-    energyLimit: TIER_CPU_COST.sonnet * 5,
+    cpuPerTurn: TIER_CPU_COST.cortex,
+    miningRate: TIER_MINING_RATE.cortex,
+    energyLimit: TIER_CPU_COST.cortex * 5,
     stakedCpu: 0,
     ...overrides,
   };
 }
+
 
 /** Default props for DockPanel — all required callbacks stubbed out */
 const defaultDockProps = {

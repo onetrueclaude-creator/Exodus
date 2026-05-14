@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useGameStore } from "@/store";
-import { NODE_CPU_PER_TURN } from "@/store/gameStore";
+import { getNodeCpuPerTurn } from "@/lib/nodeTier";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { sciFormat } from "@/lib/format";
 import { DeltaFlash } from "@/components/DeltaFlash";
@@ -73,20 +73,24 @@ export default function ResourceBar() {
   const cpuRegenPerTurn = useGameStore((s) => s.cpuRegenPerTurn);
   const miningCpuPerBlock = useGameStore((s) => s.miningCpuPerBlock);
   const securingCpuPerBlock = useGameStore((s) => s.securingCpuPerBlock);
+  const allAgents = useGameStore((s) => s.agents);
 
   const ownedBlocknodes = Object.values(blocknodes).filter((n) => n.ownerId === currentUserId);
   const faction = currentUserFaction ?? "community";
 
-  // Match the tick() formula so the bar reflects what actually happens each turn.
-  const nodeMaintenance = ownedBlocknodes.length * NODE_CPU_PER_TURN;
+  // Sum per-node CPU contribution from all owned agents
+  const ownedAgents = Object.values(allAgents).filter((a) => a.userId === currentUserId);
+  const nodeCpuOutput = ownedAgents.reduce((sum, a) => sum + getNodeCpuPerTurn(a.level), 0);
+  const grossRegen = cpuRegenPerTurn + nodeCpuOutput;
+
   const committed = miningCpuPerBlock + securingCpuPerBlock;
-  const netCpuPerTurn = cpuRegenPerTurn - committed - nodeMaintenance;
+  const netCpuPerTurn = grossRegen - committed;
   const netSign = netCpuPerTurn > 0 ? "+" : netCpuPerTurn < 0 ? "−" : "±";
   const netColor =
     netCpuPerTurn > 0 ? "text-green-400/70"
     : netCpuPerTurn < 0 ? "text-red-400/80"
     : "text-text-muted/60";
-  const netTooltip = `Regen +${cpuRegenPerTurn} · Mining −${miningCpuPerBlock} · Securing −${securingCpuPerBlock} · Maintenance −${nodeMaintenance}`;
+  const netTooltip = `Regen +${cpuRegenPerTurn} · Nodes +${nodeCpuOutput} · Mining −${miningCpuPerBlock} · Securing −${securingCpuPerBlock}`;
 
   return (
     <div className="h-8 bg-background-light border-b border-card-border flex items-center px-3 gap-3 shrink-0">

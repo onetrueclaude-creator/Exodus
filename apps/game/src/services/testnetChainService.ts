@@ -11,9 +11,38 @@
  */
 import type { Agent, AgentTier, HaikuMessage, GridPosition, ClaimInfo, ClaimNodeResult, NodeInfo, TestnetStatus, MessageResult, MessageInfo } from '@/types';
 import { CHAIN_GRID_MIN, CHAIN_GRID_SPAN } from '@/types/testnet';
-import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
+import { TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
+import { getNodeTier, getNodeCpuPerTurn } from '@/lib/nodeTier';
 import type { ChainService } from './chainService';
 import * as api from './testnetApi';
+
+// === Chain compatibility shim ===
+// Translates between the legacy on-chain tier strings (opus/sonnet/haiku) and
+// the new local level model. Sub-project B will retire this shim by adopting
+// level-based types on the chain side directly.
+
+type LegacyTier = 'opus' | 'sonnet' | 'haiku';
+
+/**
+ * Map a numeric level to the legacy tier string the chain still expects.
+ * Synapse band (L1-3) → haiku; Cortex band (L4-6) → sonnet; Lattice+ (L7+) → opus.
+ */
+export function levelToLegacyTier(level: number): LegacyTier {
+  if (level >= 7) return 'opus';
+  if (level >= 4) return 'sonnet';
+  return 'haiku';
+}
+
+/**
+ * Inverse: map a legacy tier from chain responses to a starting level.
+ * Roughly: haiku→L1, sonnet→L4, opus→L7. Loses information for high-level
+ * nodes (a L12 node sent to chain as "opus" comes back as L7).
+ */
+export function legacyTierToLevel(tier: LegacyTier): number {
+  if (tier === 'opus') return 7;
+  if (tier === 'sonnet') return 4;
+  return 1;
+}
 
 /** Visual grid extent (matches LatticeGrid GRID_EXTENT / 2) */
 const VISUAL_HALF = 4000;
@@ -43,27 +72,35 @@ export function visualToChain(vx: number, vy: number): { x: number; y: number } 
 // Claim / Node → Agent mapping
 // ---------------------------------------------------------------------------
 
-/** Map a blockchain claim to a frontend Agent. */
+/** Map a blockchain claim to a frontend Agent.
+ *  Stake → level mapping (shim until T7 replaces this with chain-native level):
+ *  stake ≥ 80 → L7 (lattice), stake ≥ 30 → L4 (cortex), else → L1 (synapse).
+ */
 function claimToAgent(claim: ClaimInfo, index: number): Agent {
   const position = chainToVisual(claim.x, claim.y);
-  const tier: AgentTier = claim.stake >= 80 ? 'opus'
-    : claim.stake >= 30 ? 'sonnet'
-    : 'haiku';
+  const level = claim.stake >= 80 ? 7
+    : claim.stake >= 30 ? 4
+    : 1;
+  const tier = getNodeTier(level);
 
   return {
     id: `chain-${claim.owner.slice(0, 8)}-${index}`,
     userId: claim.owner,
     position,
-    tier,
+    level,
+    miningAlloc: 50,
+    securingAlloc: 50,
+    selfDevAlloc: 0,
+    levelingUntilTurn: null,
     isPrimary: index === 0,
     planets: [],
     createdAt: Date.now(),
     username: `${claim.owner.slice(0, 6)}...${claim.owner.slice(-4)}`,
     borderRadius: TIER_BASE_BORDER[tier],
     borderPressure: 0,
-    cpuPerTurn: TIER_CPU_COST[tier],
+    cpuPerTurn: getNodeCpuPerTurn(level),
     miningRate: Math.round(claim.density * TIER_MINING_RATE[tier] * 10) / 10,
-    energyLimit: TIER_CPU_COST[tier] * 5,
+    energyLimit: getNodeCpuPerTurn(level) * 5,
     stakedCpu: 0,
     density: claim.density,
     storageSlots: claim.storage_slots,
@@ -77,7 +114,11 @@ function nodeToSlot(node: NodeInfo): Agent {
     id: node.id,
     userId: node.owner ?? '',
     position,
-    tier: 'haiku' as const,
+    level: 1,         // unclaimed slots start at L1 (synapse)
+    miningAlloc: 50,
+    securingAlloc: 50,
+    selfDevAlloc: 0,
+    levelingUntilTurn: null,
     isPrimary: false,
     planets: [],
     createdAt: Date.now() - 86400000,
@@ -132,20 +173,30 @@ export class TestnetChainService implements ChainService {
     const result = await api.birthNode(0);
     const position = chainToVisual(result.coordinate.x, result.coordinate.y);
 
+    // Map tier → starting level (shim for T7)
+    const TIER_START_LEVEL: Record<AgentTier, number> = {
+      synapse: 1, cortex: 4, lattice: 7, nexus: 10,
+    };
+    const startLevel = TIER_START_LEVEL[tier] ?? 1;
+
     return {
       id: `chain-birth-${Date.now()}`,
       userId,
       position,
-      tier,
+      level: startLevel,
+      miningAlloc: 50,
+      securingAlloc: 50,
+      selfDevAlloc: 0,
+      levelingUntilTurn: null,
       isPrimary: false,
       planets: [],
       createdAt: Date.now(),
       username: `Star-${result.coordinate.x},${result.coordinate.y}`,
-      borderRadius: TIER_BASE_BORDER[tier],
+      borderRadius: TIER_BASE_BORDER[getNodeTier(startLevel)],
       borderPressure: 0,
-      cpuPerTurn: TIER_CPU_COST[tier],
-      miningRate: TIER_MINING_RATE[tier],
-      energyLimit: TIER_CPU_COST[tier] * 5,
+      cpuPerTurn: getNodeCpuPerTurn(startLevel),
+      miningRate: TIER_MINING_RATE[getNodeTier(startLevel)],
+      energyLimit: getNodeCpuPerTurn(startLevel) * 5,
       stakedCpu: 0,
     };
   }

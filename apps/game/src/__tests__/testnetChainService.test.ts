@@ -22,10 +22,10 @@ describe('TestnetChainService', () => {
         new_claim_count: 1,
       });
 
-      const agent = await service.registerAgent('user-123', 'sonnet');
+      const agent = await service.registerAgent('user-123', 'cortex');
 
       expect(api.birthNode).toHaveBeenCalledWith(0);
-      expect(agent.tier).toBe('sonnet');
+      expect(agent.level).toBe(4); // cortex tier starts at L4
       expect(agent.userId).toBe('user-123');
       expect(agent.position.x).toBeDefined();
       expect(agent.position.y).toBeDefined();
@@ -36,7 +36,7 @@ describe('TestnetChainService', () => {
         new Error('Testnet API POST /api/birth: 400 Bad Request'),
       );
 
-      await expect(service.registerAgent('user-123', 'sonnet'))
+      await expect(service.registerAgent('user-123', 'cortex'))
         .rejects.toThrow('Testnet API POST /api/birth');
     });
   });

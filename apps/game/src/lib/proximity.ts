@@ -23,7 +23,7 @@ export interface VisibleAgent {
 }
 
 export function getVisibleAgents(viewer: Agent, agents: Agent[]): VisibleAgent[] {
-  const radius = getFogRadius(viewer.tier);
+  const radius = getFogRadius(viewer.level);
 
   return agents
     .filter(a => a.id !== viewer.id)
@@ -32,7 +32,7 @@ export function getVisibleAgents(viewer: Agent, agents: Agent[]): VisibleAgent[]
       return {
         agent,
         distance,
-        fogLevel: getFogLevel(distance, viewer.tier),
+        fogLevel: getFogLevel(distance, viewer.level),
         connectionStrength: getConnectionStrength(distance, CONNECTION_THRESHOLD),
       };
     })
