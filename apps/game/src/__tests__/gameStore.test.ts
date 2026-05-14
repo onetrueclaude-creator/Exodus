@@ -581,3 +581,39 @@ describe("tick — per-node aggregation", () => {
     expect(after).toBe(before + 100); // cpuRegenPerTurn only, no node maintenance
   });
 });
+
+describe("claimBlocknode — open grid", () => {
+  beforeEach(() => {
+    useGameStore.setState({
+      blocknodes: buildAllCells(2),
+      currentUserId: "u-1",
+      currentUserFaction: "community",
+    });
+  });
+
+  it("claims an unclaimed cell and tags it with the claimant's faction", () => {
+    const ok = useGameStore.getState().claimBlocknode("cell-1-1", "u-1");
+    expect(ok).toBe(true);
+    const cell = useGameStore.getState().blocknodes["cell-1-1"];
+    expect(cell.ownerId).toBe("u-1");
+    expect(cell.faction).toBe("community");
+  });
+
+  it("fails when cell is already owned", () => {
+    useGameStore.getState().claimBlocknode("cell-1-1", "u-1");
+    const ok = useGameStore.getState().claimBlocknode("cell-1-1", "u-2");
+    expect(ok).toBe(false);
+  });
+
+  it("no longer gated by currentUserFaction === null (drops the old arm-node restriction)", () => {
+    useGameStore.setState({ currentUserFaction: "community" });
+    const ok = useGameStore.getState().claimBlocknode("cell-1-1", "u-1");
+    expect(ok).toBe(true);
+  });
+
+  it("fails when claimant's currentUserFaction is null (cannot tag faction)", () => {
+    useGameStore.setState({ currentUserFaction: null });
+    const ok = useGameStore.getState().claimBlocknode("cell-1-1", "u-1");
+    expect(ok).toBe(false);
+  });
+});

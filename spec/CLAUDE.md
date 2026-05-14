@@ -6,6 +6,14 @@
 
 ---
 
+## 2026-05-14 — Whitepaper v1.1 (Open-Grid Revision)
+
+**Changed:** `whitepaper.md` from v1.0 to v1.1. Retired the four-arm logarithmic spiral spatial model. Factions are now identity classes, not territorial divisions. AGNTC no longer split 25%/25%/25%/25% by faction-arm; mints directly to claimants. Machines accumulator preserved structurally via permanent origin occupancy. New §4.5 "Open-Grid Spatial Economy" added. Updated Abstract, §1.3, §4.1, §4.2, §4.3, Figure 1, §10.1, §10.2, §10.3, §11.2, §12.3, §19.1, §19.2, §19.3, §22 parameters, §22 Genesis Topology, and the glossary. Removed `DIST_*=0.25` parameter rows; added `MACHINES_ORIGIN_COORD = (0, 0)`. Internal revision log (`whitepaper-changelog.md`, gitignored) updated with the corresponding v2.0 entry.
+
+**Why:** Align the public protocol specification with the open-grid implementation that landed in the reference client (PRs #84/#85/#86). v1.0 described territorial faction arms that the implementation no longer enforces.
+
+---
+
 ## 2026-03-28 — Security hardening + Supabase sync additions
 
 **Changed:** `agentic-chain/agentic/testnet/supabase_sync.py` — removed hardcoded service_role key, moved to env vars via python-dotenv. Added sync functions for new `subgrid_allocations` and `resource_rewards` tables.
