@@ -17,13 +17,14 @@ paths supporting expansion remain in the module for now to keep imports
 stable for legacy tests, but tick() no longer calls them. See
 deprecation notices on _next_target / _expand / _can_expand below.
 
-Live-testnet migration note: the current testnet was bootstrapped under
-v1.0 with the Machines wallet's home at GENESIS_FACTION_MASTERS[1] ==
-(10, 0). The v1.1 spec binds Machines to MACHINES_ORIGIN_COORD == (0, 0).
-Migration of the live testnet state (Sub-project D) is responsible for
-re-homing Machines to (0, 0). Until that migration runs, MACHINE_ORIGIN
-below still references the v1.0 home coordinate so the existing testnet
-state remains internally consistent.
+Live-testnet migration note: the v1.0 testnet bound Machines to wallet
+index 2 / coord (10, 0) (the East cardinal of ring 1). Sub-project D
+re-homed Machines to wallet index 0 / MACHINES_ORIGIN_COORD == (0, 0)
+to match whitepaper v1.1 §10.3. Any persisted state from a v1.0 testnet
+session (chain/testnet_state.db) must be reset before running this
+revision — running the reset endpoint or deleting the persistence file
+will trigger a fresh v1.1-aligned bootstrap. See chain/CLAUDE.md for
+the operator runbook.
 """
 from __future__ import annotations
 
@@ -33,7 +34,6 @@ from agentic.consensus.validator import Validator
 from agentic.lattice.coordinate import GridCoordinate, resource_density, storage_slots
 from agentic.params import (
     BASE_BIRTH_COST,
-    GENESIS_FACTION_MASTERS,
     MACHINES_MIN_SELL_RATIO,
     MACHINES_ORIGIN_COORD,
     NODE_GRID_SPACING,
@@ -41,15 +41,15 @@ from agentic.params import (
 from agentic.verification.agent import AgentState, VerificationAgent
 
 
-# Machine Faction Master is wallet index 2 in genesis topology:
-#   index 0 = origin, index 1 = N faction, index 2 = E faction (Machines)
-MACHINE_WALLET_INDEX = 2
+# Whitepaper v1.1: the Machines Faction is bound to the origin coordinate
+# (0, 0) which corresponds to wallet index 0 in genesis topology. The v1.0
+# binding (wallet index 2 / coord (10, 0)) is retired by this migration.
+MACHINE_WALLET_INDEX = 0
+MACHINE_ORIGIN = MACHINES_ORIGIN_COORD  # (0, 0)
 
-# v1.0 testnet home — the East cardinal of ring 1. Retained as the operative
-# coordinate until Sub-project D migrates the live testnet to MACHINES_ORIGIN_COORD.
-MACHINE_ORIGIN = GENESIS_FACTION_MASTERS[1]  # (10, 0)
-
-# [DEPRECATED v1.1] Direction used by the retired v1.0 EXPAND phase.
+# [DEPRECATED v1.1] Direction used by the retired v1.0 EXPAND phase. Kept as
+# a module-level constant so any external tooling that imported the symbol
+# remains importable. Not consumed by the v1.1 origin-bound agent.
 MACHINE_STEP = (NODE_GRID_SPACING, 0)
 
 

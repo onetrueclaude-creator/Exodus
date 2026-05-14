@@ -61,6 +61,35 @@ Base URL: `http://localhost:8080` | Swagger: `/docs`
 | Float→microAGNTC conversion | `agentic/galaxy/mining.py` | All ledger-stored yields |
 | Disinflation curve | `agentic/economics/rewards.py` | Long-term yield decay |
 
+## Operator runbooks
+
+### Reset live testnet to whitepaper v1.1 state
+
+After Sub-project D landed (Exodus PR for `feat/chain-machines-at-origin`), the Machines Faction agent is bound to wallet index 0 / coord `(0, 0)` instead of the v1.0 binding of wallet 2 / `(10, 0)`. Any persisted state from a v1.0 testnet session is now incompatible with the in-memory protocol and must be reset before the next session starts.
+
+**Steps:**
+
+```bash
+# 1. Stop the API server if running.
+
+# 2. Wipe the local persistence file (gitignored):
+rm chain/testnet_state.db
+
+# 3. (Optional) If the live testnet was syncing to Supabase, clear the
+#    state-snapshot table there as well. The chain re-creates rows on
+#    next sync.
+
+# 4. Restart the API server. Genesis runs fresh on first boot, producing
+#    the v1.1-aligned state automatically:
+uvicorn agentic.testnet.api:app --port 8080 --reload
+
+# 5. Verify Machines is at origin:
+curl -s http://localhost:8080/api/coordinate/0/0 | jq .
+# Should show: claim.owner == wallet_0_pubkey
+```
+
+The reset is lossless beyond the testnet's own data — nothing on Solana mainnet, the marketing site, or the documentation depends on the testnet's accumulated state. Participants who had claims on the v1.0 testnet will need to re-onboard from scratch.
+
 ## Change Log
 
 ### 2026-03-28 — API security hardening + deployment artifacts + new sync tables
