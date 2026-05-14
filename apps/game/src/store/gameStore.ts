@@ -6,7 +6,7 @@ import type { FactionId, BlockNode, GridNode } from "@/types";
 import type { ResearchProgress } from "@/types/research";
 import { RESEARCH_TREES } from "@/lib/research";
 import { buildCellsForRing, buildAllCells } from "@/lib/lattice";
-import { getNodeCpuPerTurn, getNodeTier as getNodeTierFromStore } from "@/lib/nodeTier";
+import { getNodeCpuPerTurn, getNodeTier as getNodeTierFromStore, getLevelUpCost, MINING_PRESETS } from "@/lib/nodeTier";
 
 /** CPU Energy deducted per turn for each owned blocknode (maintenance cost) */
 export const NODE_CPU_PER_TURN = 1;
@@ -150,8 +150,8 @@ interface GameState {
     miningRate: number;
     effectiveStake: number;
   }) => void;
-  setNodeAllocation: (agentId: string, mining: number, securing: number, selfDev: number) => boolean;
-  beginNodeLevelUp: (agentId: string) => void;
+  setNodeMiningSecuring: (agentId: string, mining: number, securing: number) => boolean;
+  beginNodeLevelUp: (agentId: string) => boolean;
   cancelNodeLevelUp: (agentId: string) => void;
   setCpuRegen: (regen: number) => void;
   setInitializing: (v: boolean) => void;
@@ -268,9 +268,8 @@ export const useGameStore = create<GameState>((set) => ({
       userId: state.currentUserId || "unknown",
       position,
       level: startLevel,
-      miningAlloc: 50,
-      securingAlloc: 50,
-      selfDevAlloc: 0,
+      miningCpu: 0,
+      securingCpu: 0,
       levelingUntilTurn: null,
       isPrimary: false,
       planets: [],
@@ -309,11 +308,10 @@ export const useGameStore = create<GameState>((set) => ({
         id: slotId,
         userId: "",
         position: { x: blocknode.cx * 64, y: blocknode.cy * 64 },
-        level: 1,                                 // NEW
-        miningAlloc: 50,                          // NEW: default 50/50/0 split
-        securingAlloc: 50,                        // NEW
-        selfDevAlloc: 0,                          // NEW
-        levelingUntilTurn: null,                  // NEW
+        level: 1,
+        miningCpu: 0,
+        securingCpu: 0,
+        levelingUntilTurn: null,
         isPrimary: false,
         planets: [],
         createdAt: 0,
@@ -336,10 +334,9 @@ export const useGameStore = create<GameState>((set) => ({
     const claimed: Agent = {
       ...slot,
       userId: state.currentUserId || "unknown",
-      level: 1,                                 // NEW: everyone starts at L1
-      miningAlloc: 50,
-      securingAlloc: 50,
-      selfDevAlloc: 0,
+      level: 1,
+      miningCpu: 0,
+      securingCpu: 0,
       levelingUntilTurn: null,
       borderRadius: 64,                         // was TIER_BASE_BORDER[tier]
       borderPressure: 0,
@@ -561,13 +558,10 @@ export const useGameStore = create<GameState>((set) => ({
   tick: () =>
     set((s) => {
       if (!s.currentUserId) return s;
-
       const nextTurn = s.turn + 1;
 
-      // 1) Energy: only subscription regen (no per-node maintenance any more)
-      const energy = s.energy + s.cpuRegenPerTurn;
-
-      // 2) Aggregate per-node mining + securing contributions
+      let income = s.cpuRegenPerTurn;
+      let expenditure = 0;
       let totalMining = 0;
       let totalSecuring = 0;
       const updatedAgents: Record<string, Agent> = { ...s.agents };
@@ -575,16 +569,15 @@ export const useGameStore = create<GameState>((set) => ({
       for (const agent of Object.values(s.agents)) {
         if (agent.userId !== s.currentUserId) continue;
 
-        const cpuOut = getNodeCpuPerTurn(agent.level);
-        const isLeveling =
-          agent.levelingUntilTurn !== null && agent.levelingUntilTurn > nextTurn - 1;
-        const m = isLeveling ? 0 : agent.miningAlloc;
-        const sa = isLeveling ? 0 : agent.securingAlloc;
+        // Nodes always produce CPU (no Self-Dev lockout).
+        income += getNodeCpuPerTurn(agent.level);
 
-        totalMining += Math.floor((cpuOut * m) / 100);
-        totalSecuring += Math.floor((cpuOut * sa) / 100);
+        // Mining/securing drain the pool every turn until the player changes them.
+        expenditure += agent.miningCpu + agent.securingCpu;
+        totalMining += agent.miningCpu;
+        totalSecuring += agent.securingCpu;
 
-        // Resolve level-up when timer reaches this turn
+        // Resolve level-up the moment the timer reaches the next turn.
         if (agent.levelingUntilTurn !== null && agent.levelingUntilTurn <= nextTurn) {
           updatedAgents[agent.id] = {
             ...agent,
@@ -594,6 +587,7 @@ export const useGameStore = create<GameState>((set) => ({
         }
       }
 
+      const energy = Math.max(0, s.energy + income - expenditure);
       const minerals =
         s.minerals +
         Object.values(s.agents).filter((a) => a.userId === s.currentUserId).length;
@@ -601,10 +595,10 @@ export const useGameStore = create<GameState>((set) => ({
       return {
         turn: nextTurn,
         energy,
-        minerals,
         agents: updatedAgents,
         miningCpuPerBlock: totalMining,
         securingCpuPerBlock: totalSecuring,
+        minerals,
         agntcBalance: s.agntcBalance,
       };
     }),
@@ -669,9 +663,9 @@ export const useGameStore = create<GameState>((set) => ({
       };
     }),
 
-  setNodeAllocation: (agentId, mining, securing, selfDev) => {
-    if (mining + securing + selfDev !== 100) return false;
-    if (mining < 0 || securing < 0 || selfDev < 0) return false;
+  setNodeMiningSecuring: (agentId, mining, securing) => {
+    const validPresets: ReadonlyArray<number> = MINING_PRESETS;
+    if (!validPresets.includes(mining) || !validPresets.includes(securing)) return false;
     const s = useGameStore.getState();
     if (!s.agents[agentId]) return false;
     set((state) => ({
@@ -679,27 +673,29 @@ export const useGameStore = create<GameState>((set) => ({
         ...state.agents,
         [agentId]: {
           ...state.agents[agentId],
-          miningAlloc: mining,
-          securingAlloc: securing,
-          selfDevAlloc: selfDev,
+          miningCpu: mining,
+          securingCpu: securing,
         },
       },
     }));
     return true;
   },
 
-  beginNodeLevelUp: (agentId) =>
-    set((s) => {
-      const agent = s.agents[agentId];
-      if (!agent || agent.levelingUntilTurn !== null) return s;
-      const turnsNeeded = agent.level; // getLevelUpTurns(level) = level
-      return {
-        agents: {
-          ...s.agents,
-          [agentId]: { ...agent, levelingUntilTurn: s.turn + turnsNeeded },
-        },
-      };
-    }),
+  beginNodeLevelUp: (agentId) => {
+    const s = useGameStore.getState();
+    const agent = s.agents[agentId];
+    if (!agent || agent.levelingUntilTurn !== null) return false;
+    const cost = getLevelUpCost(agent.level);
+    if (s.energy < cost) return false; // cannot afford
+    set((state) => ({
+      energy: state.energy - cost,
+      agents: {
+        ...state.agents,
+        [agentId]: { ...agent, levelingUntilTurn: state.turn + agent.level },
+      },
+    }));
+    return true;
+  },
 
   cancelNodeLevelUp: (agentId) =>
     set((s) => {
