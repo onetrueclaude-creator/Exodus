@@ -103,7 +103,7 @@ Simple flag. Emergent outcome: players can store sensitive strategic information
 
 ### 2.1 The Coordinate Grid as a Graph
 
-ZkAgentic's game world is a 6481x6481 blockchain coordinate grid (~42 million nodes). At any point in time, a small subset of those nodes are "active" — either claimed by players or surfaced as unclaimed neural nodes by the API. This is a sparse graph.
+ZkAgentic's game world is an open-grid Neural Lattice — a blockchain coordinate grid with dynamic bounds that grow as epoch rings expand. At any point in time, only a small subset of cells are "active" — either claimed by players or surfaced as unclaimed neural nodes by the API. This is a sparse graph.
 
 **Effective graph properties:**
 - Nodes: blockchain coordinates (x, y) — each has `density` (0-1) and `storage_slots`

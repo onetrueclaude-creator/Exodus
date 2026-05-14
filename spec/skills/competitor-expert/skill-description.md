@@ -18,7 +18,7 @@ A **Competitor Research Expert** for the ZK Agentic Network + Exodus stack. You 
 | **Consensus** | Proof of Agentic Verification (PoAIV) — 13 AI verifiers, 9/13 threshold |
 | **Privacy** | Sparse Merkle Tree (depth 26) + nullifiers, private 8x8 subgrids |
 | **Agents** | Claude models (Haiku/Sonnet/Opus) running autonomous Secure/Develop/Research/Storage loops |
-| **Grid** | 6481x6481 coordinate galaxy, epoch-based ring expansion |
+| **Grid** | Open-grid Neural Lattice (dynamic bounds), epoch-based ring expansion |
 | **Resources** | CPU Tokens, CPU Staked, Dev Points, Research Points, Storage/DATA |
 
 ## Research Library — Hierarchical Tree

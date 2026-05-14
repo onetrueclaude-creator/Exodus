@@ -1,7 +1,7 @@
 # ZK Agentic Network
 
 ## Required Reading
-**Before working on any feature, read `spec/whitepaper.md`** — the whitepaper (v1.0) is the authoritative specification for all protocol mechanics: PoAIV consensus, dual staking, tokenomics, subgrid resources, privacy architecture, and the SOL→L1 migration path. All implementation must align with the whitepaper.
+**Before working on any feature, read `spec/whitepaper.md`** — the whitepaper (v1.1, Open-Grid Revision) is the authoritative specification for all protocol mechanics: PoAIV consensus, dual staking, tokenomics, subgrid resources, privacy architecture, and the SOL→L1 migration path. All implementation must align with the whitepaper.
 
 ## Project Overview
 Gamified social media dApp where users explore a 2D Neural Lattice, communicate via haiku through AI agents, develop nodes with planets (content storage), research technologies, and build diplomatic relationships. All state is backed by the Agentic Chain testnet blockchain ledger.
@@ -55,7 +55,9 @@ Gamified social media dApp where users explore a 2D Neural Lattice, communicate 
 ## Key Concepts (Neural Lattice)
 - Neural Lattice = the full network grid (dynamic bounds, grows with epoch rings)
 - Empire = a user's total territory
-- Star system = an individual agent (Opus/Sonnet/Haiku tier), base 10x10 coordinate blocks
+- Star system = an individual agent occupying a node on the lattice, base 10x10 coordinate blocks
+- Node tier = Synapse (L1-3, 1.0×), Cortex (L4-6, 1.25×), Lattice (L7-9, 1.5×), Nexus (L10+, 2.0×); derived from numeric node level. Distinct from subscription tier.
+- Claude model = LLM powering a deployed agent (Haiku/Sonnet/Opus), chosen at deploy time. Distinct from node tier — any node tier can run any model.
 - CPU Energy = CPU deployed to maintaining the grid (yellow resource)
 - Secured Chains = blocks secured by the user (green resource with +/- deltas)
 - AGNTC = tradeable coins; supply grows via mining only (soft cap with 5% ceiling). Node claims cost AGNTC + CPU (city model: inner expensive, outer cheap)
@@ -85,7 +87,7 @@ Top-level commands:
    - **Stats** → full status report
 3. **Adjust Securing Operations Rate** → staking CPU sub-choices
 4. **Adjust Network Parameters** → mining rate + border pressure
-5. **Settings** → network color (Opus only), status report
+5. **Settings** → network color (premium visual feature), status report
 
 ## Commands
 - `npm run dev` — development server (localhost:3000)
