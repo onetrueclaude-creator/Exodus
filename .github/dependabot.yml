@@ -7,6 +7,14 @@ updates:
     labels:
       - "dependencies"
       - "chain"
+    groups:
+      # Chain pip deps live in a single requirements.txt where Dependabot's
+      # individual-PR mode creates adjacent-line conflicts on every merge
+      # (we hit this 4x in one session on #69/#71/#77/#78). One batched
+      # weekly PR avoids the rebase-storm without sacrificing visibility.
+      chain-deps:
+        patterns:
+          - "*"
 
   - package-ecosystem: "npm"
     directory: "/apps/game"
