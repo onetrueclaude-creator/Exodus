@@ -1,8 +1,9 @@
-import { Graphics } from "pixi.js";
+import { Container, Graphics, Sprite, Texture } from "pixi.js";
 import type { BlockNode, FactionId } from "@/types";
-import { CELL_SIZE, cellToPixel, getFactionForCell } from "@/lib/lattice";
+import { CELL_SIZE, cellToPixel } from "@/lib/lattice";
+import { MAX_LATTICE_RING } from "@/lib/spawn";
 
-/** Faction fill colors */
+/** Faction fill colors — used by Task 14 (owned-cell tints). */
 export const FACTION_COLORS: Record<FactionId, number> = {
   community: 0x0d9488, // teal
   treasury: 0xdc2680,  // pink (Machines)
@@ -10,245 +11,167 @@ export const FACTION_COLORS: Record<FactionId, number> = {
   "pro-max": 0x3b82f6, // blue (Professional)
 };
 
-const ALL_FACTIONS: FactionId[] = ["community", "treasury", "founder", "pro-max"];
-
 const GRID_LINE_COLOR = 0xffffff;
 const GRID_LINE_ALPHA = 0.03;
-const FACTION_FILL_ALPHA = 0.08;
-const FOG_COLOR = 0x050510;
-const FOG_ALPHA = 0.85;
 
 /**
- * Assigns every cell in the viewport a faction via quadrant-based lookup.
- * Returns a cx,cy → FactionId map for all cells in [-range, range]².
+ * Generate a radial-gradient heatmap sprite anchored at lattice origin (0,0).
+ * Drawn once at startup — faint cyan glow that fades to transparent at MAX_LATTICE_RING.
  */
-function buildCellFactionMap(range: number, _nodes: BlockNode[]): Record<string, FactionId> {
-  const map: Record<string, FactionId> = {};
-  for (let cy = -range; cy <= range; cy++) {
-    for (let cx = -range; cx <= range; cx++) {
-      const faction = getFactionForCell(cx, cy);
-      if (faction) map[`${cx},${cy}`] = faction;
-    }
+function createDensityHeatmapSprite(): Sprite {
+  // Fixed 2048×2048 canvas — safe for all GPUs. The sprite scales to lattice size.
+  const TEXTURE_SIZE = 2048;
+  const center = TEXTURE_SIZE / 2;
+  const canvas = document.createElement("canvas");
+  canvas.width = TEXTURE_SIZE;
+  canvas.height = TEXTURE_SIZE;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    // ctx may be null in non-browser environments (e.g. jsdom in tests) — skip gradient there
+    const gradient = ctx.createRadialGradient(center, center, 0, center, center, center);
+    gradient.addColorStop(0, "rgba(34, 211, 238, 0.18)");
+    gradient.addColorStop(1, "rgba(34, 211, 238, 0.00)");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE);
   }
-  return map;
+  const tex = Texture.from(canvas);
+  const sprite = new Sprite(tex);
+  sprite.anchor.set(0.5);
+  sprite.position.set(0, 0);
+  // Scale sprite so its drawn radius matches MAX_LATTICE_RING * CELL_SIZE
+  const targetRadius = MAX_LATTICE_RING * CELL_SIZE;
+  const spriteScale = (targetRadius * 2) / TEXTURE_SIZE;
+  sprite.scale.set(spriteScale);
+  return sprite;
 }
 
 /**
  * Draws the background for the Neural Lattice grid.
  *
- * Every cell is quadrant-assigned to a faction based on its (cx, cy) coordinates.
- * - Arm-path cells for visible factions: faction color tint + bright dot
- * - Non-arm cells for visible factions: fog + faction-colored dim dot
- * - Non-visible faction cells: fog + very dim faction-colored dot
- * Faction territory mesh (same-faction adjacent cell connections) is drawn on top
- * of cell fills, then grid lines are drawn last.
+ * Returns a Container with two children:
+ *   [0] density heatmap Sprite (radial cyan gradient from origin)
+ *   [1] Graphics layer with placeholder dots + grid lines
+ *
+ * Pass 1: Faction-tinted dot per owned blocknode cell; neutral dot for unclaimed cells.
+ * Pass 2: Grid lines on top.
  *
  * @param blocknodes All current blocknodes (keyed by id)
- * @param visibleFactions Factions whose cells show tinting instead of full fog
  * @param viewportCells Half-width and half-height in cell units (determines draw range)
  */
 export function createGridBackground(
   blocknodes: Record<string, BlockNode>,
-  visibleFactions: FactionId[],
   viewportCells: number = 20
-): Graphics {
-  const grid = new Graphics();
+): Container {
+  const container = new Container();
 
-  const nodes = Object.values(blocknodes);
-  const factionByCellKey: Record<string, FactionId> = {};
-  for (const node of nodes) {
-    factionByCellKey[`${node.cx},${node.cy}`] = node.faction;
-  }
+  // Layer 0: density heatmap (behind everything)
+  const heatmap = createDensityHeatmapSprite();
+  container.addChild(heatmap);
+
+  // Layer 1: owned-cell dots + grid lines
+  const graphics = new Graphics();
+  container.addChild(graphics);
 
   const range = viewportCells;
-  // Voronoi: every cell gets a faction based on nearest arm node
-  const cellFactionMap = buildCellFactionMap(range, nodes);
 
-  // --- Pass 1: cell backgrounds and fill dots ---
-  for (let cy = -range; cy <= range; cy++) {
-    for (let cx = -range; cx <= range; cx++) {
-      // Skip axis cells and origin — these are faction boundaries, not territory
-      if (cx === 0 || cy === 0) continue;
-
-      const key = `${cx},${cy}`;
-      const { px, py } = cellToPixel(cx, cy);
-      const x = px - CELL_SIZE / 2;
-      const y = py - CELL_SIZE / 2;
-
-      const armFaction = factionByCellKey[key];
-      const cellFaction = armFaction ?? cellFactionMap[key];
-      const isVisible = cellFaction ? visibleFactions.includes(cellFaction) : false;
-      const dotColor = cellFaction ? FACTION_COLORS[cellFaction] : 0x1e2d4a;
-
-      if (armFaction && visibleFactions.includes(armFaction)) {
-        // Arm-path cell, visible faction — full faction tint + bright seed dot
-        grid
-          .rect(x, y, CELL_SIZE, CELL_SIZE)
-          .fill({ color: FACTION_COLORS[armFaction], alpha: FACTION_FILL_ALPHA });
-        grid.circle(px, py, 2).fill({ color: dotColor, alpha: 0.3 });
-      } else {
-        // Fog background for all other cells
-        grid.rect(x, y, CELL_SIZE, CELL_SIZE).fill({ color: FOG_COLOR, alpha: FOG_ALPHA });
-        // Faction-colored seed dot — every cell is an AGNTC coin slot for its faction
-        grid.circle(px, py, 2).fill({ color: dotColor, alpha: isVisible ? 0.22 : 0.07 });
-      }
+  for (const node of Object.values(blocknodes)) {
+    const { px, py } = cellToPixel(node.cx, node.cy);
+    if (node.faction !== null) {
+      // Owned: faction-tinted dot, slightly larger, higher alpha
+      graphics
+        .circle(px, py, 3)
+        .fill({ color: FACTION_COLORS[node.faction], alpha: 0.85 });
+    } else {
+      // Unclaimed: neutral off-white, smaller, lower alpha
+      graphics
+        .circle(px, py, 2)
+        .fill({ color: 0xffffff, alpha: 0.30 });
     }
   }
 
-  // --- Pass 2: faction territory mesh (webbed tree) ---
-  // Connect adjacent same-faction cells with dim lines, batched per faction.
-  // Visible factions show brighter connections; fogged factions are barely visible.
-  for (const faction of ALL_FACTIONS) {
-    const isVisible = visibleFactions.includes(faction);
-    const alpha = isVisible ? 0.1 : 0.025;
-    const color = FACTION_COLORS[faction];
-    let hasLines = false;
+  // Origin marker: faint cyan cross at (0,0), half a cell wide on each axis
+  const armLength = CELL_SIZE / 2;
+  graphics
+    .moveTo(-armLength, 0)
+    .lineTo(armLength, 0)
+    .stroke({ color: 0x22d3ee, alpha: 0.4, width: 2 });
+  graphics
+    .moveTo(0, -armLength)
+    .lineTo(0, armLength)
+    .stroke({ color: 0x22d3ee, alpha: 0.4, width: 2 });
 
-    grid.setStrokeStyle({ width: 0.5, color, alpha });
-    for (let cy = -range; cy <= range; cy++) {
-      for (let cx = -range; cx <= range; cx++) {
-        if (cellFactionMap[`${cx},${cy}`] !== faction) continue;
-        const { px: x1, py: y1 } = cellToPixel(cx, cy);
-
-        // Right neighbor
-        if (cx < range && cellFactionMap[`${cx + 1},${cy}`] === faction) {
-          const { px: x2, py: y2 } = cellToPixel(cx + 1, cy);
-          grid.moveTo(x1, y1).lineTo(x2, y2);
-          hasLines = true;
-        }
-        // Down neighbor
-        if (cy < range && cellFactionMap[`${cx},${cy + 1}`] === faction) {
-          const { px: x2, py: y2 } = cellToPixel(cx, cy + 1);
-          grid.moveTo(x1, y1).lineTo(x2, y2);
-          hasLines = true;
-        }
-      }
-    }
-    if (hasLines) grid.stroke();
-  }
-
-  // --- Pass 3: grid lines on top ---
-  grid.setStrokeStyle({ width: 1, color: GRID_LINE_COLOR, alpha: GRID_LINE_ALPHA });
+  // Grid lines
+  graphics.setStrokeStyle({ width: 1, color: GRID_LINE_COLOR, alpha: GRID_LINE_ALPHA });
   const pixelRange = range * CELL_SIZE;
   for (let cx = -range; cx <= range + 1; cx++) {
     const px = cx * CELL_SIZE - CELL_SIZE / 2;
-    grid.moveTo(px, -pixelRange - CELL_SIZE / 2);
-    grid.lineTo(px, pixelRange + CELL_SIZE / 2);
+    graphics.moveTo(px, -pixelRange - CELL_SIZE / 2);
+    graphics.lineTo(px, pixelRange + CELL_SIZE / 2);
   }
   for (let cy = -range; cy <= range + 1; cy++) {
     const py = cy * CELL_SIZE - CELL_SIZE / 2;
-    grid.moveTo(-pixelRange - CELL_SIZE / 2, py);
-    grid.lineTo(pixelRange + CELL_SIZE / 2, py);
+    graphics.moveTo(-pixelRange - CELL_SIZE / 2, py);
+    graphics.lineTo(pixelRange + CELL_SIZE / 2, py);
   }
-  grid.stroke();
+  graphics.stroke();
 
-  return grid;
+  return container;
 }
 
 /**
- * Updates an existing background Graphics object to reflect new blocknode state.
- * Clears and redraws — suitable for when blocknodes change.
+ * Updates the background container to reflect new blocknode state.
+ * The container must have been created by createGridBackground — children[1] is the Graphics layer.
+ * Clears and redraws the Graphics layer; the heatmap sprite (children[0]) is unchanged.
  */
 export function updateGridBackground(
-  existing: Graphics,
+  bgContainer: Container,
   blocknodes: Record<string, BlockNode>,
-  visibleFactions: FactionId[],
   viewportCells: number = 20
 ): void {
-  existing.clear();
-
-  const nodes = Object.values(blocknodes);
-  const factionByCellKey: Record<string, FactionId> = {};
-  for (const node of nodes) {
-    factionByCellKey[`${node.cx},${node.cy}`] = node.faction;
-  }
+  // children[1] is the Graphics layer (children[0] is the heatmap sprite)
+  const graphics = bgContainer.getChildAt(1) as Graphics;
+  graphics.clear();
 
   const range = viewportCells;
-  const cellFactionMap = buildCellFactionMap(range, nodes);
 
-  for (let cy = -range; cy <= range; cy++) {
-    for (let cx = -range; cx <= range; cx++) {
-      // Skip axis cells and origin — these are faction boundaries, not territory
-      if (cx === 0 || cy === 0) continue;
-
-      const key = `${cx},${cy}`;
-      const { px, py } = cellToPixel(cx, cy);
-      const x = px - CELL_SIZE / 2;
-      const y = py - CELL_SIZE / 2;
-
-      const armFaction = factionByCellKey[key];
-      const cellFaction = armFaction ?? cellFactionMap[key];
-      const isVisible = cellFaction ? visibleFactions.includes(cellFaction) : false;
-      const dotColor = cellFaction ? FACTION_COLORS[cellFaction] : 0x1e2d4a;
-
-      if (armFaction && visibleFactions.includes(armFaction)) {
-        existing
-          .rect(x, y, CELL_SIZE, CELL_SIZE)
-          .fill({ color: FACTION_COLORS[armFaction], alpha: FACTION_FILL_ALPHA });
-        existing.circle(px, py, 2).fill({ color: dotColor, alpha: 0.3 });
-      } else {
-        existing.rect(x, y, CELL_SIZE, CELL_SIZE).fill({ color: FOG_COLOR, alpha: FOG_ALPHA });
-        existing.circle(px, py, 2).fill({ color: dotColor, alpha: isVisible ? 0.22 : 0.07 });
-      }
+  for (const node of Object.values(blocknodes)) {
+    const { px, py } = cellToPixel(node.cx, node.cy);
+    if (node.faction !== null) {
+      // Owned: faction-tinted dot, slightly larger, higher alpha
+      graphics
+        .circle(px, py, 3)
+        .fill({ color: FACTION_COLORS[node.faction], alpha: 0.85 });
+    } else {
+      // Unclaimed: neutral off-white, smaller, lower alpha
+      graphics
+        .circle(px, py, 2)
+        .fill({ color: 0xffffff, alpha: 0.30 });
     }
   }
 
-  for (const faction of ALL_FACTIONS) {
-    const isVisible = visibleFactions.includes(faction);
-    const alpha = isVisible ? 0.1 : 0.025;
-    const color = FACTION_COLORS[faction];
-    let hasLines = false;
+  // Origin marker: faint cyan cross at (0,0), half a cell wide on each axis
+  const armLength = CELL_SIZE / 2;
+  graphics
+    .moveTo(-armLength, 0)
+    .lineTo(armLength, 0)
+    .stroke({ color: 0x22d3ee, alpha: 0.4, width: 2 });
+  graphics
+    .moveTo(0, -armLength)
+    .lineTo(0, armLength)
+    .stroke({ color: 0x22d3ee, alpha: 0.4, width: 2 });
 
-    existing.setStrokeStyle({ width: 0.5, color, alpha });
-    for (let cy = -range; cy <= range; cy++) {
-      for (let cx = -range; cx <= range; cx++) {
-        if (cellFactionMap[`${cx},${cy}`] !== faction) continue;
-        const { px: x1, py: y1 } = cellToPixel(cx, cy);
-
-        if (cx < range && cellFactionMap[`${cx + 1},${cy}`] === faction) {
-          const { px: x2, py: y2 } = cellToPixel(cx + 1, cy);
-          existing.moveTo(x1, y1).lineTo(x2, y2);
-          hasLines = true;
-        }
-        if (cy < range && cellFactionMap[`${cx},${cy + 1}`] === faction) {
-          const { px: x2, py: y2 } = cellToPixel(cx, cy + 1);
-          existing.moveTo(x1, y1).lineTo(x2, y2);
-          hasLines = true;
-        }
-      }
-    }
-    if (hasLines) existing.stroke();
-  }
-
-  existing.setStrokeStyle({ width: 1, color: GRID_LINE_COLOR, alpha: GRID_LINE_ALPHA });
+  // Grid lines
+  graphics.setStrokeStyle({ width: 1, color: GRID_LINE_COLOR, alpha: GRID_LINE_ALPHA });
   const pixelRange = range * CELL_SIZE;
   for (let cx = -range; cx <= range + 1; cx++) {
     const px = cx * CELL_SIZE - CELL_SIZE / 2;
-    existing.moveTo(px, -pixelRange - CELL_SIZE / 2);
-    existing.lineTo(px, pixelRange + CELL_SIZE / 2);
+    graphics.moveTo(px, -pixelRange - CELL_SIZE / 2);
+    graphics.lineTo(px, pixelRange + CELL_SIZE / 2);
   }
   for (let cy = -range; cy <= range + 1; cy++) {
     const py = cy * CELL_SIZE - CELL_SIZE / 2;
-    existing.moveTo(-pixelRange - CELL_SIZE / 2, py);
-    existing.lineTo(pixelRange + CELL_SIZE / 2, py);
+    graphics.moveTo(-pixelRange - CELL_SIZE / 2, py);
+    graphics.lineTo(pixelRange + CELL_SIZE / 2, py);
   }
-  existing.stroke();
-
-  // Origin marker — tiny point at the meeting center of all 4 factions
-  existing.circle(0, 0, 1.5);
-  existing.fill({ color: 0xffffff, alpha: 0.3 });
-
-  // Quadrant boundaries — dashed lines along axes
-  const extent = range * CELL_SIZE;
-  existing.setStrokeStyle({ width: 1, color: 0x444444, alpha: 0.4 });
-  for (let x = -extent; x < extent; x += 8) {
-    existing.moveTo(x, 0);
-    existing.lineTo(Math.min(x + 4, extent), 0);
-    existing.stroke();
-  }
-  for (let y = -extent; y < extent; y += 8) {
-    existing.moveTo(0, y);
-    existing.lineTo(0, Math.min(y + 4, extent));
-    existing.stroke();
-  }
+  graphics.stroke();
 }

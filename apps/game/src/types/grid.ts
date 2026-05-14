@@ -12,11 +12,13 @@ export interface CellCoord {
 }
 
 /**
- * The 4 Megafactions. Each occupies a 90-degree quadrant of the Neural Lattice.
- * - community: free users (NW quadrant, cx<0 cy<0)
- * - treasury:  AI-controlled Machines swarm (NE quadrant, cx>0 cy<0)
- * - founder:   founding dev team (SE quadrant, cx>0 cy>0)
- * - pro-max:   premium users (SW quadrant, cx<0 cy>0)
+ * The 4 Megafactions. Used as player identity (color, governance, theme).
+ * In the open-grid model, factions no longer restrict spatial placement —
+ * they tint owned cells via the denormalized BlockNode.faction field.
+ * - community: free users (teal)
+ * - treasury:  Machines / AI agents (pink)
+ * - founder:   founding dev team (amber)
+ * - pro-max:   premium users (blue)
  */
 export type FactionId = "community" | "treasury" | "founder" | "pro-max";
 
@@ -31,7 +33,7 @@ export interface BlockNode {
   ringIndex: number; // 0 = genesis center, increments outward
   cx: number; // cell coordinate X
   cy: number; // cell coordinate Y
-  faction: FactionId;
+  faction: FactionId | null;
   secureStrength: number; // BaseStrength / (1 + ringIndex * decayRate), min 1
   ownerId: string | null; // userId of claimant, null if unclaimed
   stakedCpu: number; // CPU staked to this node by the owner

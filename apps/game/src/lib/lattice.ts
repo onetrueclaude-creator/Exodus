@@ -4,23 +4,6 @@ export const CELL_SIZE = 64;
 export const DENSITY_DECAY = 0.15;
 export const FACTIONS: FactionId[] = ["community", "treasury", "founder", "pro-max"];
 
-/** Quadrant signs — math convention: +Y = up (NW top-left, NE top-right, etc.) */
-const QUADRANT_SIGNS: Record<FactionId, { sx: number; sy: number }> = {
-  community: { sx: -1, sy: 1 },   // NW (top-left)
-  treasury: { sx: 1, sy: 1 },     // NE (top-right)
-  founder: { sx: 1, sy: -1 },     // SE (bottom-right)
-  "pro-max": { sx: -1, sy: -1 },  // SW (bottom-left)
-};
-
-/** Determine which faction owns a cell. Math convention: +Y = up. */
-export function getFactionForCell(cx: number, cy: number): FactionId | null {
-  if (cx === 0 || cy === 0) return null;
-  if (cx < 0 && cy > 0) return "community";   // NW
-  if (cx > 0 && cy > 0) return "treasury";    // NE
-  if (cx > 0 && cy < 0) return "founder";     // SE
-  return "pro-max";                            // SW
-}
-
 export function getCellDensity(cx: number, cy: number): number {
   const dist = Math.sqrt(cx * cx + cy * cy);
   return 1.0 / (1 + dist * DENSITY_DECAY);
@@ -36,13 +19,13 @@ export function cellId(cx: number, cy: number): string {
 }
 
 function createCell(cx: number, cy: number, ringIndex: number): BlockNode {
-  const faction = getFactionForCell(cx, cy);
-  if (!faction) throw new Error(`Cannot create cell at axis/origin (${cx},${cy})`);
   return {
     id: cellId(cx, cy),
     blockIndex: ringIndex,
     ringIndex,
-    cx, cy, faction,
+    cx,
+    cy,
+    faction: null,
     secureStrength: getCellDensity(cx, cy) * 100,
     ownerId: null,
     stakedCpu: 0,
@@ -50,17 +33,23 @@ function createCell(cx: number, cy: number, ringIndex: number): BlockNode {
   };
 }
 
+/** Exposed for tests only — production code uses buildCellsForRing/buildAllCells. */
+export const createCellInternal = createCell;
+
+/** Returns all cells at exactly Chebyshev distance `ring` from origin. Ring 0 = [(0,0)]. */
 export function getCellsForRing(ring: number): BlockNode[] {
-  if (ring <= 0) return [];
+  if (ring < 0) return [];
+  if (ring === 0) return [createCell(0, 0, 0)];
   const cells: BlockNode[] = [];
-  for (const faction of FACTIONS) {
-    const { sx, sy } = QUADRANT_SIGNS[faction];
-    if (ring === 1) {
-      cells.push(createCell(sx, sy, ring));
-    } else {
-      for (let i = 1; i <= ring; i++) { cells.push(createCell(sx * i, sy * ring, ring)); }
-      for (let i = 1; i < ring; i++) { cells.push(createCell(sx * ring, sy * i, ring)); }
-    }
+  // Top and bottom edges (cy = ±ring), full width including corners
+  for (let cx = -ring; cx <= ring; cx++) {
+    cells.push(createCell(cx, -ring, ring));
+    cells.push(createCell(cx, ring, ring));
+  }
+  // Left and right edges (cx = ±ring), excluding corners (already added)
+  for (let cy = -ring + 1; cy <= ring - 1; cy++) {
+    cells.push(createCell(-ring, cy, ring));
+    cells.push(createCell(ring, cy, ring));
   }
   return cells;
 }
@@ -77,13 +66,20 @@ export function buildAllCells(totalRings: number): Record<string, BlockNode> {
   return result;
 }
 
-export function getFrontierCell(faction: FactionId, cells: Record<string, BlockNode>): BlockNode | null {
-  const candidates = Object.values(cells)
-    .filter((c) => c.faction === faction && c.ownerId === null)
-    .sort((a, b) => (a.cx * a.cx + a.cy * a.cy) - (b.cx * b.cx + b.cy * b.cy));
-  return candidates[0] ?? null;
-}
-
 export function getCellAt(cx: number, cy: number, cells: Record<string, BlockNode>): BlockNode | null {
   return cells[cellId(cx, cy)] ?? null;
+}
+
+/** Apply ownership to a cell. Returns a new cell with ownerId and faction set. Pure. */
+export function setCellOwner(
+  cell: BlockNode,
+  ownerId: string,
+  ownerFaction: FactionId
+): BlockNode {
+  return { ...cell, ownerId, faction: ownerFaction };
+}
+
+/** Release a cell back to unclaimed. Pure. */
+export function clearCellOwner(cell: BlockNode): BlockNode {
+  return { ...cell, ownerId: null, faction: null };
 }

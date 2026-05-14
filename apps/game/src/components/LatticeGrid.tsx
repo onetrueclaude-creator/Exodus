@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useState } from "react";
-import { Application, Container, Graphics } from "pixi.js";
+import { Application, Container } from "pixi.js";
 import { useGameStore } from "@/store";
 import { createGridBackground, updateGridBackground } from "./grid/GridBackground";
 import { createBlockNode } from "./grid/StarNode";
@@ -25,7 +25,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
   const worldRef = useRef<Container | null>(null);
   /** Tracks whether initial blocknode auto-zoom has already fired */
   const hasBlocknodeZoomedRef = useRef(false);
-  const bgRef = useRef<Graphics | null>(null);
+  const bgRef = useRef<Container | null>(null);
   const blocknodesLayerRef = useRef<Container | null>(null);
   /** Tracks when a node was last tapped — avoids deselecting on node clicks */
   const lastNodeTapMsRef = useRef(0);
@@ -67,7 +67,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
     worldRef.current = world;
 
     // Grid background (index 0)
-    const bg = createGridBackground({}, []);
+    const bg = createGridBackground({});
     bgRef.current = bg;
     world.addChild(bg);
 
@@ -262,7 +262,6 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
       updateGridBackground(
         bgRef.current,
         blocknodes,
-        effectiveVisible,
         Math.min(30, Math.max(1, totalBlocksMined + 1))
       );
     }
@@ -277,7 +276,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
 
     // Draw blocknode circles
     for (const node of nodes) {
-      const isVisible = effectiveVisible.includes(node.faction);
+      const isVisible = node.faction !== null && effectiveVisible.includes(node.faction);
       const nodeContainer = createBlockNode(
         node,
         isVisible,
@@ -288,12 +287,21 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
         lastNodeTapMsRef.current = Date.now();
         setSelectedBlocknodeId(node.id);
         setSelectedGridCell(null); // close grid panel when an arm node is selected
+        // If the player clicks one of their own cells, route the Agent Terminal to it
+        // so CPU Allocation / Secure / Stats target THIS node, not just the homenode.
+        if (node.ownerId && node.ownerId === currentUserId) {
+          const store = useGameStore.getState();
+          if (store.agents[node.id]) {
+            store.switchAgent(node.id);
+            store.setActiveDockPanel("terminal");
+          }
+        }
       });
       layer.addChild(nodeContainer);
     }
 
     // Auto-zoom-to-fit on first blocknode render — centers on visible faction arms
-    const visibleNodes = nodes.filter((n) => effectiveVisible.includes(n.faction));
+    const visibleNodes = nodes.filter((n) => n.faction !== null && effectiveVisible.includes(n.faction));
     if (visibleNodes.length > 0 && !hasBlocknodeZoomedRef.current) {
       hasBlocknodeZoomedRef.current = true;
       // Only use inner rings (0–2) for the initial zoom calculation.
