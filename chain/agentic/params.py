@@ -27,14 +27,33 @@ FEE_BURN_RATE = 0.50              # 50% of fees burned, 50% to verifiers/stakers
 ANNUAL_INFLATION_CEILING = 0.05   # 5% max annualized supply growth (soft cap, governance-adjustable)
 SIGNUP_BONUS = 1.0                # 1 AGNTC fresh-minted per new user registration
 
-# Faction distribution — equal 25% per faction (applies to newly minted AGNTC)
-DIST_COMMUNITY    = 0.25   # Free Community (N arm, white)
-DIST_MACHINES     = 0.25   # Machines Faction (E arm, gold) — AI agent economy
-DIST_FOUNDERS     = 0.25   # Founder Pool (S arm, red) — team & advisors (4yr vest, 12mo cliff)
-DIST_PROFESSIONAL = 0.25   # Professional (W arm, cyan) — paid-tier users
+# Faction distribution — DEPRECATED in whitepaper v1.1 (Open-Grid Revision).
+# Under v1.1 there is no per-faction-arm AGNTC allocation; distribution is
+# emergent from mining (each claimed coordinate mints AGNTC directly to the
+# claimant regardless of faction). These constants are retained only for
+# backward compatibility with legacy visualization scripts that still render
+# the v1.0 four-segment supply chart (chain/run_*.py, agentic/visualization/).
+# Do NOT add new consumers. New code should treat distribution as emergent.
+DIST_COMMUNITY    = 0.25   # [DEPRECATED v1.1]
+DIST_MACHINES     = 0.25   # [DEPRECATED v1.1]
+DIST_FOUNDERS     = 0.25   # [DEPRECATED v1.1]
+DIST_PROFESSIONAL = 0.25   # [DEPRECATED v1.1]
 
 # Machines Faction constraint — agents cannot sell below acquisition cost
 MACHINES_MIN_SELL_RATIO = 1.0
+
+# Whitepaper v1.1: Machines Faction is permanently bound to the origin
+# coordinate. The protocol-operated agent at MACHINES_ORIGIN_COORD does not
+# expand to other coordinates; it auto-levels its single node and accumulates
+# AGNTC from origin's mining yield only. See whitepaper §4.5, §10.3.
+#
+# NOTE: the live testnet currently has Machines at GENESIS_FACTION_MASTERS[1]
+# == (10, 0) (the v1.0 East-arm master). Migration of the live testnet state
+# from (10, 0) to (0, 0) is tracked as Sub-project D (testnet state migration).
+# The Python code at agentic/testnet/machines.py is v1.1-aligned in behaviour
+# (no expansion) but the coordinate constant still reads from the legacy
+# wallet-2 home until the migration runs.
+MACHINES_ORIGIN_COORD = (0, 0)
 
 # Solana Mainnet
 AGNTC_MINT_ADDRESS = "3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd"
@@ -83,10 +102,21 @@ STORAGE_PROGRAM_ID = b"agentic_storage"
 NODE_GRID_SPACING = 10
 
 # Genesis topology — 9 nodes: origin + 8-node ring at distance NODE_GRID_SPACING.
-# Faction Masters occupy the 4 cardinal positions; regular homenodes fill the diagonals.
+# Under whitepaper v1.1 (Open-Grid Revision):
+#   - The origin (0, 0) is permanently bound to the Machines Faction agent.
+#   - Ring-1 cardinal and diagonal positions are unclaimed at launch and
+#     available to any participant regardless of faction.
+# The legacy v1.0 names GENESIS_FACTION_MASTERS / GENESIS_HOMENODES are
+# retained as the canonical constants because they are referenced from many
+# call sites (genesis.py, persistence.py, supabase_sync.py, machines.py,
+# tests). The v1.1 aliases below are the preferred names for new code.
 GENESIS_ORIGIN = (0, 0)
 GENESIS_FACTION_MASTERS = [(0, 10), (10, 0), (0, -10), (-10, 0)]   # N E S W
 GENESIS_HOMENODES      = [(10, 10), (10, -10), (-10, -10), (-10, 10)]  # NE SE SW NW
+
+# v1.1 aliases — same lists, more accurate names. Prefer these in new code.
+GENESIS_RING1_CARDINALS = GENESIS_FACTION_MASTERS
+GENESIS_RING1_DIAGONALS = GENESIS_HOMENODES
 
 # Birth / Claims — city model (inner rings expensive, outer cheap)
 # cost = BASE_CLAIM_COST × density / ring, floored at CLAIM_COST_FLOOR

@@ -1,4 +1,14 @@
-"""Tests for MachineAgentBehavior — Machines faction auto-expansion."""
+"""Tests for MachineAgentBehavior — Machines faction origin-bound agent.
+
+Under whitepaper v1.1 (Open-Grid Revision), Machines is a single
+protocol-operated agent permanently bound to its origin coordinate. It
+does not expand to other coordinates. The legacy v1.0 expansion path
+(_next_target, _expand) remains in the source module for backward
+compatibility with callers that exercise it directly, but tick() no
+longer drives it. The tests below verify the v1.1 behaviour and also
+spot-check that the legacy methods still produce correct results when
+called directly (since they're documented as deprecated, not removed).
+"""
 from __future__ import annotations
 
 import pytest
@@ -6,6 +16,7 @@ import pytest
 from agentic.params import (
     BASE_BIRTH_COST,
     MACHINES_MIN_SELL_RATIO,
+    MACHINES_ORIGIN_COORD,
     NODE_GRID_SPACING,
     GENESIS_FACTION_MASTERS,
 )
@@ -15,8 +26,9 @@ from agentic.testnet.machines import MachineAgentBehavior
 
 @pytest.fixture(autouse=True)
 def _reset_global_bounds():
-    """Save and restore GLOBAL_BOUNDS around each test so expansion
-    in machine tests doesn't bleed into other test modules."""
+    """Save and restore GLOBAL_BOUNDS around each test so any direct
+    invocation of the legacy expansion path in this module doesn't
+    bleed into other test modules."""
     from agentic.lattice.coordinate import GLOBAL_BOUNDS
     saved_min = GLOBAL_BOUNDS.min_val
     saved_max = GLOBAL_BOUNDS.max_val
@@ -29,8 +41,8 @@ def _reset_global_bounds():
 # Helpers
 # ---------------------------------------------------------------------------
 
-MACHINE_WALLET_INDEX = 2  # Faction Master at (10, 0) = E arm
-MACHINE_ORIGIN = GENESIS_FACTION_MASTERS[1]  # (10, 0)
+MACHINE_WALLET_INDEX = 2  # Live testnet still has Machines at wallet 2 (10, 0)
+MACHINE_ORIGIN = GENESIS_FACTION_MASTERS[1]  # (10, 0) — pre-migration home
 
 
 def _make_behavior(seed: int = 42) -> tuple:
@@ -51,13 +63,10 @@ class TestMachineInit:
         assert machine.wallet_index == MACHINE_WALLET_INDEX
 
     def test_origin_coordinate(self):
+        """The live testnet's MACHINE_ORIGIN still points at the v1.0 East
+        cardinal. Sub-project D will migrate this to MACHINES_ORIGIN_COORD."""
         state, machine = _make_behavior()
         assert machine.origin == MACHINE_ORIGIN
-
-    def test_direction_east(self):
-        """Machines arm expands East: step = (+NODE_GRID_SPACING, 0)."""
-        _, machine = _make_behavior()
-        assert machine.step == (NODE_GRID_SPACING, 0)
 
     def test_initial_agntc_zero(self):
         _, machine = _make_behavior()
@@ -66,6 +75,12 @@ class TestMachineInit:
     def test_min_sell_ratio(self):
         _, machine = _make_behavior()
         assert machine.min_sell_ratio == MACHINES_MIN_SELL_RATIO
+
+    def test_v1_1_origin_constant_is_zero(self):
+        """The whitepaper-v1.1 binding constant is (0, 0). The live testnet
+        coordinate (machine.origin above) does not yet match this — Sub-project
+        D performs the migration."""
+        assert MACHINES_ORIGIN_COORD == (0, 0)
 
 
 # ---------------------------------------------------------------------------
@@ -77,16 +92,12 @@ class TestSecurePhase:
     def test_secure_stakes_available_energy(self):
         """SECURE phase should stake available CPU energy."""
         state, machine = _make_behavior()
-        # Machine wallet starts with 0 balance at genesis (GENESIS_BALANCE=0),
-        # but mining distributes rewards. We simulate by giving it some AGNTC.
         machine.accumulated_agntc = 50.0
-        # Secure should not fail even with 0 balance — it's a no-op
         machine._secure(state)
-        # No crash = success; staking is a no-op when no energy available
 
 
 # ---------------------------------------------------------------------------
-# ASSESS phase
+# ASSESS phase (legacy helper, retained but not driven by tick)
 # ---------------------------------------------------------------------------
 
 
@@ -108,83 +119,6 @@ class TestAssessPhase:
 
 
 # ---------------------------------------------------------------------------
-# EXPAND phase — next target coordinate
-# ---------------------------------------------------------------------------
-
-
-class TestExpandTarget:
-    def test_first_expansion_target(self):
-        """First unclaimed node East of (10,0) is (20,0)."""
-        _, machine = _make_behavior()
-        target = machine._next_target()
-        assert target == (20, 0)
-
-    def test_second_expansion_target(self):
-        """After (20,0) is claimed, next target is (30,0)."""
-        state, machine = _make_behavior()
-        # Claim (20, 0) manually
-        from agentic.lattice.coordinate import GridCoordinate
-        wallet = state.wallets[MACHINE_WALLET_INDEX]
-        coord = GridCoordinate(x=20, y=0)
-        state.claim_registry.register(
-            owner=wallet.public_key, coordinate=coord, stake=100, slot=0)
-        target = machine._next_target()
-        assert target == (30, 0)
-
-    def test_skips_already_claimed_by_others(self):
-        """If another wallet claims (20,0), machine skips to (30,0)."""
-        state, machine = _make_behavior()
-        other_wallet = state.wallets[5]  # some other wallet
-        from agentic.lattice.coordinate import GridCoordinate
-        coord = GridCoordinate(x=20, y=0)
-        state.claim_registry.register(
-            owner=other_wallet.public_key, coordinate=coord, stake=100, slot=0)
-        target = machine._next_target()
-        assert target == (30, 0)
-
-
-# ---------------------------------------------------------------------------
-# EXPAND phase — claim execution
-# ---------------------------------------------------------------------------
-
-
-class TestExpandClaim:
-    def test_expand_claims_node(self):
-        """When AGNTC >= BASE_BIRTH_COST, expand claims the next node."""
-        state, machine = _make_behavior()
-        machine.accumulated_agntc = BASE_BIRTH_COST + 10
-        result = machine._expand(state)
-        assert result is True
-        # Check claim exists at (20, 0)
-        from agentic.lattice.coordinate import GridCoordinate
-        claim = state.claim_registry.get_claim_at(GridCoordinate(x=20, y=0))
-        assert claim is not None
-        assert claim.owner == state.wallets[MACHINE_WALLET_INDEX].public_key
-
-    def test_expand_deducts_cost(self):
-        state, machine = _make_behavior()
-        machine.accumulated_agntc = 150.0
-        machine._expand(state)
-        assert machine.accumulated_agntc == pytest.approx(50.0)
-
-    def test_expand_creates_validator_and_agent(self):
-        """Expansion should register a validator + verification agent."""
-        state, machine = _make_behavior()
-        validators_before = len(state.validators)
-        agents_before = len(state.agents)
-        machine.accumulated_agntc = BASE_BIRTH_COST
-        machine._expand(state)
-        assert len(state.validators) == validators_before + 1
-        assert len(state.agents) == agents_before + 1
-
-    def test_expand_fails_below_threshold(self):
-        state, machine = _make_behavior()
-        machine.accumulated_agntc = BASE_BIRTH_COST - 1
-        result = machine._expand(state)
-        assert result is False
-
-
-# ---------------------------------------------------------------------------
 # HOLD — never sell
 # ---------------------------------------------------------------------------
 
@@ -201,65 +135,99 @@ class TestHoldBehavior:
 
 
 # ---------------------------------------------------------------------------
-# Full tick cycle
+# Full tick cycle — v1.1 origin-bound behaviour
 # ---------------------------------------------------------------------------
 
 
-class TestTick:
+class TestTickV1_1:
+    """tick() under v1.1: SECURE + ACCUMULATE only, no EXPAND."""
+
     def test_tick_accumulates_mining_reward(self):
         """tick() should accumulate the machine's share of block rewards."""
         state, machine = _make_behavior()
-        # Mine a block to produce yields
         from agentic.testnet.api import _do_mine
         result = _do_mine(state)
-        # The machine wallet should have earned something
         wallet_key = state.wallets[MACHINE_WALLET_INDEX].public_key.hex()
         reward = result["yields"].get(wallet_key, 0.0)
-        # Now tick with that reward
         machine.tick(state, block_reward=reward)
         assert machine.accumulated_agntc == pytest.approx(reward)
 
-    def test_tick_expands_when_threshold_met(self):
-        """tick() should auto-expand when accumulated AGNTC >= BASE_BIRTH_COST."""
+    def test_tick_does_not_expand_when_threshold_met(self):
+        """v1.1: tick() must NOT claim new coordinates even when AGNTC
+        exceeds BASE_BIRTH_COST. Machines stays at its single node."""
         state, machine = _make_behavior()
         machine.tick(state, block_reward=BASE_BIRTH_COST + 10)
+        # Under v1.0 this would have claimed (20, 0). Under v1.1 it must not.
         from agentic.lattice.coordinate import GridCoordinate
         claim = state.claim_registry.get_claim_at(GridCoordinate(x=20, y=0))
-        assert claim is not None
+        assert claim is None
+        # Accumulated AGNTC stays — no claim cost deducted.
+        assert machine.accumulated_agntc == pytest.approx(BASE_BIRTH_COST + 10)
 
-    def test_tick_no_expand_below_threshold(self):
+    def test_tick_does_not_expand_below_threshold(self):
         state, machine = _make_behavior()
         machine.tick(state, block_reward=50.0)
         from agentic.lattice.coordinate import GridCoordinate
         claim = state.claim_registry.get_claim_at(GridCoordinate(x=20, y=0))
         assert claim is None
 
-    def test_multiple_ticks_accumulate(self):
+    def test_multiple_ticks_pure_accumulation(self):
+        """Multiple ticks above-threshold accumulate without any claim cost."""
         state, machine = _make_behavior()
         machine.tick(state, block_reward=40.0)
         machine.tick(state, block_reward=40.0)
-        assert machine.accumulated_agntc == pytest.approx(80.0)
-        # Still below threshold
+        machine.tick(state, block_reward=40.0)
+        assert machine.accumulated_agntc == pytest.approx(120.0)
+        # Nothing claimed.
         from agentic.lattice.coordinate import GridCoordinate
         assert state.claim_registry.get_claim_at(GridCoordinate(x=20, y=0)) is None
-        # Third tick pushes over
-        machine.tick(state, block_reward=40.0)
-        # 120 - 100 cost = 20 remaining
-        assert machine.accumulated_agntc == pytest.approx(20.0)
-        assert state.claim_registry.get_claim_at(GridCoordinate(x=20, y=0)) is not None
+        assert machine.nodes_claimed == 0
 
-    def test_sequential_expansions(self):
-        """Machine should expand to (20,0) then (30,0) on successive thresholds."""
+    def test_tick_never_claims_no_matter_the_reward(self):
+        """Confirmed: huge rewards do not produce expansion."""
         state, machine = _make_behavior()
-        machine.tick(state, block_reward=BASE_BIRTH_COST)
-        machine.tick(state, block_reward=BASE_BIRTH_COST)
+        machine.tick(state, block_reward=BASE_BIRTH_COST * 100)
+        # No new nodes claimed by Machines, regardless of reward size.
+        assert machine.nodes_claimed == 0
+        # nodes_claimed is the canonical counter; nothing along the historic
+        # East arm was claimed either (the closest, (20, 0), would have been
+        # the v1.0 first target).
+        from agentic.lattice.coordinate import GridCoordinate
+        assert state.claim_registry.get_claim_at(GridCoordinate(x=20, y=0)) is None
+
+
+# ---------------------------------------------------------------------------
+# Legacy expansion methods — still callable directly (deprecated)
+# ---------------------------------------------------------------------------
+
+
+class TestLegacyExpansionPath:
+    """The v1.0 _next_target / _expand methods remain importable and
+    invokable so any external tooling that exercised them directly does
+    not break. tick() no longer drives them.
+    """
+
+    def test_legacy_next_target_first(self):
+        _, machine = _make_behavior()
+        target = machine._next_target()
+        assert target == (20, 0)
+
+    def test_legacy_expand_when_invoked_directly_still_claims(self):
+        """Direct invocation of _expand still claims, because the method
+        is documented as legacy-callable. Production code should not call
+        this path under v1.1."""
+        state, machine = _make_behavior()
+        machine.accumulated_agntc = BASE_BIRTH_COST + 10
+        result = machine._expand(state)
+        assert result is True
         from agentic.lattice.coordinate import GridCoordinate
         assert state.claim_registry.get_claim_at(GridCoordinate(x=20, y=0)) is not None
-        assert state.claim_registry.get_claim_at(GridCoordinate(x=30, y=0)) is not None
 
-    def test_nodes_claimed_count(self):
-        _, machine = _make_behavior()
-        assert machine.nodes_claimed == 0
+    def test_legacy_expand_fails_below_threshold(self):
+        state, machine = _make_behavior()
+        machine.accumulated_agntc = BASE_BIRTH_COST - 1
+        result = machine._expand(state)
+        assert result is False
 
 
 # ---------------------------------------------------------------------------
