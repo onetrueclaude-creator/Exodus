@@ -15,10 +15,10 @@ export interface Agent {
   // NEW: numeric level replacing the old tier field. Always ≥ 1.
   level: number;
 
-  // NEW: per-node CPU allocation. Must sum to 100 at all times.
-  miningAlloc: number;
-  securingAlloc: number;
-  selfDevAlloc: number;
+  // Per-node Mining and Securing CPU/turn (absolute values from MINING_PRESETS).
+  // These DRAIN the player pool every turn; they are NOT percentages of node output.
+  miningCpu: number;
+  securingCpu: number;
 
   // NEW: level-up state. null = idle. Otherwise: the absolute turn index when leveling completes.
   levelingUntilTurn: number | null;

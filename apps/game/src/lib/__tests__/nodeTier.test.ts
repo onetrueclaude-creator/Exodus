@@ -5,6 +5,9 @@ import {
   getNodeCpuPerTurn,
   getLevelUpTurns,
   TIER_DISPLAY_NAME,
+  getLevelUpCost,
+  MINING_PRESETS,
+  SECURING_PRESETS,
 } from "@/lib/nodeTier";
 
 describe("getNodeTier", () => {
@@ -69,5 +72,31 @@ describe("TIER_DISPLAY_NAME", () => {
     expect(TIER_DISPLAY_NAME.cortex).toBe("Cortex");
     expect(TIER_DISPLAY_NAME.lattice).toBe("Lattice");
     expect(TIER_DISPLAY_NAME.nexus).toBe("Nexus");
+  });
+});
+
+describe("getLevelUpCost", () => {
+  it.each([
+    [1, 200],
+    [2, 360],
+    [3, 648],
+    [4, 1166],
+    [5, 2099],
+    [6, 3779],
+    [7, 6802],
+    [8, 12244],
+    [9, 22039],
+    [10, 39671],
+    [15, 749626],
+    [20, 14164706],
+  ])("level %i costs %i CPU to advance", (level, cost) => {
+    expect(getLevelUpCost(level)).toBe(cost);
+  });
+});
+
+describe("MINING_PRESETS / SECURING_PRESETS", () => {
+  it("both contain 0/100/200/500/1000", () => {
+    expect([...MINING_PRESETS]).toEqual([0, 100, 200, 500, 1000]);
+    expect([...SECURING_PRESETS]).toEqual([0, 100, 200, 500, 1000]);
   });
 });

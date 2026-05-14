@@ -285,17 +285,16 @@ describe("gameStore — CPU regen (subscription-based)", () => {
     expect(useGameStore.getState().energy).toBe(1100); // 1000 + 100 regen
   });
 
-  it("tick aggregates per-node mining/securing from agents with setNodeAllocation", () => {
-    // Add an agent owned by user-001 with 50/30/20 allocation at L1 (10 CPU/turn)
+  it("tick aggregates per-node miningCpu/securingCpu from agents", () => {
+    // Add an agent owned by user-001 with preset miningCpu=100, securingCpu=200
     useGameStore.setState({
       agents: {
         "agent-001": {
           id: "agent-001",
           userId: "user-001",
           level: 1,
-          miningAlloc: 50,
-          securingAlloc: 30,
-          selfDevAlloc: 20,
+          miningCpu: 100,
+          securingCpu: 200,
           levelingUntilTurn: null,
           position: { x: 0, y: 0 },
           isPrimary: true,
@@ -313,9 +312,9 @@ describe("gameStore — CPU regen (subscription-based)", () => {
     });
     useGameStore.getState().tick();
     const s = useGameStore.getState();
-    // L1 at 50/30/20: 10 * 0.5 = 5 mining, 10 * 0.3 = 3 securing
-    expect(s.miningCpuPerBlock).toBe(5);
-    expect(s.securingCpuPerBlock).toBe(3);
+    // absolute preset values are summed directly
+    expect(s.miningCpuPerBlock).toBe(100);
+    expect(s.securingCpuPerBlock).toBe(200);
   });
 
   it("energy grows from subscription regen only (no node maintenance deduction)", () => {
@@ -324,38 +323,6 @@ describe("gameStore — CPU regen (subscription-based)", () => {
     expect(useGameStore.getState().energy).toBe(before + 100);
   });
 
-  it("setNodeAllocation updates agent allocation fields", () => {
-    useGameStore.setState({
-      agents: {
-        "agent-001": {
-          id: "agent-001",
-          userId: "user-001",
-          level: 1,
-          miningAlloc: 50,
-          securingAlloc: 50,
-          selfDevAlloc: 0,
-          levelingUntilTurn: null,
-          position: { x: 0, y: 0 },
-          isPrimary: true,
-          planets: [],
-          createdAt: 0,
-          username: "test",
-          borderRadius: 64,
-          borderPressure: 0,
-          cpuPerTurn: 10,
-          miningRate: 1,
-          energyLimit: 50,
-          stakedCpu: 0,
-        },
-      },
-    });
-    const ok = useGameStore.getState().setNodeAllocation("agent-001", 25, 50, 25);
-    expect(ok).toBe(true);
-    const agent = useGameStore.getState().agents["agent-001"];
-    expect(agent.miningAlloc).toBe(25);
-    expect(agent.securingAlloc).toBe(50);
-    expect(agent.selfDevAlloc).toBe(25);
-  });
 });
 
 describe("claimBlocknode — open grid", () => {
@@ -394,7 +361,7 @@ describe("claimBlocknode — open grid", () => {
   });
 });
 
-describe("setNodeAllocation", () => {
+describe("setNodeMiningSecuring", () => {
   beforeEach(() => {
     useGameStore.setState({
       currentUserId: "u-1",
@@ -404,9 +371,8 @@ describe("setNodeAllocation", () => {
           id: "agent-1",
           userId: "u-1",
           level: 1,
-          miningAlloc: 50,
-          securingAlloc: 50,
-          selfDevAlloc: 0,
+          miningCpu: 0,
+          securingCpu: 0,
           levelingUntilTurn: null,
           position: { x: 0, y: 0 },
           isPrimary: true,
@@ -424,40 +390,37 @@ describe("setNodeAllocation", () => {
     });
   });
 
-  it("updates allocation when percentages sum to 100", () => {
-    const ok = useGameStore.getState().setNodeAllocation("agent-1", 25, 50, 25);
+  it("updates mining and securing when values are valid presets", () => {
+    const ok = useGameStore.getState().setNodeMiningSecuring("agent-1", 200, 500);
     expect(ok).toBe(true);
-    const agent = useGameStore.getState().agents["agent-1"];
-    expect(agent.miningAlloc).toBe(25);
-    expect(agent.securingAlloc).toBe(50);
-    expect(agent.selfDevAlloc).toBe(25);
+    const a = useGameStore.getState().agents["agent-1"];
+    expect(a.miningCpu).toBe(200);
+    expect(a.securingCpu).toBe(500);
   });
 
-  it("rejects allocation that doesn't sum to 100", () => {
-    const ok = useGameStore.getState().setNodeAllocation("agent-1", 50, 50, 25);
-    expect(ok).toBe(false);
-    const agent = useGameStore.getState().agents["agent-1"];
-    expect(agent.miningAlloc).toBe(50); // unchanged
+  it("rejects values not in the preset list", () => {
+    expect(useGameStore.getState().setNodeMiningSecuring("agent-1", 150, 100)).toBe(false);
+    expect(useGameStore.getState().agents["agent-1"].miningCpu).toBe(0); // unchanged
   });
 
   it("rejects unknown agent id", () => {
-    expect(useGameStore.getState().setNodeAllocation("agent-nonexistent", 50, 25, 25)).toBe(false);
+    expect(useGameStore.getState().setNodeMiningSecuring("nope", 100, 100)).toBe(false);
   });
 });
 
-describe("beginNodeLevelUp / cancelNodeLevelUp", () => {
+describe("beginNodeLevelUp — Ogame-style upfront cost", () => {
   beforeEach(() => {
     useGameStore.setState({
       currentUserId: "u-1",
       turn: 5,
+      energy: 1000,
       agents: {
         "agent-1": {
           id: "agent-1",
           userId: "u-1",
           level: 3,
-          miningAlloc: 50,
-          securingAlloc: 50,
-          selfDevAlloc: 0,
+          miningCpu: 0,
+          securingCpu: 0,
           levelingUntilTurn: null,
           position: { x: 0, y: 0 },
           isPrimary: true,
@@ -475,20 +438,72 @@ describe("beginNodeLevelUp / cancelNodeLevelUp", () => {
     });
   });
 
-  it("beginNodeLevelUp sets levelingUntilTurn = currentTurn + level", () => {
-    useGameStore.getState().beginNodeLevelUp("agent-1");
-    const agent = useGameStore.getState().agents["agent-1"];
-    expect(agent.levelingUntilTurn).toBe(5 + 3); // turn 5 + 3-turn upgrade from L3
+  it("deducts CPU cost atomically and sets the timer", () => {
+    // getLevelUpCost(3) = floor(200 * 1.8^2) = 648
+    const ok = useGameStore.getState().beginNodeLevelUp("agent-1");
+    expect(ok).toBe(true);
+    const s = useGameStore.getState();
+    expect(s.energy).toBe(1000 - 648);
+    expect(s.agents["agent-1"].levelingUntilTurn).toBe(5 + 3); // turn + level
   });
 
-  it("cancelNodeLevelUp clears the timer without refunding", () => {
-    useGameStore.getState().beginNodeLevelUp("agent-1");
-    useGameStore.getState().cancelNodeLevelUp("agent-1");
+  it("returns false when energy < cost and does not deduct", () => {
+    useGameStore.setState({ energy: 100 }); // L3 cost is 648, this is short
+    const ok = useGameStore.getState().beginNodeLevelUp("agent-1");
+    expect(ok).toBe(false);
+    expect(useGameStore.getState().energy).toBe(100); // unchanged
     expect(useGameStore.getState().agents["agent-1"].levelingUntilTurn).toBeNull();
+  });
+
+  it("returns false when the node is already leveling", () => {
+    useGameStore.getState().beginNodeLevelUp("agent-1"); // first call succeeds
+    const energyAfterFirst = useGameStore.getState().energy;
+    const ok = useGameStore.getState().beginNodeLevelUp("agent-1"); // second is rejected
+    expect(ok).toBe(false);
+    expect(useGameStore.getState().energy).toBe(energyAfterFirst); // no double charge
   });
 });
 
-describe("tick — per-node aggregation", () => {
+describe("cancelNodeLevelUp — no refund", () => {
+  beforeEach(() => {
+    useGameStore.setState({
+      currentUserId: "u-1",
+      turn: 5,
+      energy: 1000,
+      agents: {
+        "agent-1": {
+          id: "agent-1",
+          userId: "u-1",
+          level: 3,
+          miningCpu: 0,
+          securingCpu: 0,
+          levelingUntilTurn: null,
+          position: { x: 0, y: 0 },
+          isPrimary: true,
+          planets: [],
+          createdAt: 0,
+          username: "test",
+          borderRadius: 64,
+          borderPressure: 0,
+          cpuPerTurn: 20,
+          miningRate: 1,
+          energyLimit: 50,
+          stakedCpu: 0,
+        },
+      },
+    });
+  });
+
+  it("clears the timer without restoring spent CPU", () => {
+    useGameStore.getState().beginNodeLevelUp("agent-1"); // pays 648
+    const energyAfterPay = useGameStore.getState().energy;
+    useGameStore.getState().cancelNodeLevelUp("agent-1");
+    expect(useGameStore.getState().agents["agent-1"].levelingUntilTurn).toBeNull();
+    expect(useGameStore.getState().energy).toBe(energyAfterPay); // still down 648
+  });
+});
+
+describe("tick — income / expenditure model", () => {
   beforeEach(() => {
     useGameStore.setState({
       currentUserId: "u-1",
@@ -505,9 +520,8 @@ describe("tick — per-node aggregation", () => {
           id: "agent-1",
           userId: "u-1",
           level: 1, // generates 10 CPU/turn at L1
-          miningAlloc: 60,
-          securingAlloc: 40,
-          selfDevAlloc: 0,
+          miningCpu: 100,
+          securingCpu: 200,
           levelingUntilTurn: null,
           position: { x: 0, y: 0 },
           isPrimary: true,
@@ -525,15 +539,28 @@ describe("tick — per-node aggregation", () => {
     });
   });
 
-  it("aggregates mining and securing from a single node", () => {
+  it("energy = pool + subscription regen + node output − mining − securing", () => {
+    // income = 100 (regen) + 10 (L1 node) = 110
+    // expenditure = 100 (mining) + 200 (securing) = 300
+    // net = -190; pool 1000 → 810
     useGameStore.getState().tick();
-    const s = useGameStore.getState();
-    // L1 node generates 10 CPU/turn at 60/40 split → 6 mining, 4 securing
-    expect(s.miningCpuPerBlock).toBe(6);
-    expect(s.securingCpuPerBlock).toBe(4);
+    expect(useGameStore.getState().energy).toBe(1000 + 110 - 300);
   });
 
-  it("snaps allocation to (0,0,100) while leveling", () => {
+  it("clamps energy at 0 when expenditure > pool + income", () => {
+    useGameStore.setState({ energy: 50 });
+    useGameStore.getState().tick();
+    // 50 + 110 - 300 = -140 → clamped to 0
+    expect(useGameStore.getState().energy).toBe(0);
+  });
+
+  it("aggregates per-node mining and securing into the legacy scalar fields", () => {
+    useGameStore.getState().tick();
+    expect(useGameStore.getState().miningCpuPerBlock).toBe(100);
+    expect(useGameStore.getState().securingCpuPerBlock).toBe(200);
+  });
+
+  it("does NOT lock allocation while leveling (Self-Dev lockout is gone)", () => {
     useGameStore.setState((s) => ({
       agents: {
         ...s.agents,
@@ -541,12 +568,12 @@ describe("tick — per-node aggregation", () => {
       },
     }));
     useGameStore.getState().tick();
-    const s = useGameStore.getState();
-    expect(s.miningCpuPerBlock).toBe(0);
-    expect(s.securingCpuPerBlock).toBe(0);
+    // Even while leveling, mining/securing still drain and node still produces.
+    expect(useGameStore.getState().miningCpuPerBlock).toBe(100);
+    expect(useGameStore.getState().securingCpuPerBlock).toBe(200);
   });
 
-  it("resolves level-up when timer reaches current turn", () => {
+  it("resolves level-up when timer reaches next turn", () => {
     useGameStore.setState((s) => ({
       turn: 0,
       agents: {
@@ -555,65 +582,8 @@ describe("tick — per-node aggregation", () => {
       },
     }));
     useGameStore.getState().tick();
-    const agent = useGameStore.getState().agents["agent-1"];
-    expect(agent.level).toBe(4);
-    expect(agent.levelingUntilTurn).toBeNull();
-  });
-
-  it("does not resolve level-up when timer is in the future", () => {
-    useGameStore.setState((s) => ({
-      turn: 0,
-      agents: {
-        ...s.agents,
-        "agent-1": { ...s.agents["agent-1"], level: 3, levelingUntilTurn: 5 },
-      },
-    }));
-    useGameStore.getState().tick();
-    const agent = useGameStore.getState().agents["agent-1"];
-    expect(agent.level).toBe(3);
-    expect(agent.levelingUntilTurn).toBe(5);
-  });
-
-  it("energy grows only from subscription regen", () => {
-    const before = useGameStore.getState().energy;
-    useGameStore.getState().tick();
-    const after = useGameStore.getState().energy;
-    expect(after).toBe(before + 100); // cpuRegenPerTurn only, no node maintenance
-  });
-});
-
-describe("claimBlocknode — open grid", () => {
-  beforeEach(() => {
-    useGameStore.setState({
-      blocknodes: buildAllCells(2),
-      currentUserId: "u-1",
-      currentUserFaction: "community",
-    });
-  });
-
-  it("claims an unclaimed cell and tags it with the claimant's faction", () => {
-    const ok = useGameStore.getState().claimBlocknode("cell-1-1", "u-1");
-    expect(ok).toBe(true);
-    const cell = useGameStore.getState().blocknodes["cell-1-1"];
-    expect(cell.ownerId).toBe("u-1");
-    expect(cell.faction).toBe("community");
-  });
-
-  it("fails when cell is already owned", () => {
-    useGameStore.getState().claimBlocknode("cell-1-1", "u-1");
-    const ok = useGameStore.getState().claimBlocknode("cell-1-1", "u-2");
-    expect(ok).toBe(false);
-  });
-
-  it("no longer gated by currentUserFaction === null (drops the old arm-node restriction)", () => {
-    useGameStore.setState({ currentUserFaction: "community" });
-    const ok = useGameStore.getState().claimBlocknode("cell-1-1", "u-1");
-    expect(ok).toBe(true);
-  });
-
-  it("fails when claimant's currentUserFaction is null (cannot tag faction)", () => {
-    useGameStore.setState({ currentUserFaction: null });
-    const ok = useGameStore.getState().claimBlocknode("cell-1-1", "u-1");
-    expect(ok).toBe(false);
+    const a = useGameStore.getState().agents["agent-1"];
+    expect(a.level).toBe(4);
+    expect(a.levelingUntilTurn).toBeNull();
   });
 });

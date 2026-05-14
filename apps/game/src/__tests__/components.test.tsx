@@ -13,9 +13,8 @@ function makeAgent(overrides: Partial<Agent> = {}): Agent {
     userId: 'u1',
     position: { x: 100, y: 200 },
     level: 7,
-    miningAlloc: 50,
-    securingAlloc: 50,
-    selfDevAlloc: 0,
+    miningCpu: 0,
+    securingCpu: 0,
     levelingUntilTurn: null,
     isPrimary: true,
     planets: [],
@@ -323,9 +322,8 @@ describe('AgentChat — Configure Node + Develop Node', () => {
       id: 'agent-test',
       userId: 'u-1',
       level: 3,
-      miningAlloc: 50,
-      securingAlloc: 50,
-      selfDevAlloc: 0,
+      miningCpu: 0,
+      securingCpu: 0,
       levelingUntilTurn: null,
       position: { x: 0, y: 0 },
       isPrimary: true,
@@ -349,7 +347,7 @@ describe('AgentChat — Configure Node + Develop Node', () => {
     AgentChat = mod.default;
   });
 
-  it('Configure Node menu shows allocation sliders', async () => {
+  it('Configure Node menu shows preset pills for Mining and Securing', async () => {
     const agent = makeAgentChat();
     useGameStore.setState({ agents: { [agent.id]: agent } });
     render(
@@ -365,7 +363,9 @@ describe('AgentChat — Configure Node + Develop Node', () => {
     // Navigate: Blockchain Protocols → Configure Node
     fireEvent.click(screen.getByText('Blockchain Protocols'));
     fireEvent.click(screen.getByText('Configure Node'));
-    expect(screen.getAllByRole('slider').length).toBe(3);
+    // Preset pills: Mining and Securing sections with value buttons
+    expect(screen.getByText(/Mining/i)).toBeInTheDocument();
+    expect(screen.getByText(/Securing/i)).toBeInTheDocument();
   });
 
   it('Develop Node menu shows level and next-level preview', async () => {
@@ -385,13 +385,13 @@ describe('AgentChat — Configure Node + Develop Node', () => {
     fireEvent.click(screen.getByText('Develop Node'));
     // Line 1323: "Lv {agent.level} {TIER_DISPLAY_NAME[nodeTierCurrent]}" — level 3 = Synapse
     expect(screen.getByText(/Lv 3 Synapse/)).toBeInTheDocument();
-    // Line 1326: "Level {nextLevel} {TIER_DISPLAY_NAME[nextTier]}" — level 4 = Cortex
-    expect(screen.getByText(/Level 4 Cortex/)).toBeInTheDocument();
+    // Next level line: "→ Lv {nextLevel} {TIER_DISPLAY_NAME[nextTier]}" — level 4 = Cortex
+    expect(screen.getByText(/Lv 4 Cortex/)).toBeInTheDocument();
   });
 
   it('Begin level-up triggers beginNodeLevelUp action', async () => {
     const agent = makeAgentChat({ level: 2 });
-    useGameStore.setState({ turn: 5, agents: { [agent.id]: agent } });
+    useGameStore.setState({ turn: 5, energy: 1000, agents: { [agent.id]: agent } });
     render(
       <AgentChat
         agent={agent}
@@ -404,7 +404,8 @@ describe('AgentChat — Configure Node + Develop Node', () => {
     );
     fireEvent.click(screen.getByText('Blockchain Protocols'));
     fireEvent.click(screen.getByText('Develop Node'));
-    fireEvent.click(screen.getByRole('button', { name: /Begin level-up/i }));
+    // Button text: "Pay 360 CPU · Begin" (getLevelUpCost(2) = 360)
+    fireEvent.click(screen.getByRole('button', { name: /Pay 360 CPU/i }));
     const updated = useGameStore.getState().agents['agent-test'];
     expect(updated.levelingUntilTurn).toBe(7); // turn 5 + level 2
   });
@@ -424,9 +425,110 @@ describe('AgentChat — Configure Node + Develop Node', () => {
     );
     fireEvent.click(screen.getByText('Blockchain Protocols'));
     fireEvent.click(screen.getByText('Develop Node'));
-    // When leveling, the header shows "DEVELOPING — X TURNS REMAINING"
-    expect(screen.getByText(/DEVELOPING/)).toBeInTheDocument();
+    // When leveling, the header shows "Developing — X turns remaining"
+    expect(screen.getByText(/Developing/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Cancel upgrade/i })).toBeInTheDocument();
+  });
+});
+
+/* ── AgentChat — L2 gate + cost flow ─────────────────── */
+
+describe('AgentChat — L2 gate + cost flow', () => {
+  let AgentChat: React.ComponentType<{
+    agent: Agent;
+    chainService: null;
+    onClose: () => void;
+    onDeploy?: (newAgentId: string) => void;
+    onFocusNode?: (nodeId: string) => void;
+    initialDeployTarget?: string;
+  }>;
+
+  function makeL2Agent(overrides: Partial<Agent> = {}): Agent {
+    return {
+      id: 'agent-test',
+      userId: 'u-1',
+      level: 1,
+      miningCpu: 0,
+      securingCpu: 0,
+      levelingUntilTurn: null,
+      position: { x: 0, y: 0 },
+      isPrimary: true,
+      planets: [],
+      createdAt: 0,
+      username: 'Test',
+      borderRadius: 64,
+      borderPressure: 0,
+      cpuPerTurn: 10,
+      miningRate: 1,
+      energyLimit: 50,
+      stakedCpu: 0,
+      ...overrides,
+    };
+  }
+
+  beforeEach(async () => {
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
+    useGameStore.getState().reset();
+    useGameStore.setState({
+      currentUserId: 'u-1',
+      currentUserFaction: 'community',
+      energy: 1000,
+    });
+    const mod = await import('@/components/AgentChat');
+    AgentChat = mod.default;
+  });
+
+  it('Synapse homenode shows Deploy menu (isPrimary override)', () => {
+    const agent = makeL2Agent({ isPrimary: true, level: 1 });
+    useGameStore.setState({ agents: { [agent.id]: agent } });
+    render(
+      <AgentChat agent={agent} chainService={null} onClose={() => {}} onDeploy={() => {}} onFocusNode={() => {}} initialDeployTarget={undefined} />
+    );
+    expect(screen.queryAllByText(/Deploy Agent/i).length).toBeGreaterThan(0);
+  });
+
+  it('Synapse sub-agent does NOT show Deploy menu', () => {
+    const agent = makeL2Agent({ isPrimary: false, level: 2 });
+    useGameStore.setState({ agents: { [agent.id]: agent } });
+    render(
+      <AgentChat agent={agent} chainService={null} onClose={() => {}} onDeploy={() => {}} onFocusNode={() => {}} initialDeployTarget={undefined} />
+    );
+    expect(screen.queryAllByText(/Deploy Agent/i).length).toBe(0);
+  });
+
+  it('Cortex sub-agent shows Deploy menu (level >= 4)', () => {
+    const agent = makeL2Agent({ isPrimary: false, level: 4 });
+    useGameStore.setState({ agents: { [agent.id]: agent } });
+    render(
+      <AgentChat agent={agent} chainService={null} onClose={() => {}} onDeploy={() => {}} onFocusNode={() => {}} initialDeployTarget={undefined} />
+    );
+    expect(screen.queryAllByText(/Deploy Agent/i).length).toBeGreaterThan(0);
+  });
+
+  it('Develop Node Pay button is disabled when energy < cost', () => {
+    const agent = makeL2Agent({ level: 3 }); // getLevelUpCost(3) = 648
+    useGameStore.setState({ energy: 100, agents: { [agent.id]: agent } });
+    render(
+      <AgentChat agent={agent} chainService={null} onClose={() => {}} onDeploy={() => {}} onFocusNode={() => {}} initialDeployTarget={undefined} />
+    );
+    fireEvent.click(screen.getByText('Blockchain Protocols'));
+    fireEvent.click(screen.getByText('Develop Node'));
+    const begin = screen.getByRole('button', { name: /Pay 648 CPU/i });
+    expect(begin).toBeDisabled();
+  });
+
+  it('Develop Node Pay button deducts cost and starts timer', () => {
+    const agent = makeL2Agent({ level: 2 }); // getLevelUpCost(2) = 360
+    useGameStore.setState({ turn: 5, energy: 1000, agents: { [agent.id]: agent } });
+    render(
+      <AgentChat agent={agent} chainService={null} onClose={() => {}} onDeploy={() => {}} onFocusNode={() => {}} initialDeployTarget={undefined} />
+    );
+    fireEvent.click(screen.getByText('Blockchain Protocols'));
+    fireEvent.click(screen.getByText('Develop Node'));
+    fireEvent.click(screen.getByRole('button', { name: /Pay 360 CPU/i }));
+    const s = useGameStore.getState();
+    expect(s.energy).toBe(640);
+    expect(s.agents[agent.id].levelingUntilTurn).toBe(7); // 5 + 2
   });
 });
 

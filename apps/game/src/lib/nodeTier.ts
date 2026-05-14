@@ -37,3 +37,13 @@ export function getNodeCpuPerTurn(level: number): number {
 export function getLevelUpTurns(currentLevel: number): number {
   return currentLevel;
 }
+
+/** One-shot CPU cost to advance FROM the given level to (level+1).
+ *  200 × 1.8^(L-1), rounded down. Ogame-research-style steep curve. */
+export function getLevelUpCost(currentLevel: number): number {
+  return Math.floor(200 * Math.pow(1.8, currentLevel - 1));
+}
+
+/** Per-node Mining/Securing CPU/turn presets. Absolute values, drained from the player pool. */
+export const MINING_PRESETS = [0, 100, 200, 500, 1000] as const;
+export const SECURING_PRESETS = [0, 100, 200, 500, 1000] as const;
