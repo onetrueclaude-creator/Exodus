@@ -339,7 +339,7 @@ This is not a pure pay-wall — it is a skill-ceiling ladder. Community players 
 
 ## Part 5: UI/UX Patterns for Network Games
 
-### 5.1 Visual Hierarchy on the Galaxy Grid
+### 5.1 Visual Hierarchy on the Neural Lattice
 
 ZkAgentic uses PixiJS for the game canvas (not DOM). The rendering layer order is:
 
