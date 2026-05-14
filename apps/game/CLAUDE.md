@@ -50,12 +50,14 @@ Gamified social media dApp built on the Neural Lattice where users explore a 2D 
 - When a service makes multiple sequential `fetch` calls, each must be covered by its own `mockResolvedValueOnce` in test setup
 
 ## Key Concepts (Neural Lattice)
-- Neural Lattice = the full network grid (6481x6481, -3240 to +3240)
+- Neural Lattice = the full network grid (dynamic bounds, grows with epoch rings — open-grid model, no faction quadrants)
 - Empire = a user's total territory
-- Star system = an individual agent (Opus/Sonnet/Haiku tier), base 10x10 coordinate blocks
+- Star system = an individual agent occupying a node on the lattice, base 10x10 coordinate blocks
+- Node tier = Synapse (L1-3, 1.0×), Cortex (L4-6, 1.25×), Lattice (L7-9, 1.5×), Nexus (L10+, 2.0×); derived from numeric node level. Distinct from subscription tier. Source of truth: `src/lib/nodeTier.ts`.
+- Claude model = LLM powering a deployed agent (Haiku/Sonnet/Opus), chosen at deploy time. Distinct from node tier — any node tier can run any model.
 - CPU Energy = CPU deployed to maintaining the grid (yellow resource)
 - Secured Chains = blocks secured by the user (green resource with +/- deltas)
-- AGNTC = tradeable coins, each mapped to a grid coordinate
+- AGNTC = tradeable coins; supply grows via mining only (soft cap with 5% inflation ceiling). Node claims cost AGNTC + CPU (city model: inner expensive, outer cheap).
 - Data Frags = compute production from mining
 - Planets = content storage (posts, chats, prompts) orbiting nodes
 - Jump points = nodes where new agents can be spawned
@@ -67,6 +69,17 @@ Gamified social media dApp built on the Neural Lattice where users explore a 2D 
 - **Professional ($50/mo)**: 5,000 CPU Energy, cyan blue theme
 
 All tiers can deploy any Claude model (Haiku/Sonnet/Opus) for both homenode and child agents. API cost is the natural gate. Tiers control resources (CPU Energy, deploy range, node count), visual theme, and governance weight.
+
+## Node Progression (Empire Progression — post-L2)
+- **All nodes start at L1 Synapse.** No model-tier picker at claim time; level increases by paying upfront CPU.
+- **Upgrade cost:** `floor(200 × 1.8^(level-1))` CPU upfront, charged in full at start. Wait time is `level` turns (triangular: advancing from L3 takes 3 turns).
+- **Cancel-mid-upgrade:** no refund (Ogame economy). Node stays productive at its current level during the wait.
+- **Per-node CPU allocation:** mining + securing presets from `{0, 100, 200, 500, 1000}` per node, absolute values (not percentages). Drained from the player CPU pool each turn.
+- **Tier bands by level:** Synapse 1-3 (1.0×), Cortex 4-6 (1.25×), Lattice 7-9 (1.5×), Nexus 10+ (2.0×) — multiplier applies to `getNodeCpuPerTurn` output.
+- **Deploy gate:** Homenode always allows deploy. Sub-agents require Cortex (L4+) host node.
+- **Player CPU pool/turn:** subscription regen (Community 100, Professional 200) + sum of `getNodeCpuPerTurn(level)` across all owned nodes − sum of `(miningCpu + securingCpu)` allocated per node.
+
+Source of truth: `src/lib/nodeTier.ts` (tier mapping, cost curve, CPU output). See PR #90 / #91 for implementation history.
 
 ## Onboarding Flow
 Landing (/) → Google OAuth → /onboard (choose unique username, real-time check) → /subscribe (choose tier) → /game

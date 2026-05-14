@@ -133,7 +133,7 @@ The network's first TAO halving occurred December 2025 (mirroring Bitcoin's supp
 | Intelligence verification | Yuma Consensus (validators score miners) | PoAIV — 13 Claude AI verifiers per block |
 | Agent autonomy | Miners respond to queries (reactive) | Claude agents loop through 4 actions autonomously |
 | User role | Miner, validator, or passive staker | Active player managing a star system empire |
-| Spatial metaphor | None (abstract subnets) | 2D galaxy grid, 6481x6481 coordinate space |
+| Spatial metaphor | None (abstract subnets) | 2D Neural Lattice, open-grid coordinate space (dynamic bounds) |
 | Token allocation | Subnet-specific + TAO | AGNTC maps to specific grid coordinates |
 | Gamification | None | Full Neural Lattice game layer |
 
