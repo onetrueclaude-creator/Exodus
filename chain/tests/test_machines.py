@@ -18,7 +18,6 @@ from agentic.params import (
     MACHINES_MIN_SELL_RATIO,
     MACHINES_ORIGIN_COORD,
     NODE_GRID_SPACING,
-    GENESIS_FACTION_MASTERS,
 )
 from agentic.testnet.genesis import create_genesis
 from agentic.testnet.machines import MachineAgentBehavior
@@ -41,8 +40,9 @@ def _reset_global_bounds():
 # Helpers
 # ---------------------------------------------------------------------------
 
-MACHINE_WALLET_INDEX = 2  # Live testnet still has Machines at wallet 2 (10, 0)
-MACHINE_ORIGIN = GENESIS_FACTION_MASTERS[1]  # (10, 0) — pre-migration home
+# v1.1: Machines is wallet index 0 / coord (0, 0) per whitepaper §10.3.
+MACHINE_WALLET_INDEX = 0
+MACHINE_ORIGIN = MACHINES_ORIGIN_COORD  # (0, 0)
 
 
 def _make_behavior(seed: int = 42) -> tuple:
@@ -62,11 +62,11 @@ class TestMachineInit:
         state, machine = _make_behavior()
         assert machine.wallet_index == MACHINE_WALLET_INDEX
 
-    def test_origin_coordinate(self):
-        """The live testnet's MACHINE_ORIGIN still points at the v1.0 East
-        cardinal. Sub-project D will migrate this to MACHINES_ORIGIN_COORD."""
+    def test_origin_coordinate_is_zero(self):
+        """v1.1: Machines is bound to MACHINES_ORIGIN_COORD == (0, 0)."""
         state, machine = _make_behavior()
-        assert machine.origin == MACHINE_ORIGIN
+        assert machine.origin == (0, 0)
+        assert machine.origin == MACHINES_ORIGIN_COORD
 
     def test_initial_agntc_zero(self):
         _, machine = _make_behavior()
@@ -76,11 +76,14 @@ class TestMachineInit:
         _, machine = _make_behavior()
         assert machine.min_sell_ratio == MACHINES_MIN_SELL_RATIO
 
-    def test_v1_1_origin_constant_is_zero(self):
-        """The whitepaper-v1.1 binding constant is (0, 0). The live testnet
-        coordinate (machine.origin above) does not yet match this — Sub-project
-        D performs the migration."""
-        assert MACHINES_ORIGIN_COORD == (0, 0)
+    def test_owns_origin_at_genesis(self):
+        """v1.1: wallet 0 (the Machines wallet) owns coord (0, 0) at genesis."""
+        state, machine = _make_behavior()
+        from agentic.lattice.coordinate import GridCoordinate
+        machine_pubkey = state.wallets[MACHINE_WALLET_INDEX].public_key
+        origin_claim = state.claim_registry.get_claim_at(GridCoordinate(x=0, y=0))
+        assert origin_claim is not None
+        assert origin_claim.owner == machine_pubkey
 
 
 # ---------------------------------------------------------------------------
