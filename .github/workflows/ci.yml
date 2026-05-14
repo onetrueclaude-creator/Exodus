@@ -47,8 +47,14 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: apps/game/package-lock.json
+      # `npm install` (not `npm ci`) because Dependabot's regenerated
+      # lockfile occasionally drops the optional native `utf-8-validate`
+      # (transitive via `ws`); `npm ci` would error on the missing entry
+      # and block the PR until a Node 22 local regen + force-push.
+      # `npm install` reconstructs from package.json without erroring.
+      # Trades a small amount of CI determinism for not blocking Dependabot.
       - name: Install dependencies
-        run: cd apps/game && npm ci
+        run: cd apps/game && npm install --no-audit --no-fund
       - name: Generate Prisma client
         run: cd apps/game && npx prisma generate
       - name: Build
