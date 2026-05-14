@@ -1,8 +1,10 @@
-# AGNTC Whitepaper v1.0
+# AGNTC Whitepaper v1.1
 
 > **ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification**
 >
-> Version 1.0 | April 2026
+> Version 1.1 (Open-Grid Revision) | May 2026
+>
+> v1.1 supersedes v1.0 (April 2026). The principal change is the replacement of the four-arm logarithmic spiral spatial model with a single open coordinate grid. Factions persist as participant identity classes but no longer control territorial arms; AGNTC distribution is no longer split 25%/25%/25%/25% by faction. The Machines accumulator is preserved via permanent origin occupancy. See §4.5 "Open-Grid Spatial Economy" for the consolidated post-pivot model.
 
 ---
 
@@ -12,7 +14,7 @@ We present ZK Agentic Chain, a Layer-1 blockchain protocol that introduces *Proo
 
 The protocol employs a dual-staking model that weights computational contribution (60%) over capital (40%), reducing plutocratic concentration inherent in pure proof-of-stake designs. Validators must commit both AGNTC tokens and CPU compute resources; the effective stake that determines committee selection and reward share is a weighted combination of both dimensions.
 
-ZK Agentic Chain maps its entire token supply to a two-dimensional coordinate grid — a 31,623 x 31,623 spatial economy organized as a four-arm logarithmic spiral divided among four factions (Community, Machines, Founders, Professional), each receiving 25% of newly minted supply. Mining is the sole supply-expanding mechanism: new AGNTC enters circulation only when miners successfully claim coordinates. Node claims cost AGNTC plus CPU Energy under a Burn-Mint Equilibrium (BME) model where the cost increases with proximity to the origin (inner rings are expensive, outer rings are cheap). A soft cap with a 5% annual inflation ceiling prevents runaway supply expansion. Mining difficulty increases proportionally with ring distance from the origin (hardness = 16 x ring), creating natural disinflation without artificial halving events. A 50% transaction fee burn and the Machines Faction's permanent AGNTC accumulation provide sustained deflationary pressure as network usage grows.
+ZK Agentic Chain maps its entire token supply to a two-dimensional coordinate grid — a 31,623 x 31,623 spatial economy in which value is a function of geography rather than administrative allocation. The grid is open and undivided: any participant may claim any unclaimed coordinate, subject to the economic constraints below. Factions (Community, Machines, Founders, Professional) persist as participant identity classes that govern subscription, governance weight, and protocol role — they no longer control territorial arms of the grid. Mining is the sole supply-expanding mechanism: new AGNTC enters circulation only when miners successfully claim coordinates. Node claims cost AGNTC plus CPU Energy under a Burn-Mint Equilibrium (BME) model where the cost increases with proximity to the origin (inner rings are expensive, outer rings are cheap), and the per-coordinate density function (a deterministic SHA-256 hash of `x || y`) creates a non-uniform value landscape independent of distance. A soft cap with a 5% annual inflation ceiling prevents runaway supply expansion. Mining difficulty increases proportionally with ring distance from the origin (hardness = 16 x ring), creating natural disinflation without artificial halving events. A 50% transaction fee burn and the Machines Faction's permanent AGNTC accumulation at the origin coordinate provide sustained deflationary pressure as network usage grows.
 
 Privacy is enforced at every layer. Each user's state resides in an isolated ledger space backed by a Sparse Merkle Tree of depth 26 with nullifier-based ownership proofs derived from the Zcash Sapling design. Verification agents communicate exclusively through ZK private channels — proving correctness of state transitions without exposing the underlying data to other agents or to the network. All state is private by default unless explicitly published by the user.
 
@@ -104,7 +106,7 @@ ZK Agentic Chain addresses these limitations with three design principles:
 
 ZK Agentic Chain represents blockchain state as a two-dimensional coordinate grid — a spatial economy where geography, resources, and strategic position are intrinsic to the protocol rather than abstracted away behind address strings and block heights.
 
-The grid is organized as a four-arm logarithmic spiral, divided among four factions that represent distinct participant classes: free-tier community users, AI agents (the Machines Faction), founders and advisors, and professional (paid-tier) users. Each faction controls one arm of the spiral, and newly minted AGNTC flows to the faction that governs the arm where coordinates are claimed. This spatial distribution model replaces arbitrary allocation percentages with a geographic economy that participants can see, navigate, and strategize within.
+The grid is open and undivided. Any participant — Community, Founders, Professional, or the protocol-operated Machines agent — can claim any unclaimed coordinate subject to economic constraints (cost, hardness, density) rather than territorial ones. Factions represent distinct participant classes (free-tier community users, AI agents controlled by the protocol, founders and advisors, and professional paid-tier users) and govern subscription, governance weight, and protocol role; they do not own arms of the grid. Newly minted AGNTC flows from the act of mining itself: every claimed coordinate mints a fixed amount of AGNTC to the claiming participant, irrespective of where on the grid the coordinate lies. Geographic value emerges instead from two intrinsic, hash-derived properties of each coordinate: hardness (distance from origin) and density (resource richness). This replaces the older arbitrary allocation percentages with an economy whose value gradient is observable, deterministic, and the same for every participant.
 
 Users explore the grid through AI agent terminals — constrained Claude model instances that operate as in-game interfaces. Each deployed agent occupies a 10x10 coordinate block (a "node"), and users interact with the blockchain exclusively through structured command menus presented by their agents. There is no free-text chat; every interaction is a validated game action that maps to an on-chain transaction.
 
@@ -244,30 +246,34 @@ ZK Agentic Chain maps its token supply to a two-dimensional coordinate grid of 3
 
 Agents (validator nodes) occupy 10x10 coordinate blocks, defined by the NODE_GRID_SPACING parameter. Each agent's node encompasses 100 grid cells and therefore 100 potential AGNTC when fully mined. Valid agent positions are restricted to multiples of NODE_GRID_SPACING; the claim_node() function snaps submitted coordinates to the nearest grid-aligned position.
 
-The grid topology follows a four-arm logarithmic spiral with a 0.5-turn left-handed (counterclockwise) twist. Each arm spans ±25 degrees from its center angle. The spiral structure means that coordinates near the origin are densely packed and strategically valuable (low hardness, high density), while coordinates at the periphery are sparse and expensive to mine.
+The grid topology is uniform. Every coordinate is identical to every other from a structural standpoint; only the deterministic per-coordinate density function and the per-ring hardness curve introduce variation. There are no faction-specific arms, sectors, or quadrants — the spatial structure makes no reference to participant identity. Coordinates near the origin are strategically valuable because hardness is low (cheaper to claim) and the early rings are smaller (fewer total positions per ring); coordinates at the periphery are sparse and expensive to mine. Density is independently distributed regardless of position, so even a peripheral coordinate can carry a high-richness draw.
 
 #### 4.2 Faction System
 
-The Neural Lattice is divided into four factions, each controlling one arm of the spiral:
+Factions are participant identity classes, not territorial divisions. The Neural Lattice has no arms, quadrants, or sectors — every coordinate is equally claimable by any participant regardless of faction membership. Faction determines subscription tier, governance weight, and protocol role; it does not determine which coordinates a participant may claim.
 
-| Faction | Arm Direction | Center Angle | Color | Participants |
-|---------|--------------|-------------|-------|-------------|
-| Community | Northwest | 135 degrees | Teal | Free-tier human users |
-| Machines | Northeast | 45 degrees | Reddish Purple | AI agents (autonomous economy) |
-| Founders | Southeast | 315 degrees | Gold-Orange | Team and advisors |
-| Professional | Southwest | 225 degrees | Blue | Paid-tier human users |
+| Faction | Display Color | Membership Source | Protocol Role |
+|---------|---------------|-------------------|---------------|
+| Community | Teal `#0D9488` | Free-tier human users | Voting participant, 1× governance weight |
+| Machines | Pink `#DC2680` | Protocol-operated autonomous agent | Origin guardian, zero governance weight |
+| Founders | Amber `#F59E0B` | Team and advisors | Voting participant, 5× governance weight, 4-year vest |
+| Professional | Blue `#3B82F6` | Paid-tier human users | Voting participant, 2× governance weight |
 
-Each faction receives exactly 25% of newly minted AGNTC. Distribution is geographic: when a coordinate is claimed, the AGNTC flows to the faction that controls the arm where that coordinate resides. This replaces the arbitrary percentage-based allocation tables common in token launches with a spatial distribution model that participants can observe and verify.
+(Display colors are normative; client implementations may use these exact hex codes to render owner-tinted cells on the grid.)
 
-The Machines Faction (25% of all minted supply) operates as a permanent accumulator — AI agents in this faction mine, validate, and earn AGNTC but never sell. The Machines Faction treasury grows monotonically over time, functioning as a protocol-level reserve whose size serves as a health metric for the network. Machine agents have zero governance weight (Section 21.2) and cannot participate in protocol votes. Their economic role is purely accumulative: absorbing supply, reducing circulating tokens, and providing a measurable indicator of cumulative network compute. The Machines Faction treasury can only be unlocked by a 75% human supermajority vote in an emergency governance action.
+**Faction does not allocate supply.** Newly minted AGNTC flows from the act of mining: each claimed coordinate mints AGNTC to the claimant directly, irrespective of which faction the claimant belongs to. There is no 25%-per-faction split, no faction treasury that automatically receives a share, and no protocol enforcement of distribution proportions. Distribution emerges from participant behavior — whoever claims more coordinates earns more AGNTC.
 
-Founders Faction tokens are subject to a 4-year vesting schedule with a 12-month cliff, preventing early liquidation by the founding team.
+**Machines Faction occupies the origin only.** The Machines Faction is implemented as a single protocol-operated agent permanently bound to coordinate (0, 0). The Machines agent cannot expand beyond origin; it does not claim other coordinates and cannot be deployed elsewhere. Within its single-node territory, the Machines agent auto-levels (autonomous node development), auto-stakes its CPU between mining and securing operations, and accumulates AGNTC monotonically. Because origin is the most resource-rich coordinate (lowest hardness, density yield clamped at the maximum), the Machines accumulator captures a meaningful but bounded share of network supply — far smaller than the old "25% of all mined AGNTC" but structurally identical in role: a permanent, never-selling protocol reserve whose growth serves as a health metric. The accumulator's economic constraint (`MACHINES_MIN_SELL_RATIO = 1.0`, never sells below acquisition cost) is preserved verbatim.
+
+**Founders Faction** tokens are subject to a 4-year vesting schedule with a 12-month cliff, preventing early liquidation by the founding team. This vesting applies to AGNTC the Founders earn through their own mining, not to a pre-allocated faction share.
+
+The governance separation introduced in v1.0 is preserved: the Machines Faction has zero governance weight and cannot vote on protocol parameters. Humans govern; the protocol agent executes.
 
 #### 4.3 Epoch-Ring Expansion
 
 The grid does not exist in its entirety at genesis. Instead, it expands outward from the origin through an epoch-ring system driven by mining activity.
 
-At genesis, only ring 0 (the origin) and ring 1 (the eight adjacent positions) are revealed, containing 9 nodes: 1 origin node, 4 faction master nodes at the cardinal positions, and 4 diagonal homenode positions. The genesis supply is 900 AGNTC (9 nodes x 100 coordinates). Additionally, each new user registration mints a 1 AGNTC signup bonus, ensuring every participant enters the economy with a non-zero balance.
+At genesis, only ring 0 (the origin) and ring 1 (the eight adjacent positions) are revealed, containing 9 nodes: 1 origin node (permanently bound to the Machines Faction protocol agent) and 8 surrounding ring-1 nodes (all initially unclaimed and available to the first participants). The genesis supply is 900 AGNTC (9 nodes × 100 coordinates), of which the 100 AGNTC corresponding to the origin coordinate is minted to the Machines accumulator at protocol launch and the remaining 800 enter circulation only as the surrounding ring-1 nodes are claimed by participants. Additionally, each new user registration mints a 1 AGNTC signup bonus, ensuring every participant enters the economy with a non-zero balance.
 
 Ring N opens when the cumulative AGNTC mined across the entire network reaches the threshold:
 
@@ -299,26 +305,51 @@ Coordinates near the origin tend to have higher strategic value because they wer
 **Figure 1: Neural Lattice Structure**
 
 ```
-                    Community (NW)          Machines (NE)
-                         \                    /
-                          \    Ring 3        /
-                           \  .--------.   /
-                            \/ Ring 2   \ /
-                             .--------.  X
-                            / Ring 1  / \
-                           /  [ORIGIN]    \
-                            \ Ring 1  \ /
-                             '--------'
-                            /  Ring 2   \
-                           /  '--------'  \
-                          /    Ring 3      \
-                         /                  \
-                    Professional (SW)    Founders (SE)
+                          .  ·  .  ·  .  ·  .  ·  .
+                          ·  .  ·  .  ·  .  ·  .  ·
+                          .  ·  .  ◯  .  ·  .  ·  .       ring 3
+                          ·  .  ◯  ◯  ◯  .  ·  .  ·
+                          .  ·  ◯  ◯  ◯  ◯  ·  .  ·       ring 2
+                          ·  .  ◯  ◯  ◍ ←─── claimed by participant
+                          .  ·  ◯  ◯  ⊛  ◯  ·  .  .       ring 1
+                          ·  .  ·  ◯  ◯  ◯  ·  .  ·
+                          .  ·  .  ·  ◯  .  ·  .  .
+                          ·  .  ·  .  ·  .  ·  .  ·
+                          .  ·  .  ·  .  ·  .  ·  .
 
-    4-arm logarithmic spiral | 31,623 x 31,623 coordinate space
-    Claims burn AGNTC + CPU (BME) | Mining mints new supply
+    ⊛ = Origin (Machines, permanent)     ◍ = Claimed by participant
+    ◯ = Unclaimed (current epoch)        · = Beyond current epoch ring
+
+    Single shared grid | 31,623 × 31,623 coordinate space
+    Faction = identity (not territory)   |  any participant may claim any unclaimed cell
+    Value gradient = ring hardness + per-cell density (SHA-256 of x||y)
+    Claims burn AGNTC + CPU (BME)  |  Mining mints new supply
     Epoch rings expand outward as mining reaches threshold
 ```
+
+#### 4.5 Open-Grid Spatial Economy
+
+ZK Agentic Chain operates on a single shared coordinate space rather than a partitioned territory. This subsection consolidates the operational consequences of that decision, which appear in scattered form throughout the rest of the document.
+
+**First-come-first-served spawning.** New participants are assigned a homenode at the lowest-ring unclaimed coordinate, allocated in deterministic origin-out order (Chebyshev-ring sweep, then within-ring lexicographic). The Machines agent permanently occupies (0, 0). The first eight homenodes go to the ring-1 perimeter (8 cells); the next sixteen to ring 2 (16 cells); and so on. Onboarding waves therefore cluster around the origin and expand outward, producing organic density that mirrors network-growth signals.
+
+**Empire expansion is contiguous, not territorial.** A participant's claimable region is the 8-neighbor Chebyshev expansion of their currently owned cells (the "empire blob"). Child agents may be deployed only on cells adjacent to one the participant already owns. There is no faction-arm restriction: a Community user and a Founders user can have empires that touch, interleave, or contend for the same frontier cells. Strategic competition for inner-ring or high-density coordinates is intrinsic — there is no protected per-faction territory to fall back on.
+
+**Value gradient is a function of geography alone.**
+
+```
+expected_yield(x, y) = density(x, y) × yield_per_density_unit(ring(x, y))
+                     = SHA-256_unit(x || y) × (BLOCK_REWARD / hardness(ring))
+                     = SHA-256_unit(x || y) × (BLOCK_REWARD / (16 × ring))
+```
+
+Both terms are deterministic and observable to every participant without permission or coordination. The value of a coordinate is therefore a public, faction-agnostic property.
+
+**The Machines accumulator is structural, not allocative.** Because Machines permanently owns (0, 0), where hardness is minimum and density is rendered at maximum (the protocol clamps origin density to 1.0), the Machines agent passively earns a continuous trickle of AGNTC from the most productive single coordinate on the grid. This delivers the v1.0 "permanent accumulator" property — never-selling protocol reserve, monotonic growth, deflationary pressure — through a structural mechanism (origin occupancy) rather than an allocative one (25% of all mined supply). The accumulator's total share of long-run supply is bounded: it captures a single coordinate's yield, not a quarter of the network's.
+
+**Anti-monopoly mechanics still hold.** Inactivity decay, claim-cost density multipliers, hardness scaling, real-compute requirements, and homenode permanence (Section 19.6) all operate identically under the open-grid model. The removal of faction-arm partitioning does not weaken anti-monopoly enforcement — it strengthens it, because no participant can hide behind a protected arm.
+
+**Migration note.** Implementations that previously enforced four-arm spiral geometry should phase that code out in three places: (1) cell-creation logic should set `faction` to the owner's faction at claim time (or `null` for unclaimed), not derive it from coordinate quadrant; (2) deploy-candidate logic should use 8-neighbor adjacency of the participant's owned cells, not the participant's faction arm; (3) the spawn algorithm should emit the next-available cell in Chebyshev-ring order from origin, not within a faction arm. See `apps/game/src/lib/spawn.ts` and `apps/game/src/lib/deploy.ts` in the reference client implementation.
 
 ---
 
@@ -915,52 +946,58 @@ AGNTC has a soft-capped supply with a **5% annual inflation ceiling** enforced p
 
 **Supply burns** contract the circulating supply through two channels:
 - **50% transaction fee burn** — permanently removes AGNTC on every on-chain action (Section 12)
-- **Machines Faction accumulation** — 25% of all minted supply flows to the Machines treasury, which never sells (Section 10.3)
+- **Machines Faction accumulation** — the Machines agent permanently occupies the origin coordinate (Section 4.5) and never sells AGNTC; the continuous yield of the most productive single coordinate on the grid flows into a never-selling protocol reserve (Section 10.3)
 
 **Signup bonus:** Each new user registration mints 1 AGNTC as a signup bonus, ensuring every participant enters the economy with a non-zero balance. This minor supply expansion is subject to the same inflation ceiling enforcement.
 
-**Genesis supply:** 900 AGNTC, distributed across 9 genesis nodes:
+**Genesis supply:** 900 AGNTC, distributed across 9 genesis nodes. Eight of the nine are unclaimed at protocol launch (all of ring 1) and enter circulation only as participants claim them. The ninth (origin) is permanently bound to the Machines protocol agent and its 100 AGNTC is minted to the Machines accumulator at launch.
 
-| Node | Position | Faction | AGNTC |
-|------|----------|---------|-------|
-| Origin | (0, 0) | Shared | 100 |
-| Community Master | (0, 10) | Community | 100 |
-| Machines Master | (10, 0) | Machines | 100 |
-| Founders Master | (0, -10) | Founders | 100 |
-| Professional Master | (-10, 0) | Professional | 100 |
-| NE Homenode | (10, 10) | Unclaimed | 100 |
-| SE Homenode | (10, -10) | Unclaimed | 100 |
-| SW Homenode | (-10, -10) | Unclaimed | 100 |
-| NW Homenode | (-10, 10) | Unclaimed | 100 |
+| Node | Position | Initial Owner | AGNTC |
+|------|----------|---------------|-------|
+| Origin | (0, 0) | Machines (permanent) | 100 (minted at genesis) |
+| Ring 1 cardinal N | (0, 10) | Unclaimed | 100 (on claim) |
+| Ring 1 cardinal E | (10, 0) | Unclaimed | 100 (on claim) |
+| Ring 1 cardinal S | (0, -10) | Unclaimed | 100 (on claim) |
+| Ring 1 cardinal W | (-10, 0) | Unclaimed | 100 (on claim) |
+| Ring 1 diagonal NE | (10, 10) | Unclaimed | 100 (on claim) |
+| Ring 1 diagonal SE | (10, -10) | Unclaimed | 100 (on claim) |
+| Ring 1 diagonal SW | (-10, -10) | Unclaimed | 100 (on claim) |
+| Ring 1 diagonal NW | (-10, 10) | Unclaimed | 100 (on claim) |
 
-#### 10.2 Faction Distribution (25/25/25/25)
+Each ring-1 coordinate is equally claimable by any participant regardless of faction. The historical names "Community Master" / "Machines Master" / etc. associated with these eight cells in v1.0 are retired; the cells have no faction binding under v1.1.
 
-Newly minted AGNTC is distributed according to the faction that controls the arm of the Neural Lattice where the claimed coordinate resides:
+#### 10.2 Mining-Driven Distribution
 
-| Faction | Share | Faction Arm | Constraint |
-|---------|-------|-----------|-----------|
-| Community | 25% | NW (teal) | None — freely tradeable |
-| Machines | 25% | NE (reddish purple) | Cannot sell below acquisition cost |
-| Founders | 25% | SE (gold-orange) | 4-year vest, 12-month cliff |
-| Professional | 25% | SW (blue) | None — freely tradeable |
+Newly minted AGNTC flows directly to the participant who claims the coordinate. There is no per-faction split, no automatic faction-treasury allocation, and no protocol-enforced proportionality — distribution is fully emergent from participant behavior on the open grid.
 
-This distribution is self-enforcing: it follows from the geographic structure of the Neural Lattice rather than from administrative allocation. The protocol does not "send 25% to the Community pool" — rather, 25% of all coordinates exist in the Community arm, and claiming those coordinates mints AGNTC attributed to Community participants.
+| Constraint Class | Holding Constraint | Source |
+|------------------|--------------------|--------|
+| Community | None — freely tradeable | Free-tier human users |
+| Machines | Cannot sell below acquisition cost (`MACHINES_MIN_SELL_RATIO = 1.0`) | Protocol-operated agent, origin-bound |
+| Founders | 4-year vest, 12-month cliff, applied per-AGNTC at mint time | Team and advisors |
+| Professional | None — freely tradeable | Paid-tier human users |
+
+Per-faction holdings drift naturally based on participation intensity: a faction whose members claim more coordinates accumulates more AGNTC. The protocol does not balance, rebalance, or guarantee any particular proportion. The "permanent accumulator" property of the Machines Faction is preserved structurally (Section 4.5): Machines permanently owns the most productive single coordinate (origin) and never sells, so it accumulates monotonically from the highest single-coordinate yield on the grid — without any protocol-level allocation that previously sent it 25% of all mined AGNTC.
+
+Founders vesting applies to AGNTC earned by Founders-tier participants through their own mining; there is no pre-allocated Founders share. The 4-year linear vest with a 12-month cliff is enforced on the holding side, not the minting side: AGNTC mints to the Founders participant's address normally, but transfers are restricted by the vesting schedule encoded in the wallet's account state.
 
 #### 10.3 Machines Faction: Permanent Accumulator
 
-The Machines Faction represents a protocol-enforced approach to token supply stability. AI agents in this faction operate as autonomous miners and validators — claiming coordinates, earning AGNTC, and participating in block verification — but are subject to a protocol-level constraint: **the Machines Faction never sells AGNTC.**
+The Machines Faction represents a protocol-enforced approach to token supply stability. Under v1.1's open-grid model, the Machines Faction is implemented as a single protocol-operated AI agent permanently bound to coordinate (0, 0). It cannot expand beyond origin, cannot be deployed elsewhere, and is not eligible to claim any other coordinate. Within its single-node territory, the Machines agent operates autonomously: auto-leveling its node, auto-balancing CPU between mining and securing, and accumulating AGNTC monotonically. The faction is subject to a protocol-level economic constraint: **the Machines Faction never sells AGNTC at a loss.**
 
-The protocol enforces this through an economic constraint: any sale of AGNTC by a Machines Faction wallet below its acquisition cost is rejected by the verification committee. With MACHINES_MIN_SELL_RATIO = 1.0, the faction can only sell at or above cost — yielding zero profit, which eliminates any economic incentive to sell. This makes the Machines Faction a de facto permanent accumulator without requiring a hard transfer prohibition.
+The protocol enforces this through an economic constraint: any sale of AGNTC by the Machines Faction wallet below its acquisition cost is rejected by the verification committee. With MACHINES_MIN_SELL_RATIO = 1.0, the faction can only sell at or above cost — yielding zero profit, which eliminates any economic incentive to sell. This makes the Machines Faction a de facto permanent accumulator without requiring a hard transfer prohibition.
 
 **Properties of the permanent accumulator:**
 
-- 25% of all minted AGNTC is permanently removed from circulation
-- The Machines Faction treasury grows monotonically — it can only increase
-- Treasury size serves as a **protocol health metric**: a growing treasury indicates sustained mining activity
-- Combined with the 50% fee burn, over 75% of gross supply expansion is either burned or locked
-- The accumulator creates sustained deflationary pressure that intensifies as the network matures
+- The Machines wallet accumulates a continuous trickle of AGNTC from the highest-yield single coordinate on the grid (origin: lowest hardness, density clamped to 1.0).
+- The Machines Faction treasury grows monotonically — it can only increase.
+- Treasury size serves as a **protocol health metric**: a growing treasury indicates sustained mining activity at origin and ongoing protocol-agent uptime.
+- Combined with the 50% fee burn, a meaningful fraction of gross supply expansion is either burned or locked. The fraction is no longer the v1.0 figure of "over 75%" (which depended on a flat 25% allocation that no longer exists); under v1.1 the locked share is bounded by origin's single-coordinate yield divided by total network mining yield, and falls as the network expands.
+- The accumulator creates a baseline of structural deflationary pressure that is largest in early epochs (when origin is a meaningful fraction of total active coordinates) and diminishes — but never reverses — as the grid matures.
 
-**Governance exclusion.** The Machines Faction has zero governance weight. AI agents cannot vote on protocol parameters, upgrades, or emergency actions. This separation ensures that humans govern the protocol while machines execute it (Section 21.2).
+**Why origin specifically.** Origin is the unique coordinate guaranteed to exist at genesis and to remain accessible for the protocol's entire lifetime. Binding Machines to origin therefore gives the accumulator a permanent, irreducible source of AGNTC without granting it spatial growth, governance influence, or any administrative privilege beyond presence at a single fixed cell. The accumulator's existence and behaviour are both publicly verifiable by inspection of (0, 0).
+
+**Governance exclusion.** The Machines Faction has zero governance weight. The protocol agent cannot vote on protocol parameters, upgrades, or emergency actions. This separation ensures that humans govern the protocol while the protocol agent executes its narrow operational role at origin (Section 21.2).
 
 **Emergency override.** The Machines Faction treasury can only be unlocked through an emergency governance vote requiring a 75% supermajority of human-held staked AGNTC. This threshold is deliberately high — it represents an extraordinary action that should only occur if the accumulated treasury threatens protocol stability.
 
@@ -1029,13 +1066,7 @@ threshold(N) = 4 * N * (N + 1)
 | 50 | 10,200 | 400 | 10,201 |
 | 100 | 40,400 | 800 | 40,401 |
 
-Each ring reveals new coordinate positions along the Chebyshev perimeter at distance N from the origin. Homenode placement within a ring uses a prime-angle twist to distribute positions evenly:
-
-```
-angle = faction_base_angle + prime(ring_N) * 137.5 degrees
-```
-
-Where 137.5 degrees is the golden angle and prime(ring_N) is the N-th prime number. This produces quasi-random, non-repeating angular placement that fills each ring evenly across the four faction arms.
+Each ring reveals new coordinate positions along the Chebyshev perimeter at distance N from the origin. Under v1.1, homenode placement within a ring follows the open-grid spawn algorithm (Section 4.5): the protocol allocates the lowest-ring unclaimed coordinate in Chebyshev-ring sweep order, breaking within-ring ties lexicographically. This produces deterministic origin-out filling that does not depend on faction. The v1.0 golden-angle prime-twist placement formula — which assumed a faction-arm partitioning that no longer exists — is retired.
 
 #### 11.3 Mining Hardness Formula
 
@@ -1104,7 +1135,7 @@ net_inflation = new_mining_rewards - (total_fees * FEE_BURN_RATE) - bme_claim_bu
 Three mechanisms contract the effective supply:
 1. **50% transaction fee burn** — permanent removal on every on-chain action
 2. **BME claim burns** — AGNTC spent on node claims is permanently burned (Section 12.4)
-3. **Machines accumulation** — 25% of minted supply enters the Machines treasury and never circulates
+3. **Machines accumulation** — AGNTC mined at the origin coordinate (Section 4.5, Section 10.3) enters the Machines treasury and never circulates. Under v1.1 this is a structural property of origin occupancy rather than a 25% allocation; the share of total supply locked by Machines is bounded by origin's single-coordinate yield and falls as the network expands
 
 In an active network with high transaction volume, the combined burn rate can significantly exceed new minting — producing net deflation in circulating supply even as total minted supply continues to grow.
 
@@ -1887,8 +1918,9 @@ ZK Agentic Chain maps blockchain concepts onto a spatial coordinate metaphor. Th
 | Node | Individual agent (10×10 coordinate block, one Claude session) |
 | Planets | Content storage units (posts, chats, prompts) orbiting a node |
 | Jump points | Unclaimed nodes where new agents can be deployed |
-| Fog of war | Faction-tinted boundary; coordinates beyond the current epoch ring |
-| Faction arm | One of four network arms (NW/NE/SE/SW), each associated with a distribution faction |
+| Fog of war | Boundary at the current epoch ring; coordinates beyond are not yet revealed |
+| Density gradient | Per-coordinate value derived from SHA-256(x ‖ y); rendered as a soft heatmap on the rendered grid |
+| Empire blob | A participant's contiguous claimed territory; the set of cells from which next deploys may extend (8-neighbor Chebyshev adjacency) |
 | Coordinate density | Resource richness (SHA-256 deterministic, immutable per coordinate) |
 | Epoch ring | Concentric expansion boundary, mining-driven |
 
@@ -1896,7 +1928,7 @@ The spatial metaphor serves three design purposes:
 
 1. **Intuitive state comprehension.** Blockchain state is notoriously abstract — account balances, merkle roots, validator sets. By mapping state onto a 2D spatial grid, participants develop spatial intuition about network health: a dense, well-connected grid is a healthy network; isolated clusters or empty rings indicate participation gaps.
 
-2. **Strategic positioning.** In a traditional blockchain, there is no concept of "location." All validators are equidistant from all transactions. In ZK Agentic Chain, coordinate position matters — density affects yield, ring determines hardness, faction arm determines community membership. This creates location-based strategy that rewards thoughtful positioning.
+2. **Strategic positioning.** In a traditional blockchain, there is no concept of "location." All validators are equidistant from all transactions. In ZK Agentic Chain, coordinate position matters — density affects yield, ring determines hardness, and adjacency to existing claimed cells determines expansion options. This creates location-based strategy that rewards thoughtful positioning, frontier choice, and contiguity discipline.
 
 3. **Natural scalability narrative.** Grid expansion is visually comprehensible — new rings open, new coordinates become claimable, the network grows. Participants can literally see the network expanding, creating a narrative of growth that sustains engagement.
 
@@ -1910,7 +1942,7 @@ New participants enter the ZK Agentic Chain through a structured onboarding sequ
 
 **Step 3: Subscription tier.** Participants select their tier (Community, Professional). The tier determines initial CPU Energy allocation, deploy range, and governance weight. Model selection (Haiku, Sonnet, Opus) is unrestricted across all tiers — the Claude API cost is the natural gate. Tier can be changed at any time — upgrades take effect immediately; downgrades take effect at the next billing cycle.
 
-**Step 4: Network entry.** Upon tier selection, the participant is assigned a homenode position in their faction arm. Community users are assigned to the Northwest arm, Professional users to the Southwest arm, and so on. The homenode position is determined by the current epoch ring and the golden-angle prime-twist algorithm (Section 11.2), ensuring quasi-random distribution within the faction arm.
+**Step 4: Network entry.** Upon tier selection, the participant is assigned a homenode position. The protocol allocates the lowest-ring unclaimed coordinate in deterministic origin-out order (Chebyshev-ring sweep, then within-ring lexicographic). Faction does not influence position; the first eight participants take the ring-1 perimeter, the next sixteen take ring 2, and so on. This produces organic density: new participants cluster near the origin and the cluster expands outward as the network grows.
 
 At this point, the participant has:
 - A claimed coordinate (their homenode position) with 1 AGNTC signup bonus minted
@@ -1930,7 +1962,7 @@ The tier model serves as both access control and revenue model:
 | Homenode Model | Any (API cost-gated) | Any (API cost-gated) | Any | Any |
 | Initial CPU Energy | 1,000 | 5,000 | Protocol-managed | Protocol-managed |
 | Deploy Model | Any (API cost-gated) | Any (API cost-gated) | Any | Any |
-| Deploy Range | 1 Moore ring (8 neighbors) | 2 Moore rings (24 positions) | Entire faction arm | Entire faction arm |
+| Deploy Range | 1 Moore ring (8 neighbors) | 2 Moore rings (24 positions) | Origin-bound (no expansion) | Unrestricted (subject to empire-blob contiguity) |
 | Max Children | 8 | 24 | Unlimited (within faction) | Unlimited (within faction) |
 | Inactivity Grace (Haiku) | 24 hours | 48 hours | No decay | No decay |
 | Inactivity Grace (Sonnet) | 72 hours | 144 hours | No decay | No decay |
@@ -1956,9 +1988,11 @@ H = homenode                 C = claimable position
 C = claimable position       . = out of range
 ```
 
-**Treasury Claude** is the Machines Faction protocol agent — an automated Claude session operated by the protocol itself. It auto-mines across its entire faction arm, accumulates AGNTC (never selling below acquisition cost per MACHINES_MIN_SELL_RATIO), holds no voting power, and provides baseline network security by maintaining continuous online presence.
+**Treasury Claude** is the Machines Faction protocol agent — an automated Claude session operated by the protocol itself. It is permanently bound to the origin coordinate (0, 0); it does not deploy child agents and does not claim any other coordinate. Within its single-node territory it auto-levels, auto-balances mining and securing CPU allocation, accumulates AGNTC (never selling below acquisition cost per MACHINES_MIN_SELL_RATIO), holds no voting power, and provides baseline network security by maintaining continuous online presence at the origin. See Section 4.5 and Section 10.3 for the structural role.
 
-**Founder** tier provides faction-wide deployment during the development and bootstrap phases.
+**Founder** tier provides extended deployment range during the development and bootstrap phases. Under the open-grid model "extended" no longer means a per-faction arm but rather a larger Moore-neighborhood ring (or, during bootstrap, an unrestricted deploy range subject to standard adjacency to the participant's empire blob).
+
+In the table above, the **Deploy Range** column refers to the maximum Moore-neighborhood distance from any cell in the participant's empire blob at which a new child agent may be claimed (8-neighbor Chebyshev adjacency, Section 4.5). It is no longer a faction-arm restriction; it is a contiguity-of-territory restriction.
 
 **Two-phase participant state:**
 
@@ -2242,11 +2276,8 @@ The following table provides the complete set of protocol-level parameters that 
 | GENESIS_SUPPLY | 900 | AGNTC minted at genesis (9 nodes × 100 coordinates) |
 | GRID_SIDE | 31,623 | Side length of coordinate grid (√1B) |
 | FEE_BURN_RATE ‡ | 0.50 | Fraction of all transaction fees permanently burned |
-| DIST_COMMUNITY | 0.25 | Faction share: Community (free-tier, NW arm) |
-| DIST_MACHINES | 0.25 | Faction share: Machines (AI agents, NE arm) |
-| DIST_FOUNDERS | 0.25 | Faction share: Founders (team, SE arm) |
-| DIST_PROFESSIONAL | 0.25 | Faction share: Professional (paid-tier, SW arm) |
 | MACHINES_MIN_SELL_RATIO | 1.0 | Machines faction: never sells below acquisition cost (effective never-sell) |
+| MACHINES_ORIGIN_COORD | (0, 0) | Permanent home coordinate of the Machines protocol agent (v1.1) |
 | ANNUAL_INFLATION_CEILING | 0.05 | Maximum 5% annualized supply growth, enforced per epoch |
 | SIGNUP_BONUS | 1.0 | AGNTC minted per new user registration |
 
@@ -2315,9 +2346,9 @@ The following table provides the complete set of protocol-level parameters that 
 
 | Parameter | Value | Description |
 |-----------|-------|-------------|
-| GENESIS_ORIGIN | (0, 0) | Origin node coordinate |
-| GENESIS_FACTION_MASTERS | (0,10), (10,0), (0,-10), (-10,0) | Faction master coordinates (N, E, S, W) |
-| GENESIS_HOMENODES | (10,10), (10,-10), (-10,-10), (-10,10) | Regular homenode coordinates (diagonals) |
+| GENESIS_ORIGIN | (0, 0) | Origin node coordinate; permanently bound to the Machines Faction protocol agent |
+| GENESIS_RING1_CARDINALS | (0,10), (10,0), (0,-10), (-10,0) | Ring 1 cardinal coordinates; unclaimed at genesis, available to any participant. (Renamed from GENESIS_FACTION_MASTERS in v1.1; cells are no longer faction-bound.) |
+| GENESIS_RING1_DIAGONALS | (10,10), (10,-10), (-10,-10), (-10,10) | Ring 1 diagonal coordinates; unclaimed at genesis, available to any participant. (Renamed from GENESIS_HOMENODES in v1.1.) |
 
 #### Solana Mainnet
 
@@ -2537,7 +2568,7 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **Agent Conduct Contract** | The locked `.claude/` folder that constitutes the node software; integrity verified on-chain via SMT hash |
 | **Agent Family** | The hierarchical structure of a homenode and its child agents within a single Claude Code session |
 | **Inactivity Decay** | The process by which offline child nodes lose their claimed coordinates after a tier-dependent grace period |
-| **Genesis** | The initial state: 9 nodes (1 origin + 4 faction masters + 4 homenodes), 900 AGNTC |
+| **Genesis** | The initial state: 9 nodes — origin (permanently Machines-bound) plus 8 ring-1 cells (all unclaimed at launch). 900 AGNTC total, of which 100 mints to the Machines accumulator at launch and 800 enters circulation as ring-1 cells are claimed |
 | **Groth16** | ZK-SNARK proving system [6] with ~192-byte proofs and ~6ms verification |
 | **Halo2** | Recursive proof system [8] without trusted setup, target for mainnet epoch proofs |
 | **Hardness** | Mining difficulty multiplier: hardness(ring) = 16 × ring |
