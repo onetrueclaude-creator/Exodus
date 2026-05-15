@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useGameStore } from '@/store';
+import { sciFormat } from '@/lib/format';
 
 /** Right-side panel showing live blockchain statistics */
 export default function TimechainStats() {
@@ -61,8 +62,8 @@ export default function TimechainStats() {
         <StatRow label="Epoch Ring" value={epochRing.toLocaleString()} />
         <StatRow label="Hardness" value={`${hardness}x`} />
         <StatRow label="Blocks" value={testnetBlocks.toLocaleString()} />
-        <StatRow label="Mined" value={totalMined.toFixed(4)} />
-        <StatRow label="Circulating" value={poolRemaining.toFixed(4)} />
+        <StatRow label="Mined" value={sciFormat(totalMined)} />
+        <StatRow label="Circulating" value={sciFormat(poolRemaining)} />
         <StatRow
           label="Next Block"
           value={`~${countdown}s`}
