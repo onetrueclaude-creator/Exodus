@@ -366,7 +366,7 @@ describe("ResourceBar", () => {
 
   it("renders CPU Energy value (initial 1000)", () => {
     render(<ResourceBar />);
-    // sciFormat(1000) renders as '1000.0000' in yellow mono span
+    // sciFormat(1000) renders as '1000' in yellow mono span (integers have no decimals)
     const energyEls = screen.getAllByText((content) => content.includes("1000"));
     expect(energyEls.length).toBeGreaterThanOrEqual(1);
   });
