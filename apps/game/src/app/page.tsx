@@ -80,7 +80,7 @@ function DevFactionSelect() {
     <main className="min-h-screen flex flex-col items-center justify-center bg-background relative">
       <div className="flex flex-col items-center w-full max-w-lg px-6">
         <div className="mb-4 text-[10px] font-mono text-yellow-500/70 tracking-widest uppercase border border-yellow-500/20 rounded px-3 py-1">
-          {'\u25C8'} Dev Mode — All Factions Unlocked
+          {'\u25C8'} Dev Mode — Closed Factions Selectable
         </div>
 
         <h1

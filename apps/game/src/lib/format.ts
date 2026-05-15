@@ -1,28 +1,39 @@
 /**
- * Format a number in scientific notation for large/small values,
- * or as a compact decimal for mid-range values.
- * Cuts off after 4 decimal places (0.0000).
+ * Format a number for HUD display: integers as bare digits, fractional
+ * values to at most 2 decimal places (trailing zeros trimmed), and
+ * scientific notation for very large or very small magnitudes.
  *
- *   1234567   → "1.2345e6"
- *   0.00034   → "3.4000e-4"
- *   42.7      → "42.7000"
- *   0         → "0.0000"
+ *   0         → "0"
+ *   3090      → "3090"
+ *   42.7      → "42.7"
+ *   42.75     → "42.75"
+ *   0.068     → "0.07"
+ *   1234567   → "1.23e6"
+ *   0.00034   → "3.40e-4"
+ *
+ * Previously this used 4 fixed decimals everywhere, which produced
+ * "3090.0000" / "0.0000" noise on a HUD whose values are usually
+ * counter-style integers (CPU Energy, AGNTC balance, Data Frags).
  */
 export function sciFormat(n: number): string {
-  if (n === 0) return '0.0000';
+  if (n === 0) return '0';
 
   const abs = Math.abs(n);
   const sign = n < 0 ? '-' : '';
 
-  // Use scientific notation for very large (>=1e6) or very small (<0.01) values
+  // Scientific notation for very large (>=1e6) or very small (<0.01) values
   if (abs >= 1e6 || (abs > 0 && abs < 0.01)) {
     const exp = Math.floor(Math.log10(abs));
     const mantissa = abs / Math.pow(10, exp);
-    return `${sign}${mantissa.toFixed(4)}e${exp}`;
+    return `${sign}${mantissa.toFixed(2)}e${exp}`;
   }
 
-  // Mid-range: show fixed 4 decimal places
-  return `${sign}${abs.toFixed(4)}`;
+  // Integer values: render without decimals
+  if (Number.isInteger(abs)) {
+    return `${sign}${abs}`;
+  }
+  // Fractional: at most 2 decimal places, trailing zeros trimmed by parseFloat
+  return `${sign}${parseFloat(abs.toFixed(2))}`;
 }
 
 /**
