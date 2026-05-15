@@ -5,6 +5,7 @@ import { useGameStore } from '@/store';
 import { getRewards, getStaking, getSecuringStatus, getVesting, getSettings } from '@/services/testnetApi';
 import type { RewardsResponse, SecuringStatusResponse, VestingResponse, WalletSettingsResponse } from '@/types';
 import { getNodeTier, TIER_DISPLAY_NAME } from '@/lib/nodeTier';
+import { sciFormat } from '@/lib/format';
 
 export default function AccountView() {
   const currentAgentId = useGameStore((s) => s.currentAgentId);
@@ -131,7 +132,7 @@ export default function AccountView() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <StatCard label="CPU Energy" value={energy.toFixed(0)} valueClass="text-yellow-300" dotColor="bg-yellow-400" />
             <StatCard label="Secured Chains" value={String(securedChains)} valueClass="text-emerald-300" dotColor="bg-emerald-400" />
-            <StatCard label="AGNTC Balance" value={agntcBalance.toFixed(4)} valueClass="text-accent-cyan" dotColor="bg-accent-cyan" />
+            <StatCard label="AGNTC Balance" value={sciFormat(agntcBalance)} valueClass="text-accent-cyan" dotColor="bg-accent-cyan" />
             <StatCard label="Data Frags" value={String(agentPlanets.length)} valueClass="text-blue-300" dotColor="bg-blue-400" />
           </div>
         </div>
@@ -147,7 +148,7 @@ export default function AccountView() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <StatCard
                 label="Token Staked"
-                value={staking ? staking.token_staked.toFixed(4) : '\u2014'}
+                value={staking ? sciFormat(staking.token_staked) : '\u2014'}
                 valueClass="text-accent-purple"
               />
               <StatCard
@@ -157,7 +158,7 @@ export default function AccountView() {
               />
               <StatCard
                 label="Effective Stake"
-                value={settings ? settings.effective_stake.toFixed(4) : '\u2014'}
+                value={settings ? sciFormat(settings.effective_stake) : '\u2014'}
                 valueClass="text-accent-cyan"
                 sublabel="S = 0.40\u00D7token + 0.60\u00D7CPU"
               />

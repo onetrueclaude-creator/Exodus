@@ -20,6 +20,7 @@ import { postTransact, getStatus as fetchChainStats } from '@/services/testnetAp
 import { logAction } from '@/lib/actionLogger';
 import { CELL_SIZE } from '@/lib/lattice';
 import { computeDeployCandidates } from '@/lib/deploy';
+import { sciFormat } from '@/lib/format';
 
 /* ── Agent Action Definitions ─────────────────────────────── */
 
@@ -504,8 +505,8 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
           `Blocks: ${stats.blocks_processed}`,
           `Epoch Ring: ${stats.epoch_ring}`,
           `Hardness: ${stats.hardness}x`,
-          `AGNTC Mined: ${stats.total_mined.toFixed(4)}`,
-          `Circulating: ${stats.circulating_supply.toFixed(4)}`,
+          `AGNTC Mined: ${sciFormat(stats.total_mined)}`,
+          `Circulating: ${sciFormat(stats.circulating_supply)}`,
           `Burned: ${stats.burned_fees}`,
           `State Root: ${stats.state_root.slice(0, 16)}...`,
         ];
