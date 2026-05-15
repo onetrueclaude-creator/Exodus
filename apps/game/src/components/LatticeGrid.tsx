@@ -275,8 +275,16 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
     const nodes = Object.values(blocknodes);
 
     // Draw blocknode circles
+    // Open-grid v1.1: all cells are visible by default. The v1.0 faction-fog
+    // visibility filter (`node.faction !== null && effectiveVisible.includes(...)`)
+    // produced a race on first /game load: while `visibleFactions` was being
+    // populated by `revealFaction()` calls in game/page.tsx init(), the render
+    // effect would already have fired with `visibleFactions=[]`, leaving every
+    // cell at alpha 0.12 (effectively invisible against the dark canvas).
+    // Refreshing the page sometimes "fixed" it because the timing changed.
+    // Under the open-grid model there is no faction-quadrant fog at all.
     for (const node of nodes) {
-      const isVisible = node.faction !== null && effectiveVisible.includes(node.faction);
+      const isVisible = true;
       const nodeContainer = createBlockNode(
         node,
         isVisible,
@@ -300,8 +308,11 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
       layer.addChild(nodeContainer);
     }
 
-    // Auto-zoom-to-fit on first blocknode render — centers on visible faction arms
-    const visibleNodes = nodes.filter((n) => n.faction !== null && effectiveVisible.includes(n.faction));
+    // Auto-zoom-to-fit on first blocknode render — centers on the user's empire
+    // if they have claimed cells, otherwise on the inner rings of the lattice.
+    // (Open-grid v1.1: was previously filtered by visibleFactions — same race as
+    // above. Now all rendered nodes are zoom candidates.)
+    const visibleNodes = nodes;
     if (visibleNodes.length > 0 && !hasBlocknodeZoomedRef.current) {
       hasBlocknodeZoomedRef.current = true;
       // Only use inner rings (0–2) for the initial zoom calculation.
