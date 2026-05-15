@@ -87,7 +87,18 @@ def node_seed(x: int, y: int) -> bytes:
 
 
 def resource_density(x: int, y: int) -> float:
-    """Resource density at (x, y), range [0.0, 1.0]. Deterministic."""
+    """Resource density at (x, y), range [0.0, 1.0]. Deterministic.
+
+    Special case: the origin (0, 0) is clamped to 1.0 per whitepaper §4.5
+    + §10.3. The Machines Faction permanent reserve is bound to origin
+    and the protocol grants it the maximum-density yield as its structural
+    (rather than allocative) accumulator mechanism. Without this clamp,
+    origin's density is just SHA-256(node_seed("starsystem:0:0"))[:4] / max32
+    — empirically ~0.068, which silently underweights the Machines
+    accumulator vs. the whitepaper specification.
+    """
+    if x == 0 and y == 0:
+        return 1.0
     seed = node_seed(x, y)
     return int.from_bytes(seed[:4], "big") / 0xFFFFFFFF
 

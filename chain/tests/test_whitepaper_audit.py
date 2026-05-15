@@ -373,6 +373,20 @@ class TestWhitepaperGenesisTopology:
             f"Whitepaper: GENESIS_HOMENODES = {expected} (diagonals)"
         )
 
+    def test_origin_density_clamped_to_max(self):
+        """Whitepaper §4.5 + §10.3: 'the protocol clamps origin density to 1.0'.
+
+        The Machines Faction permanent reserve is bound to (0, 0); the
+        protocol grants it the maximum-density yield as its structural
+        (rather than allocative) accumulator mechanism. Without this
+        clamp the SHA-256-derived density at origin is ~0.068, which
+        silently underweights the accumulator vs. the spec.
+        """
+        from agentic.lattice.coordinate import resource_density
+        assert resource_density(0, 0) == 1.0, (
+            "Whitepaper §4.5: resource_density(0, 0) must clamp to 1.0"
+        )
+
 
 # ---------------------------------------------------------------------------
 # Solana Mainnet (Section 22, table 9)
