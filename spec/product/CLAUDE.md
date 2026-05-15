@@ -33,6 +33,27 @@
 
 **Design doc:** `docs/plans/2026-02-25-resource-system-design.md`
 
+**⚠️ Partially superseded 2026-05-14:** See entry below.
+
+---
+
+## 2026-05-14 — Open-Grid Revision (v1.1) + L2 economy
+
+**Decided (collected across PRs #84 / #88 / #89 / #90 / #91 / #92):**
+
+- **4-arm spiral galaxy retired.** Replaced with single open coordinate grid. Factions persist as identity classes; no territorial arms. Machines binds permanently to origin (0, 0).
+- **Per-node leveling** replaces the older subgrid-only progression at the *game-UI level*. Node tier bands Synapse / Cortex / Lattice / Nexus, upfront CPU cost `floor(200 × 1.8^(L-1))`, triangular wait. Source of truth: `apps/game/src/lib/nodeTier.ts`. *(Subgrid cell leveling under whitepaper §16 still uses `output = base × level^0.8` with Development Points — distinct system.)*
+- **CPU Energy / Secured Chains** are the canonical HUD resource names. The 2026-02-25 proposal to rename CPU Energy → CPU Tokens (cumulative counter, never spent) was **not adopted** — implementation kept CPU Energy as a spendable pool. The 2026-02-25 "CPU Staked" naming was likewise reframed as "Secured Chains" in the HUD (CPU Staked persists at the protocol level via dual-staking accumulators per whitepaper §13).
+- **Max tier retired** earlier in 2026-04 — only Community + Professional are player-facing tiers. Founders and Machines are closed dev-only factions. Tier-locked Claude models (Sonnet-only for Community, Opus-only for Professional) also retired — any tier may deploy any Claude model; API cost is the gate.
+- **Mining ≠ Securing.** Per-node CPU presets `{0, 100, 200, 500, 1000}` apply independently to each operation in the L2 economy.
+
+**Design + impl docs:**
+- `spec/whitepaper.md` (v1.1 Open-Grid Revision)
+- `docs/plans/2026-05-14-empire-progression-*` design + impl plans (gitignored)
+- `apps/game/src/lib/nodeTier.ts` — canonical node-tier mapping
+
+**Why:** Aligns the public protocol spec, the chain code, the game UI, and the persona skills around a single open-grid model. Removes contradictions that had accumulated between proposed (Feb-2026) and implemented (current) state.
+
 ---
 
 ## Pending
