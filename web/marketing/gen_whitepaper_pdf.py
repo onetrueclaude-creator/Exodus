@@ -1,6 +1,16 @@
-"""Generate v1.0 whitepaper PDF from spec/whitepaper.md (markdown → PDF)."""
+"""Generate whitepaper PDF from spec/whitepaper.md (markdown → PDF).
+
+Version + date are auto-parsed from the whitepaper's first H1 line and the
+following blockquote — no code changes required when bumping version.
+"""
 import re
 from fpdf import FPDF
+
+
+# Populated at runtime from whitepaper.md
+WP_VERSION = "v1.0"          # e.g. "v1.1"
+WP_VERSION_LABEL = ""         # e.g. "Version 1.1 (Open-Grid Revision)"
+WP_DATE_LABEL = "April 2026"  # e.g. "May 2026"
 
 
 class WhitepaperPDF(FPDF):
@@ -8,7 +18,7 @@ class WhitepaperPDF(FPDF):
         if self.page_no() > 1:
             self.set_font("Helvetica", "I", 8)
             self.set_text_color(120, 120, 120)
-            self.cell(0, 8, "ZK Agentic Chain - AGNTC Whitepaper v1.0", align="C", new_x="LEFT", new_y="NEXT")
+            self.cell(0, 8, f"ZK Agentic Chain - AGNTC Whitepaper {WP_VERSION}", align="C", new_x="LEFT", new_y="NEXT")
             self.ln(2)
             self.set_draw_color(200, 200, 200)
             self.line(20, self.get_y(), 190, self.get_y())
@@ -171,7 +181,7 @@ def render_title_page(pdf):
     pdf.ln(15)
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(120, 120, 120)
-    pdf.cell(0, 7, "Version 1.0  |  April 2026", align="C")
+    pdf.cell(0, 7, f"{WP_VERSION_LABEL}  |  {WP_DATE_LABEL}", align="C")
     pdf.ln(7)
     pdf.cell(0, 7, "zkagentic.ai", align="C")
 
@@ -487,12 +497,51 @@ def render_blocks(pdf, blocks, collect_toc=None):
             pdf.ln(5)
 
 
+def extract_version_metadata(filepath):
+    """Parse version + date from the whitepaper's first H1 + subtitle blockquote.
+
+    Returns (short_version, full_label, date_label):
+      short_version: e.g. "v1.1" — used in header, filename
+      full_label:    e.g. "Version 1.1 (Open-Grid Revision)" — used on title page
+      date_label:    e.g. "May 2026" — used on title page
+    """
+    with open(filepath, 'r', encoding='utf-8') as f:
+        text = f.read()
+
+    # First H1 — e.g. "# AGNTC Whitepaper v1.1"
+    h1_match = re.search(r'^#\s+.*?(v\d+(?:\.\d+)+)', text, flags=re.MULTILINE)
+    short = h1_match.group(1) if h1_match else "v1.0"
+
+    # First subtitle blockquote line containing "Version X.Y ... | Month YYYY"
+    # e.g. "> Version 1.1 (Open-Grid Revision) | May 2026"
+    sub_match = re.search(
+        r'^>\s*(Version\s+\d+(?:\.\d+)+(?:\s*\([^)]*\))?)\s*\|\s*([A-Za-z]+\s+\d{4})',
+        text,
+        flags=re.MULTILINE,
+    )
+    if sub_match:
+        full_label = sub_match.group(1).strip()
+        date_label = sub_match.group(2).strip()
+    else:
+        # Fallback if subtitle isn't found
+        full_label = f"Version {short.lstrip('v')}"
+        date_label = "April 2026"
+
+    return short, full_label, date_label
+
+
 def main():
     # Paths relative to repo root — run from repo root: python web/marketing/gen_whitepaper_pdf.py
     import pathlib
     repo_root = pathlib.Path(__file__).resolve().parent.parent.parent
     whitepaper_path = str(repo_root / "spec" / "whitepaper.md")
-    output_path = str(repo_root / "web" / "marketing" / "AGNTC-Whitepaper-v1.0.pdf")
+
+    # Auto-detect version from whitepaper.md
+    global WP_VERSION, WP_VERSION_LABEL, WP_DATE_LABEL
+    WP_VERSION, WP_VERSION_LABEL, WP_DATE_LABEL = extract_version_metadata(whitepaper_path)
+    print(f"Detected: {WP_VERSION_LABEL}  |  {WP_DATE_LABEL}  ({WP_VERSION})")
+
+    output_path = str(repo_root / "web" / "marketing" / f"AGNTC-Whitepaper-{WP_VERSION}.pdf")
 
     print("Parsing whitepaper markdown...")
     blocks = parse_markdown(whitepaper_path)
@@ -540,7 +589,7 @@ def main():
     pdf.ln(5)
     pdf.set_font("Helvetica", "I", 8)
     pdf.set_text_color(150, 150, 150)
-    pdf.cell(0, 5, "AGNTC Whitepaper v1.0  |  April 2026", align="C")
+    pdf.cell(0, 5, f"AGNTC Whitepaper {WP_VERSION}  |  {WP_DATE_LABEL}", align="C")
     pdf.ln(5)
     pdf.cell(0, 5, "Copyright 2026 ZK Agentic Chain. All rights reserved.", align="C")
 
