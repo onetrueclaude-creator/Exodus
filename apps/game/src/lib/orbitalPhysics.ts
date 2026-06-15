@@ -43,6 +43,10 @@ export interface PhysicsBody {
    * invisible wallets don't distort the visible layout. Default false.
    */
   inactive?: boolean;
+  /** Target position the body is softly tethered to (the deterministic seat). */
+  anchor?: { x: number; y: number };
+  /** Anchor-spring strength 0..1 (default 0.5). */
+  anchorStrength?: number;
 }
 
 export interface PhysicsLink {
@@ -72,6 +76,8 @@ export interface PhysicsParams {
    * BH_THRESHOLD. Defaults to 0.7 when omitted.
    */
   theta?: number;
+  /** Anchor-spring coefficient; when set, step() tethers bodies to their .anchor. */
+  anchorK?: number;
 }
 
 /**
@@ -367,6 +373,25 @@ export function integrate(
 }
 
 /**
+ * Soft spring pulling each non-pinned body toward its anchor (the deterministic
+ * phyllotaxis seat). Lets the layout stay deterministic while settling organically.
+ */
+export function applyAnchorSprings(
+  bodies: readonly PhysicsBody[],
+  dt: number,
+  springK: number,
+): void {
+  for (const b of bodies) {
+    if (!b.anchor || b.pinned || b.inactive) continue;
+    const dx = b.anchor.x - b.x;
+    const dy = b.anchor.y - b.y;
+    const f = springK * (b.anchorStrength ?? 0.5);
+    b.vx += dx * f * dt;
+    b.vy += dy * f * dt;
+  }
+}
+
+/**
  * One full simulation tick — gravity, repulsion, springs, damping +
  * integration in that order. dt is clamped to params.maxStep before
  * any force is applied (large dt blows up Verlet integration).
@@ -385,5 +410,6 @@ export function step(
     applyRepulsion(bodies, clamped, params.repulsion);
   }
   applySprings(bodies, links, clamped, params.springRest);
+  if (params.anchorK) applyAnchorSprings(bodies, clamped, params.anchorK);
   integrate(bodies, clamped, params.damping);
 }
