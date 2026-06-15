@@ -13,10 +13,11 @@ export interface Vec2 {
   y: number;
 }
 
-/** Phyllotaxis seat position for rank k at radial scale c. k=0 → origin (Singularity). */
-export function phylloPos(k: number, c: number): Vec2 {
+/** Phyllotaxis seat position for rank k at radial scale c, with an optional
+ *  corePadding (free space around the Singularity). k=0 → origin (Singularity). */
+export function phylloPos(k: number, c: number, corePadding: number = 0): Vec2 {
   if (k <= 0) return { x: 0, y: 0 };
-  const r = c * Math.sqrt(k);
+  const r = corePadding + c * Math.sqrt(k);
   const a = k * GOLDEN_ANGLE_RAD;
   return { x: r * Math.cos(a), y: r * Math.sin(a) };
 }

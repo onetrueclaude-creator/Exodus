@@ -4,6 +4,7 @@ import { FACTION_TINT, type SeatInput, type SceneModel, type SceneNode, type Sce
 
 export interface SceneOpts {
   radialScale: number; // c in radius=c·√k
+  corePadding?: number; // free space around the Singularity (default 0)
   subagentOrbitFraction?: number; // default 0.4 of radialScale
 }
 
@@ -28,7 +29,7 @@ export function buildScene(seats: readonly SeatInput[], opts: SceneOpts): SceneM
   for (const s of seats) {
     if (s.parentId) continue;
     const k = ranks.get(s.id) ?? 0;
-    const p = phylloPos(k, c);
+    const p = phylloPos(k, c, opts.corePadding ?? 0);
     posById.set(s.id, p);
     nodes.push({
       id: s.id,

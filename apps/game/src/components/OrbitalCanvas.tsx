@@ -6,26 +6,20 @@ import { buildScene } from "@/lib/orbitalScene";
 import { step, DEFAULT_PHYSICS, type PhysicsBody } from "@/lib/orbitalPhysics";
 import type { SeatInput, OrbitalFaction } from "@/types/orbital";
 
-const RADIAL_SCALE = 26;
+const RADIAL_SCALE = 46; // px per √k — wider spacing so subnodes have room
+const CORE_PADDING = 56; // free space between the Singularity and rank-1
+const CORE_HALO = 38; // faint ring framing the core's padding
 
-/** Map the store's current faction naming onto the v1.2 orbital factions. */
-function factionOf(raw: string | null | undefined): OrbitalFaction {
-  switch (raw) {
-    case "professional":
-    case "pro-max":
-      return "professional";
-    case "founders":
-    case "founder":
-      return "founders";
-    case "community":
-      return "community";
-    default:
-      return "community";
-  }
+/** Phase-1 cosmetic colour: deterministic per-id across the player palette, so the
+ *  field is varied/alive. Replaced by the chain's real faction in Plan 2. */
+const PLAYER_FACTIONS: OrbitalFaction[] = ["community", "professional", "founders"];
+function factionByHash(id: string): OrbitalFaction {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return PLAYER_FACTIONS[h % PLAYER_FACTIONS.length];
 }
 
-/** Phase-1 adapter: current store agents → seats. Activity proxy = stakedCpu + securingCpu
- *  (Plan 2 swaps this for the chain's real activity/rank). */
+/** Phase-1 adapter: current store agents → seats (activity proxy = stakedCpu + securingCpu). */
 function seatsFromStore(): SeatInput[] {
   const st = useGameStore.getState();
   const agents = Object.values(st.agents) as Array<{
@@ -34,10 +28,9 @@ function seatsFromStore(): SeatInput[] {
     stakedCpu?: number;
     securingCpu?: number;
   }>;
-  const fac = factionOf(st.currentUserFaction as unknown as string | null);
   const seats: SeatInput[] = agents.map((a) => ({
     id: a.id,
-    faction: fac,
+    faction: factionByHash(a.id),
     parentId: a.parentAgentId,
     activity: (a.stakedCpu ?? 0) + (a.securingCpu ?? 0),
   }));
@@ -45,7 +38,7 @@ function seatsFromStore(): SeatInput[] {
   return seats;
 }
 
-type BodyVM = PhysicsBody & { id: string; sprite: Sprite };
+type BodyVM = PhysicsBody & { id: string; sprite: Sprite; baseScale: number };
 
 export default function OrbitalCanvas() {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -82,6 +75,8 @@ export default function OrbitalCanvas() {
       const nodeLayer = new Container();
       world.addChild(nodeLayer);
 
+      let zoom = 1;
+
       // one shared white-circle texture → batched, tinted node sprites
       const circle = new Graphics().circle(0, 0, 32).fill(0xffffff);
       const tex: Texture = a.renderer.generateTexture({
@@ -90,21 +85,28 @@ export default function OrbitalCanvas() {
       });
       circle.destroy();
 
+      const recenter = (b: BodyVM) => {
+        world.position.set(a.screen.width / 2 - zoom * (cx() + b.x), a.screen.height / 2 - zoom * (cy() + b.y));
+      };
+
       let bodies: BodyVM[] = [];
       let byId = new Map<string, BodyVM>();
       let familyPairs: Array<[string, string]> = [];
 
       const rebuild = () => {
         const seats = seatsFromStore();
-        const scene = buildScene(seats, { radialScale: RADIAL_SCALE });
+        const scene = buildScene(seats, { radialScale: RADIAL_SCALE, corePadding: CORE_PADDING });
         nodeLayer.removeChildren();
         bodies = scene.nodes.map((n) => {
+          const baseScale = n.radius / 32;
           const dot = new Sprite(tex);
           dot.anchor.set(0.5);
           dot.tint = n.tint;
-          dot.scale.set(n.radius / 32);
+          dot.scale.set(baseScale);
+          dot.eventMode = "static";
+          dot.cursor = "pointer";
           nodeLayer.addChild(dot);
-          return {
+          const b: BodyVM = {
             id: n.id,
             x: n.x,
             y: n.y,
@@ -115,7 +117,12 @@ export default function OrbitalCanvas() {
             anchor: { x: n.x, y: n.y },
             anchorStrength: 0.6,
             sprite: dot,
-          } as BodyVM;
+            baseScale,
+          };
+          dot.on("pointerover", () => dot.scale.set(baseScale * 1.4));
+          dot.on("pointerout", () => dot.scale.set(baseScale));
+          dot.on("pointertap", () => recenter(b));
+          return b;
         });
         byId = new Map(bodies.map((b) => [b.id, b]));
         familyPairs = seats
@@ -127,6 +134,8 @@ export default function OrbitalCanvas() {
         step(bodies, [], a.ticker.deltaMS / 1000, { ...DEFAULT_PHYSICS, anchorK: 0.8 });
         for (const b of bodies) b.sprite.position.set(cx() + b.x, cy() + b.y);
         edgeG.clear();
+        // faint halo framing the Singularity's free space
+        edgeG.circle(cx(), cy(), CORE_HALO).stroke({ width: 1, color: 0xa855f7, alpha: 0.22 });
         for (const [pid, kid] of familyPairs) {
           const p = byId.get(pid);
           const k = byId.get(kid);
@@ -134,7 +143,7 @@ export default function OrbitalCanvas() {
           edgeG
             .moveTo(cx() + p.x, cy() + p.y)
             .lineTo(cx() + k.x, cy() + k.y)
-            .stroke({ width: 1.4, color: 0x5eead4, alpha: 0.85 });
+            .stroke({ width: 1.4, color: 0x5eead4, alpha: 0.8 });
         }
       };
 
@@ -143,7 +152,6 @@ export default function OrbitalCanvas() {
       a.ticker.add(tick);
 
       // cursor-anchored wheel zoom
-      let zoom = 1;
       a.canvas.addEventListener(
         "wheel",
         (ev: WheelEvent) => {

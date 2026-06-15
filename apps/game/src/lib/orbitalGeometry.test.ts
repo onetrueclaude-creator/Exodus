@@ -18,6 +18,10 @@ describe("phylloPos", () => {
     const p = phylloPos(4, 10); // r = 10·√4 = 20
     expect(Math.hypot(p.x, p.y)).toBeCloseTo(20, 6);
   });
+  it("adds core padding to the radius (free space around the Singularity)", () => {
+    const p = phylloPos(1, 10, 50); // r = 50 + 10·√1 = 60
+    expect(Math.hypot(p.x, p.y)).toBeCloseTo(60, 6);
+  });
   it("rotates each seat by the golden angle", () => {
     const a1 = Math.atan2(phylloPos(1, 10).y, phylloPos(1, 10).x);
     const a2 = Math.atan2(phylloPos(2, 10).y, phylloPos(2, 10).x);
