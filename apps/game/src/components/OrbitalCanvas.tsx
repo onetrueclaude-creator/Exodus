@@ -85,10 +85,6 @@ export default function OrbitalCanvas() {
       });
       circle.destroy();
 
-      const recenter = (b: BodyVM) => {
-        world.position.set(a.screen.width / 2 - zoom * (cx() + b.x), a.screen.height / 2 - zoom * (cy() + b.y));
-      };
-
       let bodies: BodyVM[] = [];
       let byId = new Map<string, BodyVM>();
       let familyPairs: Array<[string, string]> = [];
@@ -104,7 +100,7 @@ export default function OrbitalCanvas() {
           dot.tint = n.tint;
           dot.scale.set(baseScale);
           dot.eventMode = "static";
-          dot.cursor = "pointer";
+          dot.cursor = "default";
           nodeLayer.addChild(dot);
           const b: BodyVM = {
             id: n.id,
@@ -121,7 +117,6 @@ export default function OrbitalCanvas() {
           };
           dot.on("pointerover", () => dot.scale.set(baseScale * 1.4));
           dot.on("pointerout", () => dot.scale.set(baseScale));
-          dot.on("pointertap", () => recenter(b));
           return b;
         });
         byId = new Map(bodies.map((b) => [b.id, b]));
