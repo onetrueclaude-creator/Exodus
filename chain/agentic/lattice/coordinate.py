@@ -107,3 +107,16 @@ def storage_slots(x: int, y: int) -> int:
     """Number of planet storage slots at (x, y). Range [1, MAX_PLANETS_PER_NODE]."""
     density = resource_density(x, y)
     return max(1, round(density * MAX_PLANETS_PER_NODE))
+
+
+def density_for_node(node_id: str) -> float:
+    """Intrinsic per-node richness in [0, 1]; the Singularity is clamped to 1.0.
+
+    v1.2: with seats addressed by rank rather than (x, y), density becomes a
+    fixed property of the node's identity instead of its coordinate. Mirrors
+    resource_density's clamp + SHA-256 derivation, keyed on the node id.
+    """
+    if node_id == "__singularity__":
+        return 1.0
+    h = hashlib.sha256(f"node:{node_id}".encode()).digest()
+    return int.from_bytes(h[:4], "big") / 0xFFFFFFFF
