@@ -13,6 +13,7 @@ import ScoresWidget from "@/components/ScoresWidget";
 import { startDebugListener } from "@/lib/debugListener";
 import dynamic from "next/dynamic";
 const DebugOverlay = dynamic(() => import("@/components/DebugOverlay"), { ssr: false });
+const OrbitalCanvas = dynamic(() => import("@/components/OrbitalCanvas"), { ssr: false });
 import { useGameStore } from "@/store";
 import { MockChainService } from "@/services/chainService";
 import type { ChainService } from "@/services/chainService";
@@ -45,6 +46,11 @@ const CHAIN_SYNC_INTERVAL_MS = 60_000;
 
 export default function GamePage() {
   const addAgent = useGameStore((s) => s.addAgent);
+  // Phase-1 phyllotaxis renderer behind ?orbital=1 (swaps after mount → no hydration mismatch)
+  const [orbital, setOrbital] = useState<boolean | null>(null);
+  useEffect(() => {
+    setOrbital(new URLSearchParams(window.location.search).get("orbital") === "1");
+  }, []);
   const addHaiku = useGameStore((s) => s.addHaiku);
   const setCurrentUser = useGameStore((s) => s.setCurrentUser);
   const currentAgentId = useGameStore((s) => s.currentAgentId);
@@ -305,7 +311,11 @@ export default function GamePage() {
       <div className="flex-1 relative overflow-hidden">
         {/* Network tab — always mounted, hidden when inactive to preserve PixiJS canvas */}
         <div className={`absolute inset-0 ${activeTab !== "network" ? "hidden" : ""}`}>
-          <LatticeGrid onSelectAgent={() => {}} onDeselect={() => {}} />
+          {orbital === null ? null : orbital ? (
+            <OrbitalCanvas />
+          ) : (
+            <LatticeGrid onSelectAgent={() => {}} onDeselect={() => {}} />
+          )}
 
           {/* Dock Panel — left edge */}
           <DockPanel
