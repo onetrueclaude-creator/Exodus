@@ -25,7 +25,8 @@ def _enable_admin():
 
 @pytest.fixture(scope="module")
 def client():
-    """TestClient with a freshly initialised genesis (9 nodes, 50 wallets, seed=42)."""
+    """TestClient with a freshly initialised genesis (v1.2: only the Singularity
+    seated at the origin, 50 wallets, seed=42)."""
     with TestClient(app) as c:
         c.post("/api/reset?wallets=50&seed=42",
                headers={"X-Admin-Token": TEST_ADMIN_TOKEN})

@@ -115,7 +115,7 @@ class TestUserClaimsPersistence:
         all_claims = g2.claim_registry.all_active_claims()
         coords = [(c.coordinate.x, c.coordinate.y) for c in all_claims]
         assert len(coords) == len(set(coords)), "Duplicate coords after restore"
-        assert len(all_claims) == 9  # still exactly 9 genesis claims
+        assert len(all_claims) == 1  # v1.2 §10.1: only the seated Singularity claim
 
     def test_user_claim_creates_subgrid_allocator(self, fresh_genesis, tmp_db):
         from agentic.lattice.coordinate import GridCoordinate, GLOBAL_BOUNDS
@@ -156,9 +156,14 @@ class TestSubgridPersistence:
         assert alloc2.free_cells == 64 - 35
 
     def test_levels_restored(self, fresh_genesis, tmp_db):
+        from agentic.lattice.subgrid import SubgridAllocator
         g = fresh_genesis
         wallet = g.wallets[1]
-        alloc = g.subgrid_allocators[wallet.public_key]
+        # v1.2 §10.1: genesis seats no per-owner allocators (only the
+        # Singularity exists), so create one for this owner before the
+        # save → load round-trip.
+        alloc = g.subgrid_allocators.setdefault(
+            wallet.public_key, SubgridAllocator(owner=wallet.public_key))
         alloc.assign(SubcellType.SECURE, 10)
         alloc.set_level(SubcellType.SECURE, 3)
         save_state(g, last_block_time=0.0, db_path=tmp_db)
@@ -170,10 +175,13 @@ class TestSubgridPersistence:
         assert alloc2.get_level(SubcellType.SECURE) == 3
 
     def test_64_cell_invariant_preserved_after_restore(self, fresh_genesis, tmp_db):
+        from agentic.lattice.subgrid import SubgridAllocator
         g = fresh_genesis
         for i in range(9):
             wallet = g.wallets[i]
-            alloc = g.subgrid_allocators[wallet.public_key]
+            # v1.2 §10.1: genesis seats no per-owner allocators — create them.
+            alloc = g.subgrid_allocators.setdefault(
+                wallet.public_key, SubgridAllocator(owner=wallet.public_key))
             alloc.assign(SubcellType.SECURE, 16)
             alloc.assign(SubcellType.DEVELOP, 16)
         save_state(g, last_block_time=0.0, db_path=tmp_db)

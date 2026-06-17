@@ -68,8 +68,9 @@ from agentic.economics.activity import resolve_ranks
 from agentic.lattice.allocator import CoordinateAllocator
 from agentic.lattice.claims import claim_cost
 from agentic.lattice.coordinate import GridCoordinate, resource_density, storage_slots
-from agentic.lattice.node_subgrid import compute_node_output, NodeOutput, coord_from_node_id
+from agentic.lattice.node_subgrid import compute_node_output, NodeOutput, coord_from_node_id, NodeSubgrid, node_id_from_coord
 from agentic.lattice.seating import band_of
+from agentic.lattice.subgrid import SubgridAllocator
 from agentic.ledger.transaction import BirthTx, validate_birth
 from agentic.params import (
     ALPHA, BASE_BIRTH_COST, BASE_CPU_PER_SECURE_BLOCK, BETA, BLOCK_TIME_MS,
@@ -1390,6 +1391,18 @@ def claim_node(request: Request, req: ClaimNodeRequest) -> ClaimNodeResult:
         vpu_capacity=v.cpu_vpu, registered_epoch=0, state=AgentState.ACTIVE)
     g.agents.append(agent)
 
+    # Create the node's 64-cell mining subgrid (v1.2 §16: every claimed player
+    # node owns a subgrid). Genesis no longer pre-creates these — they are minted
+    # when a participant claims a seat. The Singularity (origin) never claims, so
+    # it correctly never gets one.
+    node_id = node_id_from_coord(x, y)
+    if node_id not in g.node_subgrids:
+        g.node_subgrids[node_id] = NodeSubgrid.new(
+            node_id=node_id, owner=wallet.public_key, created_at_block=slot,
+        )
+    if wallet.public_key not in g.subgrid_allocators:
+        g.subgrid_allocators[wallet.public_key] = SubgridAllocator(owner=wallet.public_key)
+
     # Store viewing key for reward minting
     g.viewing_keys[wallet.public_key] = wallet.viewing_key
 
@@ -1464,8 +1477,12 @@ def get_agents(user_count: int = Query(default=3, ge=1, le=50)) -> List[AgentInf
     for i, c in enumerate(claims):
         x, y = c.coordinate.x, c.coordinate.y
         density = resource_density(x, y)
-        is_user = i < user_count
         aid = ids[i]
+        is_singularity = aid == singularity_id
+        # Bug #9: the origin claim is the Singularity (protocol core), never a
+        # user agent — exclude it from is_user_agent even when it falls inside
+        # the first ``user_count`` claims.
+        is_user = i < user_count and not is_singularity
         rank = ranks.get(aid, 0)
         agents.append(AgentInfo(
             id=aid,
@@ -1483,7 +1500,7 @@ def get_agents(user_count: int = Query(default=3, ge=1, le=50)) -> List[AgentInf
             rank=rank,
             band=band_of(rank),
             activity=round(scores[aid], 4),
-            is_singularity=(aid == singularity_id),
+            is_singularity=is_singularity,
         ))
     return agents
 

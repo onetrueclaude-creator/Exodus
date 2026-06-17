@@ -74,22 +74,29 @@ def create_genesis(
 ) -> GenesisState:
     """Bootstrap a fresh testnet state.
 
-    Genesis topology (fixed, centre-out):
-      - 1 origin node at (0, 0)
-      - 4 Faction Master homenodes at cardinal positions  (N E S W)
-      - 4 regular homenodes at diagonal positions         (NE SE SW NW)
-      Total: 9 predetermined nodes.
+    Genesis topology (whitepaper v1.2 §10.1 — "only the Singularity is seated"):
+      - 1 seated Singularity claim at the origin (0, 0) — the protocol core.
+      - 9 bootstrap validators (from the 9 fixed genesis wallets/positions) that
+        keep PoAIV consensus running; these are DECOUPLED from claims — only the
+        origin holds a claim/seat, the other 8 are validator identities with no
+        claim and no star record.
+      All competitive inner ranks are OPEN at launch and fill as participants join.
+
+    The 9 fixed positions in placement order:
+      - index 0  → origin (the Singularity, seated)
+      - index 1–4 → ring-1 cardinal positions  (N E S W) — bootstrap validators only
+      - index 5–8 → ring-1 diagonal positions  (NE SE SW NW) — bootstrap validators only
 
     Wallets start with GENESIS_BALANCE = 0 — all value is earned through mining.
-    ``num_claims`` is ignored; genesis nodes are always placed at the 9 fixed positions.
+    ``num_claims`` is ignored; genesis seats exactly the Singularity at the origin.
     """
     rng = random.Random(seed)
     det_urandom = _deterministic_urandom(random.Random(seed))
 
-    # All 9 genesis positions in placement order:
-    #   index 0  → origin (system node)
-    #   index 1–4 → Faction Masters (cardinal, 'opus' tier)
-    #   index 5–8 → regular homenodes (diagonal, 'sonnet' tier)
+    # All 9 genesis positions in placement order (bootstrap validator committee):
+    #   index 0  → origin / Singularity (the only seated claim)
+    #   index 1–4 → ring-1 cardinals  (bootstrap validators, no claim)
+    #   index 5–8 → ring-1 diagonals  (bootstrap validators, no claim)
     genesis_coords: list[tuple[int, int]] = (
         [GENESIS_ORIGIN]
         + GENESIS_FACTION_MASTERS
@@ -107,29 +114,30 @@ def create_genesis(
             if GENESIS_BALANCE > 0:
                 w.receive_mint(state, amount=GENESIS_BALANCE, slot=0)
 
-        # -- Fixed genesis nodes ----------------------------------------------
+        # -- Seated claim: ONLY the Singularity at the origin (v1.2 §10.1) -----
+        # Indices 1–8 become bootstrap-validator identities below with no claim
+        # and no star record — the inner ranks stay open for arriving players.
         claim_registry = ClaimRegistry()
-        for i, (x, y) in enumerate(genesis_coords):
-            wallet = wallets[i]
-            coord = GridCoordinate(x=x, y=y)
-            stake = 500 if i == 0 else (400 if i <= 4 else 200)
-            claim_registry.register(
-                owner=wallet.public_key, coordinate=coord,
-                stake=stake, slot=0,
-            )
-            density = resource_density(x, y)
-            slots = storage_slots(x, y)
-            density_scaled = int(density * 1_000_000)
-            star_tag = hash_tag(wallet.viewing_key, BIRTH_PROGRAM_ID, state.record_count.to_bytes(32, 'big'))
-            star_record = Record(
-                owner=wallet.public_key,
-                data=[0, coord.x_offset, coord.y_offset, density_scaled, slots],
-                nonce=det_urandom(32),
-                tag=star_tag,
-                program_id=BIRTH_PROGRAM_ID,
-                birth_slot=0,
-            )
-            state.insert_record(star_record)
+        x, y = GENESIS_ORIGIN
+        origin_wallet = wallets[0]
+        coord = GridCoordinate(x=x, y=y)
+        claim_registry.register(
+            owner=origin_wallet.public_key, coordinate=coord,
+            stake=500, slot=0,
+        )
+        density = resource_density(x, y)
+        slots = storage_slots(x, y)
+        density_scaled = int(density * 1_000_000)
+        star_tag = hash_tag(origin_wallet.viewing_key, BIRTH_PROGRAM_ID, state.record_count.to_bytes(32, 'big'))
+        star_record = Record(
+            owner=origin_wallet.public_key,
+            data=[0, coord.x_offset, coord.y_offset, density_scaled, slots],
+            nonce=det_urandom(32),
+            tag=star_tag,
+            program_id=BIRTH_PROGRAM_ID,
+            birth_slot=0,
+        )
+        state.insert_record(star_record)
 
     # Expand global bounds to cover genesis coordinates
     from agentic.lattice.coordinate import GLOBAL_BOUNDS
@@ -143,15 +151,20 @@ def create_genesis(
     engine = MiningEngine()
     pipeline = ActionPipeline(ledger_state=state, claim_registry=claim_registry)
 
-    # -- Verification agents & validators (one per claim) -------------------
+    # -- Verification agents & validators (bootstrap committee) --------------
+    # DECOUPLED from claims (v1.2 §10.1): only the Singularity is seated, but
+    # consensus still needs a committee, so we build 9 bootstrap validators from
+    # the 9 fixed genesis wallets. Stake schedule and vpu_rng order are preserved
+    # byte-for-byte from the pre-v1.2 per-claim path so block production is
+    # unchanged: 500 for the origin, 400 for the cardinals, 200 for the diagonals.
     validators: list[Validator] = []
     agents: list[VerificationAgent] = []
-    claims = claim_registry.all_active_claims()
     vpu_rng = random.Random(seed + 7)
-    for i, claim in enumerate(claims):
+    for i in range(len(genesis_coords)):
+        token_stake = 500 if i == 0 else (400 if i <= 4 else 200)
         v = Validator(
             id=i,
-            token_stake=float(claim.stake_amount),
+            token_stake=float(token_stake),
             cpu_vpu=float(vpu_rng.randint(20, 120)),
             online=True,
         )

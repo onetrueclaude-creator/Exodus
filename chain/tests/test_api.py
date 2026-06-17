@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from agentic.testnet.api import app
-from tests.conftest import TEST_ADMIN_TOKEN
+from tests.conftest import TEST_ADMIN_TOKEN, seat_player_claims
 
 # Legacy grid bounds — removed from params.py in v2 (dynamic bounds)
 _GRID_MIN = -3240
@@ -18,7 +18,7 @@ _ADMIN = {"X-Admin-Token": TEST_ADMIN_TOKEN}
 def client():
     """Create a TestClient that triggers startup/shutdown events."""
     with TestClient(app) as c:
-        # v2: genesis creates 9 nodes (origin + 8 ring), no claims param needed
+        # v1.2 §10.1: genesis seats only the Singularity (origin); inner ranks open.
         c.post("/api/reset?wallets=50&seed=42", headers=_ADMIN)
         yield c
 
@@ -73,7 +73,7 @@ class TestClaims:
         assert resp.status_code == 200
         data = resp.json()
         assert isinstance(data, list)
-        assert len(data) == 9  # v2: genesis creates 9 fixed nodes
+        assert len(data) == 1  # v1.2 §10.1: only the Singularity is seated at genesis
         first = data[0]
         assert "x" in first
         assert "y" in first
@@ -127,7 +127,7 @@ class TestMine:
         assert "block_time" in data
         assert "next_block_at" in data
         assert isinstance(data["yields"], dict)
-        # Should have some yields since genesis has 9 claims
+        # Should have some yields — the seated Singularity claim mines.
         assert len(data["yields"]) > 0
         # All keys should be hex strings (owner public keys)
         for key in data["yields"]:
@@ -151,35 +151,59 @@ class TestMine:
 
 
 class TestAgents:
-    def test_agents_returns_user_agents_by_default(self, client):
+    def test_agents_genesis_is_singularity_only(self, client):
+        """v1.2 §10.1: at genesis the sole agent is the Singularity (origin).
+        It is the protocol core, not a user agent (Bug #9)."""
+        client.post("/api/reset?wallets=50&seed=42", headers=_ADMIN)
         resp = client.get("/api/agents")
         assert resp.status_code == 200
         data = resp.json()
         assert isinstance(data, list)
-        assert len(data) == 9  # v2: genesis creates 9 fixed nodes
+        assert len(data) == 1  # only the Singularity is seated
+        sing = data[0]
+        assert sing["is_singularity"] is True
+        assert sing["is_user_agent"] is False  # Bug #9: the core is never a user
+        assert (sing["x"], sing["y"]) == (0, 0)
+
+    def test_agents_user_count_slices_real_player_claims(self, client):
+        """user_count slices the player claims that follow the Singularity.
+        Seat two nodes first so there are real player agents to slice."""
+        client.post("/api/reset?wallets=50&seed=42", headers=_ADMIN)
+        # Seat two ring-1 coordinates → two real player claims.
+        assert seat_player_claims([(10, 0), (0, 10)], wallet_index=1) == 2
+        data = client.get("/api/agents?user_count=3").json()
+        # 1 Singularity + 2 player claims = 3 agents.
+        assert len(data) == 3
         user_agents = [a for a in data if a["is_user_agent"]]
-        slots = [a for a in data if not a["is_user_agent"]]
-        assert len(user_agents) == 3
-        assert len(slots) == 6
-        # User agents are Sonnet tier
+        # Singularity excluded from user agents → exactly the 2 player claims.
+        assert len(user_agents) == 2
         for a in user_agents:
+            assert a["is_singularity"] is False
             assert a["tier"] == "sonnet"
             assert a["id"].startswith("agent-")
             assert a["border_radius"] == 90
             assert a["mining_rate"] > 0
-        # Slots are Haiku tier
+        # Reset so later tests see the clean genesis state.
+        client.post("/api/reset?wallets=50&seed=42", headers=_ADMIN)
+
+    def test_agents_custom_user_count(self, client):
+        """A smaller user_count keeps remaining player claims as Haiku slots."""
+        client.post("/api/reset?wallets=50&seed=42", headers=_ADMIN)
+        assert seat_player_claims([(10, 0), (0, 10), (-10, 0)], wallet_index=1) == 3
+        # user_count=2: Singularity (excluded) + first player claim = 1 user agent.
+        data = client.get("/api/agents?user_count=2").json()
+        user_agents = [a for a in data if a["is_user_agent"]]
+        slots = [a for a in data if not a["is_user_agent"]]
+        assert len(data) == 4  # Singularity + 3 player claims
+        assert len(user_agents) == 1  # user_count=2 minus the Singularity core
         for s in slots:
+            if s["is_singularity"]:
+                continue
             assert s["tier"] == "haiku"
             assert s["id"].startswith("slot-")
             assert s["border_radius"] == 30
             assert s["mining_rate"] == 0.0
-
-    def test_agents_custom_user_count(self, client):
-        resp = client.get("/api/agents?user_count=5")
-        assert resp.status_code == 200
-        data = resp.json()
-        user_agents = [a for a in data if a["is_user_agent"]]
-        assert len(user_agents) == 5
+        client.post("/api/reset?wallets=50&seed=42", headers=_ADMIN)
 
 
 class TestReset:
@@ -190,15 +214,15 @@ class TestReset:
         resp = client.post("/api/reset?wallets=10&seed=99", headers=_ADMIN)
         assert resp.status_code == 200
         data = resp.json()
-        # v2: genesis always creates 9 fixed nodes (records)
-        assert data["record_count"] == 9
-        assert data["total_claims"] == 9
+        # v1.2 §10.1: genesis seats only the Singularity → 1 record / 1 claim.
+        assert data["record_count"] == 1
+        assert data["total_claims"] == 1
         assert "reset" in data["message"].lower()
         # State root should differ from before (different seed)
         assert data["state_root"] != before["state_root"]
         # Verify claims reflect new genesis
         claims = client.get("/api/claims").json()
-        assert len(claims) == 9
+        assert len(claims) == 1
         # Reset also clears block timing — mining should work immediately
         mine_resp = client.post("/api/mine")
         assert mine_resp.status_code == 200
@@ -249,14 +273,28 @@ class TestIntro:
         assert resp.status_code == 403
 
 
+def _two_claimed_coords(client):
+    """Ensure two distinct claimed coordinates exist and return them.
+
+    v1.2 §10.1: genesis seats only the Singularity (origin, wallet 0), so a
+    second coordinate must be seated first. Returns (origin, second) where the
+    origin is owned by wallet 0 and the second is owned by wallet 1. Seats
+    directly on the registry to avoid the /api/claim rate limiter (5 / 10s).
+    """
+    seat_player_claims([(10, 0)], wallet_index=1)  # idempotent: skips if present
+    claims = client.get("/api/claims").json()
+    origin = next(c for c in claims if (c["x"], c["y"]) == (0, 0))
+    second = next(c for c in claims if (c["x"], c["y"]) != (0, 0))
+    return (
+        {"x": origin["x"], "y": origin["y"]},
+        {"x": second["x"], "y": second["y"]},
+    )
+
+
 class TestMessage:
     def _get_two_claims(self, client):
         """Helper: get two distinct claimed coordinates."""
-        claims = client.get("/api/claims").json()
-        return (
-            {"x": claims[0]["x"], "y": claims[0]["y"]},
-            {"x": claims[1]["x"], "y": claims[1]["y"]},
-        )
+        return _two_claimed_coords(client)
 
     def test_send_message(self, client):
         client.post("/api/reset", headers=_ADMIN)
@@ -328,9 +366,7 @@ class TestMessages:
 
     def test_message_appears_in_history(self, client):
         client.post("/api/reset", headers=_ADMIN)
-        claims = client.get("/api/claims").json()
-        c1 = {"x": claims[0]["x"], "y": claims[0]["y"]}
-        c2 = {"x": claims[1]["x"], "y": claims[1]["y"]}
+        c1, c2 = _two_claimed_coords(client)
         # Send a message
         client.post("/api/message", json={
             "sender_wallet": 0,
