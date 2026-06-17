@@ -27,6 +27,24 @@ def admin_headers() -> dict:
     return {"X-Admin-Token": TEST_ADMIN_TOKEN}
 
 
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter():
+    """Clear SlowAPI rate-limit state before each test.
+
+    The TestClient sends every request from a single client IP, so the rate
+    limiter's counters accumulate across tests and can spuriously 429 a later
+    test that passes fine in isolation. Resetting before each test gives a clean
+    slate while preserving within-test rate limiting (the reset runs before the
+    test body, so a test that fires several requests still trips its own limit).
+    """
+    try:
+        from agentic.testnet.api import limiter
+        limiter.reset()
+    except Exception:
+        pass
+    yield
+
+
 def seat_player_claims(coords, *, wallet_index: int = 1, stake: int = 200):
     """Seat player claims directly on the live ``_genesis`` for API tests.
 
