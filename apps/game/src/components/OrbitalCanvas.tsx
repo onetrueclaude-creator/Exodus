@@ -6,7 +6,8 @@ import { buildScene } from "@/lib/orbitalScene";
 import { assignRanks } from "@/lib/rankMapping";
 import { bandOf } from "@/lib/orbitalGeometry";
 import { step, DEFAULT_PHYSICS, type PhysicsBody } from "@/lib/orbitalPhysics";
-import type { SeatInput, OrbitalFaction } from "@/types/orbital";
+import { seatsFromAgents, SINGULARITY_ID } from "@/lib/orbitalSeats";
+import type { SeatInput } from "@/types/orbital";
 
 const RADIAL_SCALE = 46; // px per √k — wider spacing so subnodes have room
 const CORE_PADDING = 56; // free space between the Singularity and rank-1
@@ -15,34 +16,10 @@ const DIM_ALPHA = 0.16; // non-focused node/edge dimming
 const ZOOM_MIN = 0.2;
 const ZOOM_MAX = 4;
 const ZOOM_STEP = 0.0015;
-const SINGULARITY_ID = "__singularity__";
-
-/** Phase-1 cosmetic colour: deterministic per-id across the player palette (varied/alive).
- *  Replaced by the chain's real faction in Plan 2. */
-const PLAYER_FACTIONS: OrbitalFaction[] = ["community", "professional", "founders"];
-function factionByHash(id: string): OrbitalFaction {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return PLAYER_FACTIONS[h % PLAYER_FACTIONS.length];
-}
-
-/** Phase-1 adapter: current store agents → seats (activity proxy = stakedCpu + securingCpu). */
+/** Store agents → orbital seats (claimed players + subagents + Singularity core),
+ *  consuming the chain's real activity. Seat construction lives in lib/orbitalSeats. */
 function seatsFromStore(): SeatInput[] {
-  const st = useGameStore.getState();
-  const agents = Object.values(st.agents) as Array<{
-    id: string;
-    parentAgentId?: string;
-    stakedCpu?: number;
-    securingCpu?: number;
-  }>;
-  const seats: SeatInput[] = agents.map((a) => ({
-    id: a.id,
-    faction: factionByHash(a.id),
-    parentId: a.parentAgentId,
-    activity: (a.stakedCpu ?? 0) + (a.securingCpu ?? 0),
-  }));
-  seats.push({ id: SINGULARITY_ID, faction: "singularity", isSingularity: true, activity: 0 });
-  return seats;
+  return seatsFromAgents(Object.values(useGameStore.getState().agents));
 }
 
 type BodyVM = PhysicsBody & { id: string; sprite: Sprite; baseScale: number };
