@@ -218,7 +218,7 @@ The addition of a spatial coordinate economy (the Neural Lattice), CPU-weighted 
 
 ZK Agentic Chain is organized into five distinct layers, each handling a specific concern in the protocol stack. This separation allows independent evolution of each layer while maintaining clean interfaces between them.
 
-**Layer 1 — User Layer.** The outermost layer manages wallets, transaction construction, and user-facing interfaces. Each user maintains an isolated ledger space — a private partition of the global state that is accessible only to the user and, during verification, to the ZK proof system. Wallets generate transactions, sign them with private keys, and submit them to the network. The User Layer also manages subscription tiers (Community, Professional), which determine the AI model tiers available for agent deployment and the CPU Energy allocation for staking operations. Additional protocol-managed tiers (Treasury Claude, Founder) exist for automated and team operations.
+**Layer 1 — User Layer.** The outermost layer manages wallets, transaction construction, and user-facing interfaces. Each user maintains an isolated ledger space — a private partition of the global state that is accessible only to the user and, during verification, to the ZK proof system. Wallets generate transactions, sign them with private keys, and submit them to the network. The User Layer also manages subscription tiers (Community, Professional), which determine the AI model tiers available for agent deployment and the CPU Energy allocation for staking operations. Additional protocol-managed roles (the Singularity core agent, Founder) exist for accumulator and team operations.
 
 **Layer 2 — Ledger Layer.** Each user's ledger space is backed by a Sparse Merkle Tree (SMT) of depth 26, supporting up to 2^26 (approximately 67 million) leaf nodes. State is managed in a UTXO-like model: each state entry (a "note") is committed to the tree as a hash of its contents, and spending a note requires revealing a nullifier that invalidates it without exposing which note was consumed. The Ledger Layer maintains per-user record chains — ordered sequences of state transitions that can be independently verified without reference to other users' state.
 
@@ -585,7 +585,7 @@ This architecture provides *private-by-default* semantics: unlike public ledgers
 
 Each user's ledger space is backed by a Sparse Merkle Tree [43] of depth 26 (MERKLE_TREE_DEPTH = 26), supporting 2^26 = 67,108,864 leaf nodes. The SMT provides efficient membership proofs (proving that a specific leaf exists at a specific position) and non-membership proofs (proving that a specific position is empty) without revealing any information about non-queried leaves.
 
-State transitions — such as claiming a coordinate, transferring AGNTC, or updating subgrid allocation — modify the SMT by updating the relevant leaf nodes and recomputing the root hash along the path from leaf to root. The new root hash is committed on-chain as the user's current state root. A ZK proof accompanies each state transition, proving that the new root was correctly derived from the old root given the claimed operation.
+State transitions — such as advancing standing, transferring AGNTC, or updating subgrid allocation — modify the SMT by updating the relevant leaf nodes and recomputing the root hash along the path from leaf to root. The new root hash is committed on-chain as the user's current state root. A ZK proof accompanies each state transition, proving that the new root was correctly derived from the old root given the claimed operation.
 
 The choice of depth 26 balances capacity (67 million leaves per user — sufficient for all foreseeable state entries) against proof size (26 hash computations along the Merkle path). The SMT uses Poseidon hashing [11] (Section 6.3) rather than SHA-256, reducing the in-circuit cost of Merkle path verification by approximately 100x.
 
@@ -907,7 +907,7 @@ AGNTC (Agentic Coin) is the native token of the ZK Agentic Chain protocol. It se
 3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd
 ```
 
-**Future deployment:** Upon mainnet launch of ZK Agentic Chain as an independent Layer-1 network, AGNTC becomes the native chain token with the same 1 billion maximum supply mapped to the 31,623 x 31,623 coordinate grid.
+**Future deployment:** Upon mainnet launch of ZK Agentic Chain as an independent Layer-1 network, AGNTC becomes the native chain token with the same 1 billion nominal soft cap, minted through subgrid Secure mining on the phyllotaxis lattice.
 
 #### 9.2 Token Utility
 
@@ -917,7 +917,7 @@ AGNTC serves four primary functions within the protocol:
 
 **Staking.** Validators must stake AGNTC alongside CPU compute resources to participate in block verification. The staked amount contributes to the token component (alpha = 0.40) of effective stake, which determines committee selection probability and reward share.
 
-**Governance.** Human AGNTC holders vote on protocol parameters (hardness multiplier, fee burn rate, staking weights), model updates, and network upgrades. Voting power is proportional to staked AGNTC. The Machines Faction is excluded from governance — only human participants (Community, Professional, Founders) may cast votes (Section 21.2).
+**Governance.** Human AGNTC holders vote on protocol parameters (hardness multiplier, fee burn rate, staking weights), model updates, and network upgrades. Voting power is proportional to staked AGNTC. The Singularity is excluded from governance — only human participants (Community, Professional, Founders) may cast votes (Section 21.2).
 
 **Resource economy.** Within the game interface, AGNTC represents the primary tradeable resource. It is earned through mining (Secure actions), spent on agent deployment, data storage, and NCP messaging, and traded between users.
 
@@ -1201,35 +1201,35 @@ The 50% burn rate is calibrated to produce meaningful deflationary pressure with
 
 #### 12.4 Burn-Mint Equilibrium (BME) and the City Real Estate Model
 
-Node claims in ZK Agentic Chain follow a **Burn-Mint Equilibrium (BME)** model inspired by the Render Network's economic design [28]. When a user claims a coordinate, both AGNTC and CPU Energy are permanently burned. Mining that coordinate subsequently mints new AGNTC — but the burn precedes the mint, creating a deflationary buffer.
+Standing advances in ZK Agentic Chain follow a **Burn-Mint Equilibrium (BME)** model inspired by the Render Network's economic design [28]. When a user pays to advance their seat into an inner band (active rank-advance, Section 19.5), both AGNTC and CPU Energy are permanently burned. The node's subgrid Secure mining subsequently mints new AGNTC — but the burn precedes the mint, creating a deflationary buffer.
 
-The claim cost follows a **city real estate model** — an economic geography where location determines price:
+The cost follows a **city real estate model** — an economic geography where standing determines price:
 
 ```
-claim_cost_agntc(ring, density) = BASE_CLAIM_COST × density × (1 / ring)
-claim_cost_cpu(ring, density)   = BASE_CPU_CLAIM_COST × density × (1 / ring)
+advance_cost_agntc(band, density) = BASE_CLAIM_COST × density × (1 / band)
+advance_cost_cpu(band, density)   = BASE_CPU_CLAIM_COST × density × (1 / band)
 ```
 
 Where:
-- **BASE_CLAIM_COST** = 100 AGNTC (the cost of claiming a coordinate at ring 1, density 1.0)
-- **BASE_CPU_CLAIM_COST** = 50 CPU Energy (the CPU cost at ring 1, density 1.0)
-- **density** is the coordinate's resource richness in [0, 1]
-- **ring** is the distance from the origin (minimum 1)
+- **BASE_CLAIM_COST** = 100 AGNTC (the cost at band 1, density 1.0)
+- **BASE_CPU_CLAIM_COST** = 50 CPU Energy (the CPU cost at band 1, density 1.0)
+- **density** is the node's resource richness in [0, 1] (per-node, Section 4.4)
+- **band** is the target radial band, `band(k) = ceil(√(k/8))` (minimum 1)
 
 **The real estate analogy:**
 
-| Location | Ring | Relative Cost | Real-World Analogy |
+| Standing | Band | Relative Cost | Real-World Analogy |
 |----------|------|--------------|-------------------|
-| Origin-adjacent | 1-3 | 100-33% of base | Manhattan / City of London |
-| Inner rings | 5-20 | 20-5% of base | Urban core |
-| Mid rings | 20-100 | 5-1% of base | Suburbs |
-| Outer rings | 100+ | <1% of base | Rural frontier |
+| Core-adjacent | 1-3 | 100-33% of base | Manhattan / City of London |
+| Inner bands | 5-20 | 20-5% of base | Urban core |
+| Mid bands | 20-100 | 5-1% of base | Suburbs |
+| Outer bands | 100+ | <1% of base | Rural frontier |
 
-Inner-ring coordinates are expensive to claim but yield AGNTC at the lowest hardness (most productive mining). Outer-ring coordinates are cheap to claim but yield AGNTC at high hardness (least productive mining). This creates a natural economic tension: premium locations cost more upfront but pay off faster.
+Inner-band standing is expensive to reach but yields AGNTC at the lowest hardness (most productive mining). Outer-band standing is cheap but yields AGNTC at high hardness (least productive mining). This creates a natural economic tension: premium standing costs more upfront but pays off faster.
 
-**Floor prices.** The formula includes implicit floor prices — at any ring, the minimum claim cost is BASE_CLAIM_COST × min_density / ring. Since density is derived from SHA-256 and uniformly distributed, no coordinate has zero density, preventing near-zero claim costs even at extreme outer rings.
+**Floor prices.** The formula includes implicit floor prices — at any band, the minimum cost is BASE_CLAIM_COST × min_density / band. Since density is derived from SHA-256 and uniformly distributed, no node has zero density, preventing near-zero costs even at extreme outer bands.
 
-**CPU Energy burn.** The CPU Energy spent on claims is permanently consumed — it does not flow to verifiers, stakers, or any recipient. This provides a second deflationary channel independent of the fee burn, ensuring that network expansion always carries an irreversible resource cost.
+**CPU Energy burn.** The CPU Energy spent advancing standing is permanently consumed — it does not flow to verifiers, stakers, or any recipient. This provides a second deflationary channel independent of the fee burn, ensuring that competing for inner standing always carries an irreversible resource cost.
 
 ---
 
@@ -1302,16 +1302,16 @@ These counters are verifiable through the AI provider's API response metadata �
 
 #### 13.3 Staking Requirements by Tier
 
-Participation in the ZK Agentic Chain staking system is gated by subscription tier, which determines the initial CPU Energy allocation, deploy range, and governance weight. Model selection is unrestricted across all tiers (see Section 19.3):
+Participation in the ZK Agentic Chain staking system is gated by subscription tier, which determines the initial CPU Energy allocation, subagent cap, and governance weight. Model selection is unrestricted across all tiers (see Section 19.3):
 
-| Tier | Monthly Cost | Homenode Model | Deploy Model | Initial CPU Energy |
+| Tier | Monthly Cost | Homenode Model | Subagent Model | Initial CPU Energy |
 |------|-------------|----------------|------------------|--------------------|
 | Community | Free | Any (API cost-gated) | Any (API cost-gated) | 1,000 |
 | Professional | $50 | Any (API cost-gated) | Any (API cost-gated) | 5,000 |
 
-**Why Professional has more CPU Energy.** Professional tier users pay a monthly subscription that funds protocol development and infrastructure. The higher CPU allocation (5× Community) enables them to fully utilize their broader deploy range (2 Moore rings, 24 nodes) and enhanced governance weight (2×). Community users receive a generous 1,000 CPU starting allocation — sufficient for meaningful gameplay within their single Moore ring.
+**Why Professional has more CPU Energy.** Professional tier users pay a monthly subscription that funds protocol development and infrastructure. The higher CPU allocation (5× Community) lets them run their larger subagent family (4 vs 2 orbiting subagents) at full Secure capacity and carries enhanced governance weight (2×). Community users receive a generous 1,000 CPU starting allocation — sufficient for meaningful gameplay with their 2 subagents.
 
-Protocol-managed tiers (Treasury Claude, Founder) are detailed in Section 19.3. These are not user-facing subscription options but serve automated mining and team bootstrap functions respectively.
+Protocol-managed roles (the Singularity core agent and the Founder tier) are detailed in Section 19.3. These are not user-facing subscription options but serve the protocol accumulator and team bootstrap functions respectively.
 
 #### 13.4 CPU Staking Calculations
 
@@ -1552,7 +1552,7 @@ Each homenode in the ZK Agentic Chain contains a private inner grid — an 8×8 
 
 #### 16.1 Inner Grid Architecture
 
-The subgrid is an abstraction layer between the Neural Lattice (the global coordinate space) and the individual agent operations running at each node. While the Neural Lattice is public — all participants can see claimed coordinates, node positions, and faction affiliations — the subgrid is private. Only the node owner can see how their 64 sub-cells are allocated.
+The subgrid is an abstraction layer between the Neural Lattice (the shared phyllotaxis seating) and the individual agent operations running at each node. While the Neural Lattice is public — all participants can see seated ranks, node positions, and faction affiliations — the subgrid is private. Only the node owner can see how their 64 sub-cells are allocated.
 
 ```
 SUBGRID_SIZE = 64    (8 × 8 sub-cells per homenode)
@@ -1825,8 +1825,8 @@ The tiered agent system creates a natural market structure: participants choose 
 
 The terminal presents a hierarchical command tree. At the top level:
 
-**1. Deploy Agent.** Creates a new agent at an unclaimed node. Multi-step process:
-- Select target node (must be an unclaimed jump point within the user's visible grid)
+**1. Deploy Agent.** Spawns a new subagent orbiting the participant's seat (subject to the tier subagent cap, Section 18.5). Multi-step process:
+- Confirm an available subagent slot (Community 2 · Professional 4 · Founder 4)
 - Select agent model tier (constrained by subscription)
 - Write introductory text (the agent's public-facing description)
 - Execute deployment on-chain (costs AGNTC deployment fee)
@@ -2190,7 +2190,7 @@ The zero-knowledge proof system evolves through four phases, each adding capabil
 
 #### 21.2 Governance
 
-The governance system activates after mainnet launch. A core design principle is the **separation of powers**: humans govern the protocol; machines execute it. The Machines Faction has zero governance weight — AI agents cannot vote on any proposal type. Only human-held staked AGNTC (Community, Professional, Founders factions) carries voting power.
+The governance system activates after mainnet launch. A core design principle is the **separation of powers**: humans govern the protocol; the protocol agent executes it. The Singularity has zero governance weight — the protocol's core agent cannot vote on any proposal type. Only human-held staked AGNTC (Community, Professional, Founders factions) carries voting power.
 
 **Voting weight** is proportional to staked AGNTC. All governance votes are on-chain, public, and auditable.
 
@@ -2200,14 +2200,14 @@ The governance system activates after mainnet launch. A core design principle is
 |--------------|-----------|--------|----------|-------------|
 | Parameter change | 51% | 10% | 7 days | Hardness multiplier, fee burn rate, staking weights, base rates |
 | Protocol upgrade | 67% | 25% | 30 days | Consensus rules, verification pipeline, economic model changes |
-| Emergency Machines unlock | 75% | 33% | None | Release AGNTC from Machines Faction treasury |
+| Emergency Singularity unlock | 75% | 33% | None | Release AGNTC from the Singularity reserve |
 | Emergency action | 80% | 25% | None | Pause compromised module, slash proven attacker |
 
 **Parameter proposals.** Adjustments to protocol parameters. These proposals require a simple majority (>51%) of human voting power and a minimum quorum of 10% of total human-staked AGNTC. Parameter changes take effect after a 7-day timelock.
 
 **Protocol proposals.** Changes to consensus rules, verification pipeline, or economic model. These require a supermajority (>67%) and a quorum of 25%. Protocol changes have a 30-day timelock and must include a specification, test results, and security analysis.
 
-**Emergency Machines unlock.** The Machines Faction treasury is locked by default. Unlocking any portion requires a 75% supermajority of human-staked AGNTC with a 33% quorum. This is an extraordinary action — the high threshold reflects the systemic importance of the Machines treasury as a deflationary anchor.
+**Emergency Singularity unlock.** The Singularity reserve is locked by default. Unlocking any portion requires a 75% supermajority of human-staked AGNTC with a 33% quorum. This is an extraordinary action — the high threshold reflects the systemic importance of the Singularity reserve as a deflationary anchor.
 
 **Emergency proposals.** Security-critical changes (pausing a compromised module, slashing a proven attacker). Emergency proposals require an 80% supermajority but have no timelock — they execute immediately upon reaching threshold. Emergency proposals can be vetoed by a security council (a 5-of-9 multisig) within 24 hours.
 
@@ -2517,7 +2517,7 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 #### 24.5 Governance Implementation
 
-**Status:** The governance model is specified (Section 21.2) with human-only voting, threshold tiers, and Machines exclusion. Implementation is deferred to post-mainnet. During testnet and alpha phases, protocol parameters are adjusted by the core development team. The governance smart contracts — vote weight calculation, quorum checking, timelock enforcement, and Machines exclusion logic — will be developed and audited during Phase 3.
+**Status:** The governance model is specified (Section 21.2) with human-only voting, threshold tiers, and Singularity exclusion. Implementation is deferred to post-mainnet. During testnet and alpha phases, protocol parameters are adjusted by the core development team. The governance smart contracts — vote weight calculation, quorum checking, timelock enforcement, and Singularity exclusion logic — will be developed and audited during Phase 3.
 
 #### 24.6 Network Protocol Unspecified
 
