@@ -17,9 +17,10 @@ class TestGenesisState:
 
     def test_creates_claims(self):
         from agentic.testnet.genesis import create_genesis
-        # v2: genesis always creates exactly 9 fixed nodes
+        # v1.2 §10.1: only the Singularity (origin) is seated at genesis;
+        # inner ranks stay open for arriving participants.
         g = create_genesis(num_wallets=10, seed=42)
-        assert len(g.claim_registry.all_active_claims()) == 9
+        assert len(g.claim_registry.all_active_claims()) == 1
 
     def test_no_community_pool(self):
         """v2: CommunityPool removed — organic growth, no pre-minted pool."""
@@ -83,7 +84,7 @@ class TestGenesisState:
             r = g.ledger_state.get_record(i)
             if r.program_id == BIRTH_PROGRAM_ID:
                 birth_records.append(r)
-        assert len(birth_records) == 9  # v2: 9 fixed genesis nodes
+        assert len(birth_records) == 1  # v1.2 §10.1: only the Singularity is seated
 
     def test_home_star_records_have_coordinates(self):
         from agentic.testnet.genesis import create_genesis
@@ -117,8 +118,9 @@ def test_genesis_has_subgrid_allocators():
     from agentic.lattice.subgrid import SubgridAllocator
     g = create_genesis(num_wallets=10, seed=42)
     assert hasattr(g, "subgrid_allocators")
-    # Genesis creates 9 fixed nodes with 9 unique owners
-    assert len(g.subgrid_allocators) == 9
+    # v1.2 §10.1: only the Singularity (origin) is seated, so there is exactly
+    # one claim owner → one subgrid allocator.
+    assert len(g.subgrid_allocators) == 1
     for alloc in g.subgrid_allocators.values():
         assert isinstance(alloc, SubgridAllocator)
         assert alloc.free_cells == 64

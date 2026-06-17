@@ -197,7 +197,8 @@ def test_genesis_creates_without_pool():
     g = create_genesis(num_wallets=10, seed=42)
     assert g.mining_engine is not None
     assert g.mining_engine.total_blocks_processed == 0
-    assert len(g.claim_registry.all_active_claims()) == 9
+    # v1.2 §10.1: only the Singularity (origin) is seated at genesis.
+    assert len(g.claim_registry.all_active_claims()) == 1
     assert not hasattr(g, 'community_pool') or g.community_pool is None
 
 

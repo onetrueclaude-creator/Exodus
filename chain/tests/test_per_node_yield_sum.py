@@ -1,6 +1,8 @@
 import pytest
 from agentic.testnet.genesis import create_genesis
-from agentic.lattice.node_subgrid import CellType, WARMUP_BLOCKS
+from agentic.lattice.node_subgrid import (
+    CellType, WARMUP_BLOCKS, NodeSubgrid, node_id_from_coord,
+)
 
 
 @pytest.fixture
@@ -12,11 +14,15 @@ def genesis_with_flag_off(monkeypatch):
 def test_compute_per_wallet_yields_sums_across_all_owned_nodes(genesis_with_flag_off):
     from agentic.testnet.api import _compute_per_wallet_yields
     g = genesis_with_flag_off
-    # Pick a wallet that owns at least one homenode
-    first_ns = next(iter(g.node_subgrids.values()))
-    owner = first_ns.owner
+    # v1.2 §10.1: genesis seats no homenode subgrids — seat two ring-1 nodes
+    # for ONE wallet so the per-wallet yield must sum across both owned nodes.
+    owner = g.wallets[1].public_key
+    for (x, y) in [(10, 0), (0, 10)]:
+        nid = node_id_from_coord(x, y)
+        g.node_subgrids[nid] = NodeSubgrid.new(
+            node_id=nid, owner=owner, created_at_block=0)
     owned_nodes = [ns for ns in g.node_subgrids.values() if ns.owner == owner]
-    assert len(owned_nodes) >= 1
+    assert len(owned_nodes) >= 2
     # Commit 8 SECURE cells and promote to ACTIVE on each owned node
     for ns in owned_nodes:
         ns.commit_diff([(i, CellType.SECURE) for i in range(8)], current_block=0)
