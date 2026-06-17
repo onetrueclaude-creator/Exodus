@@ -64,10 +64,12 @@ import random as _random
 
 from agentic.consensus.block import Block, BlockStatus
 from agentic.consensus.validator import Validator
+from agentic.economics.activity import resolve_ranks
 from agentic.lattice.allocator import CoordinateAllocator
 from agentic.lattice.claims import claim_cost
 from agentic.lattice.coordinate import GridCoordinate, resource_density, storage_slots
 from agentic.lattice.node_subgrid import compute_node_output, NodeOutput, coord_from_node_id
+from agentic.lattice.seating import band_of
 from agentic.ledger.transaction import BirthTx, validate_birth
 from agentic.params import (
     ALPHA, BASE_BIRTH_COST, BASE_CPU_PER_SECURE_BLOCK, BETA, BLOCK_TIME_MS,
@@ -209,6 +211,11 @@ class AgentInfo(BaseModel):
     mining_rate: float
     border_radius: int
     staked_cpu: int = 0  # CPU staked by this agent (matches Supabase agents table shape)
+    # --- Phyllotaxis seat (v1.2) ---
+    rank: int = 0          # 0 = Singularity core; 1 = innermost player seat
+    band: int = 0          # radial band = band_of(rank); 0 for the core
+    activity: float = 0.0  # rolling activity score (proxy: staked CPU, until live EMA)
+    is_singularity: bool = False  # the origin protocol node (gateway + accumulator)
 
 
 class ResetResult(BaseModel):
@@ -1420,20 +1427,48 @@ def get_agents(user_count: int = Query(default=3, ge=1, le=50)) -> List[AgentInf
 
     First `user_count` claims become user-owned Sonnet agents.
     Remaining claims become unclaimed Haiku slots.
+
+    Each agent also carries its phyllotaxis seat — ``rank`` (0 = the Singularity
+    core, 1 = innermost player seat), ``band`` = ``band_of(rank)``, and a rolling
+    ``activity`` score — so the renderer can seat nodes straight from the chain
+    instead of computing a client-side proxy. Until the live ActivityTracker is
+    wired into the mining loop, ``activity`` is seeded from each validator's
+    staked CPU as a proxy (same signal the renderer used locally).
     """
     g = _g()
     claims = g.claim_registry.all_active_claims()
+
+    # Pass 1: stable ids + activity proxy + locate the Singularity (origin node).
+    ids: List[str] = []
+    staked_cpus: List[int] = []
+    scores: Dict[str, float] = {}
+    singularity_id: Optional[str] = None
+    for i, c in enumerate(claims):
+        is_user = i < user_count
+        aid = f"agent-{i:03d}" if is_user else f"slot-{i:04d}"
+        # Option A: staked_cpu = validator.cpu_vpu for this claim's validator.
+        # TODO(Option B): switch to subgrid_allocator.count(SECURE) × BASE_SECURE_RATE
+        #   once subgrid allocation is actively used by players.
+        staked_cpu = int(g.validators[i].cpu_vpu) if i < len(g.validators) else 0
+        ids.append(aid)
+        staked_cpus.append(staked_cpu)
+        scores[aid] = float(staked_cpu)  # proxy until live activity EMA flows
+        if c.coordinate.x == 0 and c.coordinate.y == 0:
+            singularity_id = aid
+
+    # Activity → phyllotaxis rank (Singularity → 0, players ranked by score desc).
+    ranks = resolve_ranks(scores, singularity_id=singularity_id)
+
+    # Pass 2: build payloads.
     agents: List[AgentInfo] = []
     for i, c in enumerate(claims):
         x, y = c.coordinate.x, c.coordinate.y
         density = resource_density(x, y)
         is_user = i < user_count
-        # Option A: staked_cpu = validator.cpu_vpu for this claim's validator.
-        # TODO(Option B): switch to subgrid_allocator.count(SECURE) × BASE_SECURE_RATE
-        #   once subgrid allocation is actively used by players.
-        staked_cpu = int(g.validators[i].cpu_vpu) if i < len(g.validators) else 0
+        aid = ids[i]
+        rank = ranks.get(aid, 0)
         agents.append(AgentInfo(
-            id=f"agent-{i:03d}" if is_user else f"slot-{i:04d}",
+            id=aid,
             owner=c.owner.hex(),
             x=x,
             y=y,
@@ -1444,7 +1479,11 @@ def get_agents(user_count: int = Query(default=3, ge=1, le=50)) -> List[AgentInf
             storage_slots=storage_slots(x, y),
             mining_rate=round(density * 5.0, 4) if is_user else 0.0,
             border_radius=90 if is_user else 30,
-            staked_cpu=staked_cpu,
+            staked_cpu=staked_cpus[i],
+            rank=rank,
+            band=band_of(rank),
+            activity=round(scores[aid], 4),
+            is_singularity=(aid == singularity_id),
         ))
     return agents
 
