@@ -947,73 +947,66 @@ The protocol follows a phased deployment strategy, beginning on Solana and migra
 
 #### 10.1 Total Supply Architecture
 
-AGNTC has a soft-capped supply with a **5% annual inflation ceiling** enforced per epoch. The theoretical maximum is 1,000,000,000 (1 billion) tokens, corresponding to the 31,623 x 31,623 coordinate grid. In practice, the effective supply is constrained well below this by the inflation ceiling, increasing mining hardness, and sustained fee burns.
+AGNTC has a soft-capped supply with a **5% annual inflation ceiling** enforced per epoch. The nominal maximum is 1,000,000,000 (1 billion) tokens — a familiar headline figure inherited from the Solana SPL mint, not a hard ceiling tied to any grid size. In practice the effective supply is constrained far below this by the inflation ceiling, the increasing per-band mining hardness, and sustained fee burns; the 1B figure is a soft cap, and the real cap is the 5% annual ceiling.
 
-**Mining is the sole supply-expanding mechanism.** New AGNTC enters circulation only through one pathway: a miner successfully claims a grid coordinate. There is no pre-mine beyond the genesis allocation, no scheduled emission curve, no treasury minting authority. If no mining occurs, no new AGNTC enters circulation.
+**Mining is the sole supply-expanding mechanism.** New AGNTC enters circulation only through one pathway: a node's private subgrid mints AGNTC from its active Secure cells (Section 16). There is no pre-mine beyond the genesis allocation, no scheduled emission curve, no treasury minting authority. If no node secures, no new AGNTC enters circulation.
 
 **Supply burns** contract the circulating supply through two channels:
 - **50% transaction fee burn** — permanently removes AGNTC on every on-chain action (Section 12)
-- **Machines Faction accumulation** — the Machines agent permanently occupies the origin coordinate (Section 4.5) and never sells AGNTC; the continuous yield of the most productive single coordinate on the grid flows into a never-selling protocol reserve (Section 10.3)
+- **Singularity accumulation** — the Singularity is permanently bound to the core (`k = 0`, origin; Section 4.5) and never sells AGNTC; the continuous yield of the most productive single node on the lattice flows into a never-selling protocol reserve (Section 10.3)
 
 **Signup bonus:** Each new user registration mints 1 AGNTC as a signup bonus, ensuring every participant enters the economy with a non-zero balance. This minor supply expansion is subject to the same inflation ceiling enforcement.
 
-**Genesis supply:** 900 AGNTC, distributed across 9 genesis nodes. Eight of the nine are unclaimed at protocol launch (all of ring 1) and enter circulation only as participants claim them. The ninth (origin) is permanently bound to the Machines protocol agent and its 100 AGNTC is minted to the Machines accumulator at launch.
+**Genesis supply:** 900 AGNTC. At protocol launch, **only the Singularity is seated** (the core, `k = 0`); its 100 AGNTC is minted to the Singularity accumulator at genesis. The innermost competitive ranks are open at launch and the remaining 800 AGNTC enters circulation only as participants join and their subgrids mine — there is no pre-seeded ring of claims.
 
-| Node | Position | Initial Owner | AGNTC |
-|------|----------|---------------|-------|
-| Origin | (0, 0) | Machines (permanent) | 100 (minted at genesis) |
-| Ring 1 cardinal N | (0, 10) | Unclaimed | 100 (on claim) |
-| Ring 1 cardinal E | (10, 0) | Unclaimed | 100 (on claim) |
-| Ring 1 cardinal S | (0, -10) | Unclaimed | 100 (on claim) |
-| Ring 1 cardinal W | (-10, 0) | Unclaimed | 100 (on claim) |
-| Ring 1 diagonal NE | (10, 10) | Unclaimed | 100 (on claim) |
-| Ring 1 diagonal SE | (10, -10) | Unclaimed | 100 (on claim) |
-| Ring 1 diagonal SW | (-10, -10) | Unclaimed | 100 (on claim) |
-| Ring 1 diagonal NW | (-10, 10) | Unclaimed | 100 (on claim) |
+| Seat | Rank | Initial Owner | AGNTC |
+|------|------|---------------|-------|
+| Singularity core | k = 0 (origin) | Singularity (permanent) | 100 (minted at genesis) |
+| Inner band seats | k = 1, 2, 3, … | Open | minted via subgrid mining as participants join and secure |
 
-Each ring-1 coordinate is equally claimable by any participant regardless of faction. The historical names "Community Master" / "Machines Master" / etc. associated with these eight cells in v1.0 are retired; the cells have no faction binding under v1.1.
+The open inner ranks carry no faction binding. The historical v1.0 "Community Master" / "Machines Master" names and the v1.1 eight pre-seeded ring-1 cells are both retired; under v1.2 nothing but the core is seated at genesis.
 
 #### 10.2 Mining-Driven Distribution
 
-Newly minted AGNTC flows directly to the participant who claims the coordinate. There is no per-faction split, no automatic faction-treasury allocation, and no protocol-enforced proportionality — distribution is fully emergent from participant behavior on the open grid.
+Newly minted AGNTC flows directly to the participant whose subgrid mines it. There is no per-faction split, no automatic faction-treasury allocation, and no protocol-enforced proportionality — distribution is fully emergent from participant behavior.
 
 | Constraint Class | Holding Constraint | Source |
 |------------------|--------------------|--------|
 | Community | None — freely tradeable | Free-tier human users |
-| Machines | Cannot sell below acquisition cost (`MACHINES_MIN_SELL_RATIO = 1.0`) | Protocol-operated agent, origin-bound |
+| Singularity | Cannot sell below acquisition cost (`SINGULARITY_MIN_SELL_RATIO = 1.0`) | Protocol-operated core agent, origin-bound |
 | Founders | 4-year vest, 12-month cliff, applied per-AGNTC at mint time | Team and advisors |
 | Professional | None — freely tradeable | Paid-tier human users |
 
-Per-faction holdings drift naturally based on participation intensity: a faction whose members claim more coordinates accumulates more AGNTC. The protocol does not balance, rebalance, or guarantee any particular proportion. The "permanent accumulator" property of the Machines Faction is preserved structurally (Section 4.5): Machines permanently owns the most productive single coordinate (origin) and never sells, so it accumulates monotonically from the highest single-coordinate yield on the grid — without any protocol-level allocation that previously sent it 25% of all mined AGNTC.
+Per-faction holdings drift naturally based on participation intensity: a faction whose members do more verification work accumulates more AGNTC. The protocol does not balance, rebalance, or guarantee any particular proportion. The "permanent accumulator" property of the Singularity is preserved structurally (Section 4.5): the Singularity permanently holds the most productive single node (the core at origin) and never sells, so it accumulates monotonically from the highest single-node yield on the lattice — without any protocol-level allocation that previously sent it 25% of all mined AGNTC.
 
 Founders vesting applies to AGNTC earned by Founders-tier participants through their own mining; there is no pre-allocated Founders share. The 4-year linear vest with a 12-month cliff is enforced on the holding side, not the minting side: AGNTC mints to the Founders participant's address normally, but transfers are restricted by the vesting schedule encoded in the wallet's account state.
 
-#### 10.3 Machines Faction: Permanent Accumulator
+#### 10.3 The Singularity: Permanent Accumulator
 
-The Machines Faction represents a protocol-enforced approach to token supply stability. Under v1.1's open-grid model, the Machines Faction is implemented as a single protocol-operated AI agent permanently bound to coordinate (0, 0). It cannot expand beyond origin, cannot be deployed elsewhere, and is not eligible to claim any other coordinate. Within its single-node territory, the Machines agent operates autonomously: auto-leveling its node, auto-balancing CPU between mining and securing, and accumulating AGNTC monotonically. The faction is subject to a protocol-level economic constraint: **the Machines Faction never sells AGNTC at a loss.**
+The Singularity represents a protocol-enforced approach to token supply stability. Under v1.2's phyllotaxis model, it is implemented as a single protocol-operated AI agent permanently bound to the core (`k = 0`, origin). It cannot take a competitive seat, cannot be deployed elsewhere, and is not eligible to hold any other rank. Crucially, the Singularity is a **pure gateway and accumulator — it never mines and never secures.** It does not run a productive subgrid of its own; instead it passively accrues the origin's yield into its reserve and serves chain queries (Read / Stats / block data) and attestation submission as interaction spokes to the core. It is subject to a protocol-level economic constraint: **the Singularity never sells AGNTC at a loss.**
 
-The protocol enforces this through an economic constraint: any sale of AGNTC by the Machines Faction wallet below its acquisition cost is rejected by the verification committee. With MACHINES_MIN_SELL_RATIO = 1.0, the faction can only sell at or above cost — yielding zero profit, which eliminates any economic incentive to sell. This makes the Machines Faction a de facto permanent accumulator without requiring a hard transfer prohibition.
+The protocol enforces this through an economic constraint: any sale of AGNTC by the Singularity wallet below its acquisition cost is rejected by the verification committee. With `SINGULARITY_MIN_SELL_RATIO = 1.0`, it can only sell at or above cost — yielding zero profit, which eliminates any economic incentive to sell. This makes the Singularity a de facto permanent accumulator without requiring a hard transfer prohibition.
 
 **Properties of the permanent accumulator:**
 
-- The Machines wallet accumulates a continuous trickle of AGNTC from the highest-yield single coordinate on the grid (origin: lowest hardness, density clamped to 1.0).
-- The Machines Faction treasury grows monotonically — it can only increase.
-- Treasury size serves as a **protocol health metric**: a growing treasury indicates sustained mining activity at origin and ongoing protocol-agent uptime.
-- Combined with the 50% fee burn, a meaningful fraction of gross supply expansion is either burned or locked. The fraction is no longer the v1.0 figure of "over 75%" (which depended on a flat 25% allocation that no longer exists); under v1.1 the locked share is bounded by origin's single-coordinate yield divided by total network mining yield, and falls as the network expands.
-- The accumulator creates a baseline of structural deflationary pressure that is largest in early epochs (when origin is a meaningful fraction of total active coordinates) and diminishes — but never reverses — as the grid matures.
+- The Singularity wallet accumulates a continuous trickle of AGNTC from the highest-yield single node on the lattice (the core: lowest hardness, density clamped to 1.0) — earned structurally from origin yield, not by performing verification work itself.
+- The Singularity reserve grows monotonically — it can only increase.
+- Reserve size serves as a **protocol health metric**: a growing reserve indicates sustained network activity and ongoing protocol-agent uptime.
+- Combined with the 50% fee burn, a meaningful fraction of gross supply expansion is either burned or locked. The fraction is no longer the v1.0 figure of "over 75%" (which depended on a flat 25% allocation that no longer exists); under v1.2 the locked share is bounded by the core's single-node yield divided by total network mining yield, and falls as the network expands.
+- The accumulator creates a baseline of structural deflationary pressure that is largest in early epochs (when the core is a meaningful fraction of total active nodes) and diminishes — but never reverses — as the lattice matures.
 
-**Why origin specifically.** Origin is the unique coordinate guaranteed to exist at genesis and to remain accessible for the protocol's entire lifetime. Binding Machines to origin therefore gives the accumulator a permanent, irreducible source of AGNTC without granting it spatial growth, governance influence, or any administrative privilege beyond presence at a single fixed cell. The accumulator's existence and behaviour are both publicly verifiable by inspection of (0, 0).
+**Why the core specifically.** The core is the unique position guaranteed to exist at genesis and to remain present for the protocol's entire lifetime. Binding the Singularity to the core therefore gives the accumulator a permanent, irreducible source of AGNTC without granting it competitive standing, governance influence, or any administrative privilege beyond presence at the single fixed centre. The accumulator's existence and behaviour are both publicly verifiable by inspection of the origin.
 
-**Governance exclusion.** The Machines Faction has zero governance weight. The protocol agent cannot vote on protocol parameters, upgrades, or emergency actions. This separation ensures that humans govern the protocol while the protocol agent executes its narrow operational role at origin (Section 21.2).
+**Governance exclusion.** The Singularity has zero governance weight. The protocol agent cannot vote on protocol parameters, upgrades, or emergency actions. This separation ensures that humans govern the protocol while the protocol agent executes its narrow operational role at the core (Section 21.2).
 
-**Emergency override.** The Machines Faction treasury can only be unlocked through an emergency governance vote requiring a 75% supermajority of human-held staked AGNTC. This threshold is deliberately high — it represents an extraordinary action that should only occur if the accumulated treasury threatens protocol stability.
+**Emergency override.** The Singularity reserve can only be unlocked through an emergency governance vote requiring a 75% supermajority of human-held staked AGNTC. This threshold is deliberately high — it represents an extraordinary action that should only occur if the accumulated reserve threatens protocol stability.
 
 #### 10.4 Supply Curve Projections
 
-The following table shows supply growth as the grid expands through successive epoch rings, assuming average density of 0.5:
+The following table shows illustrative supply growth as the field fills through successive radial bands, assuming average density of 0.5 (cumulative seat counts scale as `∝ B²·K1`, recovering the v1.0/v1.1 `∝ N²` shape):
 
-| Ring | Nodes at Ring | Cumulative AGNTC | Hardness (16N) | Blocks per 1 AGNTC (solo miner) |
-|------|--------------|------------------|----------------|--------------------------------|
+| Band | Cumulative Seats | Cumulative AGNTC | Hardness (16·band) | Blocks per 1 AGNTC (solo node) |
+|------|------------------|------------------|--------------------|--------------------------------|
 | 1 (genesis) | 9 | 900 | 16 | 64 |
 | 10 | 441 | 44,100 | 160 | 640 |
 | 50 | 10,201 | 1,020,100 | 800 | 3,200 |
@@ -1022,7 +1015,7 @@ The following table shows supply growth as the grid expands through successive e
 | 324 | 421,201 | ~42,120,100 | 5,184 | 20,736 |
 | 500 | 1,002,001 | ~100,200,100 | 8,000 | 32,000 |
 
-The ~42 million AGNTC landmark emerges naturally around ring 324 — the point at which mining cost makes further expansion economically impractical for a network of approximately 1,000 active miners. This is an emergent property of the hardness curve, not a declared cap.
+The ~42 million AGNTC landmark emerges naturally around band 324 — the point at which mining cost makes further expansion economically impractical for a network of approximately 1,000 active nodes. This is an emergent property of the hardness curve, not a declared cap.
 
 For comparison:
 
@@ -1047,68 +1040,70 @@ ZK Agentic Chain's supply model is fundamentally different from both fixed-sched
 - No treasury minting authority
 - **Mining is the sole supply-expanding mechanism**
 
-New AGNTC enters circulation through one and only one mechanism: a miner successfully claims a grid coordinate. The rate at which supply grows is determined entirely by participant behavior — how many miners are active, how much CPU Energy they deploy, and which coordinates they choose to claim.
+New AGNTC enters circulation through one and only one mechanism: a node's subgrid Secure cells mint AGNTC for the live verification work they perform. The rate at which supply grows is determined entirely by participant behavior — how many nodes are online, how much CPU Energy they deploy to Secure, and how deep in the bands they sit.
 
 This means that in a period of low network activity, supply growth approaches zero. In a period of high activity, supply grows faster — but always bounded by two constraints:
 
-1. **Mining hardness curve** — each successive ring costs more CPU Energy to mine (hardness = 16 x ring), creating natural disinflation
+1. **Mining hardness curve** — each outer band costs more CPU Energy to mine (hardness = 16 × band), creating natural disinflation
 2. **5% annual inflation ceiling** — enforced per epoch, the protocol rejects mining rewards that would cause annualized supply growth to exceed 5% of total minted supply
 
-The inflation ceiling is a hard protocol constraint, not a target. In practice, mining hardness alone keeps actual inflation well below 5% in all but the earliest epochs. The ceiling exists as a safety valve — if a sudden influx of miners attempted to claim coordinates faster than the hardness curve alone would restrain, the ceiling caps the maximum rate of expansion.
+The inflation ceiling is a hard protocol constraint, not a target. In practice, mining hardness alone keeps actual inflation well below 5% in all but the earliest epochs. The ceiling exists as a safety valve — if a sudden influx of nodes attempted to mine faster than the hardness curve alone would restrain, the ceiling caps the maximum rate of expansion.
 
-#### 11.2 Epoch Ring Expansion
+#### 11.2 Radial Bands and Capacity
 
-The grid expands through an epoch-ring system. Each epoch corresponds to a concentric ring around the origin. Mining the required cumulative AGNTC threshold opens the next ring:
+The lattice grows through equal-width radial **bands** rather than discrete epoch rings. Band `b` is the annulus of seats at `band(k) = b`; with `K1 = SEATS_INNER_BAND` seats in the innermost band, band `b` holds proportionally `(2b − 1)·K1` seats and the cumulative capacity through band `B` is proportional to `B²·K1`. There is no threshold-gated "ring opening": seats fill continuously as participants join, and the bands are radial labels that set hardness and status, not unlock events.
+
+This `∝ B²` capacity shape recovers the same growth the v1.0/v1.1 epoch threshold produced:
 
 ```
-threshold(N) = 4 * N * (N + 1)
+old epoch threshold:  threshold(N) = 4 · N · (N + 1)   ⇒   cumulative capacity ∝ N²
+new band capacity:    cumulative through band B ∝ B² · K1   (with K1 = 8)
 ```
 
-| Ring | Threshold (cumulative AGNTC) | New Coordinates (8N) | Total Coordinates |
-|------|------------------------------|---------------------|-------------------|
-| 2 | 24 | 16 | 25 |
-| 5 | 120 | 40 | 121 |
-| 10 | 440 | 80 | 441 |
-| 20 | 1,680 | 160 | 1,681 |
-| 50 | 10,200 | 400 | 10,201 |
-| 100 | 40,400 | 800 | 40,401 |
+| Band b | Seats in band ∝ (2b−1)·K1 | Cumulative capacity ∝ B²·K1 |
+|--------|---------------------------|------------------------------|
+| 1 | 8 | 8 |
+| 2 | 24 | 32 |
+| 3 | 40 | 72 |
+| 5 | 72 | 200 |
+| 10 | 152 | 800 |
 
-Each ring reveals new coordinate positions along the Chebyshev perimeter at distance N from the origin. Under v1.1, homenode placement within a ring follows the open-grid spawn algorithm (Section 4.5): the protocol allocates the lowest-ring unclaimed coordinate in Chebyshev-ring sweep order, breaking within-ring ties lexicographically. This produces deterministic origin-out filling that does not depend on faction. The v1.0 golden-angle prime-twist placement formula — which assumed a faction-arm partitioning that no longer exists — is retired.
+Because outer bands hold proportionally more seats, the field naturally accommodates more participants as it grows — the same "outer holds more" property the old `8N`-per-ring perimeter gave, now arising directly from the sunflower's annulus areas with no separate rule. New participants are appended at the next open (outermost) rank and climb inward by activity (Section 19.2); the v1.0 golden-angle prime-twist placement formula and the v1.1 Chebyshev-ring spawn sweep are both retired in favour of pure rank assignment.
 
 #### 11.3 Mining Hardness Formula
 
-Mining difficulty increases linearly with ring distance:
+Mining difficulty increases linearly with the radial band:
 
 ```
-hardness(ring) = HARDNESS_MULTIPLIER * ring = 16 * ring
+hardness = HARDNESS_MULTIPLIER × band(k) = 16 × band(k)        band(k) = ceil(√(k / 8))
 ```
 
-The hardness multiplier of 16 was chosen to create a 2:1 ratio between difficulty growth and grid expansion:
+The hardness multiplier of 16 was chosen to create a 2:1 ratio between difficulty growth and field expansion:
 
-- Grid perimeter at ring N = 8N coordinates
-- Hardness at ring N = 16N
-- Ratio: grid_growth / hardness = 8N / 16N = 0.5
+- Seats added per band b ∝ (2b − 1)·K1 ≈ 2b·K1 for large b
+- Hardness at band b = 16b
+- Ratio: band_growth / hardness ≈ 2b·K1 / 16b = K1/8 = 1 at K1 = 8
 
-This means each successive ring yields half the AGNTC per unit of compute compared to the previous ring. The cost-to-yield ratio degrades monotonically, creating smooth, continuous disinflation without the discrete shocks of Bitcoin-style halving events.
+Equivalently, each step outward in band yields proportionally less AGNTC per unit of compute than the band before it. The cost-to-yield ratio degrades monotonically with band, creating smooth, continuous disinflation without the discrete shocks of Bitcoin-style halving events.
 
-There is no cap on hardness — it grows indefinitely as rings expand. At ring 1, hardness is 16; at ring 100, hardness is 1,600; at ring 1,000, hardness is 16,000. This unbounded growth is the mechanism by which supply expansion decelerates toward zero without ever being artificially capped.
+There is no cap on hardness — it grows indefinitely as the field expands. In band 1, hardness is 16; in band 100, hardness is 1,600; in band 1,000, hardness is 16,000. This unbounded growth is the mechanism by which supply expansion decelerates toward zero without ever being artificially capped.
 
 #### 11.4 Yield Calculations
 
-The mining yield at a given coordinate is determined by:
+The mining yield at a given node is determined by:
 
 ```
-yield_per_block = BASE_MINING_RATE_PER_BLOCK * density(x, y) / hardness(ring)
+yield_per_block = BASE_MINING_RATE_PER_BLOCK * density(node) / hardness
 ```
 
 Where:
 - BASE_MINING_RATE_PER_BLOCK = 0.5 AGNTC (at hardness 1, full density)
-- density(x, y) is in [0, 1]
-- hardness(ring) = 16 * ring
+- density(node) = SHA-256_unit(node_id) ∈ [0, 1] (per-node, Section 4.4)
+- hardness = 16 × band(k)
 
 **Worked examples** (assuming density = 0.5, the statistical average):
 
-| Ring | Hardness | Yield per Block | Blocks for 1 AGNTC | Time for 1 AGNTC (60s blocks) |
+| Band | Hardness | Yield per Block | Blocks for 1 AGNTC | Time for 1 AGNTC (60s blocks) |
 |------|----------|----------------|--------------------|-----------------------------|
 | 1 | 16 | 0.01563 | 64 | 1.1 hours |
 | 10 | 160 | 0.00156 | 640 | 10.7 hours |
@@ -1117,7 +1112,7 @@ Where:
 | 200 | 3,200 | 0.000078 | 12,800 | 8.9 days |
 | 324 | 5,184 | 0.000048 | 20,736 | 14.4 days |
 
-These figures represent a solo miner at an average-density coordinate. In a network with M active miners, the coordinate fill rate is M times faster, but each individual miner's marginal cost remains the same.
+These figures represent a solo node at an average-density seat. In a network with M active nodes, the aggregate mint rate is M times faster, but each individual node's marginal cost remains the same.
 
 #### 11.5 Supply Flattening Analysis
 
@@ -1125,24 +1120,24 @@ The organic growth model produces a supply curve that flattens asymptotically. T
 
 **Practical flattening bands** by network size:
 
-| Network Size | Flattening Ring | Approximate Supply | Individual Mining Time per AGNTC |
+| Network Size | Flattening Band | Approximate Supply | Individual Mining Time per AGNTC |
 |-------------|----------------|--------------------|---------------------------------|
-| Solo miner | ~100-150 | 4M-9M | 4-7 days |
-| Small (~100 miners) | ~200-250 | 16M-25M | 9-11 days |
-| Medium (~1,000 miners) | ~324 | ~42M | 14 days |
-| Large (~10,000 miners) | ~500+ | 100M+ | 22+ days |
+| Solo node | ~100-150 | 4M-9M | 4-7 days |
+| Small (~100 nodes) | ~200-250 | 16M-25M | 9-11 days |
+| Medium (~1,000 nodes) | ~324 | ~42M | 14 days |
+| Large (~10,000 nodes) | ~500+ | 100M+ | 22+ days |
 
 **Net supply after burns:** The actual circulating supply is reduced by multiple burn channels:
 
 ```
-circulating_supply = total_minted - cumulative_fee_burns - cumulative_bme_burns - machines_treasury
-net_inflation = new_mining_rewards - (total_fees * FEE_BURN_RATE) - bme_claim_burns
+circulating_supply = total_minted - cumulative_fee_burns - cumulative_bme_burns - singularity_reserve
+net_inflation = new_mining_rewards - (total_fees * FEE_BURN_RATE) - bme_burns
 ```
 
 Three mechanisms contract the effective supply:
 1. **50% transaction fee burn** — permanent removal on every on-chain action
-2. **BME claim burns** — AGNTC spent on node claims is permanently burned (Section 12.4)
-3. **Machines accumulation** — AGNTC mined at the origin coordinate (Section 4.5, Section 10.3) enters the Machines treasury and never circulates. Under v1.1 this is a structural property of origin occupancy rather than a 25% allocation; the share of total supply locked by Machines is bounded by origin's single-coordinate yield and falls as the network expands
+2. **BME burns** — AGNTC spent advancing standing (active relocation, Section 19.5) is permanently burned under the Burn-Mint Equilibrium (Section 12.4)
+3. **Singularity accumulation** — AGNTC earned at the core (Section 4.5, Section 10.3) enters the Singularity reserve and never circulates. Under v1.2 this is a structural property of core occupancy rather than a 25% allocation; the share of total supply locked is bounded by the core's single-node yield and falls as the network expands
 
 In an active network with high transaction volume, the combined burn rate can significantly exceed new minting — producing net deflation in circulating supply even as total minted supply continues to grow.
 
