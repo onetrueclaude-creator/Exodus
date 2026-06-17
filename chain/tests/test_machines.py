@@ -213,7 +213,9 @@ class TestLegacyExpansionPath:
     def test_legacy_next_target_first(self):
         _, machine = _make_behavior()
         target = machine._next_target()
-        assert target == (20, 0)
+        # v1.2 §10.1: genesis no longer pre-claims (10, 0), so the first free
+        # East-arm target is now (10, 0) instead of (20, 0).
+        assert target == (10, 0)
 
     def test_legacy_expand_when_invoked_directly_still_claims(self):
         """Direct invocation of _expand still claims, because the method
@@ -224,7 +226,8 @@ class TestLegacyExpansionPath:
         result = machine._expand(state)
         assert result is True
         from agentic.lattice.coordinate import GridCoordinate
-        assert state.claim_registry.get_claim_at(GridCoordinate(x=20, y=0)) is not None
+        # v1.2 §10.1: first free East-arm target is now (10, 0), not (20, 0).
+        assert state.claim_registry.get_claim_at(GridCoordinate(x=10, y=0)) is not None
 
     def test_legacy_expand_fails_below_threshold(self):
         state, machine = _make_behavior()

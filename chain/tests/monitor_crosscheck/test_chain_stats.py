@@ -62,8 +62,10 @@ class TestNetworkCard:
             f"but /api/claims returned {len(claims)} items"
         )
 
-    def test_genesis_has_nine_claims(self, claims):
-        assert len(claims) == 9, "Genesis must produce exactly 9 active claims"
+    def test_genesis_seats_only_the_singularity(self, claims):
+        # v1.2 §10.1: only the Singularity (origin) is seated at genesis.
+        assert len(claims) == 1, "Genesis must seat exactly the Singularity claim"
+        assert (claims[0]["x"], claims[0]["y"]) == (0, 0)
 
     def test_agents_count_matches_claims_count(self, agents, claims):
         # /api/agents returns the same underlying claims as agent objects

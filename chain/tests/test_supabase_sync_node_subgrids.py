@@ -18,7 +18,13 @@ def test_sync_node_subgrids_upserts_each_node(monkeypatch):
     )
 
     from agentic.testnet.supabase_sync import _sync_node_subgrids
+    from agentic.lattice.node_subgrid import NodeSubgrid, node_id_from_coord
     g = create_genesis(seed=42)
+    # v1.2 §10.1: genesis seats no homenode subgrids — seat one so the sync has
+    # a row to upsert. Owner must be a real wallet so owner_wallet resolves.
+    owner = g.wallets[1].public_key
+    nid = node_id_from_coord(10, 0)
+    g.node_subgrids[nid] = NodeSubgrid.new(node_id=nid, owner=owner, created_at_block=0)
     _sync_node_subgrids(g)
 
     # Upsert called on node_subgrids table with a list of len(node_subgrids)

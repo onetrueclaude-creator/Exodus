@@ -162,6 +162,12 @@ class TestProcessPendingTransactions:
         assert "exceeds 64" in mf.call_args[0][1]
 
     def test_multiple_transactions(self, genesis):
+        # v1.2 §10.1: genesis seats only the Singularity's allocator (wallet 0).
+        # Wallet 1 gets its subgrid allocator the way /api/claim would — by
+        # claiming a node — so the assign_subgrid txn for wallet 1 has a target.
+        from agentic.lattice.subgrid import SubgridAllocator
+        w1 = genesis.wallets[1].public_key
+        genesis.subgrid_allocators.setdefault(w1, SubgridAllocator(owner=w1))
         rows = [
             {
                 "id": "txn-010",
