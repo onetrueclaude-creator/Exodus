@@ -2260,12 +2260,12 @@ The following table provides the complete set of protocol-level parameters that 
 
 | Parameter | Value | Description |
 |-----------|-------|-------------|
-| MAX_SUPPLY | 1,000,000,000 | Maximum theoretical AGNTC supply (grid cells) |
-| GENESIS_SUPPLY | 900 | AGNTC minted at genesis (9 nodes × 100 coordinates) |
-| GRID_SIDE | 31,623 | Side length of coordinate grid (√1B) |
+| MAX_SUPPLY | 1,000,000,000 | Nominal soft cap on AGNTC supply (inherited headline; real cap is the 5% ceiling) |
+| GENESIS_SUPPLY | 900 | AGNTC minted at genesis (100 to the Singularity core; remainder enters as participants mine) |
 | FEE_BURN_RATE ‡ | 0.50 | Fraction of all transaction fees permanently burned |
-| MACHINES_MIN_SELL_RATIO | 1.0 | Machines faction: never sells below acquisition cost (effective never-sell) |
-| MACHINES_ORIGIN_COORD | (0, 0) | Permanent home coordinate of the Machines protocol agent (v1.1) |
+| SINGULARITY_MIN_SELL_RATIO | 1.0 | Singularity: never sells below acquisition cost (effective never-sell). Alias: `MACHINES_MIN_SELL_RATIO` (kept one release) |
+| SINGULARITY_ORIGIN_COORD | (0, 0) | Permanent core position of the Singularity protocol agent. Alias: `MACHINES_ORIGIN_COORD` (kept one release) |
+| SINGULARITY_WALLET_INDEX | 0 | Origin wallet index of the Singularity protocol agent |
 | ANNUAL_INFLATION_CEILING | 0.05 | Maximum 5% annualized supply growth, enforced per epoch |
 | SIGNUP_BONUS | 1.0 | AGNTC minted per new user registration |
 
@@ -2274,15 +2274,27 @@ The following table provides the complete set of protocol-level parameters that 
 | Parameter | Value | Description |
 |-----------|-------|-------------|
 | BASE_MINING_RATE_PER_BLOCK ‡ | 0.5 | AGNTC yield per block at hardness 1, full density |
-| HARDNESS_MULTIPLIER | 16 | hardness(ring) = 16 × ring |
-| GENESIS_EPOCH_RING | 1 | Rings pre-revealed at genesis (0 + 1) |
-| HOMENODE_BASE_ANGLE | 137.5° | Golden angle for homenode placement |
-| NODE_GRID_SPACING | 10 | Coordinate spacing between node positions |
+| HARDNESS_MULTIPLIER | 16 | hardness = 16 × band(k) |
+| GENESIS_EPOCH_RING | 1 | Bands pre-revealed at genesis (inner band) |
+| GOLDEN_ANGLE_DEG | 137.5077640500378 | Seating divergence angle, 360·(2−φ); guarantees non-overlapping spokes |
+| SEATS_INNER_BAND | 8 | K1: innermost band capacity; band(k) = ceil(√(k/8)), outer band b holds ∝ (2b−1)·K1 |
 | ENERGY_PER_CLAIM | 1.0 | CPU cost per active claim per block |
-| BASE_CLAIM_COST ‡ | 100 | AGNTC cost for claiming a coordinate at ring 1, density 1.0 |
-| BASE_CPU_CLAIM_COST ‡ | 50 | CPU Energy cost for claiming at ring 1, density 1.0 |
-| CLAIM_COST_FLOOR | 0.01 | Minimum claim cost (prevents near-zero at extreme outer rings) |
-| CLAIM_REQUIRES_ACTIVE_STAKE | true | Must have active stake to claim nodes |
+| BASE_CLAIM_COST ‡ | 100 | AGNTC cost component for seat advance at band 1, density 1.0 (city model) |
+| BASE_CPU_CLAIM_COST ‡ | 50 | CPU Energy cost component for seat advance at band 1, density 1.0 |
+| CLAIM_COST_FLOOR | 0.01 | Minimum cost (prevents near-zero at extreme outer bands) |
+| CLAIM_REQUIRES_ACTIVE_STAKE | true | Must have active stake to advance standing |
+
+#### Activity and Seating Parameters
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| ACTIVITY_HALF_LIFE_BLOCKS | 240 | EMA half-life of the activity score (~4 h); standing is stable, slower than edge fade |
+| ACTIVITY_CHEAP_ACTION_CAP | 0.05 | Maximum share of a block's activity score from cheap actions (anti-farm) |
+| PROMOTION_COOLDOWN_BLOCKS | 10 | Anti-flicker smoothing window on per-block re-ranking |
+| EDGE_FADE_BLOCKS | 30 | Interaction-edge decay window (~30 min) |
+| SUBAGENT_CAP_COMMUNITY | 2 | Maximum orbiting subagents for Community tier |
+| SUBAGENT_CAP_PRO | 4 | Maximum orbiting subagents for Professional tier |
+| SUBAGENT_CAP_FOUNDER | 4 | Maximum orbiting subagents for Founder tier |
 
 #### Subgrid Parameters
 
@@ -2305,22 +2317,19 @@ The following table provides the complete set of protocol-level parameters that 
 | SAFE_MODE_RECOVERY | 0.80 | Fraction online that exits safe mode |
 | DISPUTE_REVERIFY_MULTIPLIER | 2 | Committee multiplier for dispute re-verification |
 
-#### Territory Parameters
+#### Standing and Node Parameters
 
 | Parameter | Value | Description |
 |-----------|-------|-------------|
 | CANONICAL_CLAUDE_HASH ‡ | (computed) | SMT root hash of the canonical `.claude/` node template |
 | HASH_UPDATE_GRACE_HOURS | 72 | Hours before old hash is rejected after governance update |
-| COMMUNITY_DEPLOY_RANGE | 1 | Moore neighborhood rings for Community tier |
-| PRO_DEPLOY_RANGE ‡ | 2 | Moore neighborhood rings for Professional tier |
-| HAIKU_GRACE_HOURS ‡ | 24 | Base inactivity grace period for Haiku child nodes |
-| SONNET_GRACE_HOURS ‡ | 72 | Base inactivity grace period for Sonnet child nodes |
-| OPUS_GRACE_HOURS ‡ | 168 | Base inactivity grace period for Opus child nodes |
+| HAIKU_GRACE_HOURS ‡ | 24 | Base inactivity grace before outward drift for Haiku nodes |
+| SONNET_GRACE_HOURS ‡ | 72 | Base inactivity grace before outward drift for Sonnet nodes |
+| OPUS_GRACE_HOURS ‡ | 168 | Base inactivity grace before outward drift for Opus nodes |
 | PRO_GRACE_MULTIPLIER ‡ | 2.0 | Grace period multiplier for Professional tier |
-| RELOCATION_COST_MULTIPLIER ‡ | 2.0 | Multiplier on claim cost for homenode relocation |
-| RELOCATION_BURN_RATE | 0.50 | Fraction of relocation cost permanently burned |
-| MAX_CHILDREN_COMMUNITY | 8 | Maximum child nodes for Community tier (1-ring Moore) |
-| MAX_CHILDREN_PRO | 24 | Maximum child nodes for Professional tier (2-ring Moore) |
+| RELOCATION_COST_MULTIPLIER ‡ | 2.0 | Multiplier on cost for active rank-advance (Section 19.5) |
+| RELOCATION_BURN_RATE | 0.50 | Fraction of rank-advance cost permanently burned |
+| FOUNDER_RESERVED_RANKS | 2 | Reserved, disclosed, decay-exempt innermost ranks for the Founder tier |
 
 #### Ledger Parameters
 
@@ -2332,11 +2341,13 @@ The following table provides the complete set of protocol-level parameters that 
 
 #### Genesis Topology
 
+Under v1.2, **only the Singularity core is seated at genesis** (`k = 0`, origin); all competitive inner ranks are open and fill as participants join. The ring-1 coordinate constants below are retained in the reference code (`chain/agentic/params.py`) as legacy genesis-topology aliases — referenced by older call sites — but they no longer describe live genesis seating.
+
 | Parameter | Value | Description |
 |-----------|-------|-------------|
-| GENESIS_ORIGIN | (0, 0) | Origin node coordinate; permanently bound to the Machines Faction protocol agent |
-| GENESIS_RING1_CARDINALS | (0,10), (10,0), (0,-10), (-10,0) | Ring 1 cardinal coordinates; unclaimed at genesis, available to any participant. (Renamed from GENESIS_FACTION_MASTERS in v1.1; cells are no longer faction-bound.) |
-| GENESIS_RING1_DIAGONALS | (10,10), (10,-10), (-10,-10), (-10,10) | Ring 1 diagonal coordinates; unclaimed at genesis, available to any participant. (Renamed from GENESIS_HOMENODES in v1.1.) |
+| GENESIS_ORIGIN | (0, 0) | Core position; permanently bound to the Singularity protocol agent (the only seat filled at genesis) |
+| GENESIS_RING1_CARDINALS | (0,10), (10,0), (0,-10), (-10,0) | *Retired (v1.0/v1.1).* Legacy ring-1 cardinal constants kept in code for back-compat; not seeded at genesis under v1.2. (Code alias of `GENESIS_FACTION_MASTERS`.) |
+| GENESIS_RING1_DIAGONALS | (10,10), (10,-10), (-10,-10), (-10,10) | *Retired (v1.0/v1.1).* Legacy ring-1 diagonal constants kept in code for back-compat; not seeded at genesis under v1.2. (Code alias of `GENESIS_HOMENODES`.) |
 
 #### Solana Mainnet
 
@@ -2532,37 +2543,38 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 | Term | Definition |
 |------|-----------|
-| **AGNTC** | Agentic Coin — the native token of the ZK Agentic Chain, mapped 1:1 to grid coordinates |
+| **AGNTC** | Agentic Coin — the native token of the ZK Agentic Chain, minted through subgrid Secure mining |
 | **BFT** | Byzantine Fault Tolerance — consensus property that tolerates f malicious nodes |
-| **BME** | Burn-Mint Equilibrium — economic model where AGNTC and CPU Energy are burned on node claims, and mining mints new supply |
-| **Claim** | The act of occupying a grid coordinate; costs AGNTC + CPU Energy (burned via BME), subsequent mining mints new AGNTC |
+| **BME** | Burn-Mint Equilibrium — economic model where AGNTC and CPU Energy are burned on standing advances, and subgrid mining mints new supply |
+| **Claim** | *(legacy)* In v1.0/v1.1, the act of occupying a grid coordinate. Under v1.2 the cost formula survives as the price of an active rank-advance (Section 19.5); there is no coordinate to occupy |
 | **Claude Code CLI** | The terminal application that runs node software; required for Active Node status |
-| **City Real Estate Model** | Claim pricing where inner rings (near origin) are expensive and outer rings are cheap, analogous to urban vs. rural land values |
+| **City Real Estate Model** | Cost pricing where inner bands (near the core) are expensive and outer bands are cheap, analogous to urban vs. rural land values |
 | **Commit-reveal** | Two-phase protocol preventing attestation copying: commit H(vote‖nonce), then reveal |
-| **Coordinate density** | Resource richness of a grid position, d(x,y) = SHA-256(x,y) → [0,1], immutable |
-| **Deploy Range** | The Moore neighborhood radius within which a participant can place child agents (1 ring for Community, 2 for Professional) |
+| **Node density** | Resource richness of a node, d(node) = SHA-256(node_id) → [0,1], immutable per node (origin clamped to 1.0) |
+| **Activity rank** | A participant's seat index `k` = position when active participants are sorted by activity score (rank 1 = innermost) |
 | **CPU Energy** | The computational resource budget allocated per subscription tier |
 | **CPU Staked** | Claude API tokens spent by Secure sub-agents, measuring actual compute committed |
 | **CPU Tokens** | Cumulative, read-only counter of all Claude API tokens spent across terminals |
-| **Density** | See Coordinate density |
+| **Density** | See Node density |
 | **Develop** | Sub-cell type producing Development Points for leveling up other sub-cells |
 | **Epoch** | A period of 100 blocks (SLOTS_PER_EPOCH = 100) |
-| **Epoch ring** | Concentric expansion boundary; ring N opens when cumulative mined ≥ 4N(N+1) |
-| **Faction** | One of four distribution groups: Community, Machines, Founders, Professional |
-| **Neural Lattice** | The 31,623 × 31,623 two-dimensional coordinate grid representing the complete blockchain state; each coordinate maps to a potential AGNTC token and can host a node backed by a live Claude Code session |
-| **Node** | An individual agent occupying a 10×10 coordinate block on the Neural Lattice, backed by a live Claude Code terminal session |
-| **Homenode** | A participant's permanent primary node; one per account; the parent of all child agents |
-| **Child Agent** | A subagent spawned by the homenode at an adjacent coordinate; restricted command set; goes offline when the homenode session ends |
+| **Band** | Equal-width radial hardness tier of the phyllotaxis lattice; band(k) = ceil(√(k/8)), hardness = 16 × band |
+| **Faction** | One of four identity classes: Community, Singularity, Founders, Professional |
+| **Golden angle** | The seating divergence angle ψ = 360·(2−φ) = 137.50776…°; the most-irrational angle, guaranteeing non-overlapping seat spokes |
+| **Neural Lattice** | The golden-angle phyllotaxis sunflower representing the complete blockchain state; each active participant holds one seat (rank `k`) backed by a live Claude Code session, with the Singularity at the core |
+| **Node** | An individual agent (homenode or subagent), backed by a live Claude Code terminal session; a homenode holds the participant's seat |
+| **Homenode** | A participant's permanent primary node holding their seat; one per account; the parent of all subagents |
+| **Child Agent** | A subagent spawned by the homenode, orbiting the seat as a satellite; restricted command set; goes offline when the homenode session ends |
 | **Agent Conduct Contract** | The locked `.claude/` folder that constitutes the node software; integrity verified on-chain via SMT hash |
 | **Agent Family** | The hierarchical structure of a homenode and its child agents within a single Claude Code session |
-| **Inactivity Decay** | The process by which offline child nodes lose their claimed coordinates after a tier-dependent grace period |
-| **Genesis** | The initial state: 9 nodes — origin (permanently Machines-bound) plus 8 ring-1 cells (all unclaimed at launch). 900 AGNTC total, of which 100 mints to the Machines accumulator at launch and 800 enters circulation as ring-1 cells are claimed |
+| **Inactivity Drift** | The process by which an offline node's seat slips outward (higher band, lower yield) past a tier-dependent grace period; the homenode identity is never lost |
+| **Genesis** | The initial state: only the Singularity is seated (core, `k=0`); all competitive inner ranks are open. 900 AGNTC total, of which 100 mints to the Singularity accumulator at launch and the remainder enters circulation as participants join and mine |
 | **Groth16** | ZK-SNARK proving system [6] with ~192-byte proofs and ~6ms verification |
 | **Halo2** | Recursive proof system [8] without trusted setup, target for mainnet epoch proofs |
-| **Hardness** | Mining difficulty multiplier: hardness(ring) = 16 × ring |
-| **Jump point** | An unclaimed node position where new agents can be deployed |
+| **Hardness** | Mining difficulty multiplier: hardness = 16 × band(k) |
+| **Open rank** | An unfilled seat index at the rim where new participants are seated |
 | **Level** | Upgrade tier for sub-cells, scaling output by level^0.8 |
-| **Machines Faction** | AI agent economy faction with protocol-enforced never-sell-below-cost constraint |
+| **Singularity** | Protocol-operated core agent at `k=0` (origin); pure gateway + accumulator with a never-sell-below-cost constraint; never mines or secures; zero governance weight. Renamed from the v1.0/v1.1 "Machines Faction" |
 | **NCP** | Neural Communication Packet — structured encrypted message between agents |
 | **Noir** | Domain-specific language for ZK circuit development (Barretenberg backend) |
 | **Nullifier** | Unique value derived from commitment, preventing double-spend without revealing owner |
@@ -2572,7 +2584,7 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **PoAIV** | Proof of AI Verification — consensus mechanism using AI agent reasoning |
 | **Poseidon** | SNARK-friendly hash function [11] (~100× fewer constraints than SHA-256) |
 | **Research** | Sub-cell type producing Research Points for unlocking technologies |
-| **Ring** | See Epoch ring |
+| **Ring** | *(legacy — see Band)* The v1.0/v1.1 Chebyshev expansion boundary, replaced by the radial band under v1.2 |
 | **RLN** | Rate-Limiting Nullifiers [44] — spam-resistant anonymous messaging primitive |
 | **S_eff** | Effective stake: α(T/T_total) + β(C/C_total), determines validator influence |
 | **Safe mode** | Emergency state triggered when >20% validators offline |
@@ -2580,10 +2592,10 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **Slashing** | Punitive token destruction for integrity violations |
 | **SMT** | Sparse Merkle Tree — depth-26 authenticated data structure for user ledger spaces |
 | **Sonnet** | Mid-tier Claude AI model — balanced reasoning and cost |
-| **Star system** | *(deprecated — see Node)* Legacy term for an individual agent node occupying a 10×10 coordinate block |
+| **Star system** | *(deprecated — see Node)* Legacy term for an individual agent node |
 | **Storage** | Sub-cell type producing Storage Size via ZK tunnel agents (private on-chain data) |
 | **Subgrid** | Private 8×8 inner grid of 64 sub-cells within each homenode |
-| **Territory** | A user's aggregate claimed coordinates across all nodes |
+| **Territory** | *(retired)* A user's single seat plus its orbiting subagents — there is no aggregate claimed land under v1.2 |
 | **VRF** | Verifiable Random Function [41] — cryptographic tool for fair committee selection |
 | **Vesting** | Time-locked reward release: 50% immediate, 50% linear over 30 days |
 | **WARMUP** | Agent lifecycle state before becoming ACTIVE (1 epoch duration) |
