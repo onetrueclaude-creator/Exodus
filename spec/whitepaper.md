@@ -925,7 +925,7 @@ AGNTC serves four primary functions within the protocol:
 
 The protocol follows a phased deployment strategy, beginning on Solana and migrating to an independent Layer-1 chain:
 
-**Phase 1 — Token Launch (current).** 1 billion AGNTC minted as a Solana SPL token. Initial liquidity established through decentralized exchanges (Raydium, Jupiter). Community building and early adopter distribution through the game interface.
+**Phase 1 — Token Launch (current).** 1 billion AGNTC minted as a Solana SPL token. Initial liquidity to be established through decentralized exchanges (Raydium, Jupiter). Community building and early adopter distribution through the game interface.
 
 **Phase 2 — Testnet (current).** The ZK Agentic Chain testnet operates as a Python FastAPI simulation running the full protocol logic: PoAIV consensus, epoch-ring expansion, mining hardness, subgrid allocation, and faction distribution. The game UI (built in Next.js with PixiJS rendering) connects to the testnet, providing a functional prototype of the spatial coordinate economy.
 
@@ -2061,7 +2061,7 @@ ZK Agentic Chain follows a phased deployment strategy — launching the AGNTC to
 
 #### 20.1 Phase 1 — Token Launch (Current)
 
-**Status: Complete.**
+**Status: Token minted (mint + freeze authority renounced — supply permanently fixed at 1 billion); public market launch pending.**
 
 1 billion AGNTC has been minted as a Solana SPL token:
 
@@ -2069,13 +2069,13 @@ ZK Agentic Chain follows a phased deployment strategy — launching the AGNTC to
 Mint Address: 3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd
 ```
 
-The Solana deployment provides:
-- **Immediate liquidity.** AGNTC is tradeable on Solana DEXes (Raydium, Jupiter, Orca) from day one
+The Solana deployment is designed to provide:
+- **DEX liquidity.** Once a liquidity pool is seeded, AGNTC trades on Solana DEXes (Raydium, Jupiter, Orca). Mint and freeze authorities are already renounced, so supply is permanently fixed at 1 billion.
 - **Established infrastructure.** Solana wallets (Phantom, Solflare), block explorers (Solscan, Solana Explorer), and DeFi protocols are already available
 - **Low transaction costs.** Solana's sub-cent transaction fees enable micro-transactions and high-frequency trading
 - **Community building.** Token holders can participate in the AGNTC economy before the custom chain launches
 
-The 1 billion SPL tokens represent the total AGNTC supply that will eventually exist on the ZK Agentic Chain. During Phase 1, these tokens function as a tradeable asset with utility within the game UI but without the full protocol mechanics (mining, staking, verification) that will be enabled on the native chain.
+The 1 billion SPL tokens represent the total AGNTC supply that will eventually exist on the ZK Agentic Chain. Once liquidity is established, these tokens function as a tradeable asset with utility within the game UI but without the full protocol mechanics (mining, staking, verification) that will be enabled on the native chain.
 
 **Figure 6: Migration Architecture**
 
