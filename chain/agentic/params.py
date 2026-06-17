@@ -165,3 +165,21 @@ MAX_SESSIONS_PER_WALLET = 1
 # While ON, yield computation still reads per-wallet SubgridAllocator.
 # When OFF, reads per-node NodeSubgrid and ignores the legacy field.
 LEGACY_PER_WALLET_SUBGRID: bool = True
+
+# ── Phyllotaxis seating (v1.2) ──────────────────────────────────────────────
+# Seat = rank k; angle(k)=k·GOLDEN_ANGLE_DEG, radius=c·√k (radial scale is a
+# client-side visual constant). Hardness tiers via equal-width radial bands:
+# band(k)=ceil(√(k/SEATS_INNER_BAND)), hardness=HARDNESS_MULTIPLIER·band.
+GOLDEN_ANGLE_DEG = 137.5077640500378   # 360·(2−φ), φ=(1+√5)/2 — most-irrational divergence angle
+SEATS_INNER_BAND = 8                    # K1: innermost band capacity; outer band b holds (2b−1)·K1
+
+# ── Activity score (v1.2) ───────────────────────────────────────────────────
+ACTIVITY_HALF_LIFE_BLOCKS = 240   # EMA half-life (~4h) — standing is stable, slower than edge fade
+ACTIVITY_CHEAP_ACTION_CAP = 0.05  # max share of a block's score from cheap actions (anti-farm)
+PROMOTION_COOLDOWN_BLOCKS = 10    # anti-flicker on per-block re-ranking
+EDGE_FADE_BLOCKS = 30             # interaction-edge decay window (~30 min)
+
+# ── Singularity (renamed from Machines; aliases kept one release) ───────────
+SINGULARITY_ORIGIN_COORD = MACHINES_ORIGIN_COORD
+SINGULARITY_MIN_SELL_RATIO = MACHINES_MIN_SELL_RATIO
+SINGULARITY_WALLET_INDEX = 0   # origin wallet (matches machines.MACHINE_WALLET_INDEX)

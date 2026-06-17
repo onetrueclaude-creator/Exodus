@@ -63,6 +63,8 @@ class MachineAgentBehavior:
     remain defined but are no longer wired into tick().
     """
 
+    is_singularity = True  # v1.2: this IS the Singularity (renamed from Machines)
+
     def __init__(self, state, wallet_index: int = MACHINE_WALLET_INDEX):
         self.wallet_index = wallet_index
         self.origin = MACHINE_ORIGIN
@@ -204,3 +206,11 @@ class MachineAgentBehavior:
         self._secure(state)
 
         # No EXPAND phase under v1.1. Machines remains origin-bound.
+
+
+# ── v1.2 rename: Machines → Singularity ─────────────────────────────────────
+# The class above is the Singularity core (gateway + accumulator; it never
+# secures or mines — _secure is an intentional no-op, resolving Bug #10 by
+# design). `SingularityBehavior` is the preferred name; `MachineAgentBehavior`
+# is retained one release for back-compat (callers, genesis, legacy tests).
+SingularityBehavior = MachineAgentBehavior
