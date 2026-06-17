@@ -6,6 +6,14 @@
 
 ---
 
+## 2026-06-14 — Whitepaper v1.2 (Phyllotaxis Revision)
+
+**Changed:** `whitepaper.md` from v1.1 to v1.2. Replaced the open coordinate-grid spatial model with a golden-angle phyllotaxis lattice — a deterministic sunflower of agent seats around a central Singularity core (renamed from "Machines"). A seat is a single activity rank `k`: `angle(k) = k · 137.50776°`, `radius(k) = c·√k`; the golden angle guarantees non-overlapping interaction spokes. Hardness tiers are now equal-width radial bands (`band(k) = ceil(√(k/8))`, `hardness = 16 × band`); density is per-node (`SHA-256(node_id)`, origin clamped 1.0) rather than per-coordinate. Movement is activity-driven: rising activity spirals a seat inward, inactivity drifts it outward past a grace window; deliberate active relocation pays AGNTC + CPU to advance standing. Retired empire/territory/adjacency/deploy-range and the `MAX_CHILDREN_*` model in favour of one seat + 2–4 orbiting subagents (Community 2, Professional/Founder 4). The Singularity is gateway + accumulator only and never mines or secures (resolves Bugs #9/#10); genesis seats only the Singularity with inner ranks open (Bug #11). Updated Abstract, §1.3, §4.1–§4.5, Figure 1, §10.1–§10.3, §11.2/§11.3/§11.4/§11.5, §18.5, §19.1–§19.6, §22 parameters, and the glossary. §22 added `GOLDEN_ANGLE_DEG`, `SEATS_INNER_BAND`, the Activity & Seating block (half-life, cheap-action cap, promotion cooldown, edge fade, subagent caps), and `SINGULARITY_*` aliases; dropped `GRID_SIDE`, `NODE_GRID_SPACING`, `HOMENODE_BASE_ANGLE`, `*_DEPLOY_RANGE`, `MAX_CHILDREN_*`. Economic core (subgrid mining, dual staking, BME, 5% ceiling, vesting) unchanged.
+
+**Why:** Align the public protocol specification with the phyllotaxis overhaul (spec `docs/superpowers/specs/2026-06-14-orbital-lattice-overhaul-design.md`, rev 2) and the chain params landed in Plan 2 (`chain/agentic/params.py`). §22 values are cross-checked against the code by `chain/tests/test_whitepaper_audit.py`.
+
+---
+
 ## 2026-05-14 — Whitepaper v1.1 (Open-Grid Revision)
 
 **Changed:** `whitepaper.md` from v1.0 to v1.1. Retired the four-arm logarithmic spiral spatial model. Factions are now identity classes, not territorial divisions. AGNTC no longer split 25%/25%/25%/25% by faction-arm; mints directly to claimants. Machines accumulator preserved structurally via permanent origin occupancy. New §4.5 "Open-Grid Spatial Economy" added. Updated Abstract, §1.3, §4.1, §4.2, §4.3, Figure 1, §10.1, §10.2, §10.3, §11.2, §12.3, §19.1, §19.2, §19.3, §22 parameters, §22 Genesis Topology, and the glossary. Removed `DIST_*=0.25` parameter rows; added `MACHINES_ORIGIN_COORD = (0, 0)`. Internal revision log (`whitepaper-changelog.md`, gitignored) updated with the corresponding v2.0 entry.

@@ -1,10 +1,12 @@
-# AGNTC Whitepaper v1.1
+# AGNTC Whitepaper v1.2
 
 > **ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification**
 >
-> Version 1.1 (Open-Grid Revision) | May 2026
+> Version 1.2 (Phyllotaxis Revision) | June 2026
 >
-> v1.1 supersedes v1.0 (April 2026). The principal change is the replacement of the four-arm logarithmic spiral spatial model with a single open coordinate grid. Factions persist as participant identity classes but no longer control territorial arms; AGNTC distribution is no longer split 25%/25%/25%/25% by faction. The Machines accumulator is preserved via permanent origin occupancy. See §4.5 "Open-Grid Spatial Economy" for the consolidated post-pivot model.
+> v1.2 supersedes v1.1 (Open-Grid Revision, May 2026). The principal change is the replacement of the open coordinate grid with a **golden-angle phyllotaxis lattice** — a deterministic sunflower of agent seats around a central **Singularity** core (renamed from "Machines"). A participant's standing is an intrinsic activity rank `k`, not an `(x, y)` coordinate: activity draws a seat inward along the spiral, inactivity lets it drift outward. The empire/territory/adjacency/deploy-range model is retired in favour of one seat plus a small fixed family of orbiting subagents (2 for Community, 4 for Professional/Founder). Hardness tiers become equal-width radial **bands** (`hardness = 16 × band`); per-node density replaces per-coordinate density; the Singularity is a pure gateway + accumulator that never mines or secures. The economic core (subgrid mining as the sole mint path, dual staking, Burn-Mint Equilibrium, the 5% inflation ceiling, vesting) is preserved unchanged. See §4 "The Neural Lattice" for the phyllotaxis seating model and §19 for activity-rank movement.
+>
+> *v1.1 (historical) replaced the v1.0 four-arm logarithmic spiral with a single open coordinate grid and made factions identity classes rather than territorial arms. v1.2 retains factions-as-identity but replaces the coordinate grid itself with the phyllotaxis seating described above.*
 
 ---
 
