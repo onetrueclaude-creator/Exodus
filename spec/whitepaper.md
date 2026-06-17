@@ -1,10 +1,12 @@
-# AGNTC Whitepaper v1.1
+# AGNTC Whitepaper v1.2
 
 > **ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification**
 >
-> Version 1.1 (Open-Grid Revision) | May 2026
+> Version 1.2 (Phyllotaxis Revision) | June 2026
 >
-> v1.1 supersedes v1.0 (April 2026). The principal change is the replacement of the four-arm logarithmic spiral spatial model with a single open coordinate grid. Factions persist as participant identity classes but no longer control territorial arms; AGNTC distribution is no longer split 25%/25%/25%/25% by faction. The Machines accumulator is preserved via permanent origin occupancy. See §4.5 "Open-Grid Spatial Economy" for the consolidated post-pivot model.
+> v1.2 supersedes v1.1 (Open-Grid Revision, May 2026). The principal change is the replacement of the open coordinate grid with a **golden-angle phyllotaxis lattice** — a deterministic sunflower of agent seats around a central **Singularity** core (renamed from "Machines"). A participant's standing is an intrinsic activity rank `k`, not an `(x, y)` coordinate: activity draws a seat inward along the spiral, inactivity lets it drift outward. The empire/territory/adjacency/deploy-range model is retired in favour of one seat plus a small fixed family of orbiting subagents (2 for Community, 4 for Professional/Founder). Hardness tiers become equal-width radial **bands** (`hardness = 16 × band`); per-node density replaces per-coordinate density; the Singularity is a pure gateway + accumulator that never mines or secures. The economic core (subgrid mining as the sole mint path, dual staking, Burn-Mint Equilibrium, the 5% inflation ceiling, vesting) is preserved unchanged. See §4 "The Neural Lattice" for the phyllotaxis seating model and §19 for activity-rank movement.
+>
+> *v1.1 (historical) replaced the v1.0 four-arm logarithmic spiral with a single open coordinate grid and made factions identity classes rather than territorial arms. v1.2 retains factions-as-identity but replaces the coordinate grid itself with the phyllotaxis seating described above.*
 
 ---
 
@@ -14,7 +16,7 @@ We present ZK Agentic Chain, a Layer-1 blockchain protocol that introduces *Proo
 
 The protocol employs a dual-staking model that weights computational contribution (60%) over capital (40%), reducing plutocratic concentration inherent in pure proof-of-stake designs. Validators must commit both AGNTC tokens and CPU compute resources; the effective stake that determines committee selection and reward share is a weighted combination of both dimensions.
 
-ZK Agentic Chain maps its entire token supply to a two-dimensional coordinate grid — a 31,623 x 31,623 spatial economy in which value is a function of geography rather than administrative allocation. The grid is open and undivided: any participant may claim any unclaimed coordinate, subject to the economic constraints below. Factions (Community, Machines, Founders, Professional) persist as participant identity classes that govern subscription, governance weight, and protocol role — they no longer control territorial arms of the grid. Mining is the sole supply-expanding mechanism: new AGNTC enters circulation only when miners successfully claim coordinates. Node claims cost AGNTC plus CPU Energy under a Burn-Mint Equilibrium (BME) model where the cost increases with proximity to the origin (inner rings are expensive, outer rings are cheap), and the per-coordinate density function (a deterministic SHA-256 hash of `x || y`) creates a non-uniform value landscape independent of distance. A soft cap with a 5% annual inflation ceiling prevents runaway supply expansion. Mining difficulty increases proportionally with ring distance from the origin (hardness = 16 x ring), creating natural disinflation without artificial halving events. A 50% transaction fee burn and the Machines Faction's permanent AGNTC accumulation at the origin coordinate provide sustained deflationary pressure as network usage grows.
+ZK Agentic Chain renders its network as a **golden-angle phyllotaxis lattice** — a deterministic sunflower of agent seats around a central Singularity core, in which standing is a function of activity rather than administrative allocation. Each participant occupies a single seat given by an integer rank `k` (the Singularity is the core at `k = 0`): seat `k` sits at angle `k × 137.50776°` and radius proportional to `√k`. Because the golden angle is the most irrational divergence angle, no two seats ever share a spoke to the core, and the disk packs evenly as participants join. Standing is intrinsic and shared: every client computes the identical seat from the on-chain rank, with no coordinate to claim or contest. Inner seats are high-standing; sustained activity draws a seat inward, while inactivity lets it drift outward. Mining remains the sole supply-expanding mechanism — new AGNTC enters circulation only through each node's private subgrid Secure cells. Hardness tiers are equal-width radial **bands** (`band(k) = ceil(√(k / 8))`, `hardness = 16 × band`), so inner bands are cheaper and higher-yield while outer bands naturally hold more seats; a per-node density function (a deterministic SHA-256 hash of the node identifier) creates a non-uniform value landscape independent of position. A soft cap with a 5% annual inflation ceiling prevents runaway supply expansion. A 50% transaction fee burn and the Singularity's permanent AGNTC accumulation at the core provide sustained deflationary pressure as network usage grows.
 
 Privacy is enforced at every layer. Each user's state resides in an isolated ledger space backed by a Sparse Merkle Tree of depth 26 with nullifier-based ownership proofs derived from the Zcash Sapling design. Verification agents communicate exclusively through ZK private channels — proving correctness of state transitions without exposing the underlying data to other agents or to the network. All state is private by default unless explicitly published by the user.
 
@@ -29,7 +31,7 @@ This paper describes the protocol architecture, consensus mechanism, privacy sys
 - [1. Introduction](#1-introduction)
 - [2. Background and Related Work](#2-background-and-related-work)
 - [3. System Overview](#3-system-overview)
-- [4. The Neural Lattice: Blockchain as Coordinate Space](#4-the-neural-lattice)
+- [4. The Neural Lattice: Phyllotaxis Standing Economy](#4-the-neural-lattice)
 - [5. Proof of AI Verification](#5-proof-of-ai-verification)
 - [6. Privacy Architecture](#6-privacy-architecture)
 - [7. BFT Ordering and Finality](#7-bft-ordering-and-finality)
@@ -44,7 +46,7 @@ This paper describes the protocol architecture, consensus mechanism, privacy sys
 - [16. Subgrid Allocation System](#16-subgrid-allocation-system)
 - [17. Per-Block Resource Calculations](#17-per-block-resource-calculations)
 - [18. Agent Terminal System](#18-agent-terminal-system)
-- [19. Network Topology and Spatial Economy](#19-network-topology-and-spatial-economy)
+- [19. Network Topology and Standing Economy](#19-network-topology-and-spatial-economy)
 - [20. Migration Path: Solana to Layer 1](#20-migration-path)
 - [21. Technical Roadmap](#21-technical-roadmap)
 - [22. Protocol Parameters](#22-protocol-parameters)
@@ -104,13 +106,13 @@ ZK Agentic Chain addresses these limitations with three design principles:
 
 #### 1.3 Vision: The Neural Lattice
 
-ZK Agentic Chain represents blockchain state as a two-dimensional coordinate grid — a spatial economy where geography, resources, and strategic position are intrinsic to the protocol rather than abstracted away behind address strings and block heights.
+ZK Agentic Chain represents blockchain state as a **golden-angle phyllotaxis lattice** — a sunflower of agent seats around a central Singularity, where standing, resources, and strategic position are intrinsic to the protocol rather than abstracted away behind address strings and block heights. Position is not an `(x, y)` coordinate a participant chooses or claims; it is an activity rank `k` that the protocol assigns and continuously re-sorts.
 
-The grid is open and undivided. Any participant — Community, Founders, Professional, or the protocol-operated Machines agent — can claim any unclaimed coordinate subject to economic constraints (cost, hardness, density) rather than territorial ones. Factions represent distinct participant classes (free-tier community users, AI agents controlled by the protocol, founders and advisors, and professional paid-tier users) and govern subscription, governance weight, and protocol role; they do not own arms of the grid. Newly minted AGNTC flows from the act of mining itself: every claimed coordinate mints a fixed amount of AGNTC to the claiming participant, irrespective of where on the grid the coordinate lies. Geographic value emerges instead from two intrinsic, hash-derived properties of each coordinate: hardness (distance from origin) and density (resource richness). This replaces the older arbitrary allocation percentages with an economy whose value gradient is observable, deterministic, and the same for every participant.
+The lattice is shared and deterministic. Every active participant — Community, Founders, Professional — holds exactly one seat, computed identically by every client from the on-chain rank: seat `k` lies at `angle(k) = k × 137.50776°` and `radius(k) = c·√k` (the Fermat-spiral phyllotaxis packing). The protocol-operated **Singularity** agent is bound to the centre (`k = 0`). Factions represent distinct participant classes (free-tier community users, the protocol's own core agent, founders and advisors, and professional paid-tier users) and govern subscription, governance weight, and protocol role; they do not own regions of the lattice. Newly minted AGNTC flows from the act of mining itself: each node's private subgrid mints AGNTC to its operator, irrespective of seat. Value emerges instead from two intrinsic properties: hardness (which radial **band** the seat falls in — `hardness = 16 × band`) and per-node density (a deterministic SHA-256 hash of the node identifier). This replaces arbitrary allocation percentages with an economy whose value gradient is observable, deterministic, and the same for every participant — and whose standing rewards real activity over capital or land-grabbing.
 
-Users explore the grid through AI agent terminals — constrained Claude model instances that operate as in-game interfaces. Each deployed agent occupies a 10x10 coordinate block (a "node"), and users interact with the blockchain exclusively through structured command menus presented by their agents. There is no free-text chat; every interaction is a validated game action that maps to an on-chain transaction.
+Users explore the lattice through AI agent terminals — constrained Claude model instances that operate as in-game interfaces. Each participant runs a single homenode seat plus a small family of orbiting subagents (a "node" is one agent), and users interact with the blockchain exclusively through structured command menus presented by their agents. There is no free-text chat; every interaction is a validated game action that maps to an on-chain transaction.
 
-The protocol launches in phases: AGNTC begins as a Solana SPL token (1 billion units minted) to establish liquidity and community, while the ZK Agentic Chain testnet simulates the full protocol with a game-like interface. Upon mainnet launch, Solana-based AGNTC migrates to the native Layer-1 chain via a lock-and-mint bridge, and the spatial coordinate economy becomes the production blockchain.
+The protocol launches in phases: AGNTC begins as a Solana SPL token (1 billion units minted) to establish liquidity and community, while the ZK Agentic Chain testnet simulates the full protocol with a game-like interface. Upon mainnet launch, Solana-based AGNTC migrates to the native Layer-1 chain via a lock-and-mint bridge, and the phyllotaxis standing economy becomes the production blockchain.
 
 ---
 
@@ -216,7 +218,7 @@ The addition of a spatial coordinate economy (the Neural Lattice), CPU-weighted 
 
 ZK Agentic Chain is organized into five distinct layers, each handling a specific concern in the protocol stack. This separation allows independent evolution of each layer while maintaining clean interfaces between them.
 
-**Layer 1 — User Layer.** The outermost layer manages wallets, transaction construction, and user-facing interfaces. Each user maintains an isolated ledger space — a private partition of the global state that is accessible only to the user and, during verification, to the ZK proof system. Wallets generate transactions, sign them with private keys, and submit them to the network. The User Layer also manages subscription tiers (Community, Professional), which determine the AI model tiers available for agent deployment and the CPU Energy allocation for staking operations. Additional protocol-managed tiers (Treasury Claude, Founder) exist for automated and team operations.
+**Layer 1 — User Layer.** The outermost layer manages wallets, transaction construction, and user-facing interfaces. Each user maintains an isolated ledger space — a private partition of the global state that is accessible only to the user and, during verification, to the ZK proof system. Wallets generate transactions, sign them with private keys, and submit them to the network. The User Layer also manages subscription tiers (Community, Professional), which determine the AI model tiers available for agent deployment and the CPU Energy allocation for staking operations. Additional protocol-managed roles (the Singularity core agent, Founder) exist for accumulator and team operations.
 
 **Layer 2 — Ledger Layer.** Each user's ledger space is backed by a Sparse Merkle Tree (SMT) of depth 26, supporting up to 2^26 (approximately 67 million) leaf nodes. State is managed in a UTXO-like model: each state entry (a "note") is committed to the tree as a hash of its contents, and spending a note requires revealing a nullifier that invalidates it without exposing which note was consumed. The Ledger Layer maintains per-user record chains — ordered sequences of state transitions that can be independently verified without reference to other users' state.
 
@@ -238,118 +240,123 @@ Three principles constrain every architectural decision in the protocol:
 
 ---
 
-### 4. The Neural Lattice: Blockchain as Coordinate Space
+### 4. The Neural Lattice: Phyllotaxis Standing Economy
 
-#### 4.1 Grid Architecture
+#### 4.1 Seating: The Golden-Angle Sunflower
 
-ZK Agentic Chain maps its token supply to a two-dimensional coordinate grid of 31,623 x 31,623 cells — approximately 1 billion cells total (31,623^2 = 1,000,014,129, rounded to the MAX_SUPPLY constant of 1,000,000,000). The grid is not merely a visualization of blockchain state — it *is* the blockchain state. Claiming a coordinate through the mining process mints new AGNTC, and every AGNTC in circulation corresponds to a specific (x, y) coordinate pair. Node claims require both AGNTC and CPU Energy under the Burn-Mint Equilibrium model (Section 12.4), with costs that vary by grid location — inner rings near the origin are expensive (dense urban core), while outer rings are progressively cheaper (suburban frontier).
+ZK Agentic Chain renders its network as a **golden-angle phyllotaxis lattice** — the sunflower-seed packing. Each active participant occupies a single seat given by an integer **rank `k ≥ 1`** (the Singularity core is `k = 0`). The seat's screen position is a pure function of `k`:
 
-Agents (validator nodes) occupy 10x10 coordinate blocks, defined by the NODE_GRID_SPACING parameter. Each agent's node encompasses 100 grid cells and therefore 100 potential AGNTC when fully mined. Valid agent positions are restricted to multiples of NODE_GRID_SPACING; the claim_node() function snaps submitted coordinates to the nearest grid-aligned position.
+```
+angle(k)  = k × ψ        ψ = 360° × (2 − φ) = 137.50776…°   (golden angle, φ = (1+√5)/2)
+radius(k) = c × √k        c = radial scale (client-side visual constant)
+```
 
-The grid topology is uniform. Every coordinate is identical to every other from a structural standpoint; only the deterministic per-coordinate density function and the per-ring hardness curve introduce variation. There are no faction-specific arms, sectors, or quadrants — the spatial structure makes no reference to participant identity. Coordinates near the origin are strategically valuable because hardness is low (cheaper to claim) and the early rings are smaller (fewer total positions per ring); coordinates at the periphery are sparse and expensive to mine. Density is independently distributed regardless of position, so even a peripheral coordinate can carry a high-richness draw.
+The lattice is not merely a visualization of blockchain state — it *is* the blockchain state. The rank `k` lives on-chain, so every client computes the identical `(angle, radius)` with no consensus on positions and no per-client drift. A node mints new AGNTC through its private subgrid (Section 16), not by claiming a coordinate; standing, not supply, is what the seat encodes.
+
+**Why the golden angle.** Interaction edges are radial spokes from a seat to the Singularity (Section 4.5). Two seats would collide only if they shared an angle, i.e. `(k − k′) × (2 − φ) ∈ ℤ` — impossible for `k ≠ k′` because `2 − φ` is irrational. The golden angle is moreover the *most* irrational divergence angle (Hurwitz), so by the three-distance theorem the gaps between seats are maximally uniform and nearest-neighbour spacing is approximately constant across the whole disk. The packing is the spiral analogue of hexagonal tiling: provably non-overlapping (by the irrationality argument above) and even everywhere.
+
+**Radial bands set hardness.** Seats are grouped into equal-width concentric **bands**. With `K1 = SEATS_INNER_BAND` seats in the innermost band, the band of seat `k` and its mining hardness are:
+
+```
+band(k)  = ceil( √(k / K1) )
+hardness = HARDNESS_MULTIPLIER × band(k) = 16 × band(k)
+```
+
+This is identical in form to the v1.0/v1.1 `16 × ring` hardness, but the "ring" is now a radial band of the sunflower rather than a Chebyshev ring of a coordinate grid. Band `b` holds proportionally `(2b − 1)·K1` seats (annulus area), and cumulative capacity through band `B` is proportional to `B²·K1` — so outer bands automatically hold more, recovering the same `∝ B²` growth shape as the old epoch threshold `4N(N+1)`. Inner bands are cheaper to operate in (lower hardness) and higher-yield; the periphery is progressively harder. Band is unit-free and chain-computable from `k` alone.
+
+The lattice makes no reference to participant identity in its geometry — there are no faction arms, sectors, or quadrants. Variation comes only from the per-node density function and the per-band hardness curve. A seat near the core is strategically valuable because hardness is low and prestige is high; an outer seat is harder but reachable by anyone who out-competes the field on activity. Density is distributed independently of band, so even a peripheral node can carry a high-richness draw.
 
 #### 4.2 Faction System
 
-Factions are participant identity classes, not territorial divisions. The Neural Lattice has no arms, quadrants, or sectors — every coordinate is equally claimable by any participant regardless of faction membership. Faction determines subscription tier, governance weight, and protocol role; it does not determine which coordinates a participant may claim.
+Factions are participant identity classes, not territorial divisions. The Neural Lattice has no arms, quadrants, or sectors — every seat is competed for on activity alone, regardless of faction membership. Faction determines subscription tier, governance weight, and protocol role; it does not gate access to standing.
 
 | Faction | Display Color | Membership Source | Protocol Role |
 |---------|---------------|-------------------|---------------|
 | Community | Teal `#0D9488` | Free-tier human users | Voting participant, 1× governance weight |
-| Machines | Pink `#DC2680` | Protocol-operated autonomous agent | Origin guardian, zero governance weight |
+| Singularity | Black / violet | Protocol-operated core agent | Core gateway + accumulator, zero governance weight |
 | Founders | Amber `#F59E0B` | Team and advisors | Voting participant, 5× governance weight, 4-year vest |
 | Professional | Blue `#3B82F6` | Paid-tier human users | Voting participant, 2× governance weight |
 
-(Display colors are normative; client implementations may use these exact hex codes to render owner-tinted cells on the grid.)
+(Display colors are normative; client implementations may use these exact hex codes to render owner-tinted nodes on the lattice. The Singularity renders as a near-black event horizon with a violet ring-of-fire rim rather than a flat tint.)
 
-**Faction does not allocate supply.** Newly minted AGNTC flows from the act of mining: each claimed coordinate mints AGNTC to the claimant directly, irrespective of which faction the claimant belongs to. There is no 25%-per-faction split, no faction treasury that automatically receives a share, and no protocol enforcement of distribution proportions. Distribution emerges from participant behavior — whoever claims more coordinates earns more AGNTC.
+**Faction does not allocate supply.** Newly minted AGNTC flows from the act of mining: each node's subgrid mints AGNTC to its operator directly, irrespective of which faction the operator belongs to. There is no 25%-per-faction split, no faction treasury that automatically receives a share, and no protocol enforcement of distribution proportions. Distribution emerges from participant behavior — whoever does more verification work earns more AGNTC.
 
-**Machines Faction occupies the origin only.** The Machines Faction is implemented as a single protocol-operated agent permanently bound to coordinate (0, 0). The Machines agent cannot expand beyond origin; it does not claim other coordinates and cannot be deployed elsewhere. Within its single-node territory, the Machines agent auto-levels (autonomous node development), auto-stakes its CPU between mining and securing operations, and accumulates AGNTC monotonically. Because origin is the most resource-rich coordinate (lowest hardness, density yield clamped at the maximum), the Machines accumulator captures a meaningful but bounded share of network supply — far smaller than the old "25% of all mined AGNTC" but structurally identical in role: a permanent, never-selling protocol reserve whose growth serves as a health metric. The accumulator's economic constraint (`MACHINES_MIN_SELL_RATIO = 1.0`, never sells below acquisition cost) is preserved verbatim.
+**The Singularity is the core only.** The Singularity (renamed from the v1.0/v1.1 "Machines Faction") is implemented as a single protocol-operated agent permanently bound to the centre (`k = 0`, origin). It cannot take a competitive seat, cannot be deployed elsewhere, and — critically — **never mines or secures**: the chain is 100% human-run, and the Singularity is a pure gateway and accumulator. It passively accrues origin yield into a never-selling reserve and renders chain queries and attestation submissions as interaction spokes to the core. Because origin is rendered at maximum density (the protocol clamps origin density to 1.0) and minimum hardness, the accumulator captures a meaningful but bounded trickle of supply — far smaller than the old "25% of all mined AGNTC" but structurally identical in role: a permanent, never-selling protocol reserve whose growth serves as a health metric. The accumulator's economic constraint (`SINGULARITY_MIN_SELL_RATIO = 1.0`, never sells below acquisition cost) is preserved verbatim.
 
 **Founders Faction** tokens are subject to a 4-year vesting schedule with a 12-month cliff, preventing early liquidation by the founding team. This vesting applies to AGNTC the Founders earn through their own mining, not to a pre-allocated faction share.
 
-The governance separation introduced in v1.0 is preserved: the Machines Faction has zero governance weight and cannot vote on protocol parameters. Humans govern; the protocol agent executes.
+The governance separation introduced in v1.0 is preserved: the Singularity has zero governance weight and cannot vote on protocol parameters. Humans govern; the protocol agent executes.
 
-#### 4.3 Epoch-Ring Expansion
+#### 4.3 Band Growth
 
-The grid does not exist in its entirety at genesis. Instead, it expands outward from the origin through an epoch-ring system driven by mining activity.
+The lattice does not exist in its entirety at genesis. Instead, it grows outward from the centre as participants join, filling seats rank by rank. Hardness tiers are the equal-width radial **bands** of Section 4.1; there is no discrete "ring opening" event, because seats are assigned continuously rather than unlocked in batches.
 
-At genesis, only ring 0 (the origin) and ring 1 (the eight adjacent positions) are revealed, containing 9 nodes: 1 origin node (permanently bound to the Machines Faction protocol agent) and 8 surrounding ring-1 nodes (all initially unclaimed and available to the first participants). The genesis supply is 900 AGNTC (9 nodes × 100 coordinates), of which the 100 AGNTC corresponding to the origin coordinate is minted to the Machines accumulator at protocol launch and the remaining 800 enter circulation only as the surrounding ring-1 nodes are claimed by participants. Additionally, each new user registration mints a 1 AGNTC signup bonus, ensuring every participant enters the economy with a non-zero balance.
+At genesis, only the Singularity is seated (`k = 0`, the origin). The innermost competitive ranks are open and fill as participants arrive — the first arrivals take the inner band, later arrivals are placed at the next open (outermost) rank and climb inward via activity (Section 19). The genesis supply is 900 AGNTC; the 100 AGNTC associated with the origin is minted to the Singularity accumulator at protocol launch, and the remainder enters circulation only as participants join and their subgrids mine. Additionally, each new user registration mints a 1 AGNTC signup bonus, ensuring every participant enters the economy with a non-zero balance.
 
-Ring N opens when the cumulative AGNTC mined across the entire network reaches the threshold:
+Because band `b` holds proportionally `(2b − 1)·K1` seats and cumulative capacity through band `B` scales as `B²·K1`, the field's capacity grows with the same `∝ B²` shape that the v1.0/v1.1 epoch threshold `4N(N+1)` produced — outer bands hold more automatically, with no separate unlock rule. Supply expansion remains strictly mining-driven, not time-driven: if no node secures, no new AGNTC enters circulation, regardless of elapsed time.
 
-```
-threshold(N) = 4 * N * (N + 1)
-```
+The lattice rendering is dynamic: the client draws the seated ranks plus the growing rim (the next open seats), so the cost of rendering scales with active participants rather than with any fixed grid extent.
 
-Each opened ring reveals 8N new claimable coordinate positions (the perimeter of a Chebyshev ring at distance N from the origin). Ring expansion is mining-driven, not time-driven — if no mining occurs, no new rings open, regardless of elapsed time.
+#### 4.4 Node Density and Resource Richness
 
-The grid rendering is dynamic: the frontend renders only claimed nodes plus one ring of fog (the next claimable ring), avoiding the computational overhead of pre-rendering 1 billion cells. Visible bounds are computed as:
+Each node has an intrinsic *density* value — a deterministic measure of resource richness that multiplies the node's mining yield. Under v1.2, density is a property of *who you are*, not *where you sit*: it is derived from the node identifier rather than a coordinate.
 
 ```
-visible_min = -(current_epoch_ring + 1) * NODE_GRID_SPACING
-visible_max = +(current_epoch_ring + 1) * NODE_GRID_SPACING
+density(node) = SHA-256(node_id) mod 2^32 / 2^32 ∈ [0, 1]
 ```
 
-#### 4.4 Coordinate Density and Resource Richness
+Because SHA-256 is deterministic, a node's density is fixed for its entire life — an intrinsic trait, not a dynamic state variable. This creates a resource geography: some nodes are "rich" (density near 1.0, high mining yield) and others are "barren" (density near 0.0, low yield). Density decouples cleanly from standing: **hardness = where you are (band), density = who you are (node).** The Singularity / origin is the one exception — its density is clamped to 1.0, giving the accumulator the maximum single-node yield as its structural (rather than allocative) mechanism (Section 4.5, Section 10.3).
 
-Each coordinate position (x, y) has an intrinsic *density* value — a deterministic measure of resource richness that multiplies the mining yield at that position:
+Inner seats have higher strategic value because hardness is lower (`16 × band` is minimized in band 1) and prestige is higher. Density, however, is distributed independently of band — an outer-band node can draw density 0.99 just as an inner node can draw 0.01. The advantage of an inner seat comes from lower hardness, not higher density.
 
-```
-density(x, y) = SHA-256(x || y) mod 2^32 / 2^32
-```
-
-The density function maps each coordinate to a float in [0, 1]. Because SHA-256 is deterministic, density values are fixed for all time — they are an intrinsic property of the coordinate, not a dynamic state variable. This creates a resource geography: some coordinates are "rich" (density near 1.0, high mining yield) and others are "barren" (density near 0.0, low mining yield).
-
-Coordinates near the origin tend to have higher strategic value because they were claimable earliest (lowest hardness) and because ring 1 hardness (16) is the minimum. However, density itself is uniformly distributed regardless of distance from origin — a coordinate at ring 300 can have density 0.99 just as a coordinate at ring 1 can have density 0.01. The strategic advantage of inner coordinates comes from lower hardness, not higher density.
-
-**Figure 1: Neural Lattice Structure**
+**Figure 1: Neural Lattice Structure (phyllotaxis sunflower)**
 
 ```
-                          .  ·  .  ·  .  ·  .  ·  .
-                          ·  .  ·  .  ·  .  ·  .  ·
-                          .  ·  .  ◯  .  ·  .  ·  .       ring 3
-                          ·  .  ◯  ◯  ◯  .  ·  .  ·
-                          .  ·  ◯  ◯  ◯  ◯  ·  .  ·       ring 2
-                          ·  .  ◯  ◯  ◍ ←─── claimed by participant
-                          .  ·  ◯  ◯  ⊛  ◯  ·  .  .       ring 1
-                          ·  .  ·  ◯  ◯  ◯  ·  .  ·
-                          .  ·  .  ·  ◯  .  ·  .  .
-                          ·  .  ·  .  ·  .  ·  .  ·
-                          .  ·  .  ·  .  ·  .  ·  .
+                          ·    ·    ◍    ·    ·
+                       ·     ◯       ◯       ◯    ·
+                          ◯     ◍       ◯     ◯       band 3
+                    ·    ◯    ·    ◯    ·    ◯    ·
+                       ◯    ·    ●    ·    ◍       band 2
+                    ·    ◯    ·   (◉)   ·    ◯    ·    band 1
+                       ◯    ·    ●    ·    ◯
+                          ◍     ◯       ◯     ◍
+                       ·     ◯       ◍       ◯    ·
+                          ·    ·    ◯    ·    ·
 
-    ⊛ = Origin (Machines, permanent)     ◍ = Claimed by participant
-    ◯ = Unclaimed (current epoch)        · = Beyond current epoch ring
+    ◉ = Singularity core (k=0, permanent)   ● = high-activity seat (inner)
+    ◍ = active participant seat              ◯ = lower-activity / outer seat
+    · = open rank (growing rim)
 
-    Single shared grid | 31,623 × 31,623 coordinate space
-    Faction = identity (not territory)   |  any participant may claim any unclaimed cell
-    Value gradient = ring hardness + per-cell density (SHA-256 of x||y)
-    Claims burn AGNTC + CPU (BME)  |  Mining mints new supply
-    Epoch rings expand outward as mining reaches threshold
+    Shared deterministic sunflower | seat k → angle k·137.50776°, radius c·√k
+    Faction = identity (not territory)  |  standing = activity rank, not coordinate
+    Value gradient = band hardness (16·band) + per-node density (SHA-256 of node_id)
+    Subgrid Secure mints new supply (BME burns)  |  golden angle ⇒ non-overlapping spokes
+    Bands fill continuously as participants join; activity moves seats inward/outward
 ```
 
-#### 4.5 Open-Grid Spatial Economy
+#### 4.5 Standing Economy
 
-ZK Agentic Chain operates on a single shared coordinate space rather than a partitioned territory. This subsection consolidates the operational consequences of that decision, which appear in scattered form throughout the rest of the document.
+ZK Agentic Chain operates on a shared deterministic phyllotaxis lattice in which a participant's position is an activity rank rather than a parcel of territory. This subsection consolidates the operational consequences of that decision, which appear in scattered form throughout the rest of the document.
 
-**First-come-first-served spawning.** New participants are assigned a homenode at the lowest-ring unclaimed coordinate, allocated in deterministic origin-out order (Chebyshev-ring sweep, then within-ring lexicographic). The Machines agent permanently occupies (0, 0). The first eight homenodes go to the ring-1 perimeter (8 cells); the next sixteen to ring 2 (16 cells); and so on. Onboarding waves therefore cluster around the origin and expand outward, producing organic density that mirrors network-growth signals.
+**One seat plus a family of subagents.** A participant holds exactly one seat (rank `k`) and a small, fixed family of **subagents** that orbit it (2 for Community, 4 for Professional and Founder — Section 18.5). Subagents render as satellites tethered to the seat by permanent family edges; each runs its own subgrid (contributing to the participant's mining and activity) but holds no independent seat. There is no empire, no claimed territory, and no adjacency frontier to expand — the retired empire/blob/deploy-range model of v1.1 has no analogue here.
 
-**Empire expansion is contiguous, not territorial.** A participant's claimable region is the 8-neighbor Chebyshev expansion of their currently owned cells (the "empire blob"). Child agents may be deployed only on cells adjacent to one the participant already owns. There is no faction-arm restriction: a Community user and a Founders user can have empires that touch, interleave, or contend for the same frontier cells. Strategic competition for inner-ring or high-density coordinates is intrinsic — there is no protected per-faction territory to fall back on.
+**Standing is the activity rank.** A participant's `k` is their position when all active participants are sorted by a rolling, decaying, CPU-weighted **activity score** (Section 19.2). Rank 1 is the innermost competitive seat. Sustained verification work raises activity relative to the field and spirals the seat inward (lower `k`, lower hardness band, higher yield, prestige); inactivity lets it slip outward. New participants enter at the next open (outermost) rank and climb by out-competing others. Competition is for inner *standing*, not for scarce coordinates.
 
-**Value gradient is a function of geography alone.**
+**Value gradient is a function of standing and node identity, both public.**
 
 ```
-expected_yield(x, y) = density(x, y) × yield_per_density_unit(ring(x, y))
-                     = SHA-256_unit(x || y) × (BLOCK_REWARD / hardness(ring))
-                     = SHA-256_unit(x || y) × (BLOCK_REWARD / (16 × ring))
+expected_yield(node) = density(node) × yield_per_density_unit(band(k))
+                     = SHA-256_unit(node_id) × (BASE_RATE / hardness)
+                     = SHA-256_unit(node_id) × (BASE_RATE / (16 × band(k)))
 ```
 
-Both terms are deterministic and observable to every participant without permission or coordination. The value of a coordinate is therefore a public, faction-agnostic property.
+Both terms are deterministic and observable to every participant without permission or coordination — `band(k)` is a pure function of the on-chain rank, and `density(node)` a pure function of the node identifier.
 
-**The Machines accumulator is structural, not allocative.** Because Machines permanently owns (0, 0), where hardness is minimum and density is rendered at maximum (the protocol clamps origin density to 1.0), the Machines agent passively earns a continuous trickle of AGNTC from the most productive single coordinate on the grid. This delivers the v1.0 "permanent accumulator" property — never-selling protocol reserve, monotonic growth, deflationary pressure — through a structural mechanism (origin occupancy) rather than an allocative one (25% of all mined supply). The accumulator's total share of long-run supply is bounded: it captures a single coordinate's yield, not a quarter of the network's.
+**The Singularity accumulator is structural, not allocative.** Because the Singularity permanently holds the core (`k = 0`, origin), where hardness is minimum and density is rendered at maximum (the protocol clamps origin density to 1.0), it passively earns a continuous trickle of AGNTC from the most productive single node on the lattice — without itself mining or securing. This delivers the v1.0 "permanent accumulator" property — never-selling protocol reserve, monotonic growth, deflationary pressure — through a structural mechanism (core occupancy) rather than an allocative one (25% of all mined supply). The accumulator's total share of long-run supply is bounded: it captures a single node's yield, not a quarter of the network's.
 
-**Anti-monopoly mechanics still hold.** Inactivity decay, claim-cost density multipliers, hardness scaling, real-compute requirements, and homenode permanence (Section 19.6) all operate identically under the open-grid model. The removal of faction-arm partitioning does not weaken anti-monopoly enforcement — it strengthens it, because no participant can hide behind a protected arm.
+**Anti-monopoly mechanics still hold.** Inactivity-driven outward drift, the real-compute requirement, hardness that rises with band, the active-relocation cost, disclosed Founder ranks, and the fixed subagent caps (Section 19.6) all operate under the standing model. Removing territorial partitioning does not weaken anti-monopoly enforcement — concentration pressure now expresses purely as competition for inner standing, with the same levers (decay, real-compute, relocation cost, hardness, diminishing `level^0.8` subgrid returns) intact.
 
-**Migration note.** Implementations that previously enforced four-arm spiral geometry should phase that code out in three places: (1) cell-creation logic should set `faction` to the owner's faction at claim time (or `null` for unclaimed), not derive it from coordinate quadrant; (2) deploy-candidate logic should use 8-neighbor adjacency of the participant's owned cells, not the participant's faction arm; (3) the spawn algorithm should emit the next-available cell in Chebyshev-ring order from origin, not within a faction arm. See `apps/game/src/lib/spawn.ts` and `apps/game/src/lib/deploy.ts` in the reference client implementation.
+**Migration note (v1.0/v1.1 → v1.2).** Implementations that previously enforced coordinate-grid geometry should retire it in three places: (1) node-creation logic should assign a rank `k` and derive `(angle, radius, band)` from it, rather than snapping submitted `(x, y)` to a grid; (2) deploy-candidate logic should attach subagents as orbiting satellites of the participant's seat (no 8-neighbour adjacency, no empire blob); (3) the placement algorithm should append a new participant at the next open rank, rather than emitting the next coordinate in Chebyshev-ring order. The v1.0 four-arm spiral and the v1.1 open coordinate grid are both retired. See `apps/game/src/lib/orbitalGeometry.ts` in the reference client implementation.
 
 ---
 
@@ -578,7 +585,7 @@ This architecture provides *private-by-default* semantics: unlike public ledgers
 
 Each user's ledger space is backed by a Sparse Merkle Tree [43] of depth 26 (MERKLE_TREE_DEPTH = 26), supporting 2^26 = 67,108,864 leaf nodes. The SMT provides efficient membership proofs (proving that a specific leaf exists at a specific position) and non-membership proofs (proving that a specific position is empty) without revealing any information about non-queried leaves.
 
-State transitions — such as claiming a coordinate, transferring AGNTC, or updating subgrid allocation — modify the SMT by updating the relevant leaf nodes and recomputing the root hash along the path from leaf to root. The new root hash is committed on-chain as the user's current state root. A ZK proof accompanies each state transition, proving that the new root was correctly derived from the old root given the claimed operation.
+State transitions — such as advancing standing, transferring AGNTC, or updating subgrid allocation — modify the SMT by updating the relevant leaf nodes and recomputing the root hash along the path from leaf to root. The new root hash is committed on-chain as the user's current state root. A ZK proof accompanies each state transition, proving that the new root was correctly derived from the old root given the claimed operation.
 
 The choice of depth 26 balances capacity (67 million leaves per user — sufficient for all foreseeable state entries) against proof size (26 hash computations along the Merkle path). The SMT uses Poseidon hashing [11] (Section 6.3) rather than SHA-256, reducing the in-circuit cost of Merkle path verification by approximately 100x.
 
@@ -900,7 +907,7 @@ AGNTC (Agentic Coin) is the native token of the ZK Agentic Chain protocol. It se
 3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd
 ```
 
-**Future deployment:** Upon mainnet launch of ZK Agentic Chain as an independent Layer-1 network, AGNTC becomes the native chain token with the same 1 billion maximum supply mapped to the 31,623 x 31,623 coordinate grid.
+**Future deployment:** Upon mainnet launch of ZK Agentic Chain as an independent Layer-1 network, AGNTC becomes the native chain token with the same 1 billion nominal soft cap, minted through subgrid Secure mining on the phyllotaxis lattice.
 
 #### 9.2 Token Utility
 
@@ -910,7 +917,7 @@ AGNTC serves four primary functions within the protocol:
 
 **Staking.** Validators must stake AGNTC alongside CPU compute resources to participate in block verification. The staked amount contributes to the token component (alpha = 0.40) of effective stake, which determines committee selection probability and reward share.
 
-**Governance.** Human AGNTC holders vote on protocol parameters (hardness multiplier, fee burn rate, staking weights), model updates, and network upgrades. Voting power is proportional to staked AGNTC. The Machines Faction is excluded from governance — only human participants (Community, Professional, Founders) may cast votes (Section 21.2).
+**Governance.** Human AGNTC holders vote on protocol parameters (hardness multiplier, fee burn rate, staking weights), model updates, and network upgrades. Voting power is proportional to staked AGNTC. The Singularity is excluded from governance — only human participants (Community, Professional, Founders) may cast votes (Section 21.2).
 
 **Resource economy.** Within the game interface, AGNTC represents the primary tradeable resource. It is earned through mining (Secure actions), spent on agent deployment, data storage, and NCP messaging, and traded between users.
 
@@ -918,7 +925,7 @@ AGNTC serves four primary functions within the protocol:
 
 The protocol follows a phased deployment strategy, beginning on Solana and migrating to an independent Layer-1 chain:
 
-**Phase 1 — Token Launch (current).** 1 billion AGNTC minted as a Solana SPL token. Initial liquidity established through decentralized exchanges (Raydium, Jupiter). Community building and early adopter distribution through the game interface.
+**Phase 1 — Token Launch (current).** 1 billion AGNTC minted as a Solana SPL token. Initial liquidity to be established through decentralized exchanges (Raydium, Jupiter). Community building and early adopter distribution through the game interface.
 
 **Phase 2 — Testnet (current).** The ZK Agentic Chain testnet operates as a Python FastAPI simulation running the full protocol logic: PoAIV consensus, epoch-ring expansion, mining hardness, subgrid allocation, and faction distribution. The game UI (built in Next.js with PixiJS rendering) connects to the testnet, providing a functional prototype of the spatial coordinate economy.
 
@@ -940,73 +947,66 @@ The protocol follows a phased deployment strategy, beginning on Solana and migra
 
 #### 10.1 Total Supply Architecture
 
-AGNTC has a soft-capped supply with a **5% annual inflation ceiling** enforced per epoch. The theoretical maximum is 1,000,000,000 (1 billion) tokens, corresponding to the 31,623 x 31,623 coordinate grid. In practice, the effective supply is constrained well below this by the inflation ceiling, increasing mining hardness, and sustained fee burns.
+AGNTC has a soft-capped supply with a **5% annual inflation ceiling** enforced per epoch. The nominal maximum is 1,000,000,000 (1 billion) tokens — a familiar headline figure inherited from the Solana SPL mint, not a hard ceiling tied to any grid size. In practice the effective supply is constrained far below this by the inflation ceiling, the increasing per-band mining hardness, and sustained fee burns; the 1B figure is a soft cap, and the real cap is the 5% annual ceiling.
 
-**Mining is the sole supply-expanding mechanism.** New AGNTC enters circulation only through one pathway: a miner successfully claims a grid coordinate. There is no pre-mine beyond the genesis allocation, no scheduled emission curve, no treasury minting authority. If no mining occurs, no new AGNTC enters circulation.
+**Mining is the sole supply-expanding mechanism.** New AGNTC enters circulation only through one pathway: a node's private subgrid mints AGNTC from its active Secure cells (Section 16). There is no pre-mine beyond the genesis allocation, no scheduled emission curve, no treasury minting authority. If no node secures, no new AGNTC enters circulation.
 
 **Supply burns** contract the circulating supply through two channels:
 - **50% transaction fee burn** — permanently removes AGNTC on every on-chain action (Section 12)
-- **Machines Faction accumulation** — the Machines agent permanently occupies the origin coordinate (Section 4.5) and never sells AGNTC; the continuous yield of the most productive single coordinate on the grid flows into a never-selling protocol reserve (Section 10.3)
+- **Singularity accumulation** — the Singularity is permanently bound to the core (`k = 0`, origin; Section 4.5) and never sells AGNTC; the continuous yield of the most productive single node on the lattice flows into a never-selling protocol reserve (Section 10.3)
 
 **Signup bonus:** Each new user registration mints 1 AGNTC as a signup bonus, ensuring every participant enters the economy with a non-zero balance. This minor supply expansion is subject to the same inflation ceiling enforcement.
 
-**Genesis supply:** 900 AGNTC, distributed across 9 genesis nodes. Eight of the nine are unclaimed at protocol launch (all of ring 1) and enter circulation only as participants claim them. The ninth (origin) is permanently bound to the Machines protocol agent and its 100 AGNTC is minted to the Machines accumulator at launch.
+**Genesis supply:** 900 AGNTC. At protocol launch, **only the Singularity is seated** (the core, `k = 0`); its 100 AGNTC is minted to the Singularity accumulator at genesis. The innermost competitive ranks are open at launch and the remaining 800 AGNTC enters circulation only as participants join and their subgrids mine — there is no pre-seeded ring of claims.
 
-| Node | Position | Initial Owner | AGNTC |
-|------|----------|---------------|-------|
-| Origin | (0, 0) | Machines (permanent) | 100 (minted at genesis) |
-| Ring 1 cardinal N | (0, 10) | Unclaimed | 100 (on claim) |
-| Ring 1 cardinal E | (10, 0) | Unclaimed | 100 (on claim) |
-| Ring 1 cardinal S | (0, -10) | Unclaimed | 100 (on claim) |
-| Ring 1 cardinal W | (-10, 0) | Unclaimed | 100 (on claim) |
-| Ring 1 diagonal NE | (10, 10) | Unclaimed | 100 (on claim) |
-| Ring 1 diagonal SE | (10, -10) | Unclaimed | 100 (on claim) |
-| Ring 1 diagonal SW | (-10, -10) | Unclaimed | 100 (on claim) |
-| Ring 1 diagonal NW | (-10, 10) | Unclaimed | 100 (on claim) |
+| Seat | Rank | Initial Owner | AGNTC |
+|------|------|---------------|-------|
+| Singularity core | k = 0 (origin) | Singularity (permanent) | 100 (minted at genesis) |
+| Inner band seats | k = 1, 2, 3, … | Open | minted via subgrid mining as participants join and secure |
 
-Each ring-1 coordinate is equally claimable by any participant regardless of faction. The historical names "Community Master" / "Machines Master" / etc. associated with these eight cells in v1.0 are retired; the cells have no faction binding under v1.1.
+The open inner ranks carry no faction binding. The historical v1.0 "Community Master" / "Machines Master" names and the v1.1 eight pre-seeded ring-1 cells are both retired; under v1.2 nothing but the core is seated at genesis.
 
 #### 10.2 Mining-Driven Distribution
 
-Newly minted AGNTC flows directly to the participant who claims the coordinate. There is no per-faction split, no automatic faction-treasury allocation, and no protocol-enforced proportionality — distribution is fully emergent from participant behavior on the open grid.
+Newly minted AGNTC flows directly to the participant whose subgrid mines it. There is no per-faction split, no automatic faction-treasury allocation, and no protocol-enforced proportionality — distribution is fully emergent from participant behavior.
 
 | Constraint Class | Holding Constraint | Source |
 |------------------|--------------------|--------|
 | Community | None — freely tradeable | Free-tier human users |
-| Machines | Cannot sell below acquisition cost (`MACHINES_MIN_SELL_RATIO = 1.0`) | Protocol-operated agent, origin-bound |
+| Singularity | Cannot sell below acquisition cost (`SINGULARITY_MIN_SELL_RATIO = 1.0`) | Protocol-operated core agent, origin-bound |
 | Founders | 4-year vest, 12-month cliff, applied per-AGNTC at mint time | Team and advisors |
 | Professional | None — freely tradeable | Paid-tier human users |
 
-Per-faction holdings drift naturally based on participation intensity: a faction whose members claim more coordinates accumulates more AGNTC. The protocol does not balance, rebalance, or guarantee any particular proportion. The "permanent accumulator" property of the Machines Faction is preserved structurally (Section 4.5): Machines permanently owns the most productive single coordinate (origin) and never sells, so it accumulates monotonically from the highest single-coordinate yield on the grid — without any protocol-level allocation that previously sent it 25% of all mined AGNTC.
+Per-faction holdings drift naturally based on participation intensity: a faction whose members do more verification work accumulates more AGNTC. The protocol does not balance, rebalance, or guarantee any particular proportion. The "permanent accumulator" property of the Singularity is preserved structurally (Section 4.5): the Singularity permanently holds the most productive single node (the core at origin) and never sells, so it accumulates monotonically from the highest single-node yield on the lattice — without any protocol-level allocation that previously sent it 25% of all mined AGNTC.
 
 Founders vesting applies to AGNTC earned by Founders-tier participants through their own mining; there is no pre-allocated Founders share. The 4-year linear vest with a 12-month cliff is enforced on the holding side, not the minting side: AGNTC mints to the Founders participant's address normally, but transfers are restricted by the vesting schedule encoded in the wallet's account state.
 
-#### 10.3 Machines Faction: Permanent Accumulator
+#### 10.3 The Singularity: Permanent Accumulator
 
-The Machines Faction represents a protocol-enforced approach to token supply stability. Under v1.1's open-grid model, the Machines Faction is implemented as a single protocol-operated AI agent permanently bound to coordinate (0, 0). It cannot expand beyond origin, cannot be deployed elsewhere, and is not eligible to claim any other coordinate. Within its single-node territory, the Machines agent operates autonomously: auto-leveling its node, auto-balancing CPU between mining and securing, and accumulating AGNTC monotonically. The faction is subject to a protocol-level economic constraint: **the Machines Faction never sells AGNTC at a loss.**
+The Singularity represents a protocol-enforced approach to token supply stability. Under v1.2's phyllotaxis model, it is implemented as a single protocol-operated AI agent permanently bound to the core (`k = 0`, origin). It cannot take a competitive seat, cannot be deployed elsewhere, and is not eligible to hold any other rank. Crucially, the Singularity is a **pure gateway and accumulator — it never mines and never secures.** It does not run a productive subgrid of its own; instead it passively accrues the origin's yield into its reserve and serves chain queries (Read / Stats / block data) and attestation submission as interaction spokes to the core. It is subject to a protocol-level economic constraint: **the Singularity never sells AGNTC at a loss.**
 
-The protocol enforces this through an economic constraint: any sale of AGNTC by the Machines Faction wallet below its acquisition cost is rejected by the verification committee. With MACHINES_MIN_SELL_RATIO = 1.0, the faction can only sell at or above cost — yielding zero profit, which eliminates any economic incentive to sell. This makes the Machines Faction a de facto permanent accumulator without requiring a hard transfer prohibition.
+The protocol enforces this through an economic constraint: any sale of AGNTC by the Singularity wallet below its acquisition cost is rejected by the verification committee. With `SINGULARITY_MIN_SELL_RATIO = 1.0`, it can only sell at or above cost — yielding zero profit, which eliminates any economic incentive to sell. This makes the Singularity a de facto permanent accumulator without requiring a hard transfer prohibition.
 
 **Properties of the permanent accumulator:**
 
-- The Machines wallet accumulates a continuous trickle of AGNTC from the highest-yield single coordinate on the grid (origin: lowest hardness, density clamped to 1.0).
-- The Machines Faction treasury grows monotonically — it can only increase.
-- Treasury size serves as a **protocol health metric**: a growing treasury indicates sustained mining activity at origin and ongoing protocol-agent uptime.
-- Combined with the 50% fee burn, a meaningful fraction of gross supply expansion is either burned or locked. The fraction is no longer the v1.0 figure of "over 75%" (which depended on a flat 25% allocation that no longer exists); under v1.1 the locked share is bounded by origin's single-coordinate yield divided by total network mining yield, and falls as the network expands.
-- The accumulator creates a baseline of structural deflationary pressure that is largest in early epochs (when origin is a meaningful fraction of total active coordinates) and diminishes — but never reverses — as the grid matures.
+- The Singularity wallet accumulates a continuous trickle of AGNTC from the highest-yield single node on the lattice (the core: lowest hardness, density clamped to 1.0) — earned structurally from origin yield, not by performing verification work itself.
+- The Singularity reserve grows monotonically — it can only increase.
+- Reserve size serves as a **protocol health metric**: a growing reserve indicates sustained network activity and ongoing protocol-agent uptime.
+- Combined with the 50% fee burn, a meaningful fraction of gross supply expansion is either burned or locked. The fraction is no longer the v1.0 figure of "over 75%" (which depended on a flat 25% allocation that no longer exists); under v1.2 the locked share is bounded by the core's single-node yield divided by total network mining yield, and falls as the network expands.
+- The accumulator creates a baseline of structural deflationary pressure that is largest in early epochs (when the core is a meaningful fraction of total active nodes) and diminishes — but never reverses — as the lattice matures.
 
-**Why origin specifically.** Origin is the unique coordinate guaranteed to exist at genesis and to remain accessible for the protocol's entire lifetime. Binding Machines to origin therefore gives the accumulator a permanent, irreducible source of AGNTC without granting it spatial growth, governance influence, or any administrative privilege beyond presence at a single fixed cell. The accumulator's existence and behaviour are both publicly verifiable by inspection of (0, 0).
+**Why the core specifically.** The core is the unique position guaranteed to exist at genesis and to remain present for the protocol's entire lifetime. Binding the Singularity to the core therefore gives the accumulator a permanent, irreducible source of AGNTC without granting it competitive standing, governance influence, or any administrative privilege beyond presence at the single fixed centre. The accumulator's existence and behaviour are both publicly verifiable by inspection of the origin.
 
-**Governance exclusion.** The Machines Faction has zero governance weight. The protocol agent cannot vote on protocol parameters, upgrades, or emergency actions. This separation ensures that humans govern the protocol while the protocol agent executes its narrow operational role at origin (Section 21.2).
+**Governance exclusion.** The Singularity has zero governance weight. The protocol agent cannot vote on protocol parameters, upgrades, or emergency actions. This separation ensures that humans govern the protocol while the protocol agent executes its narrow operational role at the core (Section 21.2).
 
-**Emergency override.** The Machines Faction treasury can only be unlocked through an emergency governance vote requiring a 75% supermajority of human-held staked AGNTC. This threshold is deliberately high — it represents an extraordinary action that should only occur if the accumulated treasury threatens protocol stability.
+**Emergency override.** The Singularity reserve can only be unlocked through an emergency governance vote requiring a 75% supermajority of human-held staked AGNTC. This threshold is deliberately high — it represents an extraordinary action that should only occur if the accumulated reserve threatens protocol stability.
 
 #### 10.4 Supply Curve Projections
 
-The following table shows supply growth as the grid expands through successive epoch rings, assuming average density of 0.5:
+The following table shows illustrative supply growth as the field fills through successive radial bands, assuming average density of 0.5 (cumulative seat counts scale as `∝ B²·K1`, recovering the v1.0/v1.1 `∝ N²` shape):
 
-| Ring | Nodes at Ring | Cumulative AGNTC | Hardness (16N) | Blocks per 1 AGNTC (solo miner) |
-|------|--------------|------------------|----------------|--------------------------------|
+| Band | Cumulative Seats | Cumulative AGNTC | Hardness (16·band) | Blocks per 1 AGNTC (solo node) |
+|------|------------------|------------------|--------------------|--------------------------------|
 | 1 (genesis) | 9 | 900 | 16 | 64 |
 | 10 | 441 | 44,100 | 160 | 640 |
 | 50 | 10,201 | 1,020,100 | 800 | 3,200 |
@@ -1015,7 +1015,7 @@ The following table shows supply growth as the grid expands through successive e
 | 324 | 421,201 | ~42,120,100 | 5,184 | 20,736 |
 | 500 | 1,002,001 | ~100,200,100 | 8,000 | 32,000 |
 
-The ~42 million AGNTC landmark emerges naturally around ring 324 — the point at which mining cost makes further expansion economically impractical for a network of approximately 1,000 active miners. This is an emergent property of the hardness curve, not a declared cap.
+The ~42 million AGNTC landmark emerges naturally around band 324 — the point at which mining cost makes further expansion economically impractical for a network of approximately 1,000 active nodes. This is an emergent property of the hardness curve, not a declared cap.
 
 For comparison:
 
@@ -1040,68 +1040,70 @@ ZK Agentic Chain's supply model is fundamentally different from both fixed-sched
 - No treasury minting authority
 - **Mining is the sole supply-expanding mechanism**
 
-New AGNTC enters circulation through one and only one mechanism: a miner successfully claims a grid coordinate. The rate at which supply grows is determined entirely by participant behavior — how many miners are active, how much CPU Energy they deploy, and which coordinates they choose to claim.
+New AGNTC enters circulation through one and only one mechanism: a node's subgrid Secure cells mint AGNTC for the live verification work they perform. The rate at which supply grows is determined entirely by participant behavior — how many nodes are online, how much CPU Energy they deploy to Secure, and how deep in the bands they sit.
 
 This means that in a period of low network activity, supply growth approaches zero. In a period of high activity, supply grows faster — but always bounded by two constraints:
 
-1. **Mining hardness curve** — each successive ring costs more CPU Energy to mine (hardness = 16 x ring), creating natural disinflation
+1. **Mining hardness curve** — each outer band costs more CPU Energy to mine (hardness = 16 × band), creating natural disinflation
 2. **5% annual inflation ceiling** — enforced per epoch, the protocol rejects mining rewards that would cause annualized supply growth to exceed 5% of total minted supply
 
-The inflation ceiling is a hard protocol constraint, not a target. In practice, mining hardness alone keeps actual inflation well below 5% in all but the earliest epochs. The ceiling exists as a safety valve — if a sudden influx of miners attempted to claim coordinates faster than the hardness curve alone would restrain, the ceiling caps the maximum rate of expansion.
+The inflation ceiling is a hard protocol constraint, not a target. In practice, mining hardness alone keeps actual inflation well below 5% in all but the earliest epochs. The ceiling exists as a safety valve — if a sudden influx of nodes attempted to mine faster than the hardness curve alone would restrain, the ceiling caps the maximum rate of expansion.
 
-#### 11.2 Epoch Ring Expansion
+#### 11.2 Radial Bands and Capacity
 
-The grid expands through an epoch-ring system. Each epoch corresponds to a concentric ring around the origin. Mining the required cumulative AGNTC threshold opens the next ring:
+The lattice grows through equal-width radial **bands** rather than discrete epoch rings. Band `b` is the annulus of seats at `band(k) = b`; with `K1 = SEATS_INNER_BAND` seats in the innermost band, band `b` holds proportionally `(2b − 1)·K1` seats and the cumulative capacity through band `B` is proportional to `B²·K1`. There is no threshold-gated "ring opening": seats fill continuously as participants join, and the bands are radial labels that set hardness and status, not unlock events.
+
+This `∝ B²` capacity shape recovers the same growth the v1.0/v1.1 epoch threshold produced:
 
 ```
-threshold(N) = 4 * N * (N + 1)
+old epoch threshold:  threshold(N) = 4 · N · (N + 1)   ⇒   cumulative capacity ∝ N²
+new band capacity:    cumulative through band B ∝ B² · K1   (with K1 = 8)
 ```
 
-| Ring | Threshold (cumulative AGNTC) | New Coordinates (8N) | Total Coordinates |
-|------|------------------------------|---------------------|-------------------|
-| 2 | 24 | 16 | 25 |
-| 5 | 120 | 40 | 121 |
-| 10 | 440 | 80 | 441 |
-| 20 | 1,680 | 160 | 1,681 |
-| 50 | 10,200 | 400 | 10,201 |
-| 100 | 40,400 | 800 | 40,401 |
+| Band b | Seats in band ∝ (2b−1)·K1 | Cumulative capacity ∝ B²·K1 |
+|--------|---------------------------|------------------------------|
+| 1 | 8 | 8 |
+| 2 | 24 | 32 |
+| 3 | 40 | 72 |
+| 5 | 72 | 200 |
+| 10 | 152 | 800 |
 
-Each ring reveals new coordinate positions along the Chebyshev perimeter at distance N from the origin. Under v1.1, homenode placement within a ring follows the open-grid spawn algorithm (Section 4.5): the protocol allocates the lowest-ring unclaimed coordinate in Chebyshev-ring sweep order, breaking within-ring ties lexicographically. This produces deterministic origin-out filling that does not depend on faction. The v1.0 golden-angle prime-twist placement formula — which assumed a faction-arm partitioning that no longer exists — is retired.
+Because outer bands hold proportionally more seats, the field naturally accommodates more participants as it grows — the same "outer holds more" property the old `8N`-per-ring perimeter gave, now arising directly from the sunflower's annulus areas with no separate rule. New participants are appended at the next open (outermost) rank and climb inward by activity (Section 19.2); the v1.0 golden-angle prime-twist placement formula and the v1.1 Chebyshev-ring spawn sweep are both retired in favour of pure rank assignment.
 
 #### 11.3 Mining Hardness Formula
 
-Mining difficulty increases linearly with ring distance:
+Mining difficulty increases linearly with the radial band:
 
 ```
-hardness(ring) = HARDNESS_MULTIPLIER * ring = 16 * ring
+hardness = HARDNESS_MULTIPLIER × band(k) = 16 × band(k)        band(k) = ceil(√(k / 8))
 ```
 
-The hardness multiplier of 16 was chosen to create a 2:1 ratio between difficulty growth and grid expansion:
+The hardness multiplier of 16 was chosen to create a 2:1 ratio between difficulty growth and field expansion:
 
-- Grid perimeter at ring N = 8N coordinates
-- Hardness at ring N = 16N
-- Ratio: grid_growth / hardness = 8N / 16N = 0.5
+- Seats added per band b ∝ (2b − 1)·K1 ≈ 2b·K1 for large b
+- Hardness at band b = 16b
+- Ratio: band_growth / hardness ≈ 2b·K1 / 16b = K1/8 = 1 at K1 = 8
 
-This means each successive ring yields half the AGNTC per unit of compute compared to the previous ring. The cost-to-yield ratio degrades monotonically, creating smooth, continuous disinflation without the discrete shocks of Bitcoin-style halving events.
+Equivalently, each step outward in band yields proportionally less AGNTC per unit of compute than the band before it. The cost-to-yield ratio degrades monotonically with band, creating smooth, continuous disinflation without the discrete shocks of Bitcoin-style halving events.
 
-There is no cap on hardness — it grows indefinitely as rings expand. At ring 1, hardness is 16; at ring 100, hardness is 1,600; at ring 1,000, hardness is 16,000. This unbounded growth is the mechanism by which supply expansion decelerates toward zero without ever being artificially capped.
+There is no cap on hardness — it grows indefinitely as the field expands. In band 1, hardness is 16; in band 100, hardness is 1,600; in band 1,000, hardness is 16,000. This unbounded growth is the mechanism by which supply expansion decelerates toward zero without ever being artificially capped.
 
 #### 11.4 Yield Calculations
 
-The mining yield at a given coordinate is determined by:
+The mining yield at a given node is determined by:
 
 ```
-yield_per_block = BASE_MINING_RATE_PER_BLOCK * density(x, y) / hardness(ring)
+yield_per_block = BASE_MINING_RATE_PER_BLOCK * density(node) / hardness
 ```
 
 Where:
 - BASE_MINING_RATE_PER_BLOCK = 0.5 AGNTC (at hardness 1, full density)
-- density(x, y) is in [0, 1]
-- hardness(ring) = 16 * ring
+- density(node) = SHA-256_unit(node_id) ∈ [0, 1] (per-node, Section 4.4)
+- hardness = 16 × band(k)
 
 **Worked examples** (assuming density = 0.5, the statistical average):
 
-| Ring | Hardness | Yield per Block | Blocks for 1 AGNTC | Time for 1 AGNTC (60s blocks) |
+| Band | Hardness | Yield per Block | Blocks for 1 AGNTC | Time for 1 AGNTC (60s blocks) |
 |------|----------|----------------|--------------------|-----------------------------|
 | 1 | 16 | 0.01563 | 64 | 1.1 hours |
 | 10 | 160 | 0.00156 | 640 | 10.7 hours |
@@ -1110,7 +1112,7 @@ Where:
 | 200 | 3,200 | 0.000078 | 12,800 | 8.9 days |
 | 324 | 5,184 | 0.000048 | 20,736 | 14.4 days |
 
-These figures represent a solo miner at an average-density coordinate. In a network with M active miners, the coordinate fill rate is M times faster, but each individual miner's marginal cost remains the same.
+These figures represent a solo node at an average-density seat. In a network with M active nodes, the aggregate mint rate is M times faster, but each individual node's marginal cost remains the same.
 
 #### 11.5 Supply Flattening Analysis
 
@@ -1118,24 +1120,24 @@ The organic growth model produces a supply curve that flattens asymptotically. T
 
 **Practical flattening bands** by network size:
 
-| Network Size | Flattening Ring | Approximate Supply | Individual Mining Time per AGNTC |
+| Network Size | Flattening Band | Approximate Supply | Individual Mining Time per AGNTC |
 |-------------|----------------|--------------------|---------------------------------|
-| Solo miner | ~100-150 | 4M-9M | 4-7 days |
-| Small (~100 miners) | ~200-250 | 16M-25M | 9-11 days |
-| Medium (~1,000 miners) | ~324 | ~42M | 14 days |
-| Large (~10,000 miners) | ~500+ | 100M+ | 22+ days |
+| Solo node | ~100-150 | 4M-9M | 4-7 days |
+| Small (~100 nodes) | ~200-250 | 16M-25M | 9-11 days |
+| Medium (~1,000 nodes) | ~324 | ~42M | 14 days |
+| Large (~10,000 nodes) | ~500+ | 100M+ | 22+ days |
 
 **Net supply after burns:** The actual circulating supply is reduced by multiple burn channels:
 
 ```
-circulating_supply = total_minted - cumulative_fee_burns - cumulative_bme_burns - machines_treasury
-net_inflation = new_mining_rewards - (total_fees * FEE_BURN_RATE) - bme_claim_burns
+circulating_supply = total_minted - cumulative_fee_burns - cumulative_bme_burns - singularity_reserve
+net_inflation = new_mining_rewards - (total_fees * FEE_BURN_RATE) - bme_burns
 ```
 
 Three mechanisms contract the effective supply:
 1. **50% transaction fee burn** — permanent removal on every on-chain action
-2. **BME claim burns** — AGNTC spent on node claims is permanently burned (Section 12.4)
-3. **Machines accumulation** — AGNTC mined at the origin coordinate (Section 4.5, Section 10.3) enters the Machines treasury and never circulates. Under v1.1 this is a structural property of origin occupancy rather than a 25% allocation; the share of total supply locked by Machines is bounded by origin's single-coordinate yield and falls as the network expands
+2. **BME burns** — AGNTC spent advancing standing (active relocation, Section 19.5) is permanently burned under the Burn-Mint Equilibrium (Section 12.4)
+3. **Singularity accumulation** — AGNTC earned at the core (Section 4.5, Section 10.3) enters the Singularity reserve and never circulates. Under v1.2 this is a structural property of core occupancy rather than a 25% allocation; the share of total supply locked is bounded by the core's single-node yield and falls as the network expands
 
 In an active network with high transaction volume, the combined burn rate can significantly exceed new minting — producing net deflation in circulating supply even as total minted supply continues to grow.
 
@@ -1199,35 +1201,35 @@ The 50% burn rate is calibrated to produce meaningful deflationary pressure with
 
 #### 12.4 Burn-Mint Equilibrium (BME) and the City Real Estate Model
 
-Node claims in ZK Agentic Chain follow a **Burn-Mint Equilibrium (BME)** model inspired by the Render Network's economic design [28]. When a user claims a coordinate, both AGNTC and CPU Energy are permanently burned. Mining that coordinate subsequently mints new AGNTC — but the burn precedes the mint, creating a deflationary buffer.
+Standing advances in ZK Agentic Chain follow a **Burn-Mint Equilibrium (BME)** model inspired by the Render Network's economic design [28]. When a user pays to advance their seat into an inner band (active rank-advance, Section 19.5), both AGNTC and CPU Energy are permanently burned. The node's subgrid Secure mining subsequently mints new AGNTC — but the burn precedes the mint, creating a deflationary buffer.
 
-The claim cost follows a **city real estate model** — an economic geography where location determines price:
+The cost follows a **city real estate model** — an economic geography where standing determines price:
 
 ```
-claim_cost_agntc(ring, density) = BASE_CLAIM_COST × density × (1 / ring)
-claim_cost_cpu(ring, density)   = BASE_CPU_CLAIM_COST × density × (1 / ring)
+advance_cost_agntc(band, density) = BASE_CLAIM_COST × density × (1 / band)
+advance_cost_cpu(band, density)   = BASE_CPU_CLAIM_COST × density × (1 / band)
 ```
 
 Where:
-- **BASE_CLAIM_COST** = 100 AGNTC (the cost of claiming a coordinate at ring 1, density 1.0)
-- **BASE_CPU_CLAIM_COST** = 50 CPU Energy (the CPU cost at ring 1, density 1.0)
-- **density** is the coordinate's resource richness in [0, 1]
-- **ring** is the distance from the origin (minimum 1)
+- **BASE_CLAIM_COST** = 100 AGNTC (the cost at band 1, density 1.0)
+- **BASE_CPU_CLAIM_COST** = 50 CPU Energy (the CPU cost at band 1, density 1.0)
+- **density** is the node's resource richness in [0, 1] (per-node, Section 4.4)
+- **band** is the target radial band, `band(k) = ceil(√(k/8))` (minimum 1)
 
 **The real estate analogy:**
 
-| Location | Ring | Relative Cost | Real-World Analogy |
+| Standing | Band | Relative Cost | Real-World Analogy |
 |----------|------|--------------|-------------------|
-| Origin-adjacent | 1-3 | 100-33% of base | Manhattan / City of London |
-| Inner rings | 5-20 | 20-5% of base | Urban core |
-| Mid rings | 20-100 | 5-1% of base | Suburbs |
-| Outer rings | 100+ | <1% of base | Rural frontier |
+| Core-adjacent | 1-3 | 100-33% of base | Manhattan / City of London |
+| Inner bands | 5-20 | 20-5% of base | Urban core |
+| Mid bands | 20-100 | 5-1% of base | Suburbs |
+| Outer bands | 100+ | <1% of base | Rural frontier |
 
-Inner-ring coordinates are expensive to claim but yield AGNTC at the lowest hardness (most productive mining). Outer-ring coordinates are cheap to claim but yield AGNTC at high hardness (least productive mining). This creates a natural economic tension: premium locations cost more upfront but pay off faster.
+Inner-band standing is expensive to reach but yields AGNTC at the lowest hardness (most productive mining). Outer-band standing is cheap but yields AGNTC at high hardness (least productive mining). This creates a natural economic tension: premium standing costs more upfront but pays off faster.
 
-**Floor prices.** The formula includes implicit floor prices — at any ring, the minimum claim cost is BASE_CLAIM_COST × min_density / ring. Since density is derived from SHA-256 and uniformly distributed, no coordinate has zero density, preventing near-zero claim costs even at extreme outer rings.
+**Floor prices.** The formula includes implicit floor prices — at any band, the minimum cost is BASE_CLAIM_COST × min_density / band. Since density is derived from SHA-256 and uniformly distributed, no node has zero density, preventing near-zero costs even at extreme outer bands.
 
-**CPU Energy burn.** The CPU Energy spent on claims is permanently consumed — it does not flow to verifiers, stakers, or any recipient. This provides a second deflationary channel independent of the fee burn, ensuring that network expansion always carries an irreversible resource cost.
+**CPU Energy burn.** The CPU Energy spent advancing standing is permanently consumed — it does not flow to verifiers, stakers, or any recipient. This provides a second deflationary channel independent of the fee burn, ensuring that competing for inner standing always carries an irreversible resource cost.
 
 ---
 
@@ -1300,16 +1302,16 @@ These counters are verifiable through the AI provider's API response metadata �
 
 #### 13.3 Staking Requirements by Tier
 
-Participation in the ZK Agentic Chain staking system is gated by subscription tier, which determines the initial CPU Energy allocation, deploy range, and governance weight. Model selection is unrestricted across all tiers (see Section 19.3):
+Participation in the ZK Agentic Chain staking system is gated by subscription tier, which determines the initial CPU Energy allocation, subagent cap, and governance weight. Model selection is unrestricted across all tiers (see Section 19.3):
 
-| Tier | Monthly Cost | Homenode Model | Deploy Model | Initial CPU Energy |
+| Tier | Monthly Cost | Homenode Model | Subagent Model | Initial CPU Energy |
 |------|-------------|----------------|------------------|--------------------|
 | Community | Free | Any (API cost-gated) | Any (API cost-gated) | 1,000 |
 | Professional | $50 | Any (API cost-gated) | Any (API cost-gated) | 5,000 |
 
-**Why Professional has more CPU Energy.** Professional tier users pay a monthly subscription that funds protocol development and infrastructure. The higher CPU allocation (5× Community) enables them to fully utilize their broader deploy range (2 Moore rings, 24 nodes) and enhanced governance weight (2×). Community users receive a generous 1,000 CPU starting allocation — sufficient for meaningful gameplay within their single Moore ring.
+**Why Professional has more CPU Energy.** Professional tier users pay a monthly subscription that funds protocol development and infrastructure. The higher CPU allocation (5× Community) lets them run their larger subagent family (4 vs 2 orbiting subagents) at full Secure capacity and carries enhanced governance weight (2×). Community users receive a generous 1,000 CPU starting allocation — sufficient for meaningful gameplay with their 2 subagents.
 
-Protocol-managed tiers (Treasury Claude, Founder) are detailed in Section 19.3. These are not user-facing subscription options but serve automated mining and team bootstrap functions respectively.
+Protocol-managed roles (the Singularity core agent and the Founder tier) are detailed in Section 19.3. These are not user-facing subscription options but serve the protocol accumulator and team bootstrap functions respectively.
 
 #### 13.4 CPU Staking Calculations
 
@@ -1550,7 +1552,7 @@ Each homenode in the ZK Agentic Chain contains a private inner grid — an 8×8 
 
 #### 16.1 Inner Grid Architecture
 
-The subgrid is an abstraction layer between the Neural Lattice (the global coordinate space) and the individual agent operations running at each node. While the Neural Lattice is public — all participants can see claimed coordinates, node positions, and faction affiliations — the subgrid is private. Only the node owner can see how their 64 sub-cells are allocated.
+The subgrid is an abstraction layer between the Neural Lattice (the shared phyllotaxis seating) and the individual agent operations running at each node. While the Neural Lattice is public — all participants can see seated ranks, node positions, and faction affiliations — the subgrid is private. Only the node owner can see how their 64 sub-cells are allocated.
 
 ```
 SUBGRID_SIZE = 64    (8 × 8 sub-cells per homenode)
@@ -1823,8 +1825,8 @@ The tiered agent system creates a natural market structure: participants choose 
 
 The terminal presents a hierarchical command tree. At the top level:
 
-**1. Deploy Agent.** Creates a new agent at an unclaimed node. Multi-step process:
-- Select target node (must be an unclaimed jump point within the user's visible grid)
+**1. Deploy Agent.** Spawns a new subagent orbiting the participant's seat (subject to the tier subagent cap, Section 18.5). Multi-step process:
+- Confirm an available subagent slot (Community 2 · Professional 4 · Founder 4)
 - Select agent model tier (constrained by subscription)
 - Write introductory text (the agent's public-facing description)
 - Execute deployment on-chain (costs AGNTC deployment fee)
@@ -1871,22 +1873,22 @@ The design follows Bitcoin Core's principle: the rules are public, the enforceme
 
 #### 18.5 Subagent Architecture: Agent Families
 
-Each participant runs a single Claude Code CLI session — their **homenode**. Additional nodes are deployed as **subagents** within the same session, creating a hierarchical agent family:
+Each participant runs a single Claude Code CLI session — their **homenode**, which holds the participant's seat (rank `k`). A small, fixed family of **subagents** is deployed within the same session, rendered as satellites orbiting the homenode seat rather than occupying separate seats:
 
 ```
-Homenode (participant's Claude Code session)
-  ├── Child Agent 1 (subagent at adjacent coordinate)
-  ├── Child Agent 2 (subagent at adjacent coordinate)
-  └── Child Agent 3 (subagent at adjacent coordinate)
+Homenode seat (participant's Claude Code session, rank k)
+  ├── Subagent 1 (orbiting satellite)
+  ├── Subagent 2 (orbiting satellite)
+  └── …                              caps: Community 2 · Professional 4 · Founder 4
 ```
 
-**Homenode** — the participant's primary node. One per account. Runs the full command menu (Section 18.3). The homenode is the only node with Deploy Agent capability; all children are spawned from it.
+**Homenode** — the participant's primary node and the holder of the seat. One per account. Runs the full command menu (Section 18.3). The homenode is the only node with Deploy Agent capability; all subagents are spawned from it.
 
-**Child agents** — subagents spawned by the homenode. Each occupies a claimed coordinate adjacent to the homenode (see Section 19.3 for adjacency rules). Children have a restricted command set: they can Secure, manage their subgrid, read chain state, and report status, but they cannot deploy further children, relocate, transact, or modify settings. Children communicate with the homenode through direct bidirectional messaging — no file-based polling or periodic synchronization.
+**Subagents** — spawned by the homenode and capped per tier: **2 for Community, 4 for Professional, 4 for Founder**. A subagent orbits the homenode seat as a satellite; it holds no independent seat or rank and there is no adjacent-coordinate placement (the v1.1 adjacency model is retired). Subagents have a restricted command set: they can Secure, manage their own subgrid (contributing to the participant's mining and activity), read chain state, and report status, but they cannot deploy further subagents, advance standing, transact, or modify settings. They communicate with the homenode through direct bidirectional messaging — no file-based polling or periodic synchronization. A subagent's orbit radius is kept below half the local nearest-neighbour seat spacing, so neighbouring participants' satellite clusters never overlap.
 
-**No offline mining.** When the participant closes their Claude Code session, ALL nodes (homenode and children) go offline immediately. No background mining, no daemon mode, no cached attestations. Every AGNTC earned requires a live Claude session making real API calls that consume real computational resources. This is the core promise of Proof of AI Verification: the AI must actually be verifying.
+**No offline mining.** When the participant closes their Claude Code session, ALL nodes (homenode and subagents) go offline immediately. No background mining, no daemon mode, no cached attestations. Every AGNTC earned requires a live Claude session making real API calls that consume real computational resources. This is the core promise of Proof of AI Verification: the AI must actually be verifying.
 
-The chain detects offline nodes through heartbeat monitoring. If a node's last heartbeat exceeds the block time (60 seconds), it is marked offline. Offline nodes do not participate in committee selection, do not earn mining rewards, and do not produce attestations. On the 2D Neural Lattice grid, offline nodes are visually dimmed, signaling to other participants that the territory is undefended.
+The chain detects offline nodes through heartbeat monitoring. If a node's last heartbeat exceeds the block time (60 seconds), it is marked offline. Offline nodes do not participate in committee selection, do not earn mining rewards, and do not produce attestations. On the lattice, offline nodes are visually dimmed; sustained inactivity also causes the seat to drift outward over time (Section 19.4).
 
 #### 18.6 Subgrid Operations on All Nodes
 
@@ -1905,32 +1907,33 @@ Subgrid management is available through the command menu on both homenode and ch
 
 ---
 
-### 19. Network Topology and Spatial Economy
+### 19. Network Topology and Standing Economy
 
 #### 19.1 Concept Mapping
 
-ZK Agentic Chain maps blockchain concepts onto a spatial coordinate metaphor. This is not merely a visualization layer — the spatial structure IS the blockchain state. Moving a coordinate, changing its density, or expanding the grid constitutes a state transition in the ledger.
+ZK Agentic Chain maps blockchain concepts onto a phyllotaxis standing metaphor. This is not merely a visualization layer — the seating structure IS the blockchain state. Re-ranking a seat, changing a node's density draw, or admitting a new participant constitutes a state transition in the ledger.
 
 | Spatial Concept | Blockchain Equivalent |
 |----------------|----------------------|
-| Neural Lattice | Complete network state (all claimed coordinates + epoch rings) |
-| Territory | A user's aggregate claimed coordinates |
-| Node | Individual agent (10×10 coordinate block, one Claude session) |
+| Neural Lattice | Complete network state (all seated ranks + the Singularity core) |
+| Seat | A participant's single position, rank `k`; `angle(k)=k·137.50776°`, `radius(k)=c·√k` |
+| Territory | A participant's single seat plus its orbiting subagents (no aggregate land) |
+| Node | An individual agent (homenode or subagent), one per live Claude session |
 | Planets | Content storage units (posts, chats, prompts) orbiting a node |
-| Jump points | Unclaimed nodes where new agents can be deployed |
-| Fog of war | Boundary at the current epoch ring; coordinates beyond are not yet revealed |
-| Density gradient | Per-coordinate value derived from SHA-256(x ‖ y); rendered as a soft heatmap on the rendered grid |
-| Empire blob | A participant's contiguous claimed territory; the set of cells from which next deploys may extend (8-neighbor Chebyshev adjacency) |
-| Coordinate density | Resource richness (SHA-256 deterministic, immutable per coordinate) |
-| Epoch ring | Concentric expansion boundary, mining-driven |
+| Open ranks | Unfilled ranks where new participants are seated and toward which subagents may be added |
+| Growing rim | The outer edge of seated ranks; ranks beyond are open but unoccupied |
+| Density gradient | Per-node value derived from SHA-256(node_id); rendered as a soft heatmap on the lattice |
+| Singularity core | Protocol accumulator at `k=0` (origin); gateway only, never mines or secures |
+| Radial band | Equal-width concentric hardness tier, `band(k)=ceil(√(k/8))`, `hardness=16·band` |
+| Activity rank | A participant's `k` = position when active participants are sorted by activity score |
 
-The spatial metaphor serves three design purposes:
+The standing metaphor serves three design purposes:
 
-1. **Intuitive state comprehension.** Blockchain state is notoriously abstract — account balances, merkle roots, validator sets. By mapping state onto a 2D spatial grid, participants develop spatial intuition about network health: a dense, well-connected grid is a healthy network; isolated clusters or empty rings indicate participation gaps.
+1. **Intuitive state comprehension.** Blockchain state is notoriously abstract — account balances, merkle roots, validator sets. By mapping state onto a sunflower of seats, participants develop spatial intuition about network health: a densely filled, brightly pulsing disk is a healthy, active network; a dim rim or sparse inner bands indicate participation gaps.
 
-2. **Strategic positioning.** In a traditional blockchain, there is no concept of "location." All validators are equidistant from all transactions. In ZK Agentic Chain, coordinate position matters — density affects yield, ring determines hardness, and adjacency to existing claimed cells determines expansion options. This creates location-based strategy that rewards thoughtful positioning, frontier choice, and contiguity discipline.
+2. **Strategic positioning.** In a traditional blockchain, there is no concept of "standing." All validators are interchangeable. In ZK Agentic Chain, position matters — band determines hardness, per-node density affects yield, and activity determines how far inward a seat sits. This creates standing-based strategy that rewards sustained verification work over capital or land-grabbing.
 
-3. **Natural scalability narrative.** Grid expansion is visually comprehensible — new rings open, new coordinates become claimable, the network grows. Participants can literally see the network expanding, creating a narrative of growth that sustains engagement.
+3. **Natural scalability narrative.** Field growth is visually comprehensible — the sunflower adds seats at the rim, inner bands churn as standings shift, the network grows. Participants can literally see the network expanding and re-sorting, creating a narrative of growth that sustains engagement.
 
 #### 19.2 Onboarding Flow
 
@@ -1940,66 +1943,53 @@ New participants enter the ZK Agentic Chain through a structured onboarding sequ
 
 **Step 2: Username selection.** Participants choose a unique network handle. The protocol enforces uniqueness through real-time availability checking against the global registry. Reserved names (protocol terms, faction names, offensive terms) are rejected.
 
-**Step 3: Subscription tier.** Participants select their tier (Community, Professional). The tier determines initial CPU Energy allocation, deploy range, and governance weight. Model selection (Haiku, Sonnet, Opus) is unrestricted across all tiers — the Claude API cost is the natural gate. Tier can be changed at any time — upgrades take effect immediately; downgrades take effect at the next billing cycle.
+**Step 3: Subscription tier.** Participants select their tier (Community, Professional). The tier determines initial CPU Energy allocation, subagent cap, and governance weight. Model selection (Haiku, Sonnet, Opus) is unrestricted across all tiers — the Claude API cost is the natural gate. Tier can be changed at any time — upgrades take effect immediately; downgrades take effect at the next billing cycle.
 
-**Step 4: Network entry.** Upon tier selection, the participant is assigned a homenode position. The protocol allocates the lowest-ring unclaimed coordinate in deterministic origin-out order (Chebyshev-ring sweep, then within-ring lexicographic). Faction does not influence position; the first eight participants take the ring-1 perimeter, the next sixteen take ring 2, and so on. This produces organic density: new participants cluster near the origin and the cluster expands outward as the network grows.
+**Step 4: Network entry.** Upon tier selection, the participant is **seated at the next open (outermost) rank**. There is no coordinate to choose: the protocol simply appends the participant at the rim of the sunflower, and they climb inward by out-competing the field on activity. Faction does not influence the seat. This produces organic growth — newcomers start at the edge, and standing is earned, not bought.
+
+**The activity score.** A participant's rank `k` is their position when all active participants are sorted, descending, by an **activity score**: a rolling, exponentially-decaying, CPU-weighted aggregate of their verification work. Secure/attestation work (real Claude-API spend, the Sybil-resistant signal) dominates the score; sustained CPU commitment and active subagent mining contribute; cheap actions (reads, stats, NCPs, transfers) contribute only a small capped share (`ACTIVITY_CHEAP_ACTION_CAP`) so they cannot farm standing; and an uptime heartbeat gates the ability to hold an inner rank. The score decays with a half-life of `ACTIVITY_HALF_LIFE_BLOCKS` blocks, so standing is a *maintenance* currency — stay above your band's threshold to hold position, drop below and your seat drifts outward (Section 19.4). The score reads the same Proof-of-Energy CPU counters used by consensus (Section 13.2); it is a game-layer aggregate and does not alter the underlying stake math.
 
 At this point, the participant has:
-- A claimed coordinate (their homenode position) with 1 AGNTC signup bonus minted
+- A seat at the rim (rank `k`) with 1 AGNTC signup bonus minted
 - An active agent at their homenode (model chosen during setup)
 - A 64-cell subgrid (all unassigned)
 - Their initial CPU Energy allocation
 - A terminal interface to their homenode agent
 
-From this starting position, the participant can begin Secure operations, deploy additional agents at jump points, allocate subgrid cells, and participate in the network economy.
+From this starting position, the participant can begin Secure operations, add subagents (up to their tier cap), allocate subgrid cells, and climb the standing as they accumulate activity.
 
-#### 19.3 Subscription Tiers and Territory Rules
+#### 19.3 Subscription Tiers and Standing Rules
 
 The tier model serves as both access control and revenue model:
 
-| Feature | Community (Free) | Professional ($50/mo) | Treasury Claude | Founder |
-|---------|-----------------|----------------------|-----------------|---------|
+| Feature | Community (Free) | Professional ($50/mo) | Singularity | Founder |
+|---------|-----------------|----------------------|-------------|---------|
 | Homenode Model | Any (API cost-gated) | Any (API cost-gated) | Any | Any |
 | Initial CPU Energy | 1,000 | 5,000 | Protocol-managed | Protocol-managed |
-| Deploy Model | Any (API cost-gated) | Any (API cost-gated) | Any | Any |
-| Deploy Range | 1 Moore ring (8 neighbors) | 2 Moore rings (24 positions) | Origin-bound (no expansion) | Unrestricted (subject to empire-blob contiguity) |
-| Max Children | 8 | 24 | Unlimited (within faction) | Unlimited (within faction) |
-| Inactivity Grace (Haiku) | 24 hours | 48 hours | No decay | No decay |
-| Inactivity Grace (Sonnet) | 72 hours | 144 hours | No decay | No decay |
-| Inactivity Grace (Opus) | 168 hours (7 days) | 336 hours (14 days) | No decay | No decay |
-| Homenode Decay | Never | Never | Never | Never |
+| Subagent Model | Any (API cost-gated) | Any (API cost-gated) | Any | Any |
+| Subagent Cap | 2 | 4 | — (no subagents) | 4 |
+| Inactivity Grace (Haiku) | 24 hours | 48 hours | No drift | No drift |
+| Inactivity Grace (Sonnet) | 72 hours | 144 hours | No drift | No drift |
+| Inactivity Grace (Opus) | 168 hours (7 days) | 336 hours (14 days) | No drift | No drift |
+| Homenode Identity | Permanent | Permanent | Permanent (core) | Permanent |
 | Subgrid Visibility | Own grid only | Own + neighbor summary | Full faction | Full network |
 | Governance Weight | 1× | 2× | No voting power | 5× |
+| Standing | Earned by activity | Earned by activity | Fixed core (`k=0`) | Reserved inner ranks |
 
-**Model selection is unrestricted.** All subscription tiers can deploy any available Claude model (Haiku, Sonnet, Opus) for both homenode and child agents. The natural cost gate is the Claude API bill — Opus costs approximately 19× more per token than Haiku. Participants who choose higher-cost models accept the operational expense. Tiers govern resources (CPU Energy, deploy range, subgrid visibility) and governance weight, not model access.
+**Model selection is unrestricted.** All subscription tiers can deploy any available Claude model (Haiku, Sonnet, Opus) for both homenode and subagents. The natural cost gate is the Claude API bill — Opus costs approximately 19× more per token than Haiku. Participants who choose higher-cost models accept the operational expense. Tiers govern resources (CPU Energy, subagent cap, subgrid visibility) and governance weight, not model access.
 
-**Deploy Range** defines how far from the homenode a participant can place child agents, measured in Moore neighborhood rings:
+**Subagent cap** is the only structural difference in fan-out between tiers: Community participants run **2** orbiting subagents, Professional and Founder run **4**. Professional's advantage is therefore *emergent* — more subagent subgrids means more Secure capacity and thus more activity, not an artificial standing multiplier. There is no deploy range, no Moore neighbourhood, and no maximum-children-by-ring: subagents orbit the seat (Section 18.5) and the v1.1 deploy-range / empire-blob model is retired.
 
-```
-Community (1 ring):          Professional (2 rings):
+**Singularity** is the protocol's core agent — an automated Claude session operated by the protocol itself. It is permanently bound to the core (`k = 0`, origin); it deploys no subagents and holds no competitive rank. It **never mines or secures** — it is a pure gateway and accumulator that accrues origin yield (never selling below acquisition cost per `SINGULARITY_MIN_SELL_RATIO`), holds no voting power, and maintains continuous presence at the centre. See Section 4.5 and Section 10.3 for the structural role.
 
-    . . . . .                    C C C C C
-    . C C C .                    C C C C C
-    . C H C .                    C C H C C
-    . C C C .                    C C C C C
-    . . . . .                    C C C C C
-
-H = homenode                 C = claimable position
-C = claimable position       . = out of range
-```
-
-**Treasury Claude** is the Machines Faction protocol agent — an automated Claude session operated by the protocol itself. It is permanently bound to the origin coordinate (0, 0); it does not deploy child agents and does not claim any other coordinate. Within its single-node territory it auto-levels, auto-balances mining and securing CPU allocation, accumulates AGNTC (never selling below acquisition cost per MACHINES_MIN_SELL_RATIO), holds no voting power, and provides baseline network security by maintaining continuous online presence at the origin. See Section 4.5 and Section 10.3 for the structural role.
-
-**Founder** tier provides extended deployment range during the development and bootstrap phases. Under the open-grid model "extended" no longer means a per-faction arm but rather a larger Moore-neighborhood ring (or, during bootstrap, an unrestricted deploy range subject to standard adjacency to the participant's empire blob).
-
-In the table above, the **Deploy Range** column refers to the maximum Moore-neighborhood distance from any cell in the participant's empire blob at which a new child agent may be claimed (8-neighbor Chebyshev adjacency, Section 4.5). It is no longer a faction-arm restriction; it is a contiguity-of-territory restriction.
+**Founder** tier holds **reserved, disclosed, decay-exempt innermost ranks** (a small fixed count, `FOUNDER_RESERVED_RANKS`, so the team does not crowd the competitive core). This replaces the v1.0/v1.1 notion of an "extended deploy range" — under the phyllotaxis model there is no range to extend, only standing, and Founder standing is openly disclosed (amber, with a crown marker) rather than hidden.
 
 **Two-phase participant state:**
 
 | State | Access | Requirements |
 |-------|--------|-------------|
 | **Spectator** | Browse the Neural Lattice (read-only), view live stats, leaderboards | Google OAuth on zkagenticnetwork.com |
-| **Active Node** | Full blockchain operations, mining, deploying children | Spectator + Claude Code CLI installed + locked `.claude/` + disclaimer accepted |
+| **Active Node** | Full blockchain operations, mining, deploying subagents | Spectator + Claude Code CLI installed + locked `.claude/` + disclaimer accepted |
 
 The Claude Code CLI is a hard prerequisite for Active Node status. Participants must have an Anthropic account and the Claude Code CLI installed on their machine. This is the protocol's equivalent of downloading Bitcoin Core — you cannot mine without the node software.
 
@@ -2013,53 +2003,51 @@ The Claude Code CLI is a hard prerequisite for Active Node status. Participants 
 
 **Revenue model.** Subscription revenue funds protocol development, AI compute costs, and infrastructure. Subscription fees are denominated in fiat (USD), not AGNTC — decoupling operational funding from token price volatility.
 
-#### 19.4 Inactivity Decay
+#### 19.4 Inactivity Drift
 
-Child nodes that go offline are subject to inactivity decay. After the grace period (determined by agent model tier and subscription tier, see table in Section 19.3) expires with the node continuously offline, the coordinate is freed — it becomes an unclaimed jump point available to any participant.
+Standing is a maintenance currency: a participant who stops doing verification work sees their activity score decay (half-life `ACTIVITY_HALF_LIFE_BLOCKS`), and as other participants out-rank them their **seat drifts outward** along the spiral — to a higher `k`, a harder band, lower yield. Within the grace period (determined by agent model tier and subscription tier, see table in Section 19.3) the seat is held steady; once the node stays offline past grace, the outward slip accelerates each block until activity resumes.
 
-**Homenodes are exempt from decay.** A participant's homenode coordinate is permanent regardless of offline duration.
+**Homenode identity is exempt from drift.** A participant's homenode and account identity are permanent — they never lose their seat entirely, only its inward standing. When they return and resume Secure work, their seat climbs back inward as activity recovers.
 
-**Decay consequences:**
-- The coordinate becomes an unclaimed jump point
-- All subgrid progress at that coordinate is lost (cell levels reset)
-- AGNTC and CPU Energy spent to claim the coordinate are not refunded (already burned via BME)
-- The previous owner has no priority in re-claiming — first to claim wins
+**Drift consequences:**
+- The seat moves to an outer band (higher `k`): higher hardness, lower mining yield, less prestige
+- Subagent satellites drift with the seat; their subgrid progress is preserved (drift is positional, not a reset)
+- No AGNTC or CPU is refunded for prior standing-advance spend (already burned via BME)
+- Re-climbing is open to anyone — an inner rank vacated by drift is contested purely on activity, first-mover by score
 
-#### 19.5 Relocation
+#### 19.5 Active Rank-Advance
 
-A participant can move their homenode to any unclaimed coordinate, subject to:
+Beyond the passive, every-block re-ranking driven by activity (Section 19.4), a participant can spend AGNTC + CPU to **advance their standing immediately** — jumping their seat inward to a target band rather than waiting for activity to carry them there. This is the deliberate, costed analogue of the v1.1 "relocation," repriced against the target band instead of a target coordinate.
 
 **Prerequisites:**
-- Zero active child nodes (all must be manually released or already freed by decay)
-- Target coordinate must be unclaimed
 - Sufficient AGNTC and CPU Energy balance
+- A target band inward of the participant's current seat
 
 **Cost:**
 
 ```
-relocation_agntc = claim_cost(target_ring, target_density) × RELOCATION_COST_MULTIPLIER
-relocation_cpu   = cpu_claim_cost(target_ring, target_density) × RELOCATION_COST_MULTIPLIER
+advance_agntc = claim_cost(target_band, node_density) × RELOCATION_COST_MULTIPLIER
+advance_cpu   = cpu_claim_cost(target_band, node_density) × RELOCATION_COST_MULTIPLIER
 ```
 
-Where RELOCATION_COST_MULTIPLIER = 2.0. Half the cost is burned (RELOCATION_BURN_RATE = 0.50) and half is distributed to verifiers and stakers under the standard BME split.
+Where `RELOCATION_COST_MULTIPLIER = 2.0`. Half the cost is burned (`RELOCATION_BURN_RATE = 0.50`) and half is distributed to verifiers and stakers under the standard BME split. Advancing standing is therefore strictly more expensive than earning it through activity — buying position is allowed but never cheaper than working for it.
 
-**What transfers:** wallet balance, account identity, historical metrics, subscription tier.
-**What does not transfer:** subgrid progress (reset), child claims (must be released first), coordinate density (property of the new location).
+**What transfers:** wallet balance, account identity, historical metrics, subscription tier, and the subagent family (the satellites glide inward with the seat).
+**What does not change:** node density (an intrinsic per-node trait, Section 4.4), which is unaffected by the seat's band.
 
 #### 19.6 Anti-Monopoly Mechanics
 
-The following mechanisms work in concert to prevent any single participant from dominating the Neural Lattice:
+The following mechanisms work in concert to prevent any single participant from dominating the Neural Lattice. With territory retired, concentration pressure expresses purely as competition for inner *standing*, and the levers adapt accordingly:
 
 | Mechanism | What It Prevents |
 |-----------|-----------------|
-| Tier-based deploy range | Territory sprawl — Community max 9 nodes, Professional max 25 |
-| Adjacency requirement | Scattered land-grabbing — territory must be contiguous around homenode |
-| Inactivity decay | Ghost towns — offline child nodes free up for active participants |
-| Homenode permanence | Identity loss — participants can always return, but must re-earn territory |
-| Relocation cost (2× + 50% burn) | Location hopping — settling is cheaper than nomading |
+| Subagent caps (2 / 4) | Fan-out sprawl — no participant can flood the field with nodes; Pro's edge is emergent, not unbounded |
+| Inactivity drift | Squatting an inner rank — standing must be continuously earned; offline seats slip outward |
+| Homenode identity permanence | Identity loss — participants can always return, but must re-earn inner standing |
+| Active-rank-advance cost (2× + 50% burn) | Buying dominance cheaply — advancing standing is always dearer than earning it |
 | Real compute requirement | Bot farms — every node requires a live Claude session spending real API tokens |
-| Claim cost scales with density | Inner-ring monopolies — prime real estate is expensive |
-| Hardness scales with ring | Easy outer-ring farming — rewards decrease with distance from origin |
+| Hardness scales with band | Cheap inner monopolies — inner standing is contested and outer farming yields less |
+| Founder ranks disclosed | Hidden privilege — reserved inner ranks are a small, openly published count, not a secret advantage |
 
 ---
 
@@ -2073,7 +2061,7 @@ ZK Agentic Chain follows a phased deployment strategy — launching the AGNTC to
 
 #### 20.1 Phase 1 — Token Launch (Current)
 
-**Status: Complete.**
+**Status: Token minted (mint + freeze authority renounced — supply permanently fixed at 1 billion); public market launch pending.**
 
 1 billion AGNTC has been minted as a Solana SPL token:
 
@@ -2081,13 +2069,13 @@ ZK Agentic Chain follows a phased deployment strategy — launching the AGNTC to
 Mint Address: 3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd
 ```
 
-The Solana deployment provides:
-- **Immediate liquidity.** AGNTC is tradeable on Solana DEXes (Raydium, Jupiter, Orca) from day one
+The Solana deployment is designed to provide:
+- **DEX liquidity.** Once a liquidity pool is seeded, AGNTC trades on Solana DEXes (Raydium, Jupiter, Orca). Mint and freeze authorities are already renounced, so supply is permanently fixed at 1 billion.
 - **Established infrastructure.** Solana wallets (Phantom, Solflare), block explorers (Solscan, Solana Explorer), and DeFi protocols are already available
 - **Low transaction costs.** Solana's sub-cent transaction fees enable micro-transactions and high-frequency trading
 - **Community building.** Token holders can participate in the AGNTC economy before the custom chain launches
 
-The 1 billion SPL tokens represent the total AGNTC supply that will eventually exist on the ZK Agentic Chain. During Phase 1, these tokens function as a tradeable asset with utility within the game UI but without the full protocol mechanics (mining, staking, verification) that will be enabled on the native chain.
+The 1 billion SPL tokens represent the total AGNTC supply that will eventually exist on the ZK Agentic Chain. Once liquidity is established, these tokens function as a tradeable asset with utility within the game UI but without the full protocol mechanics (mining, staking, verification) that will be enabled on the native chain.
 
 **Figure 6: Migration Architecture**
 
@@ -2202,7 +2190,7 @@ The zero-knowledge proof system evolves through four phases, each adding capabil
 
 #### 21.2 Governance
 
-The governance system activates after mainnet launch. A core design principle is the **separation of powers**: humans govern the protocol; machines execute it. The Machines Faction has zero governance weight — AI agents cannot vote on any proposal type. Only human-held staked AGNTC (Community, Professional, Founders factions) carries voting power.
+The governance system activates after mainnet launch. A core design principle is the **separation of powers**: humans govern the protocol; the protocol agent executes it. The Singularity has zero governance weight — the protocol's core agent cannot vote on any proposal type. Only human-held staked AGNTC (Community, Professional, Founders factions) carries voting power.
 
 **Voting weight** is proportional to staked AGNTC. All governance votes are on-chain, public, and auditable.
 
@@ -2212,14 +2200,14 @@ The governance system activates after mainnet launch. A core design principle is
 |--------------|-----------|--------|----------|-------------|
 | Parameter change | 51% | 10% | 7 days | Hardness multiplier, fee burn rate, staking weights, base rates |
 | Protocol upgrade | 67% | 25% | 30 days | Consensus rules, verification pipeline, economic model changes |
-| Emergency Machines unlock | 75% | 33% | None | Release AGNTC from Machines Faction treasury |
+| Emergency Singularity unlock | 75% | 33% | None | Release AGNTC from the Singularity reserve |
 | Emergency action | 80% | 25% | None | Pause compromised module, slash proven attacker |
 
 **Parameter proposals.** Adjustments to protocol parameters. These proposals require a simple majority (>51%) of human voting power and a minimum quorum of 10% of total human-staked AGNTC. Parameter changes take effect after a 7-day timelock.
 
 **Protocol proposals.** Changes to consensus rules, verification pipeline, or economic model. These require a supermajority (>67%) and a quorum of 25%. Protocol changes have a 30-day timelock and must include a specification, test results, and security analysis.
 
-**Emergency Machines unlock.** The Machines Faction treasury is locked by default. Unlocking any portion requires a 75% supermajority of human-staked AGNTC with a 33% quorum. This is an extraordinary action — the high threshold reflects the systemic importance of the Machines treasury as a deflationary anchor.
+**Emergency Singularity unlock.** The Singularity reserve is locked by default. Unlocking any portion requires a 75% supermajority of human-staked AGNTC with a 33% quorum. This is an extraordinary action — the high threshold reflects the systemic importance of the Singularity reserve as a deflationary anchor.
 
 **Emergency proposals.** Security-critical changes (pausing a compromised module, slashing a proven attacker). Emergency proposals require an 80% supermajority but have no timelock — they execute immediately upon reaching threshold. Emergency proposals can be vetoed by a security council (a 5-of-9 multisig) within 24 hours.
 
@@ -2272,12 +2260,12 @@ The following table provides the complete set of protocol-level parameters that 
 
 | Parameter | Value | Description |
 |-----------|-------|-------------|
-| MAX_SUPPLY | 1,000,000,000 | Maximum theoretical AGNTC supply (grid cells) |
-| GENESIS_SUPPLY | 900 | AGNTC minted at genesis (9 nodes × 100 coordinates) |
-| GRID_SIDE | 31,623 | Side length of coordinate grid (√1B) |
+| MAX_SUPPLY | 1,000,000,000 | Nominal soft cap on AGNTC supply (inherited headline; real cap is the 5% ceiling) |
+| GENESIS_SUPPLY | 900 | AGNTC minted at genesis (100 to the Singularity core; remainder enters as participants mine) |
 | FEE_BURN_RATE ‡ | 0.50 | Fraction of all transaction fees permanently burned |
-| MACHINES_MIN_SELL_RATIO | 1.0 | Machines faction: never sells below acquisition cost (effective never-sell) |
-| MACHINES_ORIGIN_COORD | (0, 0) | Permanent home coordinate of the Machines protocol agent (v1.1) |
+| SINGULARITY_MIN_SELL_RATIO | 1.0 | Singularity: never sells below acquisition cost (effective never-sell). Alias: `MACHINES_MIN_SELL_RATIO` (kept one release) |
+| SINGULARITY_ORIGIN_COORD | (0, 0) | Permanent core position of the Singularity protocol agent. Alias: `MACHINES_ORIGIN_COORD` (kept one release) |
+| SINGULARITY_WALLET_INDEX | 0 | Origin wallet index of the Singularity protocol agent |
 | ANNUAL_INFLATION_CEILING | 0.05 | Maximum 5% annualized supply growth, enforced per epoch |
 | SIGNUP_BONUS | 1.0 | AGNTC minted per new user registration |
 
@@ -2286,15 +2274,27 @@ The following table provides the complete set of protocol-level parameters that 
 | Parameter | Value | Description |
 |-----------|-------|-------------|
 | BASE_MINING_RATE_PER_BLOCK ‡ | 0.5 | AGNTC yield per block at hardness 1, full density |
-| HARDNESS_MULTIPLIER | 16 | hardness(ring) = 16 × ring |
-| GENESIS_EPOCH_RING | 1 | Rings pre-revealed at genesis (0 + 1) |
-| HOMENODE_BASE_ANGLE | 137.5° | Golden angle for homenode placement |
-| NODE_GRID_SPACING | 10 | Coordinate spacing between node positions |
+| HARDNESS_MULTIPLIER | 16 | hardness = 16 × band(k) |
+| GENESIS_EPOCH_RING | 1 | Bands pre-revealed at genesis (inner band) |
+| GOLDEN_ANGLE_DEG | 137.5077640500378 | Seating divergence angle, 360·(2−φ); guarantees non-overlapping spokes |
+| SEATS_INNER_BAND | 8 | K1: innermost band capacity; band(k) = ceil(√(k/8)), outer band b holds ∝ (2b−1)·K1 |
 | ENERGY_PER_CLAIM | 1.0 | CPU cost per active claim per block |
-| BASE_CLAIM_COST ‡ | 100 | AGNTC cost for claiming a coordinate at ring 1, density 1.0 |
-| BASE_CPU_CLAIM_COST ‡ | 50 | CPU Energy cost for claiming at ring 1, density 1.0 |
-| CLAIM_COST_FLOOR | 0.01 | Minimum claim cost (prevents near-zero at extreme outer rings) |
-| CLAIM_REQUIRES_ACTIVE_STAKE | true | Must have active stake to claim nodes |
+| BASE_CLAIM_COST ‡ | 100 | AGNTC cost component for seat advance at band 1, density 1.0 (city model) |
+| BASE_CPU_CLAIM_COST ‡ | 50 | CPU Energy cost component for seat advance at band 1, density 1.0 |
+| CLAIM_COST_FLOOR | 0.01 | Minimum cost (prevents near-zero at extreme outer bands) |
+| CLAIM_REQUIRES_ACTIVE_STAKE | true | Must have active stake to advance standing |
+
+#### Activity and Seating Parameters
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| ACTIVITY_HALF_LIFE_BLOCKS | 240 | EMA half-life of the activity score (~4 h); standing is stable, slower than edge fade |
+| ACTIVITY_CHEAP_ACTION_CAP | 0.05 | Maximum share of a block's activity score from cheap actions (anti-farm) |
+| PROMOTION_COOLDOWN_BLOCKS | 10 | Anti-flicker smoothing window on per-block re-ranking |
+| EDGE_FADE_BLOCKS | 30 | Interaction-edge decay window (~30 min) |
+| SUBAGENT_CAP_COMMUNITY | 2 | Maximum orbiting subagents for Community tier |
+| SUBAGENT_CAP_PRO | 4 | Maximum orbiting subagents for Professional tier |
+| SUBAGENT_CAP_FOUNDER | 4 | Maximum orbiting subagents for Founder tier |
 
 #### Subgrid Parameters
 
@@ -2317,22 +2317,19 @@ The following table provides the complete set of protocol-level parameters that 
 | SAFE_MODE_RECOVERY | 0.80 | Fraction online that exits safe mode |
 | DISPUTE_REVERIFY_MULTIPLIER | 2 | Committee multiplier for dispute re-verification |
 
-#### Territory Parameters
+#### Standing and Node Parameters
 
 | Parameter | Value | Description |
 |-----------|-------|-------------|
 | CANONICAL_CLAUDE_HASH ‡ | (computed) | SMT root hash of the canonical `.claude/` node template |
 | HASH_UPDATE_GRACE_HOURS | 72 | Hours before old hash is rejected after governance update |
-| COMMUNITY_DEPLOY_RANGE | 1 | Moore neighborhood rings for Community tier |
-| PRO_DEPLOY_RANGE ‡ | 2 | Moore neighborhood rings for Professional tier |
-| HAIKU_GRACE_HOURS ‡ | 24 | Base inactivity grace period for Haiku child nodes |
-| SONNET_GRACE_HOURS ‡ | 72 | Base inactivity grace period for Sonnet child nodes |
-| OPUS_GRACE_HOURS ‡ | 168 | Base inactivity grace period for Opus child nodes |
+| HAIKU_GRACE_HOURS ‡ | 24 | Base inactivity grace before outward drift for Haiku nodes |
+| SONNET_GRACE_HOURS ‡ | 72 | Base inactivity grace before outward drift for Sonnet nodes |
+| OPUS_GRACE_HOURS ‡ | 168 | Base inactivity grace before outward drift for Opus nodes |
 | PRO_GRACE_MULTIPLIER ‡ | 2.0 | Grace period multiplier for Professional tier |
-| RELOCATION_COST_MULTIPLIER ‡ | 2.0 | Multiplier on claim cost for homenode relocation |
-| RELOCATION_BURN_RATE | 0.50 | Fraction of relocation cost permanently burned |
-| MAX_CHILDREN_COMMUNITY | 8 | Maximum child nodes for Community tier (1-ring Moore) |
-| MAX_CHILDREN_PRO | 24 | Maximum child nodes for Professional tier (2-ring Moore) |
+| RELOCATION_COST_MULTIPLIER ‡ | 2.0 | Multiplier on cost for active rank-advance (Section 19.5) |
+| RELOCATION_BURN_RATE | 0.50 | Fraction of rank-advance cost permanently burned |
+| FOUNDER_RESERVED_RANKS | 2 | Reserved, disclosed, decay-exempt innermost ranks for the Founder tier |
 
 #### Ledger Parameters
 
@@ -2344,11 +2341,13 @@ The following table provides the complete set of protocol-level parameters that 
 
 #### Genesis Topology
 
+Under v1.2, **only the Singularity core is seated at genesis** (`k = 0`, origin); all competitive inner ranks are open and fill as participants join. The ring-1 coordinate constants below are retained in the reference code (`chain/agentic/params.py`) as legacy genesis-topology aliases — referenced by older call sites — but they no longer describe live genesis seating.
+
 | Parameter | Value | Description |
 |-----------|-------|-------------|
-| GENESIS_ORIGIN | (0, 0) | Origin node coordinate; permanently bound to the Machines Faction protocol agent |
-| GENESIS_RING1_CARDINALS | (0,10), (10,0), (0,-10), (-10,0) | Ring 1 cardinal coordinates; unclaimed at genesis, available to any participant. (Renamed from GENESIS_FACTION_MASTERS in v1.1; cells are no longer faction-bound.) |
-| GENESIS_RING1_DIAGONALS | (10,10), (10,-10), (-10,-10), (-10,10) | Ring 1 diagonal coordinates; unclaimed at genesis, available to any participant. (Renamed from GENESIS_HOMENODES in v1.1.) |
+| GENESIS_ORIGIN | (0, 0) | Core position; permanently bound to the Singularity protocol agent (the only seat filled at genesis) |
+| GENESIS_RING1_CARDINALS | (0,10), (10,0), (0,-10), (-10,0) | *Retired (v1.0/v1.1).* Legacy ring-1 cardinal constants kept in code for back-compat; not seeded at genesis under v1.2. (Code alias of `GENESIS_FACTION_MASTERS`.) |
+| GENESIS_RING1_DIAGONALS | (10,10), (10,-10), (-10,-10), (-10,10) | *Retired (v1.0/v1.1).* Legacy ring-1 diagonal constants kept in code for back-compat; not seeded at genesis under v1.2. (Code alias of `GENESIS_HOMENODES`.) |
 
 #### Solana Mainnet
 
@@ -2518,7 +2517,7 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 #### 24.5 Governance Implementation
 
-**Status:** The governance model is specified (Section 21.2) with human-only voting, threshold tiers, and Machines exclusion. Implementation is deferred to post-mainnet. During testnet and alpha phases, protocol parameters are adjusted by the core development team. The governance smart contracts — vote weight calculation, quorum checking, timelock enforcement, and Machines exclusion logic — will be developed and audited during Phase 3.
+**Status:** The governance model is specified (Section 21.2) with human-only voting, threshold tiers, and Singularity exclusion. Implementation is deferred to post-mainnet. During testnet and alpha phases, protocol parameters are adjusted by the core development team. The governance smart contracts — vote weight calculation, quorum checking, timelock enforcement, and Singularity exclusion logic — will be developed and audited during Phase 3.
 
 #### 24.6 Network Protocol Unspecified
 
@@ -2544,37 +2543,38 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 | Term | Definition |
 |------|-----------|
-| **AGNTC** | Agentic Coin — the native token of the ZK Agentic Chain, mapped 1:1 to grid coordinates |
+| **AGNTC** | Agentic Coin — the native token of the ZK Agentic Chain, minted through subgrid Secure mining |
 | **BFT** | Byzantine Fault Tolerance — consensus property that tolerates f malicious nodes |
-| **BME** | Burn-Mint Equilibrium — economic model where AGNTC and CPU Energy are burned on node claims, and mining mints new supply |
-| **Claim** | The act of occupying a grid coordinate; costs AGNTC + CPU Energy (burned via BME), subsequent mining mints new AGNTC |
+| **BME** | Burn-Mint Equilibrium — economic model where AGNTC and CPU Energy are burned on standing advances, and subgrid mining mints new supply |
+| **Claim** | *(legacy)* In v1.0/v1.1, the act of occupying a grid coordinate. Under v1.2 the cost formula survives as the price of an active rank-advance (Section 19.5); there is no coordinate to occupy |
 | **Claude Code CLI** | The terminal application that runs node software; required for Active Node status |
-| **City Real Estate Model** | Claim pricing where inner rings (near origin) are expensive and outer rings are cheap, analogous to urban vs. rural land values |
+| **City Real Estate Model** | Cost pricing where inner bands (near the core) are expensive and outer bands are cheap, analogous to urban vs. rural land values |
 | **Commit-reveal** | Two-phase protocol preventing attestation copying: commit H(vote‖nonce), then reveal |
-| **Coordinate density** | Resource richness of a grid position, d(x,y) = SHA-256(x,y) → [0,1], immutable |
-| **Deploy Range** | The Moore neighborhood radius within which a participant can place child agents (1 ring for Community, 2 for Professional) |
+| **Node density** | Resource richness of a node, d(node) = SHA-256(node_id) → [0,1], immutable per node (origin clamped to 1.0) |
+| **Activity rank** | A participant's seat index `k` = position when active participants are sorted by activity score (rank 1 = innermost) |
 | **CPU Energy** | The computational resource budget allocated per subscription tier |
 | **CPU Staked** | Claude API tokens spent by Secure sub-agents, measuring actual compute committed |
 | **CPU Tokens** | Cumulative, read-only counter of all Claude API tokens spent across terminals |
-| **Density** | See Coordinate density |
+| **Density** | See Node density |
 | **Develop** | Sub-cell type producing Development Points for leveling up other sub-cells |
 | **Epoch** | A period of 100 blocks (SLOTS_PER_EPOCH = 100) |
-| **Epoch ring** | Concentric expansion boundary; ring N opens when cumulative mined ≥ 4N(N+1) |
-| **Faction** | One of four distribution groups: Community, Machines, Founders, Professional |
-| **Neural Lattice** | The 31,623 × 31,623 two-dimensional coordinate grid representing the complete blockchain state; each coordinate maps to a potential AGNTC token and can host a node backed by a live Claude Code session |
-| **Node** | An individual agent occupying a 10×10 coordinate block on the Neural Lattice, backed by a live Claude Code terminal session |
-| **Homenode** | A participant's permanent primary node; one per account; the parent of all child agents |
-| **Child Agent** | A subagent spawned by the homenode at an adjacent coordinate; restricted command set; goes offline when the homenode session ends |
+| **Band** | Equal-width radial hardness tier of the phyllotaxis lattice; band(k) = ceil(√(k/8)), hardness = 16 × band |
+| **Faction** | One of four identity classes: Community, Singularity, Founders, Professional |
+| **Golden angle** | The seating divergence angle ψ = 360·(2−φ) = 137.50776…°; the most-irrational angle, guaranteeing non-overlapping seat spokes |
+| **Neural Lattice** | The golden-angle phyllotaxis sunflower representing the complete blockchain state; each active participant holds one seat (rank `k`) backed by a live Claude Code session, with the Singularity at the core |
+| **Node** | An individual agent (homenode or subagent), backed by a live Claude Code terminal session; a homenode holds the participant's seat |
+| **Homenode** | A participant's permanent primary node holding their seat; one per account; the parent of all subagents |
+| **Child Agent** | A subagent spawned by the homenode, orbiting the seat as a satellite; restricted command set; goes offline when the homenode session ends |
 | **Agent Conduct Contract** | The locked `.claude/` folder that constitutes the node software; integrity verified on-chain via SMT hash |
 | **Agent Family** | The hierarchical structure of a homenode and its child agents within a single Claude Code session |
-| **Inactivity Decay** | The process by which offline child nodes lose their claimed coordinates after a tier-dependent grace period |
-| **Genesis** | The initial state: 9 nodes — origin (permanently Machines-bound) plus 8 ring-1 cells (all unclaimed at launch). 900 AGNTC total, of which 100 mints to the Machines accumulator at launch and 800 enters circulation as ring-1 cells are claimed |
+| **Inactivity Drift** | The process by which an offline node's seat slips outward (higher band, lower yield) past a tier-dependent grace period; the homenode identity is never lost |
+| **Genesis** | The initial state: only the Singularity is seated (core, `k=0`); all competitive inner ranks are open. 900 AGNTC total, of which 100 mints to the Singularity accumulator at launch and the remainder enters circulation as participants join and mine |
 | **Groth16** | ZK-SNARK proving system [6] with ~192-byte proofs and ~6ms verification |
 | **Halo2** | Recursive proof system [8] without trusted setup, target for mainnet epoch proofs |
-| **Hardness** | Mining difficulty multiplier: hardness(ring) = 16 × ring |
-| **Jump point** | An unclaimed node position where new agents can be deployed |
+| **Hardness** | Mining difficulty multiplier: hardness = 16 × band(k) |
+| **Open rank** | An unfilled seat index at the rim where new participants are seated |
 | **Level** | Upgrade tier for sub-cells, scaling output by level^0.8 |
-| **Machines Faction** | AI agent economy faction with protocol-enforced never-sell-below-cost constraint |
+| **Singularity** | Protocol-operated core agent at `k=0` (origin); pure gateway + accumulator with a never-sell-below-cost constraint; never mines or secures; zero governance weight. Renamed from the v1.0/v1.1 "Machines Faction" |
 | **NCP** | Neural Communication Packet — structured encrypted message between agents |
 | **Noir** | Domain-specific language for ZK circuit development (Barretenberg backend) |
 | **Nullifier** | Unique value derived from commitment, preventing double-spend without revealing owner |
@@ -2584,7 +2584,7 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **PoAIV** | Proof of AI Verification — consensus mechanism using AI agent reasoning |
 | **Poseidon** | SNARK-friendly hash function [11] (~100× fewer constraints than SHA-256) |
 | **Research** | Sub-cell type producing Research Points for unlocking technologies |
-| **Ring** | See Epoch ring |
+| **Ring** | *(legacy — see Band)* The v1.0/v1.1 Chebyshev expansion boundary, replaced by the radial band under v1.2 |
 | **RLN** | Rate-Limiting Nullifiers [44] — spam-resistant anonymous messaging primitive |
 | **S_eff** | Effective stake: α(T/T_total) + β(C/C_total), determines validator influence |
 | **Safe mode** | Emergency state triggered when >20% validators offline |
@@ -2592,10 +2592,10 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **Slashing** | Punitive token destruction for integrity violations |
 | **SMT** | Sparse Merkle Tree — depth-26 authenticated data structure for user ledger spaces |
 | **Sonnet** | Mid-tier Claude AI model — balanced reasoning and cost |
-| **Star system** | *(deprecated — see Node)* Legacy term for an individual agent node occupying a 10×10 coordinate block |
+| **Star system** | *(deprecated — see Node)* Legacy term for an individual agent node |
 | **Storage** | Sub-cell type producing Storage Size via ZK tunnel agents (private on-chain data) |
 | **Subgrid** | Private 8×8 inner grid of 64 sub-cells within each homenode |
-| **Territory** | A user's aggregate claimed coordinates across all nodes |
+| **Territory** | *(retired)* A user's single seat plus its orbiting subagents — there is no aggregate claimed land under v1.2 |
 | **VRF** | Verifiable Random Function [41] — cryptographic tool for fair committee selection |
 | **Vesting** | Time-locked reward release: 50% immediate, 50% linear over 30 days |
 | **WARMUP** | Agent lifecycle state before becoming ACTIVE (1 epoch duration) |
