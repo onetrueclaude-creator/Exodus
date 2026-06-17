@@ -38,6 +38,10 @@ export interface Agent {
   parentAgentId?: string; // controlling agent (Opus -> Sonnet -> Haiku hierarchy)
   density?: number; // blockchain coordinate density (0–1, from chain)
   storageSlots?: number; // data packet capacity at this coordinate (volume)
+  // --- Phyllotaxis seat (chain-served, v1.2) ---
+  activity?: number; // rolling chain activity score (drives orbital rank)
+  rank?: number; // phyllotaxis seat: 0 = Singularity core, 1 = innermost player
+  isSingularity?: boolean; // true for the origin protocol node (the core)
 }
 
 // === Tier-keyed cost tables, re-keyed by NodeTier ===

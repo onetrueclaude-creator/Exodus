@@ -5,7 +5,7 @@
  * All methods return typed responses matching the Pydantic models.
  */
 import type {
-  TestnetStatus, CoordinateInfo, ClaimInfo,
+  TestnetStatus, CoordinateInfo, ClaimInfo, AgentInfo,
   GridRegion, MineResult, BirthResult, ClaimNodeResult, NodeInfo,
   IntroResult, MessageResult, MessageInfo,
   SecureResponse, SecuringStatusResponse, TransactResponse,
@@ -61,8 +61,8 @@ export function getGridRegion(
 }
 
 /** GET /api/agents — frontend-ready agent list (user agents + unclaimed slots) */
-export function getAgents(userCount: number = 3): Promise<unknown[]> {
-  return get<unknown[]>(`/api/agents?user_count=${userCount}`);
+export function getAgents(userCount: number = 3): Promise<AgentInfo[]> {
+  return get<AgentInfo[]>(`/api/agents?user_count=${userCount}`);
 }
 
 /** POST /api/mine — process one mining block (rate-limited to 60s) */

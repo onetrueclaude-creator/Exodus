@@ -46,6 +46,25 @@ export interface ClaimInfo {
   storage_slots: number;
 }
 
+// GET /api/agents — claims as frontend agents, carrying the phyllotaxis seat.
+// Structural superset of ClaimInfo (shares x/y/owner/stake/density/storage_slots).
+export interface AgentInfo {
+  id: string;
+  owner: string;
+  x: number;
+  y: number;
+  tier: string;
+  is_user_agent: boolean;
+  stake: number;
+  density: number;
+  storage_slots: number;
+  staked_cpu: number;
+  rank: number; // 0 = Singularity core, 1 = innermost player seat
+  band: number; // radial band = band_of(rank)
+  activity: number; // rolling activity score
+  is_singularity: boolean; // the origin protocol node
+}
+
 // GET /api/grid/region?x_min=&x_max=&y_min=&y_max=
 export interface GridRegion {
   x_min: number;

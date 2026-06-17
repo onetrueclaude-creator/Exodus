@@ -141,13 +141,17 @@ export class TestnetChainService implements ChainService {
 
   /** Fetch all grid data from the blockchain: claims + unclaimed nodes */
   async getAgents(): Promise<Agent[]> {
-    // 1. Fetch on-chain claims (owned agents)
-    const claims = await api.getClaims();
+    // 1. Fetch on-chain claims as agents — these carry the phyllotaxis seat
+    //    (rank / activity) and the Singularity flag the orbital renderer needs.
+    const infos = await api.getAgents(50);
     const ownerFirstSeen = new Set<string>();
-    const ownedAgents: Agent[] = claims.map((claim, i) => {
-      const agent = claimToAgent(claim, i);
-      if (!ownerFirstSeen.has(claim.owner)) {
-        ownerFirstSeen.add(claim.owner);
+    const ownedAgents: Agent[] = infos.map((info, i) => {
+      const agent = claimToAgent(info, i); // AgentInfo is a structural superset of ClaimInfo
+      agent.activity = info.activity;
+      agent.rank = info.rank;
+      agent.isSingularity = info.is_singularity;
+      if (!ownerFirstSeen.has(info.owner)) {
+        ownerFirstSeen.add(info.owner);
         agent.isPrimary = true;
       } else {
         agent.isPrimary = false;

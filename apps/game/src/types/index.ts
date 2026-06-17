@@ -14,6 +14,7 @@ export type {
   TestnetStatus,
   CoordinateInfo,
   ClaimInfo,
+  AgentInfo,
   GridRegion,
   GridCell,
   MineResult,
