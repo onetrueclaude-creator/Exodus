@@ -16,7 +16,7 @@ We present ZK Agentic Chain, a Layer-1 blockchain protocol that introduces *Proo
 
 The protocol employs a dual-staking model that weights computational contribution (60%) over capital (40%), reducing plutocratic concentration inherent in pure proof-of-stake designs. Validators must commit both AGNTC tokens and CPU compute resources; the effective stake that determines committee selection and reward share is a weighted combination of both dimensions.
 
-ZK Agentic Chain maps its entire token supply to a two-dimensional coordinate grid — a 31,623 x 31,623 spatial economy in which value is a function of geography rather than administrative allocation. The grid is open and undivided: any participant may claim any unclaimed coordinate, subject to the economic constraints below. Factions (Community, Machines, Founders, Professional) persist as participant identity classes that govern subscription, governance weight, and protocol role — they no longer control territorial arms of the grid. Mining is the sole supply-expanding mechanism: new AGNTC enters circulation only when miners successfully claim coordinates. Node claims cost AGNTC plus CPU Energy under a Burn-Mint Equilibrium (BME) model where the cost increases with proximity to the origin (inner rings are expensive, outer rings are cheap), and the per-coordinate density function (a deterministic SHA-256 hash of `x || y`) creates a non-uniform value landscape independent of distance. A soft cap with a 5% annual inflation ceiling prevents runaway supply expansion. Mining difficulty increases proportionally with ring distance from the origin (hardness = 16 x ring), creating natural disinflation without artificial halving events. A 50% transaction fee burn and the Machines Faction's permanent AGNTC accumulation at the origin coordinate provide sustained deflationary pressure as network usage grows.
+ZK Agentic Chain renders its network as a **golden-angle phyllotaxis lattice** — a deterministic sunflower of agent seats around a central Singularity core, in which standing is a function of activity rather than administrative allocation. Each participant occupies a single seat given by an integer rank `k` (the Singularity is the core at `k = 0`): seat `k` sits at angle `k × 137.50776°` and radius proportional to `√k`. Because the golden angle is the most irrational divergence angle, no two seats ever share a spoke to the core, and the disk packs evenly as participants join. Standing is intrinsic and shared: every client computes the identical seat from the on-chain rank, with no coordinate to claim or contest. Inner seats are high-standing; sustained activity draws a seat inward, while inactivity lets it drift outward. Mining remains the sole supply-expanding mechanism — new AGNTC enters circulation only through each node's private subgrid Secure cells. Hardness tiers are equal-width radial **bands** (`band(k) = ceil(√(k / 8))`, `hardness = 16 × band`), so inner bands are cheaper and higher-yield while outer bands naturally hold more seats; a per-node density function (a deterministic SHA-256 hash of the node identifier) creates a non-uniform value landscape independent of position. A soft cap with a 5% annual inflation ceiling prevents runaway supply expansion. A 50% transaction fee burn and the Singularity's permanent AGNTC accumulation at the core provide sustained deflationary pressure as network usage grows.
 
 Privacy is enforced at every layer. Each user's state resides in an isolated ledger space backed by a Sparse Merkle Tree of depth 26 with nullifier-based ownership proofs derived from the Zcash Sapling design. Verification agents communicate exclusively through ZK private channels — proving correctness of state transitions without exposing the underlying data to other agents or to the network. All state is private by default unless explicitly published by the user.
 
@@ -31,7 +31,7 @@ This paper describes the protocol architecture, consensus mechanism, privacy sys
 - [1. Introduction](#1-introduction)
 - [2. Background and Related Work](#2-background-and-related-work)
 - [3. System Overview](#3-system-overview)
-- [4. The Neural Lattice: Blockchain as Coordinate Space](#4-the-neural-lattice)
+- [4. The Neural Lattice: Phyllotaxis Standing Economy](#4-the-neural-lattice)
 - [5. Proof of AI Verification](#5-proof-of-ai-verification)
 - [6. Privacy Architecture](#6-privacy-architecture)
 - [7. BFT Ordering and Finality](#7-bft-ordering-and-finality)
@@ -106,13 +106,13 @@ ZK Agentic Chain addresses these limitations with three design principles:
 
 #### 1.3 Vision: The Neural Lattice
 
-ZK Agentic Chain represents blockchain state as a two-dimensional coordinate grid — a spatial economy where geography, resources, and strategic position are intrinsic to the protocol rather than abstracted away behind address strings and block heights.
+ZK Agentic Chain represents blockchain state as a **golden-angle phyllotaxis lattice** — a sunflower of agent seats around a central Singularity, where standing, resources, and strategic position are intrinsic to the protocol rather than abstracted away behind address strings and block heights. Position is not an `(x, y)` coordinate a participant chooses or claims; it is an activity rank `k` that the protocol assigns and continuously re-sorts.
 
-The grid is open and undivided. Any participant — Community, Founders, Professional, or the protocol-operated Machines agent — can claim any unclaimed coordinate subject to economic constraints (cost, hardness, density) rather than territorial ones. Factions represent distinct participant classes (free-tier community users, AI agents controlled by the protocol, founders and advisors, and professional paid-tier users) and govern subscription, governance weight, and protocol role; they do not own arms of the grid. Newly minted AGNTC flows from the act of mining itself: every claimed coordinate mints a fixed amount of AGNTC to the claiming participant, irrespective of where on the grid the coordinate lies. Geographic value emerges instead from two intrinsic, hash-derived properties of each coordinate: hardness (distance from origin) and density (resource richness). This replaces the older arbitrary allocation percentages with an economy whose value gradient is observable, deterministic, and the same for every participant.
+The lattice is shared and deterministic. Every active participant — Community, Founders, Professional — holds exactly one seat, computed identically by every client from the on-chain rank: seat `k` lies at `angle(k) = k × 137.50776°` and `radius(k) = c·√k` (the Fermat-spiral phyllotaxis packing). The protocol-operated **Singularity** agent is bound to the centre (`k = 0`). Factions represent distinct participant classes (free-tier community users, the protocol's own core agent, founders and advisors, and professional paid-tier users) and govern subscription, governance weight, and protocol role; they do not own regions of the lattice. Newly minted AGNTC flows from the act of mining itself: each node's private subgrid mints AGNTC to its operator, irrespective of seat. Value emerges instead from two intrinsic properties: hardness (which radial **band** the seat falls in — `hardness = 16 × band`) and per-node density (a deterministic SHA-256 hash of the node identifier). This replaces arbitrary allocation percentages with an economy whose value gradient is observable, deterministic, and the same for every participant — and whose standing rewards real activity over capital or land-grabbing.
 
-Users explore the grid through AI agent terminals — constrained Claude model instances that operate as in-game interfaces. Each deployed agent occupies a 10x10 coordinate block (a "node"), and users interact with the blockchain exclusively through structured command menus presented by their agents. There is no free-text chat; every interaction is a validated game action that maps to an on-chain transaction.
+Users explore the lattice through AI agent terminals — constrained Claude model instances that operate as in-game interfaces. Each participant runs a single homenode seat plus a small family of orbiting subagents (a "node" is one agent), and users interact with the blockchain exclusively through structured command menus presented by their agents. There is no free-text chat; every interaction is a validated game action that maps to an on-chain transaction.
 
-The protocol launches in phases: AGNTC begins as a Solana SPL token (1 billion units minted) to establish liquidity and community, while the ZK Agentic Chain testnet simulates the full protocol with a game-like interface. Upon mainnet launch, Solana-based AGNTC migrates to the native Layer-1 chain via a lock-and-mint bridge, and the spatial coordinate economy becomes the production blockchain.
+The protocol launches in phases: AGNTC begins as a Solana SPL token (1 billion units minted) to establish liquidity and community, while the ZK Agentic Chain testnet simulates the full protocol with a game-like interface. Upon mainnet launch, Solana-based AGNTC migrates to the native Layer-1 chain via a lock-and-mint bridge, and the phyllotaxis standing economy becomes the production blockchain.
 
 ---
 
@@ -240,118 +240,123 @@ Three principles constrain every architectural decision in the protocol:
 
 ---
 
-### 4. The Neural Lattice: Blockchain as Coordinate Space
+### 4. The Neural Lattice: Phyllotaxis Standing Economy
 
-#### 4.1 Grid Architecture
+#### 4.1 Seating: The Golden-Angle Sunflower
 
-ZK Agentic Chain maps its token supply to a two-dimensional coordinate grid of 31,623 x 31,623 cells — approximately 1 billion cells total (31,623^2 = 1,000,014,129, rounded to the MAX_SUPPLY constant of 1,000,000,000). The grid is not merely a visualization of blockchain state — it *is* the blockchain state. Claiming a coordinate through the mining process mints new AGNTC, and every AGNTC in circulation corresponds to a specific (x, y) coordinate pair. Node claims require both AGNTC and CPU Energy under the Burn-Mint Equilibrium model (Section 12.4), with costs that vary by grid location — inner rings near the origin are expensive (dense urban core), while outer rings are progressively cheaper (suburban frontier).
+ZK Agentic Chain renders its network as a **golden-angle phyllotaxis lattice** — the sunflower-seed packing. Each active participant occupies a single seat given by an integer **rank `k ≥ 1`** (the Singularity core is `k = 0`). The seat's screen position is a pure function of `k`:
 
-Agents (validator nodes) occupy 10x10 coordinate blocks, defined by the NODE_GRID_SPACING parameter. Each agent's node encompasses 100 grid cells and therefore 100 potential AGNTC when fully mined. Valid agent positions are restricted to multiples of NODE_GRID_SPACING; the claim_node() function snaps submitted coordinates to the nearest grid-aligned position.
+```
+angle(k)  = k × ψ        ψ = 360° × (2 − φ) = 137.50776…°   (golden angle, φ = (1+√5)/2)
+radius(k) = c × √k        c = radial scale (client-side visual constant)
+```
 
-The grid topology is uniform. Every coordinate is identical to every other from a structural standpoint; only the deterministic per-coordinate density function and the per-ring hardness curve introduce variation. There are no faction-specific arms, sectors, or quadrants — the spatial structure makes no reference to participant identity. Coordinates near the origin are strategically valuable because hardness is low (cheaper to claim) and the early rings are smaller (fewer total positions per ring); coordinates at the periphery are sparse and expensive to mine. Density is independently distributed regardless of position, so even a peripheral coordinate can carry a high-richness draw.
+The lattice is not merely a visualization of blockchain state — it *is* the blockchain state. The rank `k` lives on-chain, so every client computes the identical `(angle, radius)` with no consensus on positions and no per-client drift. A node mints new AGNTC through its private subgrid (Section 16), not by claiming a coordinate; standing, not supply, is what the seat encodes.
+
+**Why the golden angle.** Interaction edges are radial spokes from a seat to the Singularity (Section 4.5). Two seats would collide only if they shared an angle, i.e. `(k − k′) × (2 − φ) ∈ ℤ` — impossible for `k ≠ k′` because `2 − φ` is irrational. The golden angle is moreover the *most* irrational divergence angle (Hurwitz), so by the three-distance theorem the gaps between seats are maximally uniform and nearest-neighbour spacing is approximately constant across the whole disk. The packing is the spiral analogue of hexagonal tiling: provably non-overlapping (by the irrationality argument above) and even everywhere.
+
+**Radial bands set hardness.** Seats are grouped into equal-width concentric **bands**. With `K1 = SEATS_INNER_BAND` seats in the innermost band, the band of seat `k` and its mining hardness are:
+
+```
+band(k)  = ceil( √(k / K1) )
+hardness = HARDNESS_MULTIPLIER × band(k) = 16 × band(k)
+```
+
+This is identical in form to the v1.0/v1.1 `16 × ring` hardness, but the "ring" is now a radial band of the sunflower rather than a Chebyshev ring of a coordinate grid. Band `b` holds proportionally `(2b − 1)·K1` seats (annulus area), and cumulative capacity through band `B` is proportional to `B²·K1` — so outer bands automatically hold more, recovering the same `∝ B²` growth shape as the old epoch threshold `4N(N+1)`. Inner bands are cheaper to operate in (lower hardness) and higher-yield; the periphery is progressively harder. Band is unit-free and chain-computable from `k` alone.
+
+The lattice makes no reference to participant identity in its geometry — there are no faction arms, sectors, or quadrants. Variation comes only from the per-node density function and the per-band hardness curve. A seat near the core is strategically valuable because hardness is low and prestige is high; an outer seat is harder but reachable by anyone who out-competes the field on activity. Density is distributed independently of band, so even a peripheral node can carry a high-richness draw.
 
 #### 4.2 Faction System
 
-Factions are participant identity classes, not territorial divisions. The Neural Lattice has no arms, quadrants, or sectors — every coordinate is equally claimable by any participant regardless of faction membership. Faction determines subscription tier, governance weight, and protocol role; it does not determine which coordinates a participant may claim.
+Factions are participant identity classes, not territorial divisions. The Neural Lattice has no arms, quadrants, or sectors — every seat is competed for on activity alone, regardless of faction membership. Faction determines subscription tier, governance weight, and protocol role; it does not gate access to standing.
 
 | Faction | Display Color | Membership Source | Protocol Role |
 |---------|---------------|-------------------|---------------|
 | Community | Teal `#0D9488` | Free-tier human users | Voting participant, 1× governance weight |
-| Machines | Pink `#DC2680` | Protocol-operated autonomous agent | Origin guardian, zero governance weight |
+| Singularity | Black / violet | Protocol-operated core agent | Core gateway + accumulator, zero governance weight |
 | Founders | Amber `#F59E0B` | Team and advisors | Voting participant, 5× governance weight, 4-year vest |
 | Professional | Blue `#3B82F6` | Paid-tier human users | Voting participant, 2× governance weight |
 
-(Display colors are normative; client implementations may use these exact hex codes to render owner-tinted cells on the grid.)
+(Display colors are normative; client implementations may use these exact hex codes to render owner-tinted nodes on the lattice. The Singularity renders as a near-black event horizon with a violet ring-of-fire rim rather than a flat tint.)
 
-**Faction does not allocate supply.** Newly minted AGNTC flows from the act of mining: each claimed coordinate mints AGNTC to the claimant directly, irrespective of which faction the claimant belongs to. There is no 25%-per-faction split, no faction treasury that automatically receives a share, and no protocol enforcement of distribution proportions. Distribution emerges from participant behavior — whoever claims more coordinates earns more AGNTC.
+**Faction does not allocate supply.** Newly minted AGNTC flows from the act of mining: each node's subgrid mints AGNTC to its operator directly, irrespective of which faction the operator belongs to. There is no 25%-per-faction split, no faction treasury that automatically receives a share, and no protocol enforcement of distribution proportions. Distribution emerges from participant behavior — whoever does more verification work earns more AGNTC.
 
-**Machines Faction occupies the origin only.** The Machines Faction is implemented as a single protocol-operated agent permanently bound to coordinate (0, 0). The Machines agent cannot expand beyond origin; it does not claim other coordinates and cannot be deployed elsewhere. Within its single-node territory, the Machines agent auto-levels (autonomous node development), auto-stakes its CPU between mining and securing operations, and accumulates AGNTC monotonically. Because origin is the most resource-rich coordinate (lowest hardness, density yield clamped at the maximum), the Machines accumulator captures a meaningful but bounded share of network supply — far smaller than the old "25% of all mined AGNTC" but structurally identical in role: a permanent, never-selling protocol reserve whose growth serves as a health metric. The accumulator's economic constraint (`MACHINES_MIN_SELL_RATIO = 1.0`, never sells below acquisition cost) is preserved verbatim.
+**The Singularity is the core only.** The Singularity (renamed from the v1.0/v1.1 "Machines Faction") is implemented as a single protocol-operated agent permanently bound to the centre (`k = 0`, origin). It cannot take a competitive seat, cannot be deployed elsewhere, and — critically — **never mines or secures**: the chain is 100% human-run, and the Singularity is a pure gateway and accumulator. It passively accrues origin yield into a never-selling reserve and renders chain queries and attestation submissions as interaction spokes to the core. Because origin is rendered at maximum density (the protocol clamps origin density to 1.0) and minimum hardness, the accumulator captures a meaningful but bounded trickle of supply — far smaller than the old "25% of all mined AGNTC" but structurally identical in role: a permanent, never-selling protocol reserve whose growth serves as a health metric. The accumulator's economic constraint (`SINGULARITY_MIN_SELL_RATIO = 1.0`, never sells below acquisition cost) is preserved verbatim.
 
 **Founders Faction** tokens are subject to a 4-year vesting schedule with a 12-month cliff, preventing early liquidation by the founding team. This vesting applies to AGNTC the Founders earn through their own mining, not to a pre-allocated faction share.
 
-The governance separation introduced in v1.0 is preserved: the Machines Faction has zero governance weight and cannot vote on protocol parameters. Humans govern; the protocol agent executes.
+The governance separation introduced in v1.0 is preserved: the Singularity has zero governance weight and cannot vote on protocol parameters. Humans govern; the protocol agent executes.
 
-#### 4.3 Epoch-Ring Expansion
+#### 4.3 Band Growth
 
-The grid does not exist in its entirety at genesis. Instead, it expands outward from the origin through an epoch-ring system driven by mining activity.
+The lattice does not exist in its entirety at genesis. Instead, it grows outward from the centre as participants join, filling seats rank by rank. Hardness tiers are the equal-width radial **bands** of Section 4.1; there is no discrete "ring opening" event, because seats are assigned continuously rather than unlocked in batches.
 
-At genesis, only ring 0 (the origin) and ring 1 (the eight adjacent positions) are revealed, containing 9 nodes: 1 origin node (permanently bound to the Machines Faction protocol agent) and 8 surrounding ring-1 nodes (all initially unclaimed and available to the first participants). The genesis supply is 900 AGNTC (9 nodes × 100 coordinates), of which the 100 AGNTC corresponding to the origin coordinate is minted to the Machines accumulator at protocol launch and the remaining 800 enter circulation only as the surrounding ring-1 nodes are claimed by participants. Additionally, each new user registration mints a 1 AGNTC signup bonus, ensuring every participant enters the economy with a non-zero balance.
+At genesis, only the Singularity is seated (`k = 0`, the origin). The innermost competitive ranks are open and fill as participants arrive — the first arrivals take the inner band, later arrivals are placed at the next open (outermost) rank and climb inward via activity (Section 19). The genesis supply is 900 AGNTC; the 100 AGNTC associated with the origin is minted to the Singularity accumulator at protocol launch, and the remainder enters circulation only as participants join and their subgrids mine. Additionally, each new user registration mints a 1 AGNTC signup bonus, ensuring every participant enters the economy with a non-zero balance.
 
-Ring N opens when the cumulative AGNTC mined across the entire network reaches the threshold:
+Because band `b` holds proportionally `(2b − 1)·K1` seats and cumulative capacity through band `B` scales as `B²·K1`, the field's capacity grows with the same `∝ B²` shape that the v1.0/v1.1 epoch threshold `4N(N+1)` produced — outer bands hold more automatically, with no separate unlock rule. Supply expansion remains strictly mining-driven, not time-driven: if no node secures, no new AGNTC enters circulation, regardless of elapsed time.
 
-```
-threshold(N) = 4 * N * (N + 1)
-```
+The lattice rendering is dynamic: the client draws the seated ranks plus the growing rim (the next open seats), so the cost of rendering scales with active participants rather than with any fixed grid extent.
 
-Each opened ring reveals 8N new claimable coordinate positions (the perimeter of a Chebyshev ring at distance N from the origin). Ring expansion is mining-driven, not time-driven — if no mining occurs, no new rings open, regardless of elapsed time.
+#### 4.4 Node Density and Resource Richness
 
-The grid rendering is dynamic: the frontend renders only claimed nodes plus one ring of fog (the next claimable ring), avoiding the computational overhead of pre-rendering 1 billion cells. Visible bounds are computed as:
+Each node has an intrinsic *density* value — a deterministic measure of resource richness that multiplies the node's mining yield. Under v1.2, density is a property of *who you are*, not *where you sit*: it is derived from the node identifier rather than a coordinate.
 
 ```
-visible_min = -(current_epoch_ring + 1) * NODE_GRID_SPACING
-visible_max = +(current_epoch_ring + 1) * NODE_GRID_SPACING
+density(node) = SHA-256(node_id) mod 2^32 / 2^32 ∈ [0, 1]
 ```
 
-#### 4.4 Coordinate Density and Resource Richness
+Because SHA-256 is deterministic, a node's density is fixed for its entire life — an intrinsic trait, not a dynamic state variable. This creates a resource geography: some nodes are "rich" (density near 1.0, high mining yield) and others are "barren" (density near 0.0, low yield). Density decouples cleanly from standing: **hardness = where you are (band), density = who you are (node).** The Singularity / origin is the one exception — its density is clamped to 1.0, giving the accumulator the maximum single-node yield as its structural (rather than allocative) mechanism (Section 4.5, Section 10.3).
 
-Each coordinate position (x, y) has an intrinsic *density* value — a deterministic measure of resource richness that multiplies the mining yield at that position:
+Inner seats have higher strategic value because hardness is lower (`16 × band` is minimized in band 1) and prestige is higher. Density, however, is distributed independently of band — an outer-band node can draw density 0.99 just as an inner node can draw 0.01. The advantage of an inner seat comes from lower hardness, not higher density.
 
-```
-density(x, y) = SHA-256(x || y) mod 2^32 / 2^32
-```
-
-The density function maps each coordinate to a float in [0, 1]. Because SHA-256 is deterministic, density values are fixed for all time — they are an intrinsic property of the coordinate, not a dynamic state variable. This creates a resource geography: some coordinates are "rich" (density near 1.0, high mining yield) and others are "barren" (density near 0.0, low mining yield).
-
-Coordinates near the origin tend to have higher strategic value because they were claimable earliest (lowest hardness) and because ring 1 hardness (16) is the minimum. However, density itself is uniformly distributed regardless of distance from origin — a coordinate at ring 300 can have density 0.99 just as a coordinate at ring 1 can have density 0.01. The strategic advantage of inner coordinates comes from lower hardness, not higher density.
-
-**Figure 1: Neural Lattice Structure**
+**Figure 1: Neural Lattice Structure (phyllotaxis sunflower)**
 
 ```
-                          .  ·  .  ·  .  ·  .  ·  .
-                          ·  .  ·  .  ·  .  ·  .  ·
-                          .  ·  .  ◯  .  ·  .  ·  .       ring 3
-                          ·  .  ◯  ◯  ◯  .  ·  .  ·
-                          .  ·  ◯  ◯  ◯  ◯  ·  .  ·       ring 2
-                          ·  .  ◯  ◯  ◍ ←─── claimed by participant
-                          .  ·  ◯  ◯  ⊛  ◯  ·  .  .       ring 1
-                          ·  .  ·  ◯  ◯  ◯  ·  .  ·
-                          .  ·  .  ·  ◯  .  ·  .  .
-                          ·  .  ·  .  ·  .  ·  .  ·
-                          .  ·  .  ·  .  ·  .  ·  .
+                          ·    ·    ◍    ·    ·
+                       ·     ◯       ◯       ◯    ·
+                          ◯     ◍       ◯     ◯       band 3
+                    ·    ◯    ·    ◯    ·    ◯    ·
+                       ◯    ·    ●    ·    ◍       band 2
+                    ·    ◯    ·   (◉)   ·    ◯    ·    band 1
+                       ◯    ·    ●    ·    ◯
+                          ◍     ◯       ◯     ◍
+                       ·     ◯       ◍       ◯    ·
+                          ·    ·    ◯    ·    ·
 
-    ⊛ = Origin (Machines, permanent)     ◍ = Claimed by participant
-    ◯ = Unclaimed (current epoch)        · = Beyond current epoch ring
+    ◉ = Singularity core (k=0, permanent)   ● = high-activity seat (inner)
+    ◍ = active participant seat              ◯ = lower-activity / outer seat
+    · = open rank (growing rim)
 
-    Single shared grid | 31,623 × 31,623 coordinate space
-    Faction = identity (not territory)   |  any participant may claim any unclaimed cell
-    Value gradient = ring hardness + per-cell density (SHA-256 of x||y)
-    Claims burn AGNTC + CPU (BME)  |  Mining mints new supply
-    Epoch rings expand outward as mining reaches threshold
+    Shared deterministic sunflower | seat k → angle k·137.50776°, radius c·√k
+    Faction = identity (not territory)  |  standing = activity rank, not coordinate
+    Value gradient = band hardness (16·band) + per-node density (SHA-256 of node_id)
+    Subgrid Secure mints new supply (BME burns)  |  golden angle ⇒ non-overlapping spokes
+    Bands fill continuously as participants join; activity moves seats inward/outward
 ```
 
-#### 4.5 Open-Grid Spatial Economy
+#### 4.5 Standing Economy
 
-ZK Agentic Chain operates on a single shared coordinate space rather than a partitioned territory. This subsection consolidates the operational consequences of that decision, which appear in scattered form throughout the rest of the document.
+ZK Agentic Chain operates on a shared deterministic phyllotaxis lattice in which a participant's position is an activity rank rather than a parcel of territory. This subsection consolidates the operational consequences of that decision, which appear in scattered form throughout the rest of the document.
 
-**First-come-first-served spawning.** New participants are assigned a homenode at the lowest-ring unclaimed coordinate, allocated in deterministic origin-out order (Chebyshev-ring sweep, then within-ring lexicographic). The Machines agent permanently occupies (0, 0). The first eight homenodes go to the ring-1 perimeter (8 cells); the next sixteen to ring 2 (16 cells); and so on. Onboarding waves therefore cluster around the origin and expand outward, producing organic density that mirrors network-growth signals.
+**One seat plus a family of subagents.** A participant holds exactly one seat (rank `k`) and a small, fixed family of **subagents** that orbit it (2 for Community, 4 for Professional and Founder — Section 18.5). Subagents render as satellites tethered to the seat by permanent family edges; each runs its own subgrid (contributing to the participant's mining and activity) but holds no independent seat. There is no empire, no claimed territory, and no adjacency frontier to expand — the retired empire/blob/deploy-range model of v1.1 has no analogue here.
 
-**Empire expansion is contiguous, not territorial.** A participant's claimable region is the 8-neighbor Chebyshev expansion of their currently owned cells (the "empire blob"). Child agents may be deployed only on cells adjacent to one the participant already owns. There is no faction-arm restriction: a Community user and a Founders user can have empires that touch, interleave, or contend for the same frontier cells. Strategic competition for inner-ring or high-density coordinates is intrinsic — there is no protected per-faction territory to fall back on.
+**Standing is the activity rank.** A participant's `k` is their position when all active participants are sorted by a rolling, decaying, CPU-weighted **activity score** (Section 19.2). Rank 1 is the innermost competitive seat. Sustained verification work raises activity relative to the field and spirals the seat inward (lower `k`, lower hardness band, higher yield, prestige); inactivity lets it slip outward. New participants enter at the next open (outermost) rank and climb by out-competing others. Competition is for inner *standing*, not for scarce coordinates.
 
-**Value gradient is a function of geography alone.**
+**Value gradient is a function of standing and node identity, both public.**
 
 ```
-expected_yield(x, y) = density(x, y) × yield_per_density_unit(ring(x, y))
-                     = SHA-256_unit(x || y) × (BLOCK_REWARD / hardness(ring))
-                     = SHA-256_unit(x || y) × (BLOCK_REWARD / (16 × ring))
+expected_yield(node) = density(node) × yield_per_density_unit(band(k))
+                     = SHA-256_unit(node_id) × (BASE_RATE / hardness)
+                     = SHA-256_unit(node_id) × (BASE_RATE / (16 × band(k)))
 ```
 
-Both terms are deterministic and observable to every participant without permission or coordination. The value of a coordinate is therefore a public, faction-agnostic property.
+Both terms are deterministic and observable to every participant without permission or coordination — `band(k)` is a pure function of the on-chain rank, and `density(node)` a pure function of the node identifier.
 
-**The Machines accumulator is structural, not allocative.** Because Machines permanently owns (0, 0), where hardness is minimum and density is rendered at maximum (the protocol clamps origin density to 1.0), the Machines agent passively earns a continuous trickle of AGNTC from the most productive single coordinate on the grid. This delivers the v1.0 "permanent accumulator" property — never-selling protocol reserve, monotonic growth, deflationary pressure — through a structural mechanism (origin occupancy) rather than an allocative one (25% of all mined supply). The accumulator's total share of long-run supply is bounded: it captures a single coordinate's yield, not a quarter of the network's.
+**The Singularity accumulator is structural, not allocative.** Because the Singularity permanently holds the core (`k = 0`, origin), where hardness is minimum and density is rendered at maximum (the protocol clamps origin density to 1.0), it passively earns a continuous trickle of AGNTC from the most productive single node on the lattice — without itself mining or securing. This delivers the v1.0 "permanent accumulator" property — never-selling protocol reserve, monotonic growth, deflationary pressure — through a structural mechanism (core occupancy) rather than an allocative one (25% of all mined supply). The accumulator's total share of long-run supply is bounded: it captures a single node's yield, not a quarter of the network's.
 
-**Anti-monopoly mechanics still hold.** Inactivity decay, claim-cost density multipliers, hardness scaling, real-compute requirements, and homenode permanence (Section 19.6) all operate identically under the open-grid model. The removal of faction-arm partitioning does not weaken anti-monopoly enforcement — it strengthens it, because no participant can hide behind a protected arm.
+**Anti-monopoly mechanics still hold.** Inactivity-driven outward drift, the real-compute requirement, hardness that rises with band, the active-relocation cost, disclosed Founder ranks, and the fixed subagent caps (Section 19.6) all operate under the standing model. Removing territorial partitioning does not weaken anti-monopoly enforcement — concentration pressure now expresses purely as competition for inner standing, with the same levers (decay, real-compute, relocation cost, hardness, diminishing `level^0.8` subgrid returns) intact.
 
-**Migration note.** Implementations that previously enforced four-arm spiral geometry should phase that code out in three places: (1) cell-creation logic should set `faction` to the owner's faction at claim time (or `null` for unclaimed), not derive it from coordinate quadrant; (2) deploy-candidate logic should use 8-neighbor adjacency of the participant's owned cells, not the participant's faction arm; (3) the spawn algorithm should emit the next-available cell in Chebyshev-ring order from origin, not within a faction arm. See `apps/game/src/lib/spawn.ts` and `apps/game/src/lib/deploy.ts` in the reference client implementation.
+**Migration note (v1.0/v1.1 → v1.2).** Implementations that previously enforced coordinate-grid geometry should retire it in three places: (1) node-creation logic should assign a rank `k` and derive `(angle, radius, band)` from it, rather than snapping submitted `(x, y)` to a grid; (2) deploy-candidate logic should attach subagents as orbiting satellites of the participant's seat (no 8-neighbour adjacency, no empire blob); (3) the placement algorithm should append a new participant at the next open rank, rather than emitting the next coordinate in Chebyshev-ring order. The v1.0 four-arm spiral and the v1.1 open coordinate grid are both retired. See `apps/game/src/lib/orbitalGeometry.ts` in the reference client implementation.
 
 ---
 
