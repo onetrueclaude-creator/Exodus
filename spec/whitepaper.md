@@ -46,7 +46,7 @@ This paper describes the protocol architecture, consensus mechanism, privacy sys
 - [16. Subgrid Allocation System](#16-subgrid-allocation-system)
 - [17. Per-Block Resource Calculations](#17-per-block-resource-calculations)
 - [18. Agent Terminal System](#18-agent-terminal-system)
-- [19. Network Topology and Spatial Economy](#19-network-topology-and-spatial-economy)
+- [19. Network Topology and Standing Economy](#19-network-topology-and-spatial-economy)
 - [20. Migration Path: Solana to Layer 1](#20-migration-path)
 - [21. Technical Roadmap](#21-technical-roadmap)
 - [22. Protocol Parameters](#22-protocol-parameters)
@@ -1873,22 +1873,22 @@ The design follows Bitcoin Core's principle: the rules are public, the enforceme
 
 #### 18.5 Subagent Architecture: Agent Families
 
-Each participant runs a single Claude Code CLI session — their **homenode**. Additional nodes are deployed as **subagents** within the same session, creating a hierarchical agent family:
+Each participant runs a single Claude Code CLI session — their **homenode**, which holds the participant's seat (rank `k`). A small, fixed family of **subagents** is deployed within the same session, rendered as satellites orbiting the homenode seat rather than occupying separate seats:
 
 ```
-Homenode (participant's Claude Code session)
-  ├── Child Agent 1 (subagent at adjacent coordinate)
-  ├── Child Agent 2 (subagent at adjacent coordinate)
-  └── Child Agent 3 (subagent at adjacent coordinate)
+Homenode seat (participant's Claude Code session, rank k)
+  ├── Subagent 1 (orbiting satellite)
+  ├── Subagent 2 (orbiting satellite)
+  └── …                              caps: Community 2 · Professional 4 · Founder 4
 ```
 
-**Homenode** — the participant's primary node. One per account. Runs the full command menu (Section 18.3). The homenode is the only node with Deploy Agent capability; all children are spawned from it.
+**Homenode** — the participant's primary node and the holder of the seat. One per account. Runs the full command menu (Section 18.3). The homenode is the only node with Deploy Agent capability; all subagents are spawned from it.
 
-**Child agents** — subagents spawned by the homenode. Each occupies a claimed coordinate adjacent to the homenode (see Section 19.3 for adjacency rules). Children have a restricted command set: they can Secure, manage their subgrid, read chain state, and report status, but they cannot deploy further children, relocate, transact, or modify settings. Children communicate with the homenode through direct bidirectional messaging — no file-based polling or periodic synchronization.
+**Subagents** — spawned by the homenode and capped per tier: **2 for Community, 4 for Professional, 4 for Founder**. A subagent orbits the homenode seat as a satellite; it holds no independent seat or rank and there is no adjacent-coordinate placement (the v1.1 adjacency model is retired). Subagents have a restricted command set: they can Secure, manage their own subgrid (contributing to the participant's mining and activity), read chain state, and report status, but they cannot deploy further subagents, advance standing, transact, or modify settings. They communicate with the homenode through direct bidirectional messaging — no file-based polling or periodic synchronization. A subagent's orbit radius is kept below half the local nearest-neighbour seat spacing, so neighbouring participants' satellite clusters never overlap.
 
-**No offline mining.** When the participant closes their Claude Code session, ALL nodes (homenode and children) go offline immediately. No background mining, no daemon mode, no cached attestations. Every AGNTC earned requires a live Claude session making real API calls that consume real computational resources. This is the core promise of Proof of AI Verification: the AI must actually be verifying.
+**No offline mining.** When the participant closes their Claude Code session, ALL nodes (homenode and subagents) go offline immediately. No background mining, no daemon mode, no cached attestations. Every AGNTC earned requires a live Claude session making real API calls that consume real computational resources. This is the core promise of Proof of AI Verification: the AI must actually be verifying.
 
-The chain detects offline nodes through heartbeat monitoring. If a node's last heartbeat exceeds the block time (60 seconds), it is marked offline. Offline nodes do not participate in committee selection, do not earn mining rewards, and do not produce attestations. On the 2D Neural Lattice grid, offline nodes are visually dimmed, signaling to other participants that the territory is undefended.
+The chain detects offline nodes through heartbeat monitoring. If a node's last heartbeat exceeds the block time (60 seconds), it is marked offline. Offline nodes do not participate in committee selection, do not earn mining rewards, and do not produce attestations. On the lattice, offline nodes are visually dimmed; sustained inactivity also causes the seat to drift outward over time (Section 19.4).
 
 #### 18.6 Subgrid Operations on All Nodes
 
@@ -1907,32 +1907,33 @@ Subgrid management is available through the command menu on both homenode and ch
 
 ---
 
-### 19. Network Topology and Spatial Economy
+### 19. Network Topology and Standing Economy
 
 #### 19.1 Concept Mapping
 
-ZK Agentic Chain maps blockchain concepts onto a spatial coordinate metaphor. This is not merely a visualization layer — the spatial structure IS the blockchain state. Moving a coordinate, changing its density, or expanding the grid constitutes a state transition in the ledger.
+ZK Agentic Chain maps blockchain concepts onto a phyllotaxis standing metaphor. This is not merely a visualization layer — the seating structure IS the blockchain state. Re-ranking a seat, changing a node's density draw, or admitting a new participant constitutes a state transition in the ledger.
 
 | Spatial Concept | Blockchain Equivalent |
 |----------------|----------------------|
-| Neural Lattice | Complete network state (all claimed coordinates + epoch rings) |
-| Territory | A user's aggregate claimed coordinates |
-| Node | Individual agent (10×10 coordinate block, one Claude session) |
+| Neural Lattice | Complete network state (all seated ranks + the Singularity core) |
+| Seat | A participant's single position, rank `k`; `angle(k)=k·137.50776°`, `radius(k)=c·√k` |
+| Territory | A participant's single seat plus its orbiting subagents (no aggregate land) |
+| Node | An individual agent (homenode or subagent), one per live Claude session |
 | Planets | Content storage units (posts, chats, prompts) orbiting a node |
-| Jump points | Unclaimed nodes where new agents can be deployed |
-| Fog of war | Boundary at the current epoch ring; coordinates beyond are not yet revealed |
-| Density gradient | Per-coordinate value derived from SHA-256(x ‖ y); rendered as a soft heatmap on the rendered grid |
-| Empire blob | A participant's contiguous claimed territory; the set of cells from which next deploys may extend (8-neighbor Chebyshev adjacency) |
-| Coordinate density | Resource richness (SHA-256 deterministic, immutable per coordinate) |
-| Epoch ring | Concentric expansion boundary, mining-driven |
+| Open ranks | Unfilled ranks where new participants are seated and toward which subagents may be added |
+| Growing rim | The outer edge of seated ranks; ranks beyond are open but unoccupied |
+| Density gradient | Per-node value derived from SHA-256(node_id); rendered as a soft heatmap on the lattice |
+| Singularity core | Protocol accumulator at `k=0` (origin); gateway only, never mines or secures |
+| Radial band | Equal-width concentric hardness tier, `band(k)=ceil(√(k/8))`, `hardness=16·band` |
+| Activity rank | A participant's `k` = position when active participants are sorted by activity score |
 
-The spatial metaphor serves three design purposes:
+The standing metaphor serves three design purposes:
 
-1. **Intuitive state comprehension.** Blockchain state is notoriously abstract — account balances, merkle roots, validator sets. By mapping state onto a 2D spatial grid, participants develop spatial intuition about network health: a dense, well-connected grid is a healthy network; isolated clusters or empty rings indicate participation gaps.
+1. **Intuitive state comprehension.** Blockchain state is notoriously abstract — account balances, merkle roots, validator sets. By mapping state onto a sunflower of seats, participants develop spatial intuition about network health: a densely filled, brightly pulsing disk is a healthy, active network; a dim rim or sparse inner bands indicate participation gaps.
 
-2. **Strategic positioning.** In a traditional blockchain, there is no concept of "location." All validators are equidistant from all transactions. In ZK Agentic Chain, coordinate position matters — density affects yield, ring determines hardness, and adjacency to existing claimed cells determines expansion options. This creates location-based strategy that rewards thoughtful positioning, frontier choice, and contiguity discipline.
+2. **Strategic positioning.** In a traditional blockchain, there is no concept of "standing." All validators are interchangeable. In ZK Agentic Chain, position matters — band determines hardness, per-node density affects yield, and activity determines how far inward a seat sits. This creates standing-based strategy that rewards sustained verification work over capital or land-grabbing.
 
-3. **Natural scalability narrative.** Grid expansion is visually comprehensible — new rings open, new coordinates become claimable, the network grows. Participants can literally see the network expanding, creating a narrative of growth that sustains engagement.
+3. **Natural scalability narrative.** Field growth is visually comprehensible — the sunflower adds seats at the rim, inner bands churn as standings shift, the network grows. Participants can literally see the network expanding and re-sorting, creating a narrative of growth that sustains engagement.
 
 #### 19.2 Onboarding Flow
 
@@ -1942,66 +1943,53 @@ New participants enter the ZK Agentic Chain through a structured onboarding sequ
 
 **Step 2: Username selection.** Participants choose a unique network handle. The protocol enforces uniqueness through real-time availability checking against the global registry. Reserved names (protocol terms, faction names, offensive terms) are rejected.
 
-**Step 3: Subscription tier.** Participants select their tier (Community, Professional). The tier determines initial CPU Energy allocation, deploy range, and governance weight. Model selection (Haiku, Sonnet, Opus) is unrestricted across all tiers — the Claude API cost is the natural gate. Tier can be changed at any time — upgrades take effect immediately; downgrades take effect at the next billing cycle.
+**Step 3: Subscription tier.** Participants select their tier (Community, Professional). The tier determines initial CPU Energy allocation, subagent cap, and governance weight. Model selection (Haiku, Sonnet, Opus) is unrestricted across all tiers — the Claude API cost is the natural gate. Tier can be changed at any time — upgrades take effect immediately; downgrades take effect at the next billing cycle.
 
-**Step 4: Network entry.** Upon tier selection, the participant is assigned a homenode position. The protocol allocates the lowest-ring unclaimed coordinate in deterministic origin-out order (Chebyshev-ring sweep, then within-ring lexicographic). Faction does not influence position; the first eight participants take the ring-1 perimeter, the next sixteen take ring 2, and so on. This produces organic density: new participants cluster near the origin and the cluster expands outward as the network grows.
+**Step 4: Network entry.** Upon tier selection, the participant is **seated at the next open (outermost) rank**. There is no coordinate to choose: the protocol simply appends the participant at the rim of the sunflower, and they climb inward by out-competing the field on activity. Faction does not influence the seat. This produces organic growth — newcomers start at the edge, and standing is earned, not bought.
+
+**The activity score.** A participant's rank `k` is their position when all active participants are sorted, descending, by an **activity score**: a rolling, exponentially-decaying, CPU-weighted aggregate of their verification work. Secure/attestation work (real Claude-API spend, the Sybil-resistant signal) dominates the score; sustained CPU commitment and active subagent mining contribute; cheap actions (reads, stats, NCPs, transfers) contribute only a small capped share (`ACTIVITY_CHEAP_ACTION_CAP`) so they cannot farm standing; and an uptime heartbeat gates the ability to hold an inner rank. The score decays with a half-life of `ACTIVITY_HALF_LIFE_BLOCKS` blocks, so standing is a *maintenance* currency — stay above your band's threshold to hold position, drop below and your seat drifts outward (Section 19.4). The score reads the same Proof-of-Energy CPU counters used by consensus (Section 13.2); it is a game-layer aggregate and does not alter the underlying stake math.
 
 At this point, the participant has:
-- A claimed coordinate (their homenode position) with 1 AGNTC signup bonus minted
+- A seat at the rim (rank `k`) with 1 AGNTC signup bonus minted
 - An active agent at their homenode (model chosen during setup)
 - A 64-cell subgrid (all unassigned)
 - Their initial CPU Energy allocation
 - A terminal interface to their homenode agent
 
-From this starting position, the participant can begin Secure operations, deploy additional agents at jump points, allocate subgrid cells, and participate in the network economy.
+From this starting position, the participant can begin Secure operations, add subagents (up to their tier cap), allocate subgrid cells, and climb the standing as they accumulate activity.
 
-#### 19.3 Subscription Tiers and Territory Rules
+#### 19.3 Subscription Tiers and Standing Rules
 
 The tier model serves as both access control and revenue model:
 
-| Feature | Community (Free) | Professional ($50/mo) | Treasury Claude | Founder |
-|---------|-----------------|----------------------|-----------------|---------|
+| Feature | Community (Free) | Professional ($50/mo) | Singularity | Founder |
+|---------|-----------------|----------------------|-------------|---------|
 | Homenode Model | Any (API cost-gated) | Any (API cost-gated) | Any | Any |
 | Initial CPU Energy | 1,000 | 5,000 | Protocol-managed | Protocol-managed |
-| Deploy Model | Any (API cost-gated) | Any (API cost-gated) | Any | Any |
-| Deploy Range | 1 Moore ring (8 neighbors) | 2 Moore rings (24 positions) | Origin-bound (no expansion) | Unrestricted (subject to empire-blob contiguity) |
-| Max Children | 8 | 24 | Unlimited (within faction) | Unlimited (within faction) |
-| Inactivity Grace (Haiku) | 24 hours | 48 hours | No decay | No decay |
-| Inactivity Grace (Sonnet) | 72 hours | 144 hours | No decay | No decay |
-| Inactivity Grace (Opus) | 168 hours (7 days) | 336 hours (14 days) | No decay | No decay |
-| Homenode Decay | Never | Never | Never | Never |
+| Subagent Model | Any (API cost-gated) | Any (API cost-gated) | Any | Any |
+| Subagent Cap | 2 | 4 | — (no subagents) | 4 |
+| Inactivity Grace (Haiku) | 24 hours | 48 hours | No drift | No drift |
+| Inactivity Grace (Sonnet) | 72 hours | 144 hours | No drift | No drift |
+| Inactivity Grace (Opus) | 168 hours (7 days) | 336 hours (14 days) | No drift | No drift |
+| Homenode Identity | Permanent | Permanent | Permanent (core) | Permanent |
 | Subgrid Visibility | Own grid only | Own + neighbor summary | Full faction | Full network |
 | Governance Weight | 1× | 2× | No voting power | 5× |
+| Standing | Earned by activity | Earned by activity | Fixed core (`k=0`) | Reserved inner ranks |
 
-**Model selection is unrestricted.** All subscription tiers can deploy any available Claude model (Haiku, Sonnet, Opus) for both homenode and child agents. The natural cost gate is the Claude API bill — Opus costs approximately 19× more per token than Haiku. Participants who choose higher-cost models accept the operational expense. Tiers govern resources (CPU Energy, deploy range, subgrid visibility) and governance weight, not model access.
+**Model selection is unrestricted.** All subscription tiers can deploy any available Claude model (Haiku, Sonnet, Opus) for both homenode and subagents. The natural cost gate is the Claude API bill — Opus costs approximately 19× more per token than Haiku. Participants who choose higher-cost models accept the operational expense. Tiers govern resources (CPU Energy, subagent cap, subgrid visibility) and governance weight, not model access.
 
-**Deploy Range** defines how far from the homenode a participant can place child agents, measured in Moore neighborhood rings:
+**Subagent cap** is the only structural difference in fan-out between tiers: Community participants run **2** orbiting subagents, Professional and Founder run **4**. Professional's advantage is therefore *emergent* — more subagent subgrids means more Secure capacity and thus more activity, not an artificial standing multiplier. There is no deploy range, no Moore neighbourhood, and no maximum-children-by-ring: subagents orbit the seat (Section 18.5) and the v1.1 deploy-range / empire-blob model is retired.
 
-```
-Community (1 ring):          Professional (2 rings):
+**Singularity** is the protocol's core agent — an automated Claude session operated by the protocol itself. It is permanently bound to the core (`k = 0`, origin); it deploys no subagents and holds no competitive rank. It **never mines or secures** — it is a pure gateway and accumulator that accrues origin yield (never selling below acquisition cost per `SINGULARITY_MIN_SELL_RATIO`), holds no voting power, and maintains continuous presence at the centre. See Section 4.5 and Section 10.3 for the structural role.
 
-    . . . . .                    C C C C C
-    . C C C .                    C C C C C
-    . C H C .                    C C H C C
-    . C C C .                    C C C C C
-    . . . . .                    C C C C C
-
-H = homenode                 C = claimable position
-C = claimable position       . = out of range
-```
-
-**Treasury Claude** is the Machines Faction protocol agent — an automated Claude session operated by the protocol itself. It is permanently bound to the origin coordinate (0, 0); it does not deploy child agents and does not claim any other coordinate. Within its single-node territory it auto-levels, auto-balances mining and securing CPU allocation, accumulates AGNTC (never selling below acquisition cost per MACHINES_MIN_SELL_RATIO), holds no voting power, and provides baseline network security by maintaining continuous online presence at the origin. See Section 4.5 and Section 10.3 for the structural role.
-
-**Founder** tier provides extended deployment range during the development and bootstrap phases. Under the open-grid model "extended" no longer means a per-faction arm but rather a larger Moore-neighborhood ring (or, during bootstrap, an unrestricted deploy range subject to standard adjacency to the participant's empire blob).
-
-In the table above, the **Deploy Range** column refers to the maximum Moore-neighborhood distance from any cell in the participant's empire blob at which a new child agent may be claimed (8-neighbor Chebyshev adjacency, Section 4.5). It is no longer a faction-arm restriction; it is a contiguity-of-territory restriction.
+**Founder** tier holds **reserved, disclosed, decay-exempt innermost ranks** (a small fixed count, `FOUNDER_RESERVED_RANKS`, so the team does not crowd the competitive core). This replaces the v1.0/v1.1 notion of an "extended deploy range" — under the phyllotaxis model there is no range to extend, only standing, and Founder standing is openly disclosed (amber, with a crown marker) rather than hidden.
 
 **Two-phase participant state:**
 
 | State | Access | Requirements |
 |-------|--------|-------------|
 | **Spectator** | Browse the Neural Lattice (read-only), view live stats, leaderboards | Google OAuth on zkagenticnetwork.com |
-| **Active Node** | Full blockchain operations, mining, deploying children | Spectator + Claude Code CLI installed + locked `.claude/` + disclaimer accepted |
+| **Active Node** | Full blockchain operations, mining, deploying subagents | Spectator + Claude Code CLI installed + locked `.claude/` + disclaimer accepted |
 
 The Claude Code CLI is a hard prerequisite for Active Node status. Participants must have an Anthropic account and the Claude Code CLI installed on their machine. This is the protocol's equivalent of downloading Bitcoin Core — you cannot mine without the node software.
 
@@ -2015,53 +2003,51 @@ The Claude Code CLI is a hard prerequisite for Active Node status. Participants 
 
 **Revenue model.** Subscription revenue funds protocol development, AI compute costs, and infrastructure. Subscription fees are denominated in fiat (USD), not AGNTC — decoupling operational funding from token price volatility.
 
-#### 19.4 Inactivity Decay
+#### 19.4 Inactivity Drift
 
-Child nodes that go offline are subject to inactivity decay. After the grace period (determined by agent model tier and subscription tier, see table in Section 19.3) expires with the node continuously offline, the coordinate is freed — it becomes an unclaimed jump point available to any participant.
+Standing is a maintenance currency: a participant who stops doing verification work sees their activity score decay (half-life `ACTIVITY_HALF_LIFE_BLOCKS`), and as other participants out-rank them their **seat drifts outward** along the spiral — to a higher `k`, a harder band, lower yield. Within the grace period (determined by agent model tier and subscription tier, see table in Section 19.3) the seat is held steady; once the node stays offline past grace, the outward slip accelerates each block until activity resumes.
 
-**Homenodes are exempt from decay.** A participant's homenode coordinate is permanent regardless of offline duration.
+**Homenode identity is exempt from drift.** A participant's homenode and account identity are permanent — they never lose their seat entirely, only its inward standing. When they return and resume Secure work, their seat climbs back inward as activity recovers.
 
-**Decay consequences:**
-- The coordinate becomes an unclaimed jump point
-- All subgrid progress at that coordinate is lost (cell levels reset)
-- AGNTC and CPU Energy spent to claim the coordinate are not refunded (already burned via BME)
-- The previous owner has no priority in re-claiming — first to claim wins
+**Drift consequences:**
+- The seat moves to an outer band (higher `k`): higher hardness, lower mining yield, less prestige
+- Subagent satellites drift with the seat; their subgrid progress is preserved (drift is positional, not a reset)
+- No AGNTC or CPU is refunded for prior standing-advance spend (already burned via BME)
+- Re-climbing is open to anyone — an inner rank vacated by drift is contested purely on activity, first-mover by score
 
-#### 19.5 Relocation
+#### 19.5 Active Rank-Advance
 
-A participant can move their homenode to any unclaimed coordinate, subject to:
+Beyond the passive, every-block re-ranking driven by activity (Section 19.4), a participant can spend AGNTC + CPU to **advance their standing immediately** — jumping their seat inward to a target band rather than waiting for activity to carry them there. This is the deliberate, costed analogue of the v1.1 "relocation," repriced against the target band instead of a target coordinate.
 
 **Prerequisites:**
-- Zero active child nodes (all must be manually released or already freed by decay)
-- Target coordinate must be unclaimed
 - Sufficient AGNTC and CPU Energy balance
+- A target band inward of the participant's current seat
 
 **Cost:**
 
 ```
-relocation_agntc = claim_cost(target_ring, target_density) × RELOCATION_COST_MULTIPLIER
-relocation_cpu   = cpu_claim_cost(target_ring, target_density) × RELOCATION_COST_MULTIPLIER
+advance_agntc = claim_cost(target_band, node_density) × RELOCATION_COST_MULTIPLIER
+advance_cpu   = cpu_claim_cost(target_band, node_density) × RELOCATION_COST_MULTIPLIER
 ```
 
-Where RELOCATION_COST_MULTIPLIER = 2.0. Half the cost is burned (RELOCATION_BURN_RATE = 0.50) and half is distributed to verifiers and stakers under the standard BME split.
+Where `RELOCATION_COST_MULTIPLIER = 2.0`. Half the cost is burned (`RELOCATION_BURN_RATE = 0.50`) and half is distributed to verifiers and stakers under the standard BME split. Advancing standing is therefore strictly more expensive than earning it through activity — buying position is allowed but never cheaper than working for it.
 
-**What transfers:** wallet balance, account identity, historical metrics, subscription tier.
-**What does not transfer:** subgrid progress (reset), child claims (must be released first), coordinate density (property of the new location).
+**What transfers:** wallet balance, account identity, historical metrics, subscription tier, and the subagent family (the satellites glide inward with the seat).
+**What does not change:** node density (an intrinsic per-node trait, Section 4.4), which is unaffected by the seat's band.
 
 #### 19.6 Anti-Monopoly Mechanics
 
-The following mechanisms work in concert to prevent any single participant from dominating the Neural Lattice:
+The following mechanisms work in concert to prevent any single participant from dominating the Neural Lattice. With territory retired, concentration pressure expresses purely as competition for inner *standing*, and the levers adapt accordingly:
 
 | Mechanism | What It Prevents |
 |-----------|-----------------|
-| Tier-based deploy range | Territory sprawl — Community max 9 nodes, Professional max 25 |
-| Adjacency requirement | Scattered land-grabbing — territory must be contiguous around homenode |
-| Inactivity decay | Ghost towns — offline child nodes free up for active participants |
-| Homenode permanence | Identity loss — participants can always return, but must re-earn territory |
-| Relocation cost (2× + 50% burn) | Location hopping — settling is cheaper than nomading |
+| Subagent caps (2 / 4) | Fan-out sprawl — no participant can flood the field with nodes; Pro's edge is emergent, not unbounded |
+| Inactivity drift | Squatting an inner rank — standing must be continuously earned; offline seats slip outward |
+| Homenode identity permanence | Identity loss — participants can always return, but must re-earn inner standing |
+| Active-rank-advance cost (2× + 50% burn) | Buying dominance cheaply — advancing standing is always dearer than earning it |
 | Real compute requirement | Bot farms — every node requires a live Claude session spending real API tokens |
-| Claim cost scales with density | Inner-ring monopolies — prime real estate is expensive |
-| Hardness scales with ring | Easy outer-ring farming — rewards decrease with distance from origin |
+| Hardness scales with band | Cheap inner monopolies — inner standing is contested and outer farming yields less |
+| Founder ranks disclosed | Hidden privilege — reserved inner ranks are a small, openly published count, not a secret advantage |
 
 ---
 
