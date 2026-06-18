@@ -496,9 +496,36 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
     }
 
     if (action.id === 'chain-stats') {
-      logAction('chain-call', 'GET /api/status', 'fetching chain stats');
       addMsg('user', 'Chain Stats');
       setProcessing(true);
+      // Render placeholder stats from the store. Used both in offline/mock mode and
+      // as a graceful fallback when the testnet fetch fails \u2014 never surface a raw
+      // "Failed to fetch" to the player.
+      const offlineStats = (): string => {
+        const s = useGameStore.getState();
+        return [
+          '\u2550\u2550\u2550 CHAIN STATUS (offline) \u2550\u2550\u2550',
+          `Blocks: ${s.testnetBlocks}`,
+          `Epoch Ring: ${s.epochRing}`,
+          `Hardness: ${s.hardness}x`,
+          `AGNTC Mined: ${sciFormat(s.totalMined)}`,
+          `Circulating: ${sciFormat(s.poolRemaining)}`,
+          s.stateRoot ? `State Root: ${s.stateRoot.slice(0, 16)}...` : 'State Root: \u2014',
+          '',
+          'Testnet API unreachable \u2014 showing cached/local values.',
+          'Connect to localhost:8080 for live chain stats.',
+        ].join('\n');
+      };
+
+      // Mock/offline mode: don't even attempt the network call.
+      if (useGameStore.getState().chainMode !== 'testnet') {
+        await new Promise(r => setTimeout(r, 300 + Math.random() * 400));
+        addMsg('agent', offlineStats());
+        setProcessing(false);
+        return;
+      }
+
+      logAction('chain-call', 'GET /api/status', 'fetching chain stats');
       try {
         const stats = await fetchChainStats();
         const statsLines = [
@@ -513,8 +540,10 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
         ];
         addMsg('agent', statsLines.join('\n'));
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Unknown error';
-        addMsg('agent', `Stats unavailable: ${msg}`);
+        // Testnet selected but unreachable \u2192 degrade gracefully to local values
+        // instead of leaking the raw fetch error to the terminal.
+        logAction('chain-err', 'GET /api/status', err instanceof Error ? err.message : 'unknown error');
+        addMsg('agent', offlineStats());
       }
       setProcessing(false);
       return;

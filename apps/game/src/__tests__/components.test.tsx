@@ -429,6 +429,56 @@ describe('AgentChat — Configure Node + Develop Node', () => {
     expect(screen.getByText(/Developing/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Cancel upgrade/i })).toBeInTheDocument();
   });
+
+  it('Chain Stats in mock/offline mode shows graceful offline stats, never a raw fetch error', async () => {
+    const { getStatus } = await import('@/services/testnetApi');
+    (getStatus as ReturnType<typeof vi.fn>).mockClear();
+    const agent = makeAgentChat();
+    // default chainMode after reset() is "mock"
+    useGameStore.setState({ agents: { [agent.id]: agent }, chainMode: 'mock' });
+    render(
+      <AgentChat
+        agent={agent}
+        chainService={null}
+        onClose={() => {}}
+        onDeploy={() => {}}
+        onFocusNode={() => {}}
+        initialDeployTarget={undefined}
+      />
+    );
+    fireEvent.click(screen.getByText('Blockchain Protocols'));
+    fireEvent.click(screen.getByText('Chain Stats'));
+    // Renders a clean offline panel from the store...
+    expect(await screen.findByText(/CHAIN STATUS \(offline\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Testnet API unreachable/)).toBeInTheDocument();
+    // ...without ever surfacing a raw fetch error...
+    expect(screen.queryByText(/Stats unavailable/)).toBeNull();
+    expect(screen.queryByText(/Failed to fetch/)).toBeNull();
+    // ...and without even attempting the network call in mock mode.
+    expect(getStatus).not.toHaveBeenCalled();
+  });
+
+  it('Chain Stats degrades gracefully when the testnet fetch fails (no raw error)', async () => {
+    const { getStatus } = await import('@/services/testnetApi');
+    (getStatus as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Failed to fetch'));
+    const agent = makeAgentChat();
+    useGameStore.setState({ agents: { [agent.id]: agent }, chainMode: 'testnet' });
+    render(
+      <AgentChat
+        agent={agent}
+        chainService={null}
+        onClose={() => {}}
+        onDeploy={() => {}}
+        onFocusNode={() => {}}
+        initialDeployTarget={undefined}
+      />
+    );
+    fireEvent.click(screen.getByText('Blockchain Protocols'));
+    fireEvent.click(screen.getByText('Chain Stats'));
+    // Falls back to the offline panel instead of leaking "Failed to fetch".
+    expect(await screen.findByText(/CHAIN STATUS \(offline\)/)).toBeInTheDocument();
+    expect(screen.queryByText(/Stats unavailable: Failed to fetch/)).toBeNull();
+  });
 });
 
 /* ── AgentChat — L2 gate + cost flow ─────────────────── */
