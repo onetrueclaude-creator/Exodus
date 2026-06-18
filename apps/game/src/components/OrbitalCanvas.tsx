@@ -11,7 +11,7 @@ import type { SeatInput } from "@/types/orbital";
 
 const RADIAL_SCALE = 46; // px per √k — wider spacing so subnodes have room
 const CORE_PADDING = 56; // free space between the Singularity and rank-1
-const CORE_HALO = 38; // faint ring framing the core's padding
+const SING_CORE_TEX_R = 32; // black-hole texture core radius (sprite-scale unit)
 const DIM_ALPHA = 0.16; // non-focused node/edge dimming
 const ZOOM_MIN = 0.2;
 const ZOOM_MAX = 4;
@@ -95,6 +95,25 @@ export default function OrbitalCanvas() {
       });
       circle.destroy();
 
+      // Singularity black-hole texture: a faint violet corona, a bright purple
+      // accretion ring, and a near-black eclipsed core. Core radius == SING_CORE_TEX_R
+      // so it shares the sprite-scale convention. Rendered untinted.
+      const bh = new Graphics();
+      for (let i = 7; i >= 1; i--) {
+        // corona — concentric translucent rings fading outward to ~3.5× the core
+        bh.circle(0, 0, SING_CORE_TEX_R * (1 + i * 0.36)).fill({ color: 0x2a0a55, alpha: 0.05 });
+      }
+      bh.circle(0, 0, SING_CORE_TEX_R * 1.34).fill({ color: 0x7c3aed, alpha: 0.55 }); // outer accretion
+      bh.circle(0, 0, SING_CORE_TEX_R * 1.2).fill({ color: 0xc084fc, alpha: 0.95 }); // inner accretion (bright)
+      bh.circle(0, 0, SING_CORE_TEX_R).fill({ color: 0x050009, alpha: 1 }); // eclipsed core (near-black)
+      bh.circle(0, 0, SING_CORE_TEX_R * 1.06).stroke({ width: SING_CORE_TEX_R * 0.09, color: 0xe9d5ff, alpha: 0.85 }); // hot rim
+      bh.circle(0, 0, SING_CORE_TEX_R).stroke({ width: SING_CORE_TEX_R * 0.06, color: 0x6d28d9, alpha: 0.45 }); // violet inner edge
+      const singTex: Texture = a.renderer.generateTexture({
+        target: bh,
+        resolution: Math.max(2, (window.devicePixelRatio || 1) * 2),
+      });
+      bh.destroy();
+
       let bodies: BodyVM[] = [];
       let byId = new Map<string, BodyVM>();
       let familyPairs: Array<[string, string]> = [];
@@ -162,10 +181,13 @@ export default function OrbitalCanvas() {
 
         nodeLayer.removeChildren();
         bodies = scene.nodes.map((n) => {
-          const baseScale = n.radius / 32;
-          const dot = new Sprite(tex);
+          const isSing = n.kind === "singularity";
+          // Singularity = the black-hole texture (untinted, larger so the corona
+          // reads as the focal core); players/subagents = the shared tinted circle.
+          const baseScale = isSing ? (n.radius * 1.7) / SING_CORE_TEX_R : n.radius / 32;
+          const dot = new Sprite(isSing ? singTex : tex);
           dot.anchor.set(0.5);
-          dot.tint = n.tint;
+          dot.tint = isSing ? 0xffffff : n.tint;
           dot.scale.set(baseScale);
           dot.eventMode = "static";
           dot.cursor = "pointer";
@@ -220,7 +242,6 @@ export default function OrbitalCanvas() {
         step(bodies, [], a.ticker.deltaMS / 1000, { ...DEFAULT_PHYSICS, anchorK: 0.8 });
         for (const b of bodies) b.sprite.position.set(cx() + b.x, cy() + b.y);
         edgeG.clear();
-        edgeG.circle(cx(), cy(), CORE_HALO).stroke({ width: 1, color: 0xa855f7, alpha: 0.22 });
         for (const [pid, kid] of familyPairs) {
           const p = byId.get(pid);
           const k = byId.get(kid);

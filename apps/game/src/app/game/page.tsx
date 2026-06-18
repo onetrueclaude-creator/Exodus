@@ -46,10 +46,13 @@ const CHAIN_SYNC_INTERVAL_MS = 60_000;
 
 export default function GamePage() {
   const addAgent = useGameStore((s) => s.addAgent);
-  // Phase-1 phyllotaxis renderer behind ?orbital=1 (swaps after mount → no hydration mismatch)
+  // Phyllotaxis orbital renderer is the DEFAULT view; ?grid=1 (or ?orbital=0)
+  // falls back to the legacy lattice grid. Resolved after mount so the tri-state
+  // (null until known) avoids a hydration mismatch / LatticeGrid mount race.
   const [orbital, setOrbital] = useState<boolean | null>(null);
   useEffect(() => {
-    setOrbital(new URLSearchParams(window.location.search).get("orbital") === "1");
+    const p = new URLSearchParams(window.location.search);
+    setOrbital(p.get("grid") !== "1" && p.get("orbital") !== "0");
   }, []);
   const addHaiku = useGameStore((s) => s.addHaiku);
   const setCurrentUser = useGameStore((s) => s.setCurrentUser);
