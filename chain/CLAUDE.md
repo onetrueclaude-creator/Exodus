@@ -90,6 +90,15 @@ curl -s http://localhost:8080/api/coordinate/0/0 | jq .
 
 The reset is lossless beyond the testnet's own data — nothing on Solana mainnet, the marketing site, or the documentation depends on the testnet's accumulated state. Participants who had claims on the v1.0 testnet will need to re-onboard from scratch.
 
+### Reset for Proof-of-Vault (feat/chain-proof-of-vault)
+
+Genesis now bootstraps a content-addressed knowledge **vault** (`GenesisState.vault_dag`) and a `VaultRegistry`. Persisted v1.2 state has no vault and will mis-bootstrap securing. Reset before running this revision:
+
+```bash
+rm chain/testnet_state.db   # gitignored; genesis rebuilds the vault on next boot
+uvicorn agentic.testnet.api:app --port 8080 --reload
+```
+
 ## Change Log
 
 ### 2026-03-28 — API security hardening + deployment artifacts + new sync tables

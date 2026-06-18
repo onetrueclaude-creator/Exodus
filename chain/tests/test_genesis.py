@@ -139,3 +139,28 @@ def test_genesis_has_resource_totals():
         assert totals["dev_points"] == 0.0
         assert totals["research_points"] == 0.0
         assert totals["storage_units"] == 0.0
+
+
+def test_genesis_has_vault_dag_with_content():
+    from agentic.testnet.genesis import create_genesis
+    g = create_genesis(seed=42)
+    assert g.vault_dag is not None
+    assert len(g.vault_dag.cids()) > 0          # genesis seeds the vault
+    assert len(g.vault_dag.root_cid()) == 64
+
+
+def test_genesis_vault_is_deterministic():
+    from agentic.testnet.genesis import create_genesis
+    a = create_genesis(seed=42)
+    b = create_genesis(seed=7)
+    # genesis vault content is canonical (independent of wallet RNG seed)
+    assert a.vault_dag.root_cid() == b.vault_dag.root_cid()
+
+
+def test_genesis_vault_registry_wired_over_dag():
+    from agentic.testnet.genesis import create_genesis
+    from agentic.vault.registry import VaultRegistry
+    g = create_genesis(seed=42)
+    assert isinstance(g.vault_registry, VaultRegistry)
+    # no owners assigned at genesis (the API seats owners once claims exist)
+    assert g.vault_registry.shards_for_owner("00" * 32) == []

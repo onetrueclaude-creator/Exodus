@@ -23,12 +23,32 @@ from agentic.verification.pipeline import VerificationPipeline
 from agentic.lattice.epoch import EpochTracker
 from agentic.lattice.subgrid import SubgridAllocator
 from agentic.lattice.node_subgrid import NodeSubgrid, node_id_from_coord
+from agentic.vault.dag import VaultDag
+from agentic.vault.registry import VaultRegistry
 from agentic.params import (
     GENESIS_BALANCE, BIRTH_PROGRAM_ID,
     GENESIS_ORIGIN, GENESIS_FACTION_MASTERS, GENESIS_HOMENODES,
 )
 
 _GENESIS_HOMENODE_COORDS: frozenset[tuple[int, int]] = frozenset(GENESIS_HOMENODES)
+
+
+def _build_genesis_vault() -> VaultDag:
+    """Deterministic, seed-independent genesis knowledge vault.
+
+    Seeds the network's shared memory with a small canonical atom set so the
+    vault has content to shard + prove from block 0. Real content accrues as
+    agents author entries (a later feature). Content is fixed (not RNG-seeded)
+    so create_genesis(seed=X) yields the same vault root for every X.
+    """
+    dag = VaultDag()
+    cids = []
+    for i in range(64):
+        cids.append(dag.add_atom(f"genesis-vault-atom:{i}".encode()))
+    # chain consecutive atoms with links so the DAG has edges, not just leaves
+    for i in range(len(cids) - 1):
+        dag.add_link(cids[i], cids[i + 1])
+    return dag
 
 
 @dataclass
@@ -49,6 +69,10 @@ class GenesisState:
     fee_engine: FeeEngine = field(default_factory=FeeEngine)
     stake_registry: StakeRegistry = field(default_factory=StakeRegistry)
     securing_registry: SecuringRegistry = field(default_factory=SecuringRegistry)
+    # Proof-of-Vault: content-addressed knowledge vault + coordinator registry.
+    # Built in __post_init__ because the registry must wrap *its own* dag.
+    vault_dag: VaultDag = None
+    vault_registry: VaultRegistry = None
     # Agent intro messages: (x, y) -> str
     intro_messages: dict = field(default_factory=dict)
     # Agent-to-agent message history: (x, y) -> list[dict]
@@ -58,6 +82,10 @@ class GenesisState:
     def __post_init__(self):
         if self.viewing_keys is None:
             self.viewing_keys = {}
+        if self.vault_dag is None:
+            self.vault_dag = _build_genesis_vault()
+        if self.vault_registry is None:
+            self.vault_registry = VaultRegistry(self.vault_dag)
 
 
 def _deterministic_urandom(rng: random.Random):
