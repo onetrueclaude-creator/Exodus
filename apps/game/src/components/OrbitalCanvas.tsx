@@ -213,10 +213,15 @@ export default function OrbitalCanvas() {
           dot.anchor.set(0.5);
           dot.tint = isSing ? 0xffffff : n.tint;
           dot.scale.set(baseScale);
-          // Clip the Singularity's hit area to the visible black-hole (core + accretion):
-          // its sprite includes a large faint corona whose bounds would otherwise swallow
-          // nearby nodes' clicks. Normal dots keep their default bounds.
-          if (isSing) dot.hitArea = new Circle(0, 0, SING_CORE_TEX_R * 1.34);
+          // Hit areas (local/pre-scale coords; on-screen radius = r × baseScale):
+          //  - Singularity → clip to its visible disc so its faint corona doesn't swallow
+          //    neighbouring clicks.
+          //  - everything else → a generous target (≥14px on screen) so small nodes,
+          //    especially sub-agents, are easy to click and DRAG. A bare 4px dot is
+          //    nearly ungrabbable.
+          dot.hitArea = isSing
+            ? new Circle(0, 0, SING_CORE_TEX_R * 1.34)
+            : new Circle(0, 0, Math.max(32, 14 / baseScale));
           dot.eventMode = "static";
           dot.cursor = "pointer";
           nodeLayer.addChild(dot);
