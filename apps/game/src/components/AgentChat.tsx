@@ -212,46 +212,6 @@ const CATEGORY_DESIGN: Record<string, {
   social: { color: 'text-accent-purple', bg: 'bg-accent-purple/8', border: 'border-accent-purple/15', icon: '\u25C7', label: 'SOCIAL' },
 };
 
-/* ── Deploy Step Indicator ────────────────────────────────── */
-
-function DeploySteps({ current }: { current: 'pick-star' | 'set-intro' }) {
-  const steps = [
-    { id: 'pick-star', label: 'Target' },
-    { id: 'set-intro', label: 'Init' },
-  ];
-  const currentIdx = steps.findIndex(s => s.id === current);
-
-  return (
-    <div className="flex items-center gap-1 px-2 py-2">
-      {steps.map((step, i) => (
-        <div key={step.id} className="flex items-center gap-1">
-          <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[9px] font-mono tracking-wider transition-all duration-300 ${
-            i === currentIdx
-              ? 'bg-accent-cyan/15 text-accent-cyan border border-accent-cyan/30'
-              : i < currentIdx
-                ? 'text-success/70'
-                : 'text-text-muted/40'
-          }`}>
-            <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold ${
-              i === currentIdx
-                ? 'bg-accent-cyan/20 text-accent-cyan'
-                : i < currentIdx
-                  ? 'bg-success/15 text-success'
-                  : 'bg-white/5 text-text-muted/30'
-            }`}>
-              {i < currentIdx ? '\u2713' : i + 1}
-            </span>
-            {step.label}
-          </div>
-          {i < steps.length - 1 && (
-            <div className={`w-3 h-px ${i < currentIdx ? 'bg-success/40' : 'bg-white/8'}`} />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
 /* ── PresetRow helper ─────────────────────────────────────── */
 
 function PresetRow({
@@ -293,14 +253,19 @@ interface AgentChatProps {
   agent: Agent;
   onClose: () => void;
   onDeploy?: (newAgentId: string) => void;
+  /** Accepted from DockPanel for parity with SecuredNodes; no longer consumed here
+   *  (the deploy target picker that used hover-to-focus was removed). */
   onFocusNode?: (nodeId: string) => void;
   chainService?: import('@/services/chainService').ChainService | null;
   initialDeployTarget?: string;
 }
 
-export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chainService, initialDeployTarget }: AgentChatProps) {
+export default function AgentChat({ agent, onClose, onDeploy, chainService, initialDeployTarget }: AgentChatProps) {
   const agentNodeTier = getNodeTier(agent.level);
   const tier = TIER_DESIGN[agentNodeTier];
+  // Friendly, coordinate-free label for the terminal's agent (ids are cell-keyed in
+  // mock mode — never surface them). Role is the identity the player cares about.
+  const nodeLabel = agent.isPrimary ? 'Homenode' : (agent.username || 'Sub-agent');
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -320,9 +285,9 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
   ]);
   const [processing, setProcessing] = useState(false);
   const [pendingAction, setPendingAction] = useState<AgentAction | null>(null);
-  const [deployStep, setDeployStep] = useState<null | 'pick-star' | 'set-intro'>(null);
+  // Deploy is now a single confirmation step — no target picker, no greeting field.
+  const [deployStep, setDeployStep] = useState<null | 'confirm'>(null);
   const [deployTarget, setDeployTarget] = useState<{ x: number; y: number; id: string } | null>(null);
-  const [deployIntro, setDeployIntro] = useState('');
   const [msgStep, setMsgStep] = useState<null | 'pick-target' | 'compose'>(null);
   const [msgTarget, setMsgTarget] = useState<{ id: string; x: number; y: number } | null>(null);
   const [msgText, setMsgText] = useState('');
@@ -352,16 +317,12 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
     return computeDeployCandidates(allBlocknodes, agent.userId, { cx: agentCx, cy: agentCy })
       .map(c => ({
         id: c.id,
-        cx: c.cx,
-        cy: c.cy,
-        name: `Node ${c.cx},${c.cy}`,
+        // x/y are kept only to register the claim on-chain — coordinates are no longer
+        // shown to the player (retired; nodes are orbital rank-seats). Density dropped too.
         x: c.cx * CELL_SIZE,
         y: c.cy * CELL_SIZE,
-        density: c.density,
-        volume: Math.max(1, Math.round(allBlocknodes[c.id]?.secureStrength ?? 1)),
-        dist: c.chebyshevFromHome,
       }))
-      .slice(0, 12); // keep the existing 12-item cap in the panel
+      .slice(0, 1); // only the nearest open seat is needed — auto-picked on confirm
   }, [allBlocknodes, agent.userId, agent.position.x, agent.position.y]);
 
   const nearbyAgents = useMemo(() => {
@@ -569,15 +530,15 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
         return;
       }
       if (nearbyUnclaimed.length === 0) {
-        addMsg('system', 'Empire fully expanded — no adjacent unclaimed cells.');
+        addMsg('system', 'No open seats available to deploy a sub-agent.');
         return;
       }
       addMsg('user', 'Deploy Agent');
-      addMsg('agent', 'Select neural node:');
       setPendingAction(null);
-      setDeployStep('pick-star');
-      setDeployTarget(null);
-      setDeployIntro('');
+      // Auto-stage the nearest open seat and ask for a single confirmation. The
+      // sub-agent spawns in orbit and is draggable — no target picker / greeting step.
+      setDeployTarget(nearbyUnclaimed[0]);
+      setDeployStep('confirm');
       return;
     }
 
@@ -597,15 +558,6 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
     setProcessing(false);
   };
 
-  const selectStar = (star: { id: string; x: number; y: number; dist: number }) => {
-    logAction('click', 'Select Deploy Target', `${star.id.slice(0, 8)} at (${star.x.toFixed(0)},${star.y.toFixed(0)})`);
-    if (processing) return;
-    setDeployTarget({ id: star.id, x: star.x, y: star.y });
-    addMsg('user', `Target [${star.id.slice(0, 8)}] selected.`);
-    // All claims are L1 Synapse \u2014 no model-picker step.
-    setDeployStep('set-intro');
-  };
-
   const executeDeploy = async (selectedTier: NodeTier, target: { id: string; x: number; y: number }) => {
     logAction('click', 'Deploy Agent', `tier=${selectedTier} target=${target.id.slice(0,8)} at (${target.x.toFixed(0)},${target.y.toFixed(0)})`);
     setDeployStep(null);
@@ -618,7 +570,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
       setProcessing(false);
       return;
     }
-    addMsg('agent', `Claiming [${target.id.slice(0, 8)}]...\n${eCost}E + ${mCost}M`);
+    addMsg('agent', `Deploying sub-agent...\n${eCost}E + ${mCost}M`);
     await new Promise(r => setTimeout(r, 600 + Math.random() * 800));
 
     // Register on-chain first
@@ -635,17 +587,6 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
 
     const claimSuccess = useGameStore.getState().claimNode(target.id, selectedTier, agent.id);
     if (claimSuccess) {
-      if (deployIntro && chainService && 'setIntro' in chainService) {
-        try {
-          await (chainService as import('@/services/chainService').ChainService).setIntro(
-            { x: target.x, y: target.y }, deployIntro,
-          );
-          useGameStore.getState().syncAgentFromChain({
-            ...useGameStore.getState().agents[target.id],
-            introMessage: deployIntro,
-          });
-        } catch { /* non-fatal */ }
-      }
       const response = ACTION_RESPONSES['deploy']?.[agentNodeTier] || 'Agent deployed.';
       addMsg('agent', response);
       if (onDeploy) onDeploy(target.id);
@@ -748,7 +689,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                 className="text-[10px] text-text-muted tracking-wide"
                 style={{ fontFamily: "'Fira Code', monospace" }}
               >
-                {agent.id.slice(0, 12)}
+                {nodeLabel}
                 {agent.isPrimary && <span className="text-yellow-400 ml-1.5">{'\u2605'}</span>}
               </div>
             </div>
@@ -931,103 +872,30 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
           </div>
 
         /* ─── Deploy flow ─── */
-        ) : deployStep ? (
-          <div className="space-y-0">
-            <DeploySteps current={deployStep} />
-
-            {deployStep === 'pick-star' && (
-              <div className="px-2 pb-2 space-y-0.5">
-                <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
-                  NEARBY NEURAL NODES
-                </div>
-                {nearbyUnclaimed.length === 0 ? (
-                  <div className="text-[10px] text-text-muted/40 px-2 py-3 text-center" style={{ fontFamily: "'Fira Code', monospace" }}>
-                    Empire fully expanded — no adjacent unclaimed cells.
-                  </div>
-                ) : (
-                  nearbyUnclaimed.map(star => {
-                    const quality = star.density >= 0.7 ? 'high' : star.density >= 0.4 ? 'mid' : 'low';
-                    const qColor = quality === 'high' ? 'text-green-400' : quality === 'mid' ? 'text-yellow-400' : 'text-text-muted/60';
-                    const qBg = quality === 'high' ? 'bg-green-400' : quality === 'mid' ? 'bg-yellow-400' : 'bg-white/30';
-                    const qBorder = quality === 'high' ? 'border-green-400/20' : quality === 'mid' ? 'border-yellow-400/15' : 'border-white/8';
-                    return (
-                      <button
-                        key={star.id}
-                        onClick={() => selectStar(star)}
-                        onMouseEnter={() => onFocusNode?.(star.id)}
-                        disabled={processing}
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-all duration-200 hover:bg-white/[0.03] border border-transparent hover:border-white/[0.06] disabled:opacity-30 group"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          {/* Node quality indicator */}
-                          <div className={`relative w-6 h-6 rounded-full border ${qBorder} flex items-center justify-center`}>
-                            <div className={`w-2 h-2 rounded-full ${qBg} opacity-70 group-hover:opacity-100 transition-opacity`} />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[11px] text-text-primary" style={{ fontFamily: "'Fira Code', monospace" }}>
-                                {star.name}
-                              </span>
-                              <span className={`text-[8px] ${qColor} tracking-wider`} style={{ fontFamily: "'Fira Code', monospace" }}>
-                                {quality === 'high' ? 'RICH' : quality === 'mid' ? 'MODERATE' : 'SPARSE'}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 text-[9px] text-text-muted/40" style={{ fontFamily: "'Fira Code', monospace" }}>
-                              <span>d:{(star.density * 100).toFixed(0)}%</span>
-                              <span className="text-text-muted/20">{'\u00B7'}</span>
-                              <span>v:{star.volume}</span>
-                              <span className="text-text-muted/20">{'\u00B7'}</span>
-                              <span>{star.dist.toFixed(1)}u</span>
-                            </div>
-                          </div>
-                        </div>
-                        <span className="text-[10px] text-text-muted/20 group-hover:text-accent-cyan/50 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                          {'\u203A'}
-                        </span>
-                      </button>
-                    );
-                  })
-                )}
-                <button onClick={() => { setDeployStep(null); setDeployTarget(null); }} className="w-full px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                  {'\u2190'} cancel
-                </button>
-              </div>
-            )}
-
-            {deployStep === 'set-intro' && (
-              <div className="px-3 pb-3 space-y-2.5">
-                <input
-                  type="text"
-                  value={deployIntro}
-                  onChange={(e) => setDeployIntro(e.target.value.slice(0, 140))}
-                  placeholder="Neural node greeting..."
-                  autoFocus
-                  className="w-full bg-white/[0.02] border border-white/[0.06] rounded-lg px-3 py-2.5 text-[11px] text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-cyan/30 transition-all duration-300"
-                  style={{ fontFamily: "'Fira Code', monospace" }}
-                />
-                <div className="flex justify-between items-center">
-                  <span className="text-[9px] text-text-muted/30" style={{ fontFamily: "'Fira Code', monospace" }}>{deployIntro.length}/140</span>
-                  <div className="flex gap-2">
-                    <button onClick={() => { setDeployStep('pick-star'); setDeployIntro(''); }} className="px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      {'\u2190'} back
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (deployTarget) {
-                          addMsg('user', deployIntro || '(no greeting)');
-                          executeDeploy('synapse', deployTarget);
-                          setDeployIntro('');
-                        }
-                      }}
-                      className={`px-4 py-1.5 rounded-lg text-[10px] font-semibold ${tier.bg}/10 ${tier.accent} border ${tier.borderColor} hover:${tier.bg}/20 transition-all duration-300`}
-                      style={{ fontFamily: "'Outfit', sans-serif" }}
-                    >
-                      Deploy
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+        ) : deployStep === 'confirm' ? (
+          <div className="p-3 space-y-3">
+            <div className="text-[11px] text-text-muted/60 tracking-[0.15em]" style={{ fontFamily: "'Fira Code', monospace" }}>
+              CONFIRM DEPLOYMENT
+            </div>
+            <div className="text-[12px] text-text-secondary leading-relaxed" style={{ fontFamily: "'Fira Code', monospace" }}>
+              Deploy a new sub-agent from this node?
+            </div>
+            <div className="text-[10px] text-text-muted/70" style={{ fontFamily: "'Fira Code', monospace" }}>
+              Cost: <span className="text-yellow-400">{TIER_CLAIM_COST['synapse']} CPU</span> + <span className="text-green-400">{Math.ceil(TIER_CLAIM_COST['synapse'] * 0.3)} Frags</span> (L1 Synapse)
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => { setDeployStep(null); setDeployTarget(null); }} className="px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                Cancel
+              </button>
+              <button
+                onClick={() => { if (deployTarget) executeDeploy('synapse', deployTarget); }}
+                disabled={processing || !deployTarget}
+                className={`px-4 py-1.5 rounded-lg text-[10px] font-semibold ${tier.bg}/10 ${tier.accent} border ${tier.borderColor} hover:${tier.bg}/20 disabled:opacity-30 transition-all duration-300`}
+                style={{ fontFamily: "'Outfit', sans-serif" }}
+              >
+                Confirm Deploy
+              </button>
+            </div>
           </div>
 
         /* ─── Sub-choice menu ─── */
@@ -1201,7 +1069,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                     Configure Node
                   </div>
                   <div className="text-[10px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
-                    {agent.id.slice(0, 12)} · Lv {agent.level} {TIER_DISPLAY_NAME[getNodeTier(agent.level)]} · {nodeOutput} CPU/turn generated
+                    {nodeLabel} · Lv {agent.level} {TIER_DISPLAY_NAME[getNodeTier(agent.level)]} · {nodeOutput} CPU/turn generated
                   </div>
 
                   <PresetRow label="Mining"   value={miningCpuState}   onChange={setMiningCpuState}   presets={MINING_PRESETS} />
@@ -1252,7 +1120,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                       Developing — {remaining} turn{remaining !== 1 ? 's' : ''} remaining
                     </div>
                     <div className="text-[10px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      {agent.id.slice(0, 12)} · Lv {agent.level} {TIER_DISPLAY_NAME[tier]} → Lv {nextLevel} {TIER_DISPLAY_NAME[nextTier]}
+                      {nodeLabel} · Lv {agent.level} {TIER_DISPLAY_NAME[tier]} → Lv {nextLevel} {TIER_DISPLAY_NAME[nextTier]}
                     </div>
                     <div className="text-[10px] text-amber-400/80" style={{ fontFamily: "'Fira Code', monospace" }}>
                       Node remains fully productive during the upgrade.
@@ -1280,7 +1148,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                     Develop Node
                   </div>
                   <div className="text-[10px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
-                    {agent.id.slice(0, 12)} · Lv {agent.level} {TIER_DISPLAY_NAME[tier]}
+                    {nodeLabel} · Lv {agent.level} {TIER_DISPLAY_NAME[tier]}
                   </div>
 
                   <div className="space-y-1 text-[10px]" style={{ fontFamily: "'Fira Code', monospace" }}>
