@@ -25,6 +25,7 @@ function seatsFromStore(): SeatInput[] {
 
 type BodyVM = PhysicsBody & {
   id: string;
+  kind: string; // "player" | "subagent" | "singularity" — gates drag (subagents only)
   sprite: Sprite;
   baseScale: number;
   coreR: number; // visual core radius (world px) for the focus ring — excludes the Singularity corona
@@ -132,6 +133,17 @@ export default function OrbitalCanvas() {
       let focusedId: string | null = null;
       let focusSet: Set<string> | null = null;
 
+      // ---- subagent drag state ----
+      // Subagents are user-repositionable: a node-level drag (distinct from the
+      // empty-space camera pan) moves the dragged subagent's body + anchor so the
+      // physics tether holds it at its new spot. Screen→world deltas divide by zoom.
+      let dragId: string | null = null; // the subagent currently being dragged
+      let dragMoved = false; // crossed the click→drag threshold (suppresses the tap)
+      let dragStartX = 0; // pointer screen pos at drag start
+      let dragStartY = 0;
+      let dragBodyX = 0; // body world pos at drag start
+      let dragBodyY = 0;
+
       const computeFocusSet = (): void => {
         if (!focusedId) {
           focusSet = null;
@@ -222,6 +234,7 @@ export default function OrbitalCanvas() {
           }
           const b: BodyVM = {
             id: n.id,
+            kind: n.kind,
             x: n.x,
             y: n.y,
             vx: 0,
@@ -255,7 +268,29 @@ export default function OrbitalCanvas() {
             dot.scale.set(baseScale);
             tip.style.display = "none";
           });
+          // Any node pointerdown starts a fresh gesture → clear a stale drag-suppress
+          // flag so a tap on THIS node isn't eaten by a previous subagent drag.
+          // Subagents additionally begin a node-level drag (players/Singularity don't
+          // drag — they fall through to focus-on-tap only). stopPropagation keeps the
+          // stage's empty-space pan handler from also firing.
+          dot.on("pointerdown", (e: PointerLike) => {
+            dragMoved = false;
+            if (n.kind !== "subagent") return;
+            dragId = n.id;
+            dragStartX = e.global.x;
+            dragStartY = e.global.y;
+            dragBodyX = b.x;
+            dragBodyY = b.y;
+            b.pinned = true; // freeze physics on the dragged body for a solid drag
+            a.canvas.style.cursor = "grabbing";
+            const ev = e as unknown as { stopPropagation?: () => void };
+            ev.stopPropagation?.();
+          });
           dot.on("pointertap", () => {
+            if (dragMoved) {
+              dragMoved = false; // consume the just-ended drag; the next tap is live
+              return; // a drag just ended — don't toggle focus
+            }
             focusedId = focusedId === n.id ? null : n.id;
             computeFocusSet();
             applyFocus();
@@ -343,6 +378,26 @@ export default function OrbitalCanvas() {
         a.canvas.style.cursor = "grabbing";
       });
       a.stage.on("pointermove", (e: PointerLike) => {
+        // Subagent drag takes priority over panning (a drag started on a node).
+        if (dragId) {
+          const ddx = e.global.x - dragStartX;
+          const ddy = e.global.y - dragStartY;
+          if (ddx * ddx + ddy * ddy > 25) dragMoved = true;
+          const body = byId.get(dragId);
+          if (body) {
+            // Screen delta → world delta (the world is scaled by zoom).
+            const wx = dragBodyX + ddx / zoom;
+            const wy = dragBodyY + ddy / zoom;
+            body.x = wx;
+            body.y = wy;
+            body.vx = 0;
+            body.vy = 0;
+            // Re-anchor so the phyllotaxis tether holds the new position instead
+            // of springing the subagent back to its spawn seat.
+            body.anchor = { x: wx, y: wy };
+          }
+          return;
+        }
         if (!panning) return;
         const ddx = e.global.x - panStartX;
         const ddy = e.global.y - panStartY;
@@ -351,7 +406,20 @@ export default function OrbitalCanvas() {
         camY = camStartY + ddy;
         applyCamera();
       });
+      const endDrag = () => {
+        if (!dragId) return;
+        const body = byId.get(dragId);
+        if (body) body.pinned = false; // hand the body back to the physics tether (now anchored at the drop spot)
+        dragId = null;
+        a.canvas.style.cursor = "";
+        // Leave dragMoved set so the trailing pointertap is suppressed; the next
+        // pointerdown resets it.
+      };
       const endPan = (clicked: boolean) => {
+        if (dragId) {
+          endDrag();
+          return;
+        }
         if (!panning) return;
         panning = false;
         a.canvas.style.cursor = "";
