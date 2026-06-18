@@ -13,7 +13,7 @@ import type { SeatInput } from "@/types/orbital";
 const RADIAL_SCALE = 46; // px per √k — wider spacing so subnodes have room
 const CORE_PADDING = 56; // free space between the Singularity and rank-1
 const SING_CORE_TEX_R = 32; // black-hole texture core radius (sprite-scale unit)
-const DIM_ALPHA = 0.16; // non-focused node/edge dimming
+const DIM_ALPHA = 0.6; // non-focused nodes recede gently (stay clearly visible) — focus is shown by a selection ring + edge glow, not a harsh dim
 const ZOOM_MIN = 0.2;
 const ZOOM_MAX = 4;
 const ZOOM_STEP = 0.0015;
@@ -298,7 +298,17 @@ export default function OrbitalCanvas() {
           edgeG
             .moveTo(cx() + p.x, cy() + p.y)
             .lineTo(cx() + k.x, cy() + k.y)
-            .stroke({ width: 1.4, color: 0x5eead4, alpha: lit ? 0.8 : 0.1 });
+            .stroke({ width: 1.4, color: 0x5eead4, alpha: lit ? 0.9 : 0.4 });
+        }
+        // Soft selection ring on the focused node — the primary focus signal
+        // (replaces the old harsh dim-everything; non-focused nodes now only recede gently).
+        if (focusedId) {
+          const f = byId.get(focusedId);
+          if (f) {
+            edgeG
+              .circle(cx() + f.x, cy() + f.y, f.sprite.height / 2 + 6)
+              .stroke({ width: 2, color: 0x93c5fd, alpha: 0.9 });
+          }
         }
       };
 
