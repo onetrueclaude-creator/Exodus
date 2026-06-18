@@ -14,10 +14,12 @@ from agentic.vault.pdp import (
     sub_units_for_shard,
     verify_proof,
 )
+from agentic.vault.registry import Challenge, VaultRegistry
 
 __all__ = [
     "Atom", "Link", "VaultDag", "compute_cid",
     "assign_shards", "replicas_for_shard", "shard_of_cid",
     "build_shard_tree", "derive_challenge", "make_proof",
     "sub_units_for_shard", "verify_proof",
+    "Challenge", "VaultRegistry",
 ]
