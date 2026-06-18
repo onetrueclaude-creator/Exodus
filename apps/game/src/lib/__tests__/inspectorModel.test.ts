@@ -113,4 +113,16 @@ describe("inspectorModelFor", () => {
       expect(m.activity).toBe(7);
     }
   });
+
+  it("normalizes a stray/invalid tier (e.g. a stale SubscriptionTier) so tint is never undefined", () => {
+    const agents: Record<string, Agent> = {
+      // a stale uppercase SubscriptionTier slipped into the Tier field — the crash repro
+      x: agent({ id: "x", userId: "o", tier: "PROFESSIONAL" as unknown as Agent["tier"] }),
+    };
+    const m = inspectorModelFor("x", agents);
+    if (m && m.kind !== "singularity") {
+      expect(typeof m.tint).toBe("number"); // defined → tintToCss won't crash
+      expect(m.tier).toBe("community"); // invalid → safe fallback
+    }
+  });
 });

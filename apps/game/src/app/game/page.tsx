@@ -237,9 +237,15 @@ export default function GamePage() {
         //   2. dev_subscription → tier mapping, but ONLY when dev_subscription was set
         //      explicitly (otherwise this would mask the Founder default below)
         //   3. Founder — the dev default, so the crown/marker path runs out of the box
+        // Validate dev_tier: this key was repurposed (it previously held a
+        // SubscriptionTier), so a stale uppercase value must NOT slip through as an
+        // invalid Tier (which would yield an undefined tint and crash the inspector).
+        const devTier =
+          devTierRaw === "community" || devTierRaw === "professional" || devTierRaw === "founder"
+            ? devTierRaw
+            : null;
         const newUserTier: Tier =
-          (devTierRaw as Tier | null) ??
-          (devSubRaw ? SUBSCRIPTION_TIER_MAP[devSub] : "founder");
+          devTier ?? (devSubRaw ? SUBSCRIPTION_TIER_MAP[devSub] ?? "founder" : "founder");
 
         const newUserId = `user-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
         useGameStore.setState({

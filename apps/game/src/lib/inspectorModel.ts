@@ -72,7 +72,13 @@ export function inspectorModelFor(
   );
   const rank = ranks.get(focusedNodeId) ?? 0;
   const seat = seats.find((s) => s.id === focusedNodeId);
-  const tier: Tier = (seat?.tier as Tier | undefined) ?? agent.tier ?? "community";
+  // Normalize to a valid player Tier — guards against stray values (e.g. a
+  // SubscriptionTier or unset field) that would otherwise yield an undefined tint.
+  const rawTier = seat?.tier ?? agent.tier;
+  const tier: Tier =
+    rawTier === "community" || rawTier === "professional" || rawTier === "founder"
+      ? rawTier
+      : "community";
   const isSubagent = !!agent.parentAgentId;
   const isSelf = !!agent.isSelf;
 

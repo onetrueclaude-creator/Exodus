@@ -9,9 +9,10 @@ import { SINGULARITY_ID } from "@/lib/orbitalSeats";
 const SINGULARITY_OPS = ["Secure", "Read", "Stats"] as const;
 type SingularityOp = (typeof SINGULARITY_OPS)[number];
 
-/** Format the 0xRRGGBB tint as a CSS hex colour for swatches/accents. */
-function tintToCss(tint: number): string {
-  return `#${tint.toString(16).padStart(6, "0")}`;
+/** Format the 0xRRGGBB tint as a CSS hex colour for swatches/accents.
+ *  Defensive: an unknown/undefined tint falls back to a neutral slate. */
+function tintToCss(tint: number | undefined): string {
+  return `#${(tint ?? 0x64748b).toString(16).padStart(6, "0")}`;
 }
 
 /**
