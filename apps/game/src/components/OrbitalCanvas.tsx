@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { Application, Container, Graphics, Sprite, Text, type Texture } from "pixi.js";
+import { Application, Container, Graphics, Sprite, Circle, type Texture } from "pixi.js";
 import { useGameStore } from "@/store/gameStore";
 import { buildScene } from "@/lib/orbitalScene";
 import { assignRanks } from "@/lib/rankMapping";
@@ -8,7 +8,6 @@ import { bandOf } from "@/lib/orbitalGeometry";
 import { step, DEFAULT_PHYSICS, type PhysicsBody } from "@/lib/orbitalPhysics";
 import { seatsFromAgents, SINGULARITY_ID } from "@/lib/orbitalSeats";
 import { edgeAlpha, EDGE_FADE_BLOCKS } from "@/lib/orbitalEdges";
-import { TIER_LABELS, TIER_CROWN } from "@/types/grid";
 import type { SeatInput } from "@/types/orbital";
 
 const RADIAL_SCALE = 46; // px per √k — wider spacing so subnodes have room
@@ -28,8 +27,8 @@ type BodyVM = PhysicsBody & {
   id: string;
   sprite: Sprite;
   baseScale: number;
-  selfRing?: Graphics; // bright outline drawn around the player's own node
-  selfLabel?: Text; // "YOU / Your Homenode" badge above the player's own node
+  coreR: number; // visual core radius (world px) for the focus ring — excludes the Singularity corona
+  selfRing?: Graphics; // subtle ring drawn around the player's own node
 };
 type NodeMeta = { rank: number; band: number; tier: string; kind: string; isSelf?: boolean };
 type PointerLike = { global: { x: number; y: number }; target?: unknown };
@@ -199,16 +198,19 @@ export default function OrbitalCanvas() {
           dot.anchor.set(0.5);
           dot.tint = isSing ? 0xffffff : n.tint;
           dot.scale.set(baseScale);
+          // Clip the Singularity's hit area to the visible black-hole (core + accretion):
+          // its sprite includes a large faint corona whose bounds would otherwise swallow
+          // nearby nodes' clicks. Normal dots keep their default bounds.
+          if (isSing) dot.hitArea = new Circle(0, 0, SING_CORE_TEX_R * 1.34);
           dot.eventMode = "static";
           dot.cursor = "pointer";
           nodeLayer.addChild(dot);
+          // Visual core radius (world px) for the focus ring — excludes the corona.
+          const coreR = isSing ? baseScale * SING_CORE_TEX_R * 1.34 : dot.height / 2;
 
-          // "Your homenode" marker: a bright ring + a floating "YOU" badge so the
-          // player can always find their own node in the orbit. Founder tier also
-          // gets a 👑 crown. Drawn radius == sprite radius (n.radius) since dots are
-          // scaled from the 32px texture. Position is synced every tick().
+          // "Your homenode" marker: a subtle ring so the player can find their own
+          // node in the orbit (text badge removed per design). Synced every tick().
           let selfRing: Graphics | undefined;
-          let selfLabel: Text | undefined;
           if (n.isSelf) {
             const r = n.radius;
             selfRing = new Graphics()
@@ -217,22 +219,6 @@ export default function OrbitalCanvas() {
               .circle(0, 0, r + 9)
               .stroke({ width: 1, color: 0x5eead4, alpha: 0.6 });
             nodeLayer.addChild(selfRing);
-            // Self nodes always carry a player Tier (never "singularity"); guard anyway.
-            const playerTier = n.tier && n.tier !== "singularity" ? n.tier : null;
-            const crown = playerTier ? TIER_CROWN[playerTier] : "";
-            const tierName = playerTier ? TIER_LABELS[playerTier] : "";
-            selfLabel = new Text({
-              text: `${crown ? crown + " " : ""}YOU · Your Homenode${tierName ? ` (${tierName})` : ""}`,
-              style: {
-                fontFamily: "ui-monospace, monospace",
-                fontSize: 11,
-                fontWeight: "700",
-                fill: 0xffffff,
-                stroke: { color: 0x05050a, width: 3 },
-              },
-            });
-            selfLabel.anchor.set(0.5, 1);
-            nodeLayer.addChild(selfLabel);
           }
           const b: BodyVM = {
             id: n.id,
@@ -246,12 +232,12 @@ export default function OrbitalCanvas() {
             anchorStrength: 0.6,
             sprite: dot,
             baseScale,
+            coreR,
             selfRing,
-            selfLabel,
           };
           dot.on("pointerover", (e: PointerLike) => {
             if (panning) return;
-            dot.scale.set(baseScale * 1.4);
+            if (!isSing) dot.scale.set(baseScale * 1.4); // no hover-embiggen on the Singularity
             const m = metaById.get(n.id);
             const short = n.id === SINGULARITY_ID ? "Singularity" : n.id.slice(0, 8);
             const selfPrefix = m?.isSelf ? "Your homenode · " : "";
@@ -289,9 +275,8 @@ export default function OrbitalCanvas() {
         step(bodies, [], a.ticker.deltaMS / 1000, { ...DEFAULT_PHYSICS, anchorK: 0.8 });
         for (const b of bodies) {
           b.sprite.position.set(cx() + b.x, cy() + b.y);
-          // Keep the self-marker ring + badge glued to the player's own node.
+          // Keep the self-marker ring glued to the player's own node.
           if (b.selfRing) b.selfRing.position.set(cx() + b.x, cy() + b.y);
-          if (b.selfLabel) b.selfLabel.position.set(cx() + b.x, cy() + b.y - (b.sprite.height / 2 + 8));
         }
         edgeG.clear();
         for (const [pid, kid] of familyPairs) {
@@ -327,7 +312,7 @@ export default function OrbitalCanvas() {
           const f = byId.get(focusedId);
           if (f) {
             edgeG
-              .circle(cx() + f.x, cy() + f.y, f.sprite.height / 2 + 6)
+              .circle(cx() + f.x, cy() + f.y, f.coreR + 6)
               .stroke({ width: 2, color: 0x93c5fd, alpha: 0.9 });
           }
         }
