@@ -97,9 +97,7 @@ export default function AgentCreator({
               >
                 <div>
                   <div className="text-[10px] font-mono font-semibold text-text-primary">[{node.id.slice(0, 8)}]</div>
-                  <div className="text-[9px] text-text-muted font-mono">
-                    ({node.x.toFixed(0)}, {node.y.toFixed(0)})
-                  </div>
+                  {/* Coordinates retired (orbital rank-seat model) — id + distance suffice. */}
                 </div>
                 <span className="text-[9px] font-mono text-accent-cyan">{node.dist.toFixed(0)}u</span>
               </button>
@@ -122,7 +120,8 @@ export default function AgentCreator({
 
       {selectedNode && (
         <div className="text-[9px] text-text-muted mb-2 font-mono px-0.5">
-          Node: [{selectedNode.id.slice(0, 8)}] ({selectedNode.x.toFixed(0)}, {selectedNode.y.toFixed(0)})
+          {/* Coordinates retired (orbital rank-seat model). */}
+          Node: [{selectedNode.id.slice(0, 8)}]
         </div>
       )}
 

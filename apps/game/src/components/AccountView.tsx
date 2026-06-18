@@ -101,7 +101,8 @@ export default function AccountView() {
                         <div className="text-[10px] text-text-muted font-mono">
                           <span className={tierClass}>{TIER_DISPLAY_NAME[tier]}</span>
                           <span className="mx-1.5 text-text-muted/40">{'\u00B7'}</span>
-                          <span>({Math.round(a.position.x)}, {Math.round(a.position.y)})</span>
+                          {/* Coordinates retired (orbital rank-seat model) \u2014 show role instead. */}
+                          <span>{a.isPrimary ? 'Homenode' : 'Subagent'}</span>
                           <span className="mx-1.5 text-text-muted/40">{'\u00B7'}</span>
                           <span>{planetCountFor(a.id)} packets</span>
                         </div>

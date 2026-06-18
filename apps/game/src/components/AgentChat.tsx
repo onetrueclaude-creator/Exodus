@@ -468,7 +468,8 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
       const lines = [
         `\u2500\u2500\u2500 ${tier.label} STATUS \u2500\u2500\u2500`,
         `Tier: ${TIER_DISPLAY_NAME[agentNodeTier]} (Lv ${agent.level})`,
-        `Position: (${agent.position.x.toFixed(0)}, ${agent.position.y.toFixed(0)})`,
+        // Coordinates retired (phyllotaxis orbital model \u2014 nodes are rank-seats, not x/y).
+        ...(agent.rank ? [`Seat: rank #${agent.rank}`] : []),
         `Mining: ${currentMining}/t${extraMining > 0 ? ` (+${extraMining} boost)` : ''}`,
         `CPU: ${cpuUsed}/t (base ${baseCpu})`,
         `Perimeter: ${agent.borderPressure}/20`,
@@ -851,8 +852,9 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
                     <div className={`w-1.5 h-1.5 rounded-full ${td.bg} opacity-70 group-hover:opacity-100 transition-opacity`} />
                     <div>
                       <div className="text-[11px] text-text-primary" style={{ fontFamily: "'Fira Code', monospace" }}>{target.name}</div>
-                      <div className="text-[9px] text-text-muted/50" style={{ fontFamily: "'Fira Code', monospace" }}>
-                        ({target.x.toFixed(0)}, {target.y.toFixed(0)})
+                      {/* Coordinates retired (orbital rank-seat model). Tier reads as identity instead. */}
+                      <div className="text-[9px] text-text-muted/50 capitalize" style={{ fontFamily: "'Fira Code', monospace" }}>
+                        {target.tier}
                       </div>
                     </div>
                   </div>
