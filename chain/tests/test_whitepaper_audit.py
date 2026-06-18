@@ -877,3 +877,25 @@ class TestWhitepaperVaultParams:
         assert params.VAULT_SLASH_RATE == 0.10, (
             "Proof-of-Vault: missed/failed proof slashes 10% of committed capacity"
         )
+
+
+class TestProofOfVaultInvariants:
+    """Securing = reward/stake INPUT via vault proofs, NOT consensus (report §3)."""
+
+    def test_vault_slash_rate_matches_slashing_table(self):
+        from agentic.economics.slashing import SlashReason, SLASH_RATES
+        assert SLASH_RATES[SlashReason.VAULT_PROOF_FAILURE] == params.VAULT_SLASH_RATE
+
+    def test_securing_reward_is_fee_pool_split_not_consensus(self):
+        # Securing rewards come from the fee pool (a reward INPUT), the immediate
+        # split is unchanged, and vault proofs feed the same path.
+        assert params.SECURE_REWARD_IMMEDIATE == 0.50
+        assert params.VAULT_PROOF_CPU_CREDIT > 0
+
+    def test_replication_factor_at_least_two_for_redundancy(self):
+        assert params.VAULT_REPLICATION_FACTOR >= 2
+
+    def test_challenge_window_not_shorter_than_block_cadence(self):
+        # A proof must have at least one block to land within its window.
+        assert params.VAULT_CHALLENGE_WINDOW_BLOCKS >= 1
+        assert params.VAULT_CHALLENGE_INTERVAL_BLOCKS >= 1
