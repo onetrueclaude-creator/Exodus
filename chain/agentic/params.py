@@ -183,3 +183,20 @@ EDGE_FADE_BLOCKS = 30             # interaction-edge decay window (~30 min)
 SINGULARITY_ORIGIN_COORD = MACHINES_ORIGIN_COORD
 SINGULARITY_MIN_SELL_RATIO = MACHINES_MIN_SELL_RATIO
 SINGULARITY_WALLET_INDEX = 0   # origin wallet (matches machines.MACHINE_WALLET_INDEX)
+
+# ── Proof-of-Vault securing (feasibility report 2026-06-18) ─────────────────
+# Securing = real CPU+disk spent storing/serving a shard of the Singularity's
+# content-addressed knowledge vault, proven via freshness-bound sampled-PDP.
+# Each passing proof is a reward/stake INPUT (not consensus, not an API-key
+# spend) and refreshes the decaying Singularity link edge. The Singularity is
+# the trusted coordinator/verifier on TESTNET ONLY — mainnet unique-encoding /
+# anti-sybil (PoRep, timed/keyed challenges, Merkle-CRDT) is a DEFERRED
+# research milestone and is intentionally NOT implemented here. See report §6/§8.
+VAULT_SHARD_COUNT = 16              # vault CID space partitioned into 16 shards
+VAULT_REPLICATION_FACTOR = 3       # each shard stored by 3 distinct owners
+VAULT_CHALLENGE_INTERVAL_BLOCKS = 30   # issue a fresh challenge every 30 blocks
+VAULT_CHALLENGE_WINDOW_BLOCKS = 30     # proof must arrive within 30 blocks
+VAULT_PROOF_SAMPLE_SIZE = 8        # sub-units spot-checked per sampled-PDP challenge
+VAULT_MIN_STAKE_CAPACITY = 100.0   # dual-stake committed-capacity floor to be assigned a shard
+VAULT_PROOF_CPU_CREDIT = 50.0      # CPU-equivalent credited to activity/reward per passing proof
+VAULT_SLASH_RATE = 0.10            # fraction of committed capacity slashed on missed/failed proof
