@@ -8,7 +8,6 @@ import { createBlockNode } from "./grid/StarNode";
 import BlockNodePanel from "./BlockNodePanel";
 // GridNodePanel removed — all actions via terminal
 import { CELL_SIZE, cellToPixel } from "@/lib/lattice";
-import type { FactionId } from "@/types";
 
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 3;
@@ -34,7 +33,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
 
   const setCamera = useGameStore((s) => s.setCamera);
   const blocknodes = useGameStore((s) => s.blocknodes);
-  const visibleFactions = useGameStore((s) => s.visibleFactions);
+  const visibleTiers = useGameStore((s) => s.visibleTiers);
   const totalBlocksMined = useGameStore((s) => s.totalBlocksMined);
   const currentUserId = useGameStore((s) => s.currentUserId);
   const empireColor = useGameStore((s) => s.empireColor);
@@ -251,11 +250,6 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
     const app = appRef.current;
     if (!world || !app) return;
 
-    // In dev mode, D key reveals all 4 factions
-    const effectiveVisible: FactionId[] = devRevealAll
-      ? (["community", "treasury", "founder", "pro-max"] as FactionId[])
-      : visibleFactions;
-
     // Update background tinting — grid expands one ring per block, capped at 30
     // (30 rings = 61×61 = 3721 cells; beyond this the draw cost grows quadratically)
     if (bgRef.current) {
@@ -275,14 +269,14 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
     const nodes = Object.values(blocknodes);
 
     // Draw blocknode circles
-    // Open-grid v1.1: all cells are visible by default. The v1.0 faction-fog
-    // visibility filter (`node.faction !== null && effectiveVisible.includes(...)`)
-    // produced a race on first /game load: while `visibleFactions` was being
-    // populated by `revealFaction()` calls in game/page.tsx init(), the render
-    // effect would already have fired with `visibleFactions=[]`, leaving every
+    // Open-grid v1.1: all cells are visible by default. The v1.0 tier-fog
+    // visibility filter (`node.tier !== null && effectiveVisible.includes(...)`)
+    // produced a race on first /game load: while `visibleTiers` was being
+    // populated by `revealTier()` calls in game/page.tsx init(), the render
+    // effect would already have fired with `visibleTiers=[]`, leaving every
     // cell at alpha 0.12 (effectively invisible against the dark canvas).
     // Refreshing the page sometimes "fixed" it because the timing changed.
-    // Under the open-grid model there is no faction-quadrant fog at all.
+    // Under the open-grid model there is no tier-quadrant fog at all.
     for (const node of nodes) {
       const isVisible = true;
       const nodeContainer = createBlockNode(
@@ -310,7 +304,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
 
     // Auto-zoom-to-fit on first blocknode render — centers on the user's empire
     // if they have claimed cells, otherwise on the inner rings of the lattice.
-    // (Open-grid v1.1: was previously filtered by visibleFactions — same race as
+    // (Open-grid v1.1: was previously filtered by visibleTiers — same race as
     // above. Now all rendered nodes are zoom candidates.)
     const visibleNodes = nodes;
     if (visibleNodes.length > 0 && !hasBlocknodeZoomedRef.current) {
@@ -352,7 +346,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
   }, [
     appReady,
     blocknodes,
-    visibleFactions,
+    visibleTiers,
     totalBlocksMined,
     devRevealAll,
     currentUserId,
@@ -409,7 +403,7 @@ export default function LatticeGrid({ onDeselect }: LatticeGridProps) {
     setCamera({ x: world.position.x, y: world.position.y }, world.scale.x);
   }, [setCamera]);
 
-  // Dev-only: press D to toggle full galaxy reveal (shows all 4 faction arms)
+  // Dev-only: press D to toggle full galaxy reveal (shows all tier arms)
   useEffect(() => {
     if (process.env.NODE_ENV !== "development") return;
     const handler = (e: KeyboardEvent) => {

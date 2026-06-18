@@ -1,6 +1,6 @@
 import { phylloPos, bandOf } from "./orbitalGeometry";
 import { assignRanks, type RankInput } from "./rankMapping";
-import { FACTION_TINT, type SeatInput, type SceneModel, type SceneNode, type SceneEdge } from "../types/orbital";
+import { TIER_TINT, type SeatInput, type SceneModel, type SceneNode, type SceneEdge } from "../types/orbital";
 
 export interface SceneOpts {
   radialScale: number; // c in radius=c·√k
@@ -35,9 +35,11 @@ export function buildScene(seats: readonly SeatInput[], opts: SceneOpts): SceneM
       id: s.id,
       x: p.x,
       y: p.y,
-      tint: FACTION_TINT[s.faction],
+      tint: TIER_TINT[s.tier],
       kind: s.isSingularity ? "singularity" : "player",
       radius: s.isSingularity ? SINGULARITY_R : Math.max(4, PLAYER_R - (bandOf(k) - 1) * 0.6),
+      isSelf: s.isSelf,
+      tier: s.tier,
     });
   }
 
@@ -57,7 +59,7 @@ export function buildScene(seats: readonly SeatInput[], opts: SceneOpts): SceneM
       const x = base.x + orbit * Math.cos(a);
       const y = base.y + orbit * Math.sin(a);
       posById.set(kid.id, { x, y });
-      nodes.push({ id: kid.id, x, y, radius: SUBAGENT_R, tint: FACTION_TINT[kid.faction], kind: "subagent" });
+      nodes.push({ id: kid.id, x, y, radius: SUBAGENT_R, tint: TIER_TINT[kid.tier], kind: "subagent", isSelf: kid.isSelf, tier: kid.tier });
       edges.push({ x1: base.x, y1: base.y, x2: x, y2: y, alpha: 0.85, kind: "family" });
     });
   }

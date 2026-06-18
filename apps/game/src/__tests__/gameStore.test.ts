@@ -21,59 +21,59 @@ describe("gameStore — lattice/blocknode state", () => {
     expect(Object.keys(s.blocknodes)).toHaveLength(24); // ring 1 (8) + ring 2 (16) = 24
   });
 
-  it("claimBlocknode sets ownerId but does NOT auto-add to visibleFactions", () => {
+  it("claimBlocknode sets ownerId but does NOT auto-add to visibleTiers", () => {
     useGameStore.getState().initLattice(1);
-    useGameStore.getState().setCurrentUserFaction("community");
+    useGameStore.getState().setCurrentUserTier("community");
     const result = useGameStore.getState().claimBlocknode("cell--1-1", "user-001");
     expect(result).toBe(true);
     const state = useGameStore.getState();
     expect(state.blocknodes["cell--1-1"].ownerId).toBe("user-001");
-    // visibleFactions must NOT be auto-populated — player must call revealFaction explicitly
-    expect(state.visibleFactions).toEqual([]);
+    // visibleTiers must NOT be auto-populated — player must call revealTier explicitly
+    expect(state.visibleTiers).toEqual([]);
   });
 
-  it("revealFaction adds faction to visibleFactions", () => {
+  it("revealTier adds tier to visibleTiers", () => {
     useGameStore.getState().initLattice(1);
-    useGameStore.getState().revealFaction("community");
-    expect(useGameStore.getState().visibleFactions).toContain("community");
+    useGameStore.getState().revealTier("community");
+    expect(useGameStore.getState().visibleTiers).toContain("community");
   });
 
-  it("revealFaction is idempotent — does not duplicate", () => {
+  it("revealTier is idempotent — does not duplicate", () => {
     useGameStore.getState().initLattice(1);
-    useGameStore.getState().revealFaction("community");
-    useGameStore.getState().revealFaction("community");
-    expect(useGameStore.getState().visibleFactions.filter((f) => f === "community").length).toBe(1);
+    useGameStore.getState().revealTier("community");
+    useGameStore.getState().revealTier("community");
+    expect(useGameStore.getState().visibleTiers.filter((f) => f === "community").length).toBe(1);
   });
 
   it("claimBlocknode returns false for already claimed node", () => {
     useGameStore.getState().initLattice(1);
-    useGameStore.getState().setCurrentUserFaction("community");
+    useGameStore.getState().setCurrentUserTier("community");
     useGameStore.getState().claimBlocknode("cell--1-1", "user-001");
     const result = useGameStore.getState().claimBlocknode("cell--1-1", "user-002");
     expect(result).toBe(false);
   });
 
-  it("claimBlocknode succeeds when currentUserFaction is set (open grid — any cell claimable)", () => {
+  it("claimBlocknode succeeds when currentUserTier is set (open grid — any cell claimable)", () => {
     useGameStore.getState().initLattice(1);
-    useGameStore.getState().setCurrentUserFaction("community");
+    useGameStore.getState().setCurrentUserTier("community");
     const result = useGameStore.getState().claimBlocknode("cell-1-1", "user-001");
     expect(result).toBe(true);
     expect(useGameStore.getState().blocknodes["cell-1-1"].ownerId).toBe("user-001");
-    expect(useGameStore.getState().blocknodes["cell-1-1"].faction).toBe("community");
+    expect(useGameStore.getState().blocknodes["cell-1-1"].tier).toBe("community");
   });
 
-  it("claimBlocknode tags the cell with the claimant's faction", () => {
+  it("claimBlocknode tags the cell with the claimant's tier", () => {
     useGameStore.getState().initLattice(1);
-    useGameStore.getState().setCurrentUserFaction("community");
+    useGameStore.getState().setCurrentUserTier("community");
     const result = useGameStore.getState().claimBlocknode("cell--1-1", "user-001");
     expect(result).toBe(true);
-    expect(useGameStore.getState().blocknodes["cell--1-1"].faction).toBe("community");
+    expect(useGameStore.getState().blocknodes["cell--1-1"].tier).toBe("community");
   });
 
-  it("claimBlocknode returns false when currentUserFaction is null (cannot tag faction)", () => {
+  it("claimBlocknode returns false when currentUserTier is null (cannot tag tier)", () => {
     useGameStore.getState().initLattice(1);
-    // currentUserFaction is null after reset — cannot claim without faction
-    expect(useGameStore.getState().currentUserFaction).toBeNull();
+    // currentUserTier is null after reset — cannot claim without tier
+    expect(useGameStore.getState().currentUserTier).toBeNull();
     const result = useGameStore.getState().claimBlocknode("cell-1-1", "user-001");
     expect(result).toBe(false);
   });
@@ -81,15 +81,15 @@ describe("gameStore — lattice/blocknode state", () => {
   it("claimBlocknode does not deduct AGNTC (no AGNTC gate on claimBlocknode)", () => {
     useGameStore.getState().initLattice(1);
     useGameStore.setState({ agntcBalance: 5 });
-    useGameStore.getState().setCurrentUserFaction("community");
+    useGameStore.getState().setCurrentUserTier("community");
     useGameStore.getState().claimBlocknode("cell--1-1", "user-001");
     // claimBlocknode does not touch AGNTC balance
     expect(useGameStore.getState().agntcBalance).toBe(5);
   });
 
-  it("claimBlocknode can claim any ring when faction is set (ring adjacency not enforced)", () => {
+  it("claimBlocknode can claim any ring when tier is set (ring adjacency not enforced)", () => {
     useGameStore.getState().initLattice(2);
-    useGameStore.getState().setCurrentUserFaction("community");
+    useGameStore.getState().setCurrentUserTier("community");
     const ring0Result = useGameStore.getState().claimBlocknode("cell--1-1", "user-001");
     expect(ring0Result).toBe(true);
     const ring1Result = useGameStore.getState().claimBlocknode("cell--1--2", "user-001");
@@ -98,7 +98,7 @@ describe("gameStore — lattice/blocknode state", () => {
 
   it("secureBlocknode increases agntcBalance and decreases energy", () => {
     useGameStore.getState().initLattice(1);
-    useGameStore.getState().setCurrentUserFaction("community");
+    useGameStore.getState().setCurrentUserTier("community");
     useGameStore.getState().claimBlocknode("cell--1-1", "user-001");
     const energyBefore = useGameStore.getState().energy;
     useGameStore.getState().secureBlocknode("cell--1-1", 100);
@@ -109,7 +109,7 @@ describe("gameStore — lattice/blocknode state", () => {
 
   it("secureBlocknode does NOT spawn new nodes", () => {
     useGameStore.getState().initLattice(1);
-    useGameStore.getState().setCurrentUserFaction("community");
+    useGameStore.getState().setCurrentUserTier("community");
     useGameStore.getState().claimBlocknode("cell--1-1", "user-001");
     const nodesBefore = Object.keys(useGameStore.getState().blocknodes).length;
     // Stake large amount — used to trigger ring spawn, should not any more
@@ -187,9 +187,9 @@ describe("gameStore — grid node territory (mineGridNode / claimGridNode)", () 
   beforeEach(() => {
     useGameStore.getState().reset();
     useGameStore.getState().initLattice(1);
-    // New user init order: set faction FIRST (required to tag cell), then claim homenode
+    // New user init order: set tier FIRST (required to tag cell), then claim homenode
     useGameStore.setState({ currentUserId: "user-001", energy: 1000, agntcBalance: 50 });
-    useGameStore.getState().setCurrentUserFaction("community");
+    useGameStore.getState().setCurrentUserTier("community");
     useGameStore.getState().claimBlocknode("cell--1-1", "user-001");
   });
 
@@ -219,7 +219,7 @@ describe("gameStore — grid node territory (mineGridNode / claimGridNode)", () 
     expect(result).toBe(false);
   });
 
-  it("mineGridNode returns false when cell is in another faction's territory", () => {
+  it("mineGridNode returns false when cell is in another tier's territory", () => {
     // (2,1) is treasury territory (NE: cx>0, cy>0) — community player can't mine there
     const result = useGameStore.getState().mineGridNode(2, 1);
     expect(result).toBe(false);
@@ -229,7 +229,7 @@ describe("gameStore — grid node territory (mineGridNode / claimGridNode)", () 
     useGameStore.getState().reset();
     useGameStore.getState().initLattice(3);
     useGameStore.setState({ currentUserId: "user-001", energy: 1000, agntcBalance: 50 });
-    useGameStore.getState().setCurrentUserFaction("community");
+    useGameStore.getState().setCurrentUserTier("community");
     useGameStore.getState().claimBlocknode("cell--1-1", "user-001");
     // (-3,3): within community quadrant but NOT adjacent to any owned node
     const result = useGameStore.getState().mineGridNode(-3, 3);
@@ -330,16 +330,16 @@ describe("claimBlocknode — open grid", () => {
     useGameStore.setState({
       blocknodes: buildAllCells(2),
       currentUserId: "u-1",
-      currentUserFaction: "community",
+      currentUserTier: "community",
     });
   });
 
-  it("claims an unclaimed cell and tags it with the claimant's faction", () => {
+  it("claims an unclaimed cell and tags it with the claimant's tier", () => {
     const ok = useGameStore.getState().claimBlocknode("cell-1-1", "u-1");
     expect(ok).toBe(true);
     const cell = useGameStore.getState().blocknodes["cell-1-1"];
     expect(cell.ownerId).toBe("u-1");
-    expect(cell.faction).toBe("community");
+    expect(cell.tier).toBe("community");
   });
 
   it("fails when cell is already owned", () => {
@@ -348,14 +348,14 @@ describe("claimBlocknode — open grid", () => {
     expect(ok).toBe(false);
   });
 
-  it("no longer gated by currentUserFaction === null (drops the old arm-node restriction)", () => {
-    useGameStore.setState({ currentUserFaction: "community" });
+  it("no longer gated by currentUserTier === null (drops the old arm-node restriction)", () => {
+    useGameStore.setState({ currentUserTier: "community" });
     const ok = useGameStore.getState().claimBlocknode("cell-1-1", "u-1");
     expect(ok).toBe(true);
   });
 
-  it("fails when claimant's currentUserFaction is null (cannot tag faction)", () => {
-    useGameStore.setState({ currentUserFaction: null });
+  it("fails when claimant's currentUserTier is null (cannot tag tier)", () => {
+    useGameStore.setState({ currentUserTier: null });
     const ok = useGameStore.getState().claimBlocknode("cell-1-1", "u-1");
     expect(ok).toBe(false);
   });
@@ -365,7 +365,7 @@ describe("setNodeMiningSecuring", () => {
   beforeEach(() => {
     useGameStore.setState({
       currentUserId: "u-1",
-      currentUserFaction: "community",
+      currentUserTier: "community",
       agents: {
         "agent-1": {
           id: "agent-1",
@@ -507,7 +507,7 @@ describe("tick — income / expenditure model", () => {
   beforeEach(() => {
     useGameStore.setState({
       currentUserId: "u-1",
-      currentUserFaction: "community",
+      currentUserTier: "community",
       turn: 0,
       energy: 1000,
       minerals: 100,

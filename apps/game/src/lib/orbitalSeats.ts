@@ -1,15 +1,15 @@
-import type { SeatInput, OrbitalFaction } from "@/types/orbital";
+import type { SeatInput, OrbitalTier } from "@/types/orbital";
 
 /** Synthetic id for the Singularity core node (rendered separately from players). */
 export const SINGULARITY_ID = "__singularity__";
 
 /** Deterministic per-id cosmetic colour across the player palette (varied/alive).
- *  Phase-2 placeholder until the chain serves a real faction per node. */
-const PLAYER_FACTIONS: OrbitalFaction[] = ["community", "professional", "founders"];
-export function factionByHash(id: string): OrbitalFaction {
+ *  Phase-2 placeholder until the chain serves a real tier per node. */
+const PLAYER_TIERS: OrbitalTier[] = ["community", "professional", "founder"];
+export function tierByHash(id: string): OrbitalTier {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return PLAYER_FACTIONS[h % PLAYER_FACTIONS.length];
+  return PLAYER_TIERS[h % PLAYER_TIERS.length];
 }
 
 /** The store-agent fields the seat builder reads. `Agent` satisfies this structurally. */
@@ -19,6 +19,8 @@ export interface SeatAgent {
   parentAgentId?: string; // present → subagent (orbits its parent)
   activity?: number; // real chain activity (rank signal)
   isSingularity?: boolean; // the chain origin claim — rendered as the core, not a player
+  isSelf?: boolean; // the current player's own node (drives the "YOU" marker)
+  tier?: OrbitalTier; // real player Tier when known (overrides the per-id hash colour)
   stakedCpu?: number; // fallback proxy when chain activity is absent (mock/offline)
   securingCpu?: number;
 }
@@ -39,11 +41,12 @@ export function seatsFromAgents(agents: readonly SeatAgent[]): SeatInput[] {
     if (!isSubagent && !isClaimedPlayer) continue; // drop unclaimed slots + the origin
     seats.push({
       id: a.id,
-      faction: factionByHash(a.id),
+      tier: a.tier ?? tierByHash(a.id),
       parentId: a.parentAgentId,
+      isSelf: a.isSelf,
       activity: a.activity ?? (a.stakedCpu ?? 0) + (a.securingCpu ?? 0),
     });
   }
-  seats.push({ id: SINGULARITY_ID, faction: "singularity", isSingularity: true, activity: 0 });
+  seats.push({ id: SINGULARITY_ID, tier: "singularity", isSingularity: true, activity: 0 });
   return seats;
 }

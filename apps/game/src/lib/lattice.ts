@@ -1,8 +1,8 @@
-import type { FactionId, BlockNode } from "@/types";
+import type { Tier, BlockNode } from "@/types";
 
 export const CELL_SIZE = 64;
 export const DENSITY_DECAY = 0.15;
-export const FACTIONS: FactionId[] = ["community", "treasury", "founder", "pro-max"];
+export const TIERS: Tier[] = ["community", "professional", "founder"];
 
 export function getCellDensity(cx: number, cy: number): number {
   const dist = Math.sqrt(cx * cx + cy * cy);
@@ -25,7 +25,7 @@ function createCell(cx: number, cy: number, ringIndex: number): BlockNode {
     ringIndex,
     cx,
     cy,
-    faction: null,
+    tier: null,
     secureStrength: getCellDensity(cx, cy) * 100,
     ownerId: null,
     stakedCpu: 0,
@@ -70,16 +70,16 @@ export function getCellAt(cx: number, cy: number, cells: Record<string, BlockNod
   return cells[cellId(cx, cy)] ?? null;
 }
 
-/** Apply ownership to a cell. Returns a new cell with ownerId and faction set. Pure. */
+/** Apply ownership to a cell. Returns a new cell with ownerId and tier set. Pure. */
 export function setCellOwner(
   cell: BlockNode,
   ownerId: string,
-  ownerFaction: FactionId
+  ownerTier: Tier
 ): BlockNode {
-  return { ...cell, ownerId, faction: ownerFaction };
+  return { ...cell, ownerId, tier: ownerTier };
 }
 
 /** Release a cell back to unclaimed. Pure. */
 export function clearCellOwner(cell: BlockNode): BlockNode {
-  return { ...cell, ownerId: null, faction: null };
+  return { ...cell, ownerId: null, tier: null };
 }

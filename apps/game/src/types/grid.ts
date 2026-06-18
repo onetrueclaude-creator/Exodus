@@ -12,15 +12,37 @@ export interface CellCoord {
 }
 
 /**
- * The 4 Megafactions. Used as player identity (color, governance, theme).
- * In the open-grid model, factions no longer restrict spatial placement —
- * they tint owned cells via the denormalized BlockNode.faction field.
- * - community: free users (teal)
- * - treasury:  Machines / AI agents (pink)
- * - founder:   founding dev team (amber)
- * - pro-max:   premium users (blue)
+ * Player identity (color, governance, theme). One unified concept across the
+ * whole game — distinct from node tier (Synapse/Cortex/Lattice/Nexus, see
+ * lib/nodeTier.ts) and from the Claude model powering an agent.
+ * In the open-grid model, tiers no longer restrict spatial placement —
+ * they tint owned cells via the denormalized BlockNode.tier field.
+ * - community:    free users (teal #0D9488)
+ * - professional: premium users (blue #3B82F6)
+ * - founder:      founding dev team (amber #F59E0B), shown with a 👑 crown
  */
-export type FactionId = "community" | "treasury" | "founder" | "pro-max";
+export type Tier = "community" | "professional" | "founder";
+
+/** Human-readable label for each player Tier. */
+export const TIER_LABELS: Record<Tier, string> = {
+  community: "Community",
+  professional: "Professional",
+  founder: "Founder",
+};
+
+/** Canonical Tier colors as hex strings (whitepaper §4.2). Founder = amber. */
+export const TIER_COLORS: Record<Tier, string> = {
+  community: "#0D9488", // teal
+  professional: "#3B82F6", // blue
+  founder: "#F59E0B", // amber
+};
+
+/** Crown shown next to the Founder tier in UI. Empty for other tiers. */
+export const TIER_CROWN: Record<Tier, string> = {
+  community: "",
+  professional: "",
+  founder: "\u{1F451}", // 👑
+};
 
 /**
  * A cell in the Neural Lattice grid. Each cell sits at the center of a
@@ -33,7 +55,7 @@ export interface BlockNode {
   ringIndex: number; // 0 = genesis center, increments outward
   cx: number; // cell coordinate X
   cy: number; // cell coordinate Y
-  faction: FactionId | null;
+  tier: Tier | null; // owner's player Tier (NOT node tier) — tints the cell
   secureStrength: number; // BaseStrength / (1 + ringIndex * decayRate), min 1
   ownerId: string | null; // userId of claimant, null if unclaimed
   stakedCpu: number; // CPU staked to this node by the owner
@@ -41,9 +63,9 @@ export interface BlockNode {
 }
 
 /**
- * A grid node is any cell on the Neural Lattice that is not on a faction arm.
+ * A grid node is any cell on the Neural Lattice that is not on a tier arm.
  * Users mine these cells (costs CPU) then claim them (costs AGNTC) to build territory.
- * Territory must be adjacent to the user's faction arm or an already-owned grid node.
+ * Territory must be adjacent to the user's tier arm or an already-owned grid node.
  */
 export interface GridNode {
   id: string; // "grid-{cx}-{cy}"
@@ -51,14 +73,14 @@ export interface GridNode {
   cy: number;
   state: "available" | "mined" | "claimed";
   ownerId: string | null; // userId of claimer, null if unclaimed
-  faction: FactionId; // Voronoi-assigned faction territory
+  tier: Tier; // Voronoi-assigned tier territory
   mineCpuCost: number; // CPU energy spent to mine this node
 }
 
-/** Full network state — snapshot of all blocknodes, grid nodes, and visible factions */
+/** Full network state — snapshot of all blocknodes, grid nodes, and visible tiers */
 export interface LatticeState {
   blocknodes: Record<string, BlockNode>; // keyed by blocknode id (arm nodes)
   gridNodes: Record<string, GridNode>; // keyed by "grid-{cx}-{cy}" (territory nodes)
   totalBlocksMined: number;
-  visibleFactions: FactionId[]; // factions explicitly revealed to the current player via revealFaction()
+  visibleTiers: Tier[]; // tiers explicitly revealed to the current player via revealTier()
 }

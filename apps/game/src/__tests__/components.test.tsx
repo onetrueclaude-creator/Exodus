@@ -471,7 +471,7 @@ describe('AgentChat — L2 gate + cost flow', () => {
     useGameStore.getState().reset();
     useGameStore.setState({
       currentUserId: 'u-1',
-      currentUserFaction: 'community',
+      currentUserTier: 'community',
       energy: 1000,
     });
     const mod = await import('@/components/AgentChat');

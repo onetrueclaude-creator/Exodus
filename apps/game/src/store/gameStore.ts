@@ -2,7 +2,7 @@ import { create } from "zustand";
 import type { Agent, HaikuMessage, GridPosition, DiplomaticState, Planet } from "@/types";
 import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE, TIER_CLAIM_COST } from "@/types/agent";
 import type { AgentTier } from "@/types";
-import type { FactionId, BlockNode, GridNode } from "@/types";
+import type { Tier, BlockNode, GridNode } from "@/types";
 import type { ResearchProgress } from "@/types/research";
 import { RESEARCH_TREES } from "@/lib/research";
 import { buildCellsForRing, buildAllCells } from "@/lib/lattice";
@@ -11,7 +11,7 @@ import { getNodeCpuPerTurn, getNodeTier as getNodeTierFromStore, getLevelUpCost,
 /** CPU Energy deducted per turn for each owned blocknode (maintenance cost) */
 export const NODE_CPU_PER_TURN = 1;
 
-/** AGNTC cost to spawn one new node in the user's faction arm */
+/** AGNTC cost to spawn one new node in the user's tier arm */
 export const SPAWN_NODE_AGNTC_COST = 1;
 
 /** CPU energy to mine one grid cell (off-arm territory node) */
@@ -79,15 +79,15 @@ interface GameState {
   walletMiningRate: number;
   walletEffectiveStake: number;
 
-  // Neural Lattice / blocknode state (arm nodes — faction infrastructure)
+  // Neural Lattice / blocknode state (arm nodes — tier infrastructure)
   blocknodes: Record<string, BlockNode>;
   // Grid node territory (user-claimable cells off the arm)
   gridNodes: Record<string, GridNode>;
-  visibleFactions: FactionId[];
+  visibleTiers: Tier[];
   totalBlocksMined: number;
 
-  // Faction territory — null = no restriction (dev seed / uninitialized)
-  currentUserFaction: FactionId | null;
+  // Tier territory — null = no restriction (dev seed / uninitialized)
+  currentUserTier: Tier | null;
 
   // Subscription restriction
   maxDeployTier: AgentTier; // highest tier this user can deploy (from subscription)
@@ -167,13 +167,13 @@ interface GameState {
   addBlocknodesForBlock: (blockIndex: number) => void;
   claimBlocknode: (nodeId: string, userId: string) => boolean;
   secureBlocknode: (nodeId: string, cpuAmount: number) => void;
-  /** Mine a grid cell (costs CPU). Cell must be adjacent to faction arm or owned territory. */
+  /** Mine a grid cell (costs CPU). Cell must be adjacent to tier arm or owned territory. */
   mineGridNode: (cx: number, cy: number) => boolean;
   /** Claim a mined grid cell as territory (costs AGNTC). */
   claimGridNode: (cx: number, cy: number) => boolean;
-  setVisibleFactions: (factions: FactionId[]) => void;
-  setCurrentUserFaction: (faction: FactionId | null) => void;
-  revealFaction: (faction: FactionId) => void;
+  setVisibleTiers: (tiers: Tier[]) => void;
+  setCurrentUserTier: (tier: Tier | null) => void;
+  revealTier: (tier: Tier) => void;
   devRevealAll: boolean;
   setDevRevealAll: (on: boolean) => void;
   syncBlocknodeFromSupabase: (node: BlockNode) => void;
@@ -213,35 +213,35 @@ const initialState = {
   walletEffectiveStake: 0,
   blocknodes: {} as Record<string, BlockNode>,
   gridNodes: {} as Record<string, GridNode>,
-  visibleFactions: [] as FactionId[],
+  visibleTiers: [] as Tier[],
   totalBlocksMined: 0,
   devRevealAll: false,
-  currentUserFaction: null as FactionId | null,
+  currentUserTier: null as Tier | null,
   researchProgress: {} as Record<string, ResearchProgress>,
   completedResearch: [] as string[],
   unlockedSkills: [] as string[],
   maxDeployTier: "synapse" as AgentTier, // default: Community tier (synapse only)
   activeTab: "network" as GameTab,
-  empireColor: 0xffffff, // default: Community faction white
+  empireColor: 0xffffff, // default: Community tier white
   activeDockPanel: null as DockPanelId | null,
   focusRequest: null as { nodeId: string; ts: number } | null,
 };
 
-/** Voronoi: returns the nearest faction arm node's faction for a given cell coordinate. */
-function computeCellFaction(
+/** Voronoi: returns the nearest tier arm node's tier for a given cell coordinate. */
+function computeCellTier(
   cx: number,
   cy: number,
   blocknodes: Record<string, BlockNode>
-): FactionId | null {
+): Tier | null {
   const nodes = Object.values(blocknodes);
   if (nodes.length === 0) return null;
   let minDist = Infinity;
-  let nearest: FactionId | null = null;
+  let nearest: Tier | null = null;
   for (const node of nodes) {
     const d = (node.cx - cx) ** 2 + (node.cy - cy) ** 2;
     if (d < minDist) {
       minDist = d;
-      nearest = node.faction;
+      nearest = node.tier;
     }
   }
   return nearest;
@@ -363,10 +363,10 @@ export const useGameStore = create<GameState>((set) => ({
                 [slotId]: {
                   ...existingBlocknode,
                   ownerId: state.currentUserId || "unknown",
-                  // Tag the cell with the claimant's faction so the BlockNodePanel,
+                  // Tag the cell with the claimant's tier so the BlockNodePanel,
                   // GridBackground tint, and CellTooltip all show the correct identity.
-                  // Falls back to existing tag (null for unclaimed) if faction unset.
-                  faction: state.currentUserFaction ?? existingBlocknode.faction,
+                  // Falls back to existing tag (null for unclaimed) if tier unset.
+                  tier: state.currentUserTier ?? existingBlocknode.tier,
                 },
               },
             }
@@ -781,7 +781,7 @@ export const useGameStore = create<GameState>((set) => ({
     set({
       blocknodes: buildAllCells(totalRings),
       totalBlocksMined: totalRings,
-      visibleFactions: [],
+      visibleTiers: [],
     }),
 
   addBlocknodesForBlock: (ringIndex) =>
@@ -797,13 +797,13 @@ export const useGameStore = create<GameState>((set) => ({
     const s = useGameStore.getState();
     const node = s.blocknodes[nodeId];
     if (!node || node.ownerId !== null) return false;
-    if (s.currentUserFaction === null) return false; // need faction to tag the cell
+    if (s.currentUserTier === null) return false; // need tier to tag the cell
     set((state) => ({
       blocknodes: {
         ...state.blocknodes,
-        [nodeId]: { ...node, ownerId: userId, faction: s.currentUserFaction },
+        [nodeId]: { ...node, ownerId: userId, tier: s.currentUserTier },
       },
-      // visibleFactions NOT updated here — call revealFaction() explicitly
+      // visibleTiers NOT updated here — call revealTier() explicitly
     }));
     return true;
   },
@@ -834,15 +834,15 @@ export const useGameStore = create<GameState>((set) => ({
   mineGridNode: (cx, cy) => {
     const s = useGameStore.getState();
     const userId = s.currentUserId;
-    const faction = s.currentUserFaction;
-    if (!userId || !faction) return false;
+    const tier = s.currentUserTier;
+    if (!userId || !tier) return false;
 
     const nodeId = `grid-${cx}-${cy}`;
     const existing = s.gridNodes[nodeId];
     // Node is only mineable if it hasn't been interacted with yet ("available" = not in map or explicitly available)
     if (existing && existing.state !== "available") return false;
 
-    // Arm cells are faction infrastructure — not mineable territory
+    // Arm cells are tier infrastructure — not mineable territory
     const isArmCell = Object.values(s.blocknodes).some((n) => n.cx === cx && n.cy === cy);
     if (isArmCell) return false;
 
@@ -850,12 +850,12 @@ export const useGameStore = create<GameState>((set) => ({
     const mineableRange = Math.max(1, s.totalBlocksMined + 1);
     if (Math.abs(cx) > mineableRange || Math.abs(cy) > mineableRange) return false;
 
-    // Must be in user's Voronoi faction territory
-    const cellFaction = computeCellFaction(cx, cy, s.blocknodes);
-    if (cellFaction !== faction) return false;
+    // Must be in user's Voronoi tier territory
+    const cellTier = computeCellTier(cx, cy, s.blocknodes);
+    if (cellTier !== tier) return false;
 
-    // Must be adjacent (Chebyshev ≤ 1) to a faction arm node OR an owned+claimed grid node
-    const armNodes = Object.values(s.blocknodes).filter((n) => n.faction === faction);
+    // Must be adjacent (Chebyshev ≤ 1) to a tier arm node OR an owned+claimed grid node
+    const armNodes = Object.values(s.blocknodes).filter((n) => n.tier === tier);
     const adjacentToArm = armNodes.some(
       (n) => Math.abs(n.cx - cx) <= 1 && Math.abs(n.cy - cy) <= 1
     );
@@ -875,7 +875,7 @@ export const useGameStore = create<GameState>((set) => ({
       cy,
       state: "mined",
       ownerId: null,
-      faction,
+      tier,
       mineCpuCost: MINE_GRID_CPU_COST,
     };
     set((state) => ({
@@ -912,15 +912,15 @@ export const useGameStore = create<GameState>((set) => ({
     return true;
   },
 
-  setVisibleFactions: (factions) => set({ visibleFactions: factions }),
+  setVisibleTiers: (tiers) => set({ visibleTiers: tiers }),
 
-  setCurrentUserFaction: (faction) => set({ currentUserFaction: faction }),
+  setCurrentUserTier: (tier) => set({ currentUserTier: tier }),
 
-  revealFaction: (faction) =>
+  revealTier: (tier) =>
     set((s) => ({
-      visibleFactions: s.visibleFactions.includes(faction)
-        ? s.visibleFactions
-        : [...s.visibleFactions, faction],
+      visibleTiers: s.visibleTiers.includes(tier)
+        ? s.visibleTiers
+        : [...s.visibleTiers, tier],
     })),
 
   setDevRevealAll: (on) => set({ devRevealAll: on }),
@@ -928,7 +928,7 @@ export const useGameStore = create<GameState>((set) => ({
   syncBlocknodeFromSupabase: (node) =>
     set((s) => ({
       blocknodes: { ...s.blocknodes, [node.id]: node },
-      // visibleFactions not auto-updated — controlled explicitly
+      // visibleTiers not auto-updated — controlled explicitly
     })),
 
   reset: () => {

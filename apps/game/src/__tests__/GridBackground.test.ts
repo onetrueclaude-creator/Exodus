@@ -55,16 +55,15 @@ vi.mock("pixi.js", () => {
 import {
   createGridBackground,
   updateGridBackground,
-  FACTION_COLORS,
+  TIER_COLORS,
 } from "@/components/grid/GridBackground";
 import { buildAllCells } from "@/lib/lattice";
 
-describe("FACTION_COLORS", () => {
-  it("all 4 factions have colors defined", () => {
-    expect(FACTION_COLORS.community).toBe(0x0d9488); // teal
-    expect(FACTION_COLORS.treasury).toBe(0xdc2680);  // pink (Machines)
-    expect(FACTION_COLORS.founder).toBe(0xf59e0b);   // amber
-    expect(FACTION_COLORS["pro-max"]).toBe(0x3b82f6); // blue (Professional)
+describe("TIER_COLORS", () => {
+  it("all 3 tiers have colors defined", () => {
+    expect(TIER_COLORS.community).toBe(0x0d9488); // teal
+    expect(TIER_COLORS.professional).toBe(0x3b82f6); // blue
+    expect(TIER_COLORS.founder).toBe(0xf59e0b); // amber
   });
 });
 

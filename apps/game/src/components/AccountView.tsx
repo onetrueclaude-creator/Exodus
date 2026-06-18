@@ -247,7 +247,9 @@ export default function AccountView() {
               <h2 className="text-lg font-heading font-bold text-text-primary tracking-wide">Vesting Schedule</h2>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard label="Faction" value={vesting.faction} valueClass="text-text-primary capitalize" />
+              {/* Chain serves the player's identity in vesting.faction (server contract
+                  field, not renamed here); displayed as the unified "Tier" label. */}
+              <StatCard label="Tier" value={vesting.faction} valueClass="text-text-primary capitalize" />
               <StatCard label="Total Allocation" value={String(vesting.total_allocation)} valueClass="text-accent-cyan" />
               <StatCard label="Vested" value={String(vesting.vested)} valueClass="text-emerald-400" />
               <StatCard label="Locked" value={String(vesting.locked)} valueClass="text-yellow-400" />

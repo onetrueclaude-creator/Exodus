@@ -21,28 +21,73 @@ import { TestnetChainService } from "@/services/testnetChainService";
 import { isTestnetOnline, getSettings } from "@/services/testnetApi";
 import { useChainWebSocket } from "@/hooks/useChainWebSocket";
 import type { SubscriptionTier } from "@/types";
-import type { FactionId } from "@/types";
+import type { Tier } from "@/types";
+import { TIER_TINT } from "@/types";
 import { SUBSCRIPTION_PLANS } from "@/types/subscription";
 import { createCellInternal, getCellDensity, CELL_SIZE } from "@/lib/lattice";
 import { getNextSpawnCell } from "@/lib/spawn";
 import { visualToChain } from "@/services/testnetChainService";
 
-/** Map subscription tier to faction arm */
-const SUBSCRIPTION_FACTION: Record<SubscriptionTier, FactionId | null> = {
+/** Map subscription tier to default player Tier identity. */
+const SUBSCRIPTION_TIER_MAP: Record<SubscriptionTier, Tier> = {
   COMMUNITY: "community",
-  PROFESSIONAL: "pro-max",
+  PROFESSIONAL: "professional",
 };
 
-/** Dev-only faction colors — for factions not available to players */
-const DEV_FACTION_COLOR: Record<FactionId, number> = {
-  community: 0xffffff,
-  "pro-max": 0x00ffff,
-  founder: 0xf59e0b, // amber
-  treasury: 0xdc2680, // pink (Machines)
+/** Empire border tint per player Tier (PixiJS color number). */
+const DEV_TIER_COLOR: Record<Tier, number> = {
+  community: TIER_TINT.community,
+  professional: TIER_TINT.professional,
+  founder: TIER_TINT.founder, // amber
 };
 
 /** Block time on chain — refresh grid every 60 seconds to sync with ledger */
 const CHAIN_SYNC_INTERVAL_MS = 60_000;
+
+/**
+ * dev/demo seed — replace with real chain claims later.
+ * Injects a handful of neighbour player nodes directly into the Zustand store so
+ * the orbital graph is populated around the player's own (isSelf) homenode. These
+ * are store-only and dev-only — NOT a chain change. Each neighbour gets its own
+ * userId so seatsFromAgents treats it as a claimed player (not the self/origin).
+ */
+function seedDemoNeighbors(): void {
+  const demo: Array<{ tier: Tier; activity: number }> = [
+    { tier: "community", activity: 80 },
+    { tier: "professional", activity: 65 },
+    { tier: "community", activity: 40 },
+    { tier: "professional", activity: 25 },
+    { tier: "community", activity: 12 },
+  ];
+  const addAgent = useGameStore.getState().addAgent;
+  demo.forEach((d, i) => {
+    const id = `demo-neighbor-${i}`;
+    addAgent({
+      id,
+      userId: `demo-user-${i}`, // distinct from the player → seated as a neighbour
+      position: { x: (i + 1) * CELL_SIZE * 2, y: ((i % 2 === 0 ? 1 : -1) * (i + 1)) * CELL_SIZE * 2 },
+      level: 1,
+      miningCpu: 0,
+      securingCpu: 0,
+      levelingUntilTurn: null,
+      isPrimary: true,
+      planets: [],
+      createdAt: Date.now(),
+      username: `Neighbor ${i + 1}`,
+      borderRadius: 64,
+      borderPressure: 0,
+      cpuPerTurn: 0,
+      miningRate: 0,
+      energyLimit: 0,
+      stakedCpu: 0,
+      density: 0.5,
+      storageSlots: 1,
+      tier: d.tier,
+      activity: d.activity,
+      isSelf: false,
+    });
+  });
+}
 
 export default function GamePage() {
   const addAgent = useGameStore((s) => s.addAgent);
@@ -66,8 +111,8 @@ export default function GamePage() {
   const setInitializing = useGameStore((s) => s.setInitializing);
   const initLattice = useGameStore((s) => s.initLattice);
   const claimBlocknode = useGameStore((s) => s.claimBlocknode);
-  const setCurrentUserFaction = useGameStore((s) => s.setCurrentUserFaction);
-  const revealFaction = useGameStore((s) => s.revealFaction);
+  const setCurrentUserTier = useGameStore((s) => s.setCurrentUserTier);
+  const revealTier = useGameStore((s) => s.revealTier);
   const chainMode = useGameStore((s) => s.chainMode);
 
   // Connect WebSocket when in testnet mode
@@ -176,27 +221,36 @@ export default function GamePage() {
         // Center camera on homenode
         useGameStore.getState().setCamera(homenode.position, 2);
       } else {
-        // New user — read dev-selected tier + faction (dev mode) or default to COMMUNITY
+        // New user — read dev-selected player Tier + subscription (dev mode).
+        // INSECURE dev-only: tier must become server-authoritative (sub-project B);
+        // localStorage is client-spoofable.
         const devTierRaw = typeof window !== "undefined" ? localStorage.getItem("dev_tier") : null;
-        const devFactionRaw = typeof window !== "undefined" ? localStorage.getItem("dev_faction") : null;
-        const devTier = (devTierRaw as SubscriptionTier | null) ?? "COMMUNITY";
-        const plan = SUBSCRIPTION_PLANS.find((p) => p.tier === devTier) ?? SUBSCRIPTION_PLANS[0];
-
-        // Dev faction override — allows testing founder/treasury factions regardless of tier
-        const devFaction = (devFactionRaw as FactionId | null);
+        const devSubRaw = typeof window !== "undefined" ? localStorage.getItem("dev_subscription") : null;
+        // Subscription tier is a separate concept (resources/CPU plan), still
+        // selectable in dev via the dev_subscription key. Defaults to Professional
+        // so the dev has ample CPU for the founder homenode.
+        const devSub = (devSubRaw as SubscriptionTier | null) ?? "PROFESSIONAL";
+        const plan = SUBSCRIPTION_PLANS.find((p) => p.tier === devSub) ?? SUBSCRIPTION_PLANS[0];
+        // Player Tier identity. Resolution order:
+        //   1. explicit dev_tier (player chose a tier)
+        //   2. dev_subscription → tier mapping, but ONLY when dev_subscription was set
+        //      explicitly (otherwise this would mask the Founder default below)
+        //   3. Founder — the dev default, so the crown/marker path runs out of the box
+        const newUserTier: Tier =
+          (devTierRaw as Tier | null) ??
+          (devSubRaw ? SUBSCRIPTION_TIER_MAP[devSub] : "founder");
 
         const newUserId = `user-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-        const newUserFaction: FactionId = devFaction ?? SUBSCRIPTION_FACTION[devTier] ?? "community";
         useGameStore.setState({
           currentUserId: newUserId,
           energy: plan.startEnergy,
           agntcBalance: plan.startAgntc + 1, // +1 genesis airdrop
           minerals: plan.startMinerals,
-          empireColor: DEV_FACTION_COLOR[newUserFaction],
+          empireColor: DEV_TIER_COLOR[newUserTier],
           cpuRegenPerTurn: plan.cpuRegen,
         });
-        // Open-grid spawn: faction first, then claim the next available origin-out cell.
-        useGameStore.setState({ currentUserFaction: newUserFaction });
+        // Open-grid spawn: set tier first, then claim the next available origin-out cell.
+        useGameStore.setState({ currentUserTier: newUserTier });
         let blocknodes = useGameStore.getState().blocknodes;
         const spawn = getNextSpawnCell(blocknodes);
         if (!spawn) {
@@ -217,7 +271,8 @@ export default function GamePage() {
         }
         const claimedCell = useGameStore.getState().blocknodes[homeCellId];
 
-        // Create a homenode agent so the terminal works immediately
+        // Create a homenode agent so the terminal works immediately.
+        // isSelf + tier drive the "Your Homenode" marker in the orbital renderer.
         const homenodeAgent: import("@/types").Agent = {
           id: homeCellId,
           userId: newUserId,
@@ -238,9 +293,21 @@ export default function GamePage() {
           stakedCpu: 0,
           density: getCellDensity(claimedCell.cx, claimedCell.cy),
           storageSlots: 1,
+          isSelf: true,
+          tier: newUserTier,
+          activity: 100, // high activity → seated near the core
         };
         addAgent(homenodeAgent);
         setCurrentUser(newUserId, homeCellId);
+
+        // dev/demo seed — replace with real chain claims later.
+        // Inject a handful of neighbour player nodes (store-only, NOT a chain change)
+        // so the orbit is populated and the player's own node is visibly marked
+        // against real neighbours. Skipped in production (only dev hits this branch).
+        if (isDev) {
+          seedDemoNeighbors();
+        }
+
         useGameStore.getState().setCamera(
           { x: claimedCell.cx * CELL_SIZE, y: -claimedCell.cy * CELL_SIZE },
           2
@@ -252,15 +319,14 @@ export default function GamePage() {
         if (!isDev) {
           setActiveDockPanel("terminal");
         }
-        setCurrentUserFaction(newUserFaction);
-        revealFaction(newUserFaction);
+        setCurrentUserTier(newUserTier);
+        revealTier(newUserTier);
 
-        // Dev mode: reveal all factions so the full grid is visible
+        // Dev mode: reveal all tiers so the full grid is visible
         if (isDev) {
-          revealFaction("community");
-          revealFaction("pro-max");
-          revealFaction("founder");
-          revealFaction("treasury");
+          revealTier("community");
+          revealTier("professional");
+          revealTier("founder");
         }
       }
 
@@ -361,14 +427,14 @@ export default function GamePage() {
             const density = getCellDensity(tooltip.cx, tooltip.cy);
             const cellKey = `cell-${tooltip.cx}-${tooltip.cy}`;
             const node = useGameStore.getState().blocknodes[cellKey];
-            // faction comes from the cell itself (open-grid: no spatial faction zones)
-            const faction = node?.faction ?? null;
-            if (!faction) return null;
+            // tier comes from the cell itself (open-grid: no spatial tier zones)
+            const tier = node?.tier ?? null;
+            if (!tier) return null;
             return (
               <CellTooltip
                 cx={tooltip.cx}
                 cy={tooltip.cy}
-                faction={faction}
+                tier={tier}
                 density={density}
                 owner={node?.ownerId ?? null}
                 screenX={tooltip.screenX}

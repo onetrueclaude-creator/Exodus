@@ -343,7 +343,7 @@ export default function AgentChat({ agent, onClose, onDeploy, onFocusNode, chain
   const actions = AGENT_ACTIONS[agentNodeTier];
 
   // Deploy targets: empire-blob adjacency via computeDeployCandidates — no
-  // faction/quadrant gate, sorted by Chebyshev distance from homenode.
+  // tier/quadrant gate, sorted by Chebyshev distance from homenode.
   // Clicking/hovering uses blocknode IDs so the focus useEffect's path A
   // (cellToPixel) centers the camera on a *visible* cell.
   const nearbyUnclaimed = useMemo(() => {

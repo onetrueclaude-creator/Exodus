@@ -49,4 +49,18 @@ describe("seatsFromAgents", () => {
     expect(seats).toHaveLength(1);
     expect(seats[0].id).toBe(SINGULARITY_ID);
   });
+
+  it("carries isSelf and an explicit tier onto the seat (homenode marker)", () => {
+    const seats = seatsFromAgents([
+      { id: "me", userId: "owner", activity: 10, isSelf: true, tier: "founder" },
+      { id: "other", userId: "owner2", activity: 5 }, // no explicit tier → hashed colour
+    ]);
+    const me = seats.find((s) => s.id === "me")!;
+    expect(me.isSelf).toBe(true);
+    expect(me.tier).toBe("founder");
+    const other = seats.find((s) => s.id === "other")!;
+    expect(other.isSelf).toBeFalsy();
+    // hashed fallback still yields a valid player tier
+    expect(["community", "professional", "founder"]).toContain(other.tier);
+  });
 });

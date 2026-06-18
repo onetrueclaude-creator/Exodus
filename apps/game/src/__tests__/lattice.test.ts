@@ -6,7 +6,7 @@ import {
   buildAllCells,
   buildCellsForRing,
   getCellDensity,
-  FACTIONS,
+  TIERS,
   createCellInternal,
   setCellOwner,
   clearCellOwner,
@@ -77,44 +77,50 @@ describe("getCellsForRing — open grid", () => {
   });
 });
 
+describe("TIERS", () => {
+  it("enumerates the three player tiers", () => {
+    expect(TIERS).toEqual(["community", "professional", "founder"]);
+  });
+});
+
 describe("createCell — open grid", () => {
-  it("creates an origin cell (0,0) with faction null", () => {
+  it("creates an origin cell (0,0) with tier null", () => {
     const cell = createCellInternal(0, 0, 0);
     expect(cell.cx).toBe(0);
     expect(cell.cy).toBe(0);
-    expect(cell.faction).toBeNull();
+    expect(cell.tier).toBeNull();
     expect(cell.ownerId).toBeNull();
     expect(cell.secureStrength).toBeCloseTo(100, 0); // density 1.0 at origin
   });
 
-  it("creates axis cells with faction null", () => {
-    expect(createCellInternal(0, 5, 5).faction).toBeNull();
-    expect(createCellInternal(5, 0, 5).faction).toBeNull();
-    expect(createCellInternal(-3, 0, 3).faction).toBeNull();
+  it("creates axis cells with tier null", () => {
+    expect(createCellInternal(0, 5, 5).tier).toBeNull();
+    expect(createCellInternal(5, 0, 5).tier).toBeNull();
+    expect(createCellInternal(-3, 0, 3).tier).toBeNull();
   });
 
-  it("creates non-axis cells with faction null (no quadrant binding)", () => {
-    expect(createCellInternal(1, 1, 1).faction).toBeNull();
-    expect(createCellInternal(-2, 3, 3).faction).toBeNull();
+  it("creates non-axis cells with tier null (no quadrant binding)", () => {
+    expect(createCellInternal(1, 1, 1).tier).toBeNull();
+    expect(createCellInternal(-2, 3, 3).tier).toBeNull();
   });
 });
 
 describe("setCellOwner / clearCellOwner", () => {
-  it("setCellOwner returns new cell with owner + faction set", () => {
+  it("setCellOwner returns new cell with owner + tier set", () => {
     const c = createCellInternal(2, 3, 3);
     const owned = setCellOwner(c, "user-abc", "community");
     expect(owned.ownerId).toBe("user-abc");
-    expect(owned.faction).toBe("community");
+    expect(owned.tier).toBe("community");
     expect(c.ownerId).toBeNull(); // original unchanged (pure)
-    expect(c.faction).toBeNull();
+    expect(c.tier).toBeNull();
   });
 
-  it("clearCellOwner returns new cell with owner + faction cleared", () => {
+  it("clearCellOwner returns new cell with owner + tier cleared", () => {
     const c = createCellInternal(2, 3, 3);
     const owned = setCellOwner(c, "user-abc", "community");
     const cleared = clearCellOwner(owned);
     expect(cleared.ownerId).toBeNull();
-    expect(cleared.faction).toBeNull();
+    expect(cleared.tier).toBeNull();
     expect(owned.ownerId).toBe("user-abc"); // pure
   });
 });

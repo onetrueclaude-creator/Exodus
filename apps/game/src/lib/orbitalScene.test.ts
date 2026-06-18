@@ -3,10 +3,10 @@ import { buildScene } from "./orbitalScene";
 import type { SeatInput } from "../types/orbital";
 
 const seats: SeatInput[] = [
-  { id: "core", faction: "singularity", isSingularity: true, activity: 0 },
-  { id: "p1", faction: "community", activity: 90 },
-  { id: "p2", faction: "professional", activity: 50 },
-  { id: "p2-a", faction: "professional", parentId: "p2", activity: 0 },
+  { id: "core", tier: "singularity", isSingularity: true, activity: 0 },
+  { id: "p1", tier: "community", activity: 90 },
+  { id: "p2", tier: "professional", activity: 50 },
+  { id: "p2-a", tier: "professional", parentId: "p2", activity: 0 },
 ];
 
 describe("buildScene", () => {
@@ -34,5 +34,19 @@ describe("buildScene", () => {
     const fam = s.edges.filter((e) => e.kind === "family");
     expect(fam.length).toBe(1);
     expect(fam[0].alpha).toBeGreaterThan(0.5);
+  });
+
+  it("carries isSelf + tier through to the scene node (homenode marker)", () => {
+    const withSelf: SeatInput[] = [
+      { id: "core", tier: "singularity", isSingularity: true, activity: 0 },
+      { id: "me", tier: "founder", isSelf: true, activity: 99 },
+    ];
+    const s = buildScene(withSelf, { radialScale: 24 });
+    const me = s.nodes.find((n) => n.id === "me")!;
+    expect(me.isSelf).toBe(true);
+    expect(me.tier).toBe("founder");
+    // the singularity core is never the player's self node
+    const core = s.nodes.find((n) => n.id === "core")!;
+    expect(core.isSelf).toBeFalsy();
   });
 });

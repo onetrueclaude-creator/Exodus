@@ -3,52 +3,46 @@
 import { useState } from "react";
 import { useGameStore } from "@/store";
 import { MINE_GRID_CPU_COST, CLAIM_GRID_AGNTC_COST } from "@/store/gameStore";
-import type { FactionId, BlockNode } from "@/types";
+import type { Tier, BlockNode } from "@/types";
 
-/** Voronoi: nearest arm node's faction for a given cell. Mirrors the store helper. */
-function computeCellFaction(
+/** Voronoi: nearest arm node's tier for a given cell. Mirrors the store helper. */
+function computeCellTier(
   cx: number,
   cy: number,
   blocknodes: Record<string, BlockNode>
-): FactionId | null {
+): Tier | null {
   const nodes = Object.values(blocknodes);
   if (nodes.length === 0) return null;
   let minDist = Infinity;
-  let nearest: FactionId | null = null;
+  let nearest: Tier | null = null;
   for (const node of nodes) {
     const d = (node.cx - cx) ** 2 + (node.cy - cy) ** 2;
     if (d < minDist) {
       minDist = d;
-      nearest = node.faction;
+      nearest = node.tier;
     }
   }
   return nearest;
 }
 
-const FACTION_STYLE: Record<string, { text: string; border: string; bg: string; label: string }> = {
+const TIER_STYLE: Record<string, { text: string; border: string; bg: string; label: string }> = {
   community: {
-    text: "text-white",
-    border: "border-white/30",
-    bg: "bg-white/5",
+    text: "text-teal-400",
+    border: "border-teal-400/40",
+    bg: "bg-teal-400/5",
     label: "Community",
   },
-  treasury: {
-    text: "text-orange-400",
-    border: "border-orange-400/40",
-    bg: "bg-orange-400/5",
-    label: "Treasury",
+  professional: {
+    text: "text-blue-400",
+    border: "border-blue-400/40",
+    bg: "bg-blue-400/5",
+    label: "Professional",
   },
   founder: {
-    text: "text-fuchsia-400",
-    border: "border-fuchsia-400/40",
-    bg: "bg-fuchsia-400/5",
-    label: "Founder",
-  },
-  "pro-max": {
-    text: "text-cyan-400",
-    border: "border-cyan-400/40",
-    bg: "bg-cyan-400/5",
-    label: "Pro/Max",
+    text: "text-amber-400",
+    border: "border-amber-400/40",
+    bg: "bg-amber-400/5",
+    label: "Founder \u{1F451}",
   },
 };
 
@@ -65,7 +59,7 @@ export default function GridNodePanel({ cx, cy, onClose }: GridNodePanelProps) {
   const gridNodes = useGameStore((s) => s.gridNodes);
   const totalBlocksMined = useGameStore((s) => s.totalBlocksMined);
   const currentUserId = useGameStore((s) => s.currentUserId);
-  const currentUserFaction = useGameStore((s) => s.currentUserFaction);
+  const currentUserTier = useGameStore((s) => s.currentUserTier);
   const energy = useGameStore((s) => s.energy);
   const agntcBalance = useGameStore((s) => s.agntcBalance);
   const mineGridNode = useGameStore((s) => s.mineGridNode);
@@ -78,8 +72,8 @@ export default function GridNodePanel({ cx, cy, onClose }: GridNodePanelProps) {
   const isArmCell = Object.values(blocknodes).some((n) => n.cx === cx && n.cy === cy);
   if (isArmCell) return null;
 
-  const faction = gridNode?.faction ?? computeCellFaction(cx, cy, blocknodes);
-  const style = FACTION_STYLE[faction ?? "community"] ?? FACTION_STYLE.community;
+  const tier = gridNode?.tier ?? computeCellTier(cx, cy, blocknodes);
+  const style = TIER_STYLE[tier ?? "community"] ?? TIER_STYLE.community;
 
   const nodeState = gridNode?.state ?? "available";
   const isOwnedByMe = gridNode?.ownerId === currentUserId;
@@ -87,10 +81,10 @@ export default function GridNodePanel({ cx, cy, onClose }: GridNodePanelProps) {
   // Range check: mineable range expands one ring per block
   const mineableRange = Math.max(1, totalBlocksMined + 1);
   const inRange = Math.abs(cx) <= mineableRange && Math.abs(cy) <= mineableRange;
-  const inUserFaction = faction === currentUserFaction;
+  const inUserTier = tier === currentUserTier;
 
   // Adjacency preview (mirrors store logic — actual guard is authoritative)
-  const armNodes = Object.values(blocknodes).filter((n) => n.faction === currentUserFaction);
+  const armNodes = Object.values(blocknodes).filter((n) => n.tier === currentUserTier);
   const adjacentToArm = armNodes.some((n) => Math.abs(n.cx - cx) <= 1 && Math.abs(n.cy - cy) <= 1);
   const ownedGrid = Object.values(gridNodes).filter(
     (n) => n.ownerId === currentUserId && n.state === "claimed"
@@ -103,7 +97,7 @@ export default function GridNodePanel({ cx, cy, onClose }: GridNodePanelProps) {
   const canMine =
     nodeState === "available" &&
     inRange &&
-    inUserFaction &&
+    inUserTier &&
     isAdjacent &&
     energy >= MINE_GRID_CPU_COST &&
     !!currentUserId;
@@ -177,9 +171,9 @@ export default function GridNodePanel({ cx, cy, onClose }: GridNodePanelProps) {
             <div className="text-[10px] text-text-muted/40 font-mono text-center py-1.5 border border-card-border/30 rounded-lg">
               Outside mineable range (max ±{mineableRange})
             </div>
-          ) : !inUserFaction ? (
+          ) : !inUserTier ? (
             <div className="text-[10px] text-red-400/50 font-mono text-center py-1">
-              Foreign territory — not your faction
+              Foreign territory — not your tier
             </div>
           ) : !isAdjacent ? (
             <div className="text-[10px] text-text-muted/40 font-mono text-center py-1.5 border border-card-border/30 rounded-lg">

@@ -33,7 +33,7 @@ function addOriginCell(map: Record<string, BlockNode>): Record<string, BlockNode
     ringIndex: 0,
     cx: 0,
     cy: 0,
-    faction: null,
+    tier: null,
     secureStrength: 100,
     ownerId: null,
     stakedCpu: 0,
