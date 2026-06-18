@@ -41,7 +41,13 @@ export function seatsFromAgents(agents: readonly SeatAgent[]): SeatInput[] {
     if (!isSubagent && !isClaimedPlayer) continue; // drop unclaimed slots + the origin
     seats.push({
       id: a.id,
-      tier: a.tier ?? tierByHash(a.id),
+      // Subagents are TIER-LESS: they belong to their parent player and must not
+      // carry (or be coloured by) a player Tier. We deliberately do NOT assign a
+      // per-id `tierByHash` tier to a child — only top-level players get one. The
+      // placeholder "community" here is structural (SeatInput.tier is required);
+      // downstream consumers key off `parentId` and ignore a subagent's tier,
+      // rendering the neutral SUBAGENT_TINT marker instead.
+      tier: isSubagent ? "community" : (a.tier ?? tierByHash(a.id)),
       parentId: a.parentAgentId,
       isSelf: a.isSelf,
       activity: a.activity ?? (a.stakedCpu ?? 0) + (a.securingCpu ?? 0),

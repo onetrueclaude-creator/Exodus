@@ -1,5 +1,6 @@
 import type { Agent, Tier } from "@/types";
 import { TIER_LABELS, TIER_CROWN, TIER_TINT } from "@/types";
+import { SUBAGENT_TINT } from "@/types/orbital";
 import { SINGULARITY_ID, seatsFromAgents } from "@/lib/orbitalSeats";
 import { assignRanks } from "@/lib/rankMapping";
 import { bandOf } from "@/lib/orbitalGeometry";
@@ -17,7 +18,7 @@ export type InspectorModel =
       tint: number;
     }
   | {
-      kind: "player" | "subagent";
+      kind: "player";
       title: string; // short id (or "Your Homenode")
       isSelf: boolean;
       tier: Tier;
@@ -27,6 +28,20 @@ export type InspectorModel =
       rank: number;
       band: number;
       owner: string; // short owner id
+      activity: number;
+    }
+  | {
+      // Subagents are TIER-LESS: they belong to their parent player and carry no
+      // Tier of their own, so the model omits tier/tierLabel/crown entirely. The
+      // inspector renders "Subagent" + owner/parent, never a Tier row.
+      kind: "subagent";
+      title: string; // short id
+      isSelf: boolean;
+      tint: number; // neutral subagent marker
+      rank: number; // subagents inherit 0 (not seated by rank)
+      band: number;
+      owner: string; // short owner id (the parent player's owner)
+      parent: string; // short id of the parent player node
       activity: number;
     };
 
@@ -71,6 +86,26 @@ export function inspectorModelFor(
       .map((s) => ({ id: s.id, activity: s.activity, isSingularity: s.isSingularity }))
   );
   const rank = ranks.get(focusedNodeId) ?? 0;
+  const isSubagent = !!agent.parentAgentId;
+  const isSelf = !!agent.isSelf;
+  const activity = agent.activity ?? (agent.stakedCpu ?? 0) + (agent.securingCpu ?? 0);
+
+  // Subagents are TIER-LESS: omit all Tier fields and render a neutral marker.
+  // Identity is their owner + the parent player they belong to.
+  if (isSubagent) {
+    return {
+      kind: "subagent",
+      title: shortId(focusedNodeId),
+      isSelf,
+      tint: SUBAGENT_TINT,
+      rank,
+      band: bandOf(rank),
+      owner: shortId(agent.userId || "unknown"),
+      parent: shortId(agent.parentAgentId as string),
+      activity,
+    };
+  }
+
   const seat = seats.find((s) => s.id === focusedNodeId);
   // Normalize to a valid player Tier — guards against stray values (e.g. a
   // SubscriptionTier or unset field) that would otherwise yield an undefined tint.
@@ -79,11 +114,9 @@ export function inspectorModelFor(
     rawTier === "community" || rawTier === "professional" || rawTier === "founder"
       ? rawTier
       : "community";
-  const isSubagent = !!agent.parentAgentId;
-  const isSelf = !!agent.isSelf;
 
   return {
-    kind: isSubagent ? "subagent" : "player",
+    kind: "player",
     title: isSelf ? "Your Homenode" : shortId(focusedNodeId),
     isSelf,
     tier,
@@ -93,6 +126,6 @@ export function inspectorModelFor(
     rank,
     band: bandOf(rank),
     owner: shortId(agent.userId || "unknown"),
-    activity: agent.activity ?? (agent.stakedCpu ?? 0) + (agent.securingCpu ?? 0),
+    activity,
   };
 }

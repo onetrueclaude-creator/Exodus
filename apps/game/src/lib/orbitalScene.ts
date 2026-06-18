@@ -1,20 +1,27 @@
 import { phylloPos, bandOf } from "./orbitalGeometry";
 import { assignRanks, type RankInput } from "./rankMapping";
-import { TIER_TINT, type SeatInput, type SceneModel, type SceneNode, type SceneEdge } from "../types/orbital";
+import { TIER_TINT, SUBAGENT_TINT, type SeatInput, type SceneModel, type SceneNode, type SceneEdge } from "../types/orbital";
 
 export interface SceneOpts {
   radialScale: number; // c in radius=c·√k
   corePadding?: number; // free space around the Singularity (default 0)
-  subagentOrbitFraction?: number; // default 0.4 of radialScale
+  subagentOrbitFraction?: number; // multiple of radialScale for the subagent orbit (default SUBAGENT_ORBIT_FRACTION)
 }
 
 const PLAYER_R = 7;
 const SUBAGENT_R = 4;
 const SINGULARITY_R = 13;
 
+/**
+ * Default subagent orbit radius as a multiple of `radialScale`. Subagents sit on
+ * a ring this far from their parent. Bumped from 0.4 → 1.1 so spawned subagents
+ * appear clearly away from the homenode (they were spawning visually on top of it).
+ */
+export const SUBAGENT_ORBIT_FRACTION = 1.1;
+
 export function buildScene(seats: readonly SeatInput[], opts: SceneOpts): SceneModel {
   const c = opts.radialScale;
-  const orbit = (opts.subagentOrbitFraction ?? 0.4) * c;
+  const orbit = (opts.subagentOrbitFraction ?? SUBAGENT_ORBIT_FRACTION) * c;
 
   const rankInput: RankInput[] = seats
     .filter((s) => !s.parentId)
@@ -59,7 +66,10 @@ export function buildScene(seats: readonly SeatInput[], opts: SceneOpts): SceneM
       const x = base.x + orbit * Math.cos(a);
       const y = base.y + orbit * Math.sin(a);
       posById.set(kid.id, { x, y });
-      nodes.push({ id: kid.id, x, y, radius: SUBAGENT_R, tint: TIER_TINT[kid.tier], kind: "subagent", isSelf: kid.isSelf, tier: kid.tier });
+      // Subagents are tier-less: render a neutral marker (SUBAGENT_TINT) and carry
+      // NO tier on the scene node, so nothing downstream colours/labels them as a
+      // player Tier. Identity is conveyed via the family edge to the parent.
+      nodes.push({ id: kid.id, x, y, radius: SUBAGENT_R, tint: SUBAGENT_TINT, kind: "subagent", isSelf: kid.isSelf });
       edges.push({ x1: base.x, y1: base.y, x2: x, y2: y, alpha: 0.85, kind: "family" });
     });
   }

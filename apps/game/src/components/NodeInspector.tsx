@@ -98,7 +98,9 @@ export default function NodeInspector() {
           <span className="text-[11px] font-bold tracking-wide text-text-primary truncate font-mono">
             {model.kind === "singularity"
               ? "SINGULARITY"
-              : `${model.crown ? model.crown + " " : ""}${model.title}`}
+              : model.kind === "player"
+                ? `${model.crown ? model.crown + " " : ""}${model.title}`
+                : model.title /* subagent — tier-less, no crown */}
           </span>
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -140,7 +142,7 @@ export default function NodeInspector() {
             <div className="text-[10px] font-mono text-emerald-400/90 pt-0.5">{log}</div>
           )}
         </div>
-      ) : (
+      ) : model.kind === "player" ? (
         <div className="space-y-1">
           {model.isSelf && (
             <div className="text-[10px] font-bold text-accent-cyan mb-1.5 tracking-wide">
@@ -148,9 +150,17 @@ export default function NodeInspector() {
             </div>
           )}
           <InspectorRow label="Tier" value={`${model.crown ? model.crown + " " : ""}${model.tierLabel}`} />
-          <InspectorRow label="Kind" value={model.kind === "subagent" ? "Subagent" : "Player"} />
+          <InspectorRow label="Kind" value="Player" />
           <InspectorRow label="Rank" value={`#${model.rank}`} />
           <InspectorRow label="Band" value={String(model.band)} />
+          <InspectorRow label="Activity" value={String(model.activity)} />
+          <InspectorRow label="Owner" value={model.owner} mono />
+        </div>
+      ) : (
+        /* Subagent — tier-less: no Tier row. Shows owner + the parent it belongs to. */
+        <div className="space-y-1">
+          <InspectorRow label="Kind" value="Subagent" />
+          <InspectorRow label="Parent" value={model.parent} mono />
           <InspectorRow label="Activity" value={String(model.activity)} />
           <InspectorRow label="Owner" value={model.owner} mono />
         </div>

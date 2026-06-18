@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { buildScene } from "./orbitalScene";
+import { buildScene, SUBAGENT_ORBIT_FRACTION } from "./orbitalScene";
+import { SUBAGENT_TINT, TIER_TINT } from "../types/orbital";
 import type { SeatInput } from "../types/orbital";
 
 const seats: SeatInput[] = [
@@ -22,12 +23,32 @@ describe("buildScene", () => {
     const p2 = s.nodes.find((n) => n.id === "p2")!;
     expect(Math.hypot(p1.x, p1.y)).toBeLessThan(Math.hypot(p2.x, p2.y));
   });
-  it("orbits subagents near their parent (within nearest-neighbour spacing)", () => {
-    const s = buildScene(seats, { radialScale: 24 });
+  it("orbits subagents at SUBAGENT_ORBIT_FRACTION × radialScale from their parent", () => {
+    const c = 24;
+    const s = buildScene(seats, { radialScale: c });
     const p2 = s.nodes.find((n) => n.id === "p2")!;
     const sub = s.nodes.find((n) => n.id === "p2-a")!;
     expect(sub.kind).toBe("subagent");
-    expect(Math.hypot(sub.x - p2.x, sub.y - p2.y)).toBeLessThan(24); // < radialScale
+    // Spawn distance is the configured fraction of radialScale (bumped well away
+    // from the homenode so a fresh subagent doesn't render on top of its parent).
+    expect(Math.hypot(sub.x - p2.x, sub.y - p2.y)).toBeCloseTo(SUBAGENT_ORBIT_FRACTION * c, 5);
+    expect(SUBAGENT_ORBIT_FRACTION).toBeGreaterThanOrEqual(1); // ≥ one ring out
+  });
+
+  it("renders subagents tier-less: neutral SUBAGENT_TINT, no player tier on the node", () => {
+    const s = buildScene(seats, { radialScale: 24 });
+    const sub = s.nodes.find((n) => n.id === "p2-a")!;
+    expect(sub.tint).toBe(SUBAGENT_TINT);
+    // never coloured by a player Tier, even though its seat had a placeholder tier
+    expect(sub.tint).not.toBe(TIER_TINT.professional);
+    expect(sub.tier).toBeUndefined();
+  });
+
+  it("respects an explicit subagentOrbitFraction override", () => {
+    const s = buildScene(seats, { radialScale: 24, subagentOrbitFraction: 0.5 });
+    const p2 = s.nodes.find((n) => n.id === "p2")!;
+    const sub = s.nodes.find((n) => n.id === "p2-a")!;
+    expect(Math.hypot(sub.x - p2.x, sub.y - p2.y)).toBeCloseTo(0.5 * 24, 5);
   });
   it("emits a permanent family edge parent→subagent", () => {
     const s = buildScene(seats, { radialScale: 24 });

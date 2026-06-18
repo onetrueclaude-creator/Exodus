@@ -57,7 +57,7 @@ describe("inspectorModelFor", () => {
     };
     const m = inspectorModelFor("me", agents);
     expect(m?.kind).toBe("player");
-    if (m && m.kind !== "singularity") {
+    if (m && m.kind === "player") {
       expect(m.title).toBe("Your Homenode");
       expect(m.isSelf).toBe(true);
       expect(m.tier).toBe("founder");
@@ -76,14 +76,39 @@ describe("inspectorModelFor", () => {
         id: "sub-1234567890",
         userId: "u1",
         parentAgentId: "parent",
-        tier: "community",
       }),
     };
     const m = inspectorModelFor("sub-1234567890", agents);
     expect(m?.kind).toBe("subagent");
-    if (m && m.kind !== "singularity") {
+    if (m && m.kind === "subagent") {
       expect(m.title).toBe("sub-1234"); // first 8 chars
       expect(m.isSelf).toBe(false);
+    }
+  });
+
+  it("subagents are TIER-LESS: the model carries no tier/tierLabel/crown, only owner + parent", () => {
+    const agents: Record<string, Agent> = {
+      "parent-aaaa": agent({ id: "parent-aaaa", userId: "u1", activity: 50, tier: "professional" }),
+      "sub-bbbbbbbb": agent({
+        id: "sub-bbbbbbbb",
+        userId: "u1",
+        parentAgentId: "parent-aaaa",
+        // even if a stray tier slipped onto the agent, a subagent must not surface it
+        tier: "professional",
+      }),
+    };
+    const m = inspectorModelFor("sub-bbbbbbbb", agents);
+    expect(m?.kind).toBe("subagent");
+    if (m && m.kind === "subagent") {
+      // no Tier fields exist on a subagent model
+      expect("tier" in m).toBe(false);
+      expect("tierLabel" in m).toBe(false);
+      expect("crown" in m).toBe(false);
+      // it shows the parent it belongs to + the owner
+      expect(m.parent).toBe("parent-a"); // first 8 chars of parent-aaaa
+      expect(m.owner).toBe("u1");
+      // and a neutral (non-tier) tint
+      expect(m.tint).not.toBe(TIER_TINT.professional);
     }
   });
 
@@ -120,7 +145,7 @@ describe("inspectorModelFor", () => {
       x: agent({ id: "x", userId: "o", tier: "PROFESSIONAL" as unknown as Agent["tier"] }),
     };
     const m = inspectorModelFor("x", agents);
-    if (m && m.kind !== "singularity") {
+    if (m && m.kind === "player") {
       expect(typeof m.tint).toBe("number"); // defined → tintToCss won't crash
       expect(m.tier).toBe("community"); // invalid → safe fallback
     }

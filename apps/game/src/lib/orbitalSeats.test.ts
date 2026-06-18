@@ -44,6 +44,32 @@ describe("seatsFromAgents", () => {
     expect(sub?.parentId).toBe("p1");
   });
 
+  it("does NOT assign a per-id (hashed) player tier to a subagent", () => {
+    // Two subagents whose ids would hash to DIFFERENT player tiers if tierByHash
+    // were applied. Tier-less subagents must instead share the fixed placeholder,
+    // so neither carries a varied/hashed player Tier.
+    const seats = seatsFromAgents([
+      { id: "parent", userId: "o", activity: 10 },
+      { id: "sub-aaaa", userId: "o", parentAgentId: "parent", activity: 0 },
+      { id: "sub-zzzz", userId: "o", parentAgentId: "parent", activity: 0 },
+    ]);
+    const a = seats.find((s) => s.id === "sub-aaaa")!;
+    const z = seats.find((s) => s.id === "sub-zzzz")!;
+    // Both subagents resolve to the same (placeholder) tier — proof no per-id hash
+    // was applied (tierByHash would very likely diverge for these two ids).
+    expect(a.tier).toBe(z.tier);
+  });
+
+  it("ignores an explicit tier on a subagent (subagents are tier-less)", () => {
+    const seats = seatsFromAgents([
+      { id: "parent", userId: "o", activity: 10 },
+      // even if the chain/store hands a tier to a child, the seat must drop it
+      { id: "sub1", userId: "o", parentAgentId: "parent", activity: 0, tier: "founder" },
+    ]);
+    const sub = seats.find((s) => s.id === "sub1")!;
+    expect(sub.tier).not.toBe("founder");
+  });
+
   it("seats only the core when there are no claimed players", () => {
     const seats = seatsFromAgents([{ id: "slot1", userId: "" }, { id: "slot2", userId: "" }]);
     expect(seats).toHaveLength(1);
