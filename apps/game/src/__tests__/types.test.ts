@@ -6,7 +6,7 @@ import type {
   HaikuMessage,
   DiplomaticState,
   BlockNode,
-  FactionId,
+  Tier,
   CellCoord,
   LatticeState,
 } from "@/types";
@@ -78,20 +78,20 @@ describe("Type definitions", () => {
       ringIndex: 0,
       cx: -1,
       cy: -1,
-      faction: "community",
+      tier: "community",
       secureStrength: 100,
       ownerId: null,
       stakedCpu: 0,
       cumulativeSecures: 0,
     };
-    expect(node.faction).toBe("community");
+    expect(node.tier).toBe("community");
     expect(node.ringIndex).toBe(0);
     expect(node.ownerId).toBeNull();
   });
 
-  it("should allow all FactionId values", () => {
-    const factions: FactionId[] = ["community", "treasury", "founder", "pro-max"];
-    expect(factions).toHaveLength(4);
+  it("should allow all Tier values", () => {
+    const tiers: Tier[] = ["community", "professional", "founder"];
+    expect(tiers).toHaveLength(3);
   });
 
   it("should allow creating a valid CellCoord", () => {
@@ -107,7 +107,7 @@ describe("Type definitions", () => {
       ringIndex: 0,
       cx: -1,
       cy: -1,
-      faction: "community",
+      tier: "community",
       secureStrength: 100,
       ownerId: null,
       stakedCpu: 0,
@@ -117,9 +117,9 @@ describe("Type definitions", () => {
       blocknodes: { "block-0-community": node },
       gridNodes: {},
       totalBlocksMined: 1,
-      visibleFactions: ["community"],
+      visibleTiers: ["community"],
     };
     expect(state.totalBlocksMined).toBe(1);
-    expect(state.visibleFactions).toContain("community");
+    expect(state.visibleTiers).toContain("community");
   });
 });

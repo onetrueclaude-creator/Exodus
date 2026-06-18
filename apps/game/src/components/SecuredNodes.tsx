@@ -88,8 +88,9 @@ export default function SecuredNodes({ onFocusNode }: SecuredNodesProps) {
                       {TIER_DISPLAY_NAME[getNodeTier(agent.level)]}
                     </span>
                   </div>
+                  {/* Coordinates retired (orbital rank-seat model). Show seat/role instead. */}
                   <div className="text-[9px] text-text-muted/40" style={{ fontFamily: "'Fira Code', monospace" }}>
-                    ({agent.position.x.toFixed(0)}, {agent.position.y.toFixed(0)})
+                    {agent.rank ? `rank #${agent.rank}` : agent.isPrimary ? 'Homenode' : 'Subagent'}
                   </div>
                 </div>
               </div>

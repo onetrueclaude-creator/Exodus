@@ -169,12 +169,11 @@ export function setNodeDimmed(container: Container, dimmed: boolean): void {
   container.alpha = dimmed ? 0.4 : 1.0;
 }
 
-/** Blocknode colors by faction */
+/** Blocknode colors by player Tier */
 const BLOCKNODE_COLORS: Record<string, number> = {
   community: 0x0d9488, // teal
-  treasury: 0xdc2680,  // pink (Machines)
-  founder: 0xf59e0b,   // amber
-  "pro-max": 0x3b82f6, // blue (Professional)
+  professional: 0x3b82f6, // blue
+  founder: 0xf59e0b, // amber
 };
 
 /**
@@ -184,7 +183,7 @@ const BLOCKNODE_COLORS: Record<string, number> = {
  * Unclaimed nodes are dimmer; claimed nodes have a claim ring.
  *
  * @param node The blocknode to render
- * @param isVisible Whether this node's faction is visible (affects fog)
+ * @param isVisible Whether this node's tier is visible (affects fog)
  */
 export function createBlockNode(
   node: BlockNode,
@@ -197,7 +196,7 @@ export function createBlockNode(
   const { px, py } = cellToPixel(node.cx, node.cy);
   container.position.set(px, py);
 
-  const color = (node.faction ? BLOCKNODE_COLORS[node.faction] : null) ?? 0xffffff;
+  const color = (node.tier ? BLOCKNODE_COLORS[node.tier] : null) ?? 0xffffff;
   const strengthFraction = Math.min(1, node.secureStrength / 100);
 
   // Scale radius 3px (min strength) to 8px (max strength)

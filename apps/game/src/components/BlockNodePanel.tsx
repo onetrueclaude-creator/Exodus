@@ -4,30 +4,24 @@ import { useGameStore } from "@/store";
 import { getNodeTier, TIER_DISPLAY_NAME } from "@/lib/nodeTier";
 import type { BlockNode } from "@/types";
 
-const FACTION_STYLE: Record<string, { text: string; border: string; bg: string; label: string }> = {
+const TIER_STYLE: Record<string, { text: string; border: string; bg: string; label: string }> = {
   community: {
     text: "text-teal-400",
     border: "border-teal-400/30",
     bg: "bg-teal-400/5",
     label: "Community",
   },
-  treasury: {
-    text: "text-pink-400",
-    border: "border-pink-400/30",
-    bg: "bg-pink-400/5",
-    label: "Machines",
+  professional: {
+    text: "text-blue-400",
+    border: "border-blue-400/30",
+    bg: "bg-blue-400/5",
+    label: "Professional",
   },
   founder: {
     text: "text-amber-400",
     border: "border-amber-400/30",
     bg: "bg-amber-400/5",
-    label: "Founders",
-  },
-  "pro-max": {
-    text: "text-blue-400",
-    border: "border-blue-400/30",
-    bg: "bg-blue-400/5",
-    label: "Professional",
+    label: "Founder \u{1F451}",
   },
 };
 
@@ -51,7 +45,7 @@ export default function BlockNodePanel({ node, onClose }: BlockNodePanelProps) {
   const levelLabel = agentAtCell
     ? ` · Lv ${agentAtCell.level} ${TIER_DISPLAY_NAME[getNodeTier(agentAtCell.level)]}`
     : "";
-  const style = node.faction ? (FACTION_STYLE[node.faction] ?? UNCLAIMED_STYLE) : UNCLAIMED_STYLE;
+  const style = node.tier ? (TIER_STYLE[node.tier] ?? UNCLAIMED_STYLE) : UNCLAIMED_STYLE;
   const isOwned = node.ownerId !== null;
   const isOwnedByMe = node.ownerId === currentUserId;
 

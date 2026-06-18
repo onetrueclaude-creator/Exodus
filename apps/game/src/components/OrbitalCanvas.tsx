@@ -1,18 +1,19 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { Application, Container, Graphics, Sprite, type Texture } from "pixi.js";
+import { Application, Container, Graphics, Sprite, Circle, type Texture } from "pixi.js";
 import { useGameStore } from "@/store/gameStore";
 import { buildScene } from "@/lib/orbitalScene";
 import { assignRanks } from "@/lib/rankMapping";
 import { bandOf } from "@/lib/orbitalGeometry";
 import { step, DEFAULT_PHYSICS, type PhysicsBody } from "@/lib/orbitalPhysics";
 import { seatsFromAgents, SINGULARITY_ID } from "@/lib/orbitalSeats";
+import { edgeAlpha, EDGE_FADE_BLOCKS } from "@/lib/orbitalEdges";
 import type { SeatInput } from "@/types/orbital";
 
 const RADIAL_SCALE = 46; // px per √k — wider spacing so subnodes have room
 const CORE_PADDING = 56; // free space between the Singularity and rank-1
-const CORE_HALO = 38; // faint ring framing the core's padding
-const DIM_ALPHA = 0.16; // non-focused node/edge dimming
+const SING_CORE_TEX_R = 32; // black-hole texture core radius (sprite-scale unit)
+const DIM_ALPHA = 0.6; // non-focused nodes recede gently (stay clearly visible) — focus is shown by a selection ring + edge glow, not a harsh dim
 const ZOOM_MIN = 0.2;
 const ZOOM_MAX = 4;
 const ZOOM_STEP = 0.0015;
@@ -22,8 +23,15 @@ function seatsFromStore(): SeatInput[] {
   return seatsFromAgents(Object.values(useGameStore.getState().agents));
 }
 
-type BodyVM = PhysicsBody & { id: string; sprite: Sprite; baseScale: number };
-type NodeMeta = { rank: number; band: number; faction: string; kind: string };
+type BodyVM = PhysicsBody & {
+  id: string;
+  kind: string; // "player" | "subagent" | "singularity" — gates drag (subagents only)
+  sprite: Sprite;
+  baseScale: number;
+  coreR: number; // visual core radius (world px) for the focus ring — excludes the Singularity corona
+  selfRing?: Graphics; // subtle ring drawn around the player's own node
+};
+type NodeMeta = { rank: number; band: number; tier: string; kind: string; isSelf?: boolean };
 type PointerLike = { global: { x: number; y: number }; target?: unknown };
 
 export default function OrbitalCanvas() {
@@ -95,6 +103,25 @@ export default function OrbitalCanvas() {
       });
       circle.destroy();
 
+      // Singularity black-hole texture: a faint violet corona, a bright purple
+      // accretion ring, and a near-black eclipsed core. Core radius == SING_CORE_TEX_R
+      // so it shares the sprite-scale convention. Rendered untinted.
+      const bh = new Graphics();
+      for (let i = 7; i >= 1; i--) {
+        // corona — concentric translucent rings fading outward to ~3.5× the core
+        bh.circle(0, 0, SING_CORE_TEX_R * (1 + i * 0.36)).fill({ color: 0x2a0a55, alpha: 0.05 });
+      }
+      bh.circle(0, 0, SING_CORE_TEX_R * 1.34).fill({ color: 0x7c3aed, alpha: 0.55 }); // outer accretion
+      bh.circle(0, 0, SING_CORE_TEX_R * 1.2).fill({ color: 0xc084fc, alpha: 0.95 }); // inner accretion (bright)
+      bh.circle(0, 0, SING_CORE_TEX_R).fill({ color: 0x050009, alpha: 1 }); // eclipsed core (near-black)
+      bh.circle(0, 0, SING_CORE_TEX_R * 1.06).stroke({ width: SING_CORE_TEX_R * 0.09, color: 0xe9d5ff, alpha: 0.85 }); // hot rim
+      bh.circle(0, 0, SING_CORE_TEX_R).stroke({ width: SING_CORE_TEX_R * 0.06, color: 0x6d28d9, alpha: 0.45 }); // violet inner edge
+      const singTex: Texture = a.renderer.generateTexture({
+        target: bh,
+        resolution: Math.max(2, (window.devicePixelRatio || 1) * 2),
+      });
+      bh.destroy();
+
       let bodies: BodyVM[] = [];
       let byId = new Map<string, BodyVM>();
       let familyPairs: Array<[string, string]> = [];
@@ -105,6 +132,20 @@ export default function OrbitalCanvas() {
       // focus (ego-network) state
       let focusedId: string | null = null;
       let focusSet: Set<string> | null = null;
+
+      // ---- subagent drag state ----
+      // Subagents are user-repositionable: a node-level drag (distinct from the
+      // empty-space camera pan) moves the dragged subagent's body + anchor so the
+      // physics tether holds it at its new spot. Screen→world deltas divide by zoom.
+      let dragId: string | null = null; // the subagent currently being dragged
+      let dragMoved = false; // crossed the click→drag threshold (suppresses the tap)
+      let dragStartX = 0; // pointer screen pos at drag start
+      let dragStartY = 0;
+      let dragBodyX = 0; // body world pos at drag start
+      let dragBodyY = 0;
+      // Persisted drop positions for dragged subagents — survive rebuild() so a focus
+      // click (or any store update) doesn't snap a moved subagent back to its seat.
+      const draggedPos = new Map<string, { x: number; y: number }>();
 
       const computeFocusSet = (): void => {
         if (!focusedId) {
@@ -131,13 +172,14 @@ export default function OrbitalCanvas() {
         focusedId = null;
         computeFocusSet();
         applyFocus();
+        useGameStore.getState().setFocusedNode(null); // sync the inspector toast
       };
 
       const rebuild = () => {
         const seats = seatsFromStore();
         const scene = buildScene(seats, { radialScale: RADIAL_SCALE, corePadding: CORE_PADDING });
 
-        // meta (rank/band/faction) for tooltips + relationships for focus
+        // meta (rank/band/tier) for tooltips + relationships for focus
         const ranks = assignRanks(
           seats.filter((s) => !s.parentId).map((s) => ({ id: s.id, activity: s.activity, isSingularity: s.isSingularity })),
         );
@@ -149,8 +191,9 @@ export default function OrbitalCanvas() {
           metaById.set(s.id, {
             rank: r,
             band: bandOf(r),
-            faction: s.faction,
+            tier: s.tier,
             kind: s.isSingularity ? "singularity" : s.parentId ? "subagent" : "player",
+            isSelf: s.isSelf,
           });
           if (s.parentId) {
             parentByChild.set(s.id, s.parentId);
@@ -162,16 +205,44 @@ export default function OrbitalCanvas() {
 
         nodeLayer.removeChildren();
         bodies = scene.nodes.map((n) => {
-          const baseScale = n.radius / 32;
-          const dot = new Sprite(tex);
+          const isSing = n.kind === "singularity";
+          // Singularity = the black-hole texture (untinted, larger so the corona
+          // reads as the focal core); players/subagents = the shared tinted circle.
+          const baseScale = isSing ? (n.radius * 1.7) / SING_CORE_TEX_R : n.radius / 32;
+          const dot = new Sprite(isSing ? singTex : tex);
           dot.anchor.set(0.5);
-          dot.tint = n.tint;
+          dot.tint = isSing ? 0xffffff : n.tint;
           dot.scale.set(baseScale);
+          // Hit areas (local/pre-scale coords; on-screen radius = r × baseScale):
+          //  - Singularity → clip to its visible disc so its faint corona doesn't swallow
+          //    neighbouring clicks.
+          //  - everything else → a generous target (≥14px on screen) so small nodes,
+          //    especially sub-agents, are easy to click and DRAG. A bare 4px dot is
+          //    nearly ungrabbable.
+          dot.hitArea = isSing
+            ? new Circle(0, 0, SING_CORE_TEX_R * 1.34)
+            : new Circle(0, 0, Math.max(32, 14 / baseScale));
           dot.eventMode = "static";
           dot.cursor = "pointer";
           nodeLayer.addChild(dot);
+          // Visual core radius (world px) for the focus ring — excludes the corona.
+          const coreR = isSing ? baseScale * SING_CORE_TEX_R * 1.34 : dot.height / 2;
+
+          // "Your homenode" marker: a subtle ring so the player can find their own
+          // node in the orbit (text badge removed per design). Synced every tick().
+          let selfRing: Graphics | undefined;
+          if (n.isSelf) {
+            const r = n.radius;
+            selfRing = new Graphics()
+              .circle(0, 0, r + 5)
+              .stroke({ width: 2.5, color: 0xffffff, alpha: 0.95 })
+              .circle(0, 0, r + 9)
+              .stroke({ width: 1, color: 0x5eead4, alpha: 0.6 });
+            nodeLayer.addChild(selfRing);
+          }
           const b: BodyVM = {
             id: n.id,
+            kind: n.kind,
             x: n.x,
             y: n.y,
             vx: 0,
@@ -182,18 +253,31 @@ export default function OrbitalCanvas() {
             anchorStrength: 0.6,
             sprite: dot,
             baseScale,
+            coreR,
+            selfRing,
           };
+          // Restore a persisted drag position so a rebuild() (focus click, chain sync)
+          // keeps a moved subagent where the user dropped it instead of re-seating it.
+          const persisted = draggedPos.get(n.id);
+          if (persisted) {
+            b.x = persisted.x;
+            b.y = persisted.y;
+            b.anchor = { x: persisted.x, y: persisted.y };
+          }
           dot.on("pointerover", (e: PointerLike) => {
             if (panning) return;
-            dot.scale.set(baseScale * 1.4);
+            if (!isSing) dot.scale.set(baseScale * 1.4); // no hover-embiggen on the Singularity
             const m = metaById.get(n.id);
-            const short = n.id === SINGULARITY_ID ? "Singularity" : n.id.slice(0, 8);
+            // "Your homenode" is identity enough for the player's own node — omit the
+            // raw id (a dev-seed id like "cell-0-0" reads coordinate-like; coordinates
+            // are retired, nodes are rank-seats). Other nodes show their short id.
+            const label = m?.isSelf ? "Your homenode" : n.id.slice(0, 8);
             tip.textContent =
               m?.kind === "singularity"
                 ? "Singularity · gateway + accumulator"
                 : m?.kind === "subagent"
-                  ? `${short} · subagent`
-                  : `${short} · rank ${m?.rank} · band ${m?.band} · ${m?.faction}`;
+                  ? "Sub-agent" // coordinate-free: ids are cell-keyed in mock mode
+                  : `${label} · rank ${m?.rank} · band ${m?.band} · ${m?.tier}`;
             tip.style.left = `${e.global.x}px`;
             tip.style.top = `${e.global.y}px`;
             tip.style.display = "block";
@@ -202,10 +286,34 @@ export default function OrbitalCanvas() {
             dot.scale.set(baseScale);
             tip.style.display = "none";
           });
+          // Any node pointerdown starts a fresh gesture → clear a stale drag-suppress
+          // flag so a tap on THIS node isn't eaten by a previous subagent drag.
+          // Subagents additionally begin a node-level drag (players/Singularity don't
+          // drag — they fall through to focus-on-tap only). stopPropagation keeps the
+          // stage's empty-space pan handler from also firing.
+          dot.on("pointerdown", (e: PointerLike) => {
+            dragMoved = false;
+            if (n.kind !== "subagent") return;
+            dragId = n.id;
+            dragStartX = e.global.x;
+            dragStartY = e.global.y;
+            dragBodyX = b.x;
+            dragBodyY = b.y;
+            b.pinned = true; // freeze physics on the dragged body for a solid drag
+            a.canvas.style.cursor = "grabbing";
+            const ev = e as unknown as { stopPropagation?: () => void };
+            ev.stopPropagation?.();
+          });
           dot.on("pointertap", () => {
+            if (dragMoved) {
+              dragMoved = false; // consume the just-ended drag; the next tap is live
+              return; // a drag just ended — don't toggle focus
+            }
             focusedId = focusedId === n.id ? null : n.id;
             computeFocusSet();
             applyFocus();
+            // Drive the store-backed NodeInspector toast (incl. the Singularity core).
+            useGameStore.getState().setFocusedNode(focusedId);
           });
           return b;
         });
@@ -218,9 +326,12 @@ export default function OrbitalCanvas() {
 
       const tick = () => {
         step(bodies, [], a.ticker.deltaMS / 1000, { ...DEFAULT_PHYSICS, anchorK: 0.8 });
-        for (const b of bodies) b.sprite.position.set(cx() + b.x, cy() + b.y);
+        for (const b of bodies) {
+          b.sprite.position.set(cx() + b.x, cy() + b.y);
+          // Keep the self-marker ring glued to the player's own node.
+          if (b.selfRing) b.selfRing.position.set(cx() + b.x, cy() + b.y);
+        }
         edgeG.clear();
-        edgeG.circle(cx(), cy(), CORE_HALO).stroke({ width: 1, color: 0xa855f7, alpha: 0.22 });
         for (const [pid, kid] of familyPairs) {
           const p = byId.get(pid);
           const k = byId.get(kid);
@@ -229,12 +340,48 @@ export default function OrbitalCanvas() {
           edgeG
             .moveTo(cx() + p.x, cy() + p.y)
             .lineTo(cx() + k.x, cy() + k.y)
-            .stroke({ width: 1.4, color: 0x5eead4, alpha: lit ? 0.8 : 0.1 });
+            .stroke({ width: 1.4, color: 0x5eead4, alpha: lit ? 0.9 : 0.4 });
+        }
+        // Decaying interaction "link" edges (e.g. homenode → Singularity ops).
+        // Age = turns since the action; alpha fades to 0 over EDGE_FADE_BLOCKS.
+        const ix = useGameStore.getState().interactionEdges;
+        if (ix.length) {
+          const turn = useGameStore.getState().turn;
+          for (const e of ix) {
+            const from = byId.get(e.from);
+            const to = byId.get(e.to);
+            if (!from || !to) continue;
+            const alpha = edgeAlpha(turn - e.bornAt, 0.9, EDGE_FADE_BLOCKS);
+            if (alpha <= 0) continue;
+            edgeG
+              .moveTo(cx() + from.x, cy() + from.y)
+              .lineTo(cx() + to.x, cy() + to.y)
+              .stroke({ width: 1.6, color: 0xc084fc, alpha });
+          }
+        }
+        // Soft selection ring on the focused node — the primary focus signal
+        // (replaces the old harsh dim-everything; non-focused nodes now only recede gently).
+        if (focusedId) {
+          const f = byId.get(focusedId);
+          if (f) {
+            edgeG
+              .circle(cx() + f.x, cy() + f.y, f.coreR + 6)
+              .stroke({ width: 2, color: 0x93c5fd, alpha: 0.9 });
+          }
         }
       };
 
       rebuild();
-      const unsub = useGameStore.subscribe(rebuild);
+      // Rebuild only when the agent set actually changes (the store replaces `agents`
+      // immutably). Other store updates — notably setFocusedNode on a click — must NOT
+      // rebuild, or they'd reset dragged subagents to their phyllotaxis seats.
+      let lastAgents = useGameStore.getState().agents;
+      const unsub = useGameStore.subscribe(() => {
+        const next = useGameStore.getState().agents;
+        if (next === lastAgents) return;
+        lastAgents = next;
+        rebuild();
+      });
       cleanup.push(unsub);
       a.ticker.add(tick);
 
@@ -258,6 +405,26 @@ export default function OrbitalCanvas() {
         a.canvas.style.cursor = "grabbing";
       });
       a.stage.on("pointermove", (e: PointerLike) => {
+        // Subagent drag takes priority over panning (a drag started on a node).
+        if (dragId) {
+          const ddx = e.global.x - dragStartX;
+          const ddy = e.global.y - dragStartY;
+          if (ddx * ddx + ddy * ddy > 25) dragMoved = true;
+          const body = byId.get(dragId);
+          if (body) {
+            // Screen delta → world delta (the world is scaled by zoom).
+            const wx = dragBodyX + ddx / zoom;
+            const wy = dragBodyY + ddy / zoom;
+            body.x = wx;
+            body.y = wy;
+            body.vx = 0;
+            body.vy = 0;
+            // Re-anchor so the phyllotaxis tether holds the new position instead
+            // of springing the subagent back to its spawn seat.
+            body.anchor = { x: wx, y: wy };
+          }
+          return;
+        }
         if (!panning) return;
         const ddx = e.global.x - panStartX;
         const ddy = e.global.y - panStartY;
@@ -266,7 +433,23 @@ export default function OrbitalCanvas() {
         camY = camStartY + ddy;
         applyCamera();
       });
+      const endDrag = () => {
+        if (!dragId) return;
+        const body = byId.get(dragId);
+        if (body) {
+          body.pinned = false; // hand the body back to the physics tether (anchored at the drop spot)
+          draggedPos.set(dragId, { x: body.x, y: body.y }); // persist the drop across rebuilds
+        }
+        dragId = null;
+        a.canvas.style.cursor = "";
+        // Leave dragMoved set so the trailing pointertap is suppressed; the next
+        // pointerdown resets it.
+      };
       const endPan = (clicked: boolean) => {
+        if (dragId) {
+          endDrag();
+          return;
+        }
         if (!panning) return;
         panning = false;
         a.canvas.style.cursor = "";

@@ -2,77 +2,63 @@
 
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { SUBSCRIPTION_PLANS } from "@/types/subscription";
 import { logAction } from "@/lib/actionLogger";
 import type { SubscriptionTier } from "@/types/subscription";
-import type { FactionId } from "@/types";
+import type { Tier } from "@/types";
 
 const IS_DEV = process.env.NODE_ENV === "development";
 
-/** All 4 factions for dev testing — includes closed factions (founder, treasury) */
-const DEV_FACTIONS: {
-  faction: FactionId;
-  tier: SubscriptionTier;
+/** Player Tiers for dev testing — Founder is dev-only (closed). */
+const DEV_TIERS: {
+  tier: Tier;
+  subscription: SubscriptionTier;
   name: string;
   label: string;
   energy: number;
   agntc: number;
-  arm: string;
   accent: string;
   closed?: boolean;
 }[] = [
   {
-    faction: "community",
-    tier: "COMMUNITY",
+    tier: "community",
+    subscription: "COMMUNITY",
     name: "Community",
     label: "Free",
     energy: 1000,
     agntc: 10,
-    arm: "NW arm",
     accent: "text-teal-400 border-teal-400/30 bg-teal-400/5",
   },
   {
-    faction: "pro-max",
-    tier: "PROFESSIONAL",
+    tier: "professional",
+    subscription: "PROFESSIONAL",
     name: "Professional",
     label: "$50/mo",
     energy: 5000,
     agntc: 100,
-    arm: "SW arm",
     accent: "text-blue-400 border-blue-400/30 bg-blue-400/5",
   },
   {
-    faction: "founder",
-    tier: "PROFESSIONAL",
-    name: "Founders",
+    tier: "founder",
+    subscription: "PROFESSIONAL",
+    name: "Founder \u{1F451}",
     label: "Closed",
     energy: 20000,
     agntc: 500,
-    arm: "SE arm",
     accent: "text-amber-400 border-amber-400/30 bg-amber-400/5",
-    closed: true,
-  },
-  {
-    faction: "treasury",
-    tier: "PROFESSIONAL",
-    name: "Machines",
-    label: "Closed",
-    energy: 50000,
-    agntc: 1000,
-    arm: "NE arm",
-    accent: "text-pink-400 border-pink-400/30 bg-pink-400/5",
     closed: true,
   },
 ];
 
-/** Development entry point — choose faction, skip auth */
-function DevFactionSelect() {
+/** Development entry point — choose player Tier, skip auth */
+function DevTierSelect() {
   const router = useRouter();
 
-  const handleSelect = (f: typeof DEV_FACTIONS[number]) => {
-    logAction('click', `Faction selected: ${f.name}`, `faction=${f.faction} tier=${f.tier} energy=${f.energy}`);
-    localStorage.setItem("dev_tier", f.tier);
-    localStorage.setItem("dev_faction", f.faction);
+  const handleSelect = (t: typeof DEV_TIERS[number]) => {
+    logAction('click', `Tier selected: ${t.name}`, `tier=${t.tier} subscription=${t.subscription} energy=${t.energy}`);
+    // INSECURE dev-only: tier must become server-authoritative (sub-project B);
+    // localStorage is client-spoofable.
+    localStorage.setItem("dev_tier", t.tier);
+    localStorage.setItem("dev_subscription", t.subscription);
     router.push("/game");
   };
 
@@ -80,7 +66,7 @@ function DevFactionSelect() {
     <main className="min-h-screen flex flex-col items-center justify-center bg-background relative">
       <div className="flex flex-col items-center w-full max-w-lg px-6">
         <div className="mb-4 text-[10px] font-mono text-yellow-500/70 tracking-widest uppercase border border-yellow-500/20 rounded px-3 py-1">
-          {'\u25C8'} Dev Mode — Closed Factions Selectable
+          {'\u25C8'} Dev Mode — Closed Tiers Selectable
         </div>
 
         <h1
@@ -89,15 +75,15 @@ function DevFactionSelect() {
         >
           ZK Agentic Network
         </h1>
-        <p className="text-[13px] text-text-muted mb-8">Choose your faction to enter the testnet</p>
+        <p className="text-[13px] text-text-muted mb-8">Choose your tier to enter the testnet</p>
 
         <div className="w-full grid gap-3">
-          {DEV_FACTIONS.map((f) => {
-            const [textClass, borderClass, bgClass] = f.accent.split(" ");
+          {DEV_TIERS.map((t) => {
+            const [textClass, borderClass, bgClass] = t.accent.split(" ");
             return (
               <button
-                key={f.faction}
-                onClick={() => handleSelect(f)}
+                key={t.tier}
+                onClick={() => handleSelect(t)}
                 className={`w-full text-left p-5 rounded-xl border ${borderClass} ${bgClass} hover:bg-white/[0.04] transition-all duration-200 group`}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -106,9 +92,9 @@ function DevFactionSelect() {
                       className={`text-[15px] font-semibold ${textClass}`}
                       style={{ fontFamily: "'Outfit', sans-serif" }}
                     >
-                      {f.name}
+                      {t.name}
                     </span>
-                    {f.closed && (
+                    {t.closed && (
                       <span className="text-[9px] font-mono text-yellow-500/60 bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20">
                         DEV ONLY
                       </span>
@@ -118,16 +104,15 @@ function DevFactionSelect() {
                     className={`text-[13px] font-semibold ${textClass}`}
                     style={{ fontFamily: "'Fira Code', monospace" }}
                   >
-                    {f.label}
+                    {t.label}
                   </span>
                 </div>
                 <div
                   className="flex gap-4 text-[10px] text-text-muted/50"
                   style={{ fontFamily: "'Fira Code', monospace" }}
                 >
-                  <span>{f.energy.toLocaleString()} CPU</span>
-                  <span>{f.agntc} AGNTC</span>
-                  <span className="text-text-muted/30">{f.arm}</span>
+                  <span>{t.energy.toLocaleString()} CPU</span>
+                  <span>{t.agntc} AGNTC</span>
                 </div>
               </button>
             );
@@ -135,7 +120,7 @@ function DevFactionSelect() {
         </div>
 
         <p className="mt-6 text-[11px] text-text-muted/30 text-center max-w-sm">
-          Faction stored in localStorage. Clear it to pick a different one on next visit.
+          Tier stored in localStorage. Clear it to pick a different one on next visit.
         </p>
       </div>
 
@@ -225,5 +210,5 @@ function ProductionLanding() {
 }
 
 export default function Home() {
-  return IS_DEV ? <DevFactionSelect /> : <ProductionLanding />;
+  return IS_DEV ? <DevTierSelect /> : <ProductionLanding />;
 }

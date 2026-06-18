@@ -6,7 +6,8 @@ import { getNodeCpuPerTurn } from "@/lib/nodeTier";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { sciFormat } from "@/lib/format";
 import { DeltaFlash } from "@/components/DeltaFlash";
-import type { FactionId } from "@/types";
+import type { Tier } from "@/types";
+import { TIER_LABELS, TIER_CROWN } from "@/types";
 
 function LiveClock() {
   const [time, setTime] = useState(new Date());
@@ -23,19 +24,17 @@ function LiveClock() {
   );
 }
 
-/** Faction colors and labels */
-const FACTION_DOT: Record<FactionId, string> = {
+/** Tier dot color + text color classes (labels come from shared TIER_LABELS). */
+const TIER_DOT: Record<Tier, string> = {
   community: "bg-teal-400",
-  treasury: "bg-pink-400",
+  professional: "bg-blue-400",
   founder: "bg-amber-400",
-  "pro-max": "bg-blue-400",
 };
 
-const FACTION_LABEL: Record<FactionId, string> = {
-  community: "Community",
-  treasury: "Machines",
-  founder: "Founders",
-  "pro-max": "Professional",
+const TIER_TEXT: Record<Tier, string> = {
+  community: "text-teal-300",
+  professional: "text-blue-300",
+  founder: "text-amber-300",
 };
 
 /** Turn countdown — ticks down from 10s to 0 each turn */
@@ -65,7 +64,7 @@ export default function ResourceBar() {
   const minerals = useGameStore((s) => s.minerals);
   const agntcBalance = useGameStore((s) => s.agntcBalance);
   const turn = useGameStore((s) => s.turn);
-  const currentUserFaction = useGameStore((s) => s.currentUserFaction);
+  const currentUserTier = useGameStore((s) => s.currentUserTier);
   const blocknodes = useGameStore((s) => s.blocknodes);
   const currentUserId = useGameStore((s) => s.currentUserId);
   const chainMode = useGameStore((s) => s.chainMode);
@@ -76,7 +75,7 @@ export default function ResourceBar() {
   const allAgents = useGameStore((s) => s.agents);
 
   const ownedBlocknodes = Object.values(blocknodes).filter((n) => n.ownerId === currentUserId);
-  const faction = currentUserFaction ?? "community";
+  const tier = currentUserTier ?? "community";
 
   // Sum per-node CPU contribution from all owned agents
   const ownedAgents = Object.values(allAgents).filter((a) => a.userId === currentUserId);
@@ -119,10 +118,12 @@ export default function ResourceBar() {
         )}
       </div>
 
-      {/* Faction indicator */}
+      {/* Tier indicator */}
       <div className="flex items-center gap-1.5" suppressHydrationWarning>
-        <div className={`w-2 h-2 rounded-full animate-pulse ${FACTION_DOT[faction]}`} suppressHydrationWarning />
-        <span className="text-sm font-heading text-text-primary" suppressHydrationWarning>{FACTION_LABEL[faction]} Faction</span>
+        <div className={`w-2 h-2 rounded-full animate-pulse ${TIER_DOT[tier]}`} suppressHydrationWarning />
+        <span className={`text-sm font-heading ${TIER_TEXT[tier]}`} suppressHydrationWarning>
+          {TIER_CROWN[tier] ? `${TIER_CROWN[tier]} ` : ""}{TIER_LABELS[tier]} Tier
+        </span>
         {ownedBlocknodes.length > 0 && (
           <span className="text-[10px] font-mono text-text-muted/60">
             {ownedBlocknodes.length} node{ownedBlocknodes.length !== 1 ? "s" : ""}

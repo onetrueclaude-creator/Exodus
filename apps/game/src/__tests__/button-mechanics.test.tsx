@@ -398,22 +398,22 @@ describe("ResourceBar", () => {
     expect(screen.queryByText("Mined")).toBeNull();
   });
 
-  it("renders faction label", () => {
-    useGameStore.getState().setCurrentUserFaction("community");
+  it("renders tier label", () => {
+    useGameStore.getState().setCurrentUserTier("community");
     render(<ResourceBar />);
-    expect(screen.getByText("Community Faction")).toBeDefined();
+    expect(screen.getByText("Community Tier")).toBeDefined();
   });
 
-  it("renders default community faction when faction is null", () => {
+  it("renders default community tier when tier is null", () => {
     useGameStore.getState().reset();
     render(<ResourceBar />);
-    expect(screen.getByText("Community Faction")).toBeDefined();
+    expect(screen.getByText("Community Tier")).toBeDefined();
   });
 
-  it("renders faction-specific label", () => {
-    useGameStore.getState().setCurrentUserFaction("pro-max");
+  it("renders tier-specific label", () => {
+    useGameStore.getState().setCurrentUserTier("professional");
     render(<ResourceBar />);
-    expect(screen.getByText("Professional Faction")).toBeDefined();
+    expect(screen.getByText("Professional Tier")).toBeDefined();
   });
 
   it("shows No wallet indicator when publicKey is null", () => {
