@@ -7,6 +7,7 @@ import { assignRanks } from "@/lib/rankMapping";
 import { bandOf } from "@/lib/orbitalGeometry";
 import { step, DEFAULT_PHYSICS, type PhysicsBody } from "@/lib/orbitalPhysics";
 import { seatsFromAgents, SINGULARITY_ID } from "@/lib/orbitalSeats";
+import { edgeAlpha, EDGE_FADE_BLOCKS } from "@/lib/orbitalEdges";
 import { TIER_LABELS, TIER_CROWN } from "@/types/grid";
 import type { SeatInput } from "@/types/orbital";
 
@@ -157,6 +158,7 @@ export default function OrbitalCanvas() {
         focusedId = null;
         computeFocusSet();
         applyFocus();
+        useGameStore.getState().setFocusedNode(null); // sync the inspector toast
       };
 
       const rebuild = () => {
@@ -271,6 +273,8 @@ export default function OrbitalCanvas() {
             focusedId = focusedId === n.id ? null : n.id;
             computeFocusSet();
             applyFocus();
+            // Drive the store-backed NodeInspector toast (incl. the Singularity core).
+            useGameStore.getState().setFocusedNode(focusedId);
           });
           return b;
         });
@@ -299,6 +303,23 @@ export default function OrbitalCanvas() {
             .moveTo(cx() + p.x, cy() + p.y)
             .lineTo(cx() + k.x, cy() + k.y)
             .stroke({ width: 1.4, color: 0x5eead4, alpha: lit ? 0.9 : 0.4 });
+        }
+        // Decaying interaction "link" edges (e.g. homenode → Singularity ops).
+        // Age = turns since the action; alpha fades to 0 over EDGE_FADE_BLOCKS.
+        const ix = useGameStore.getState().interactionEdges;
+        if (ix.length) {
+          const turn = useGameStore.getState().turn;
+          for (const e of ix) {
+            const from = byId.get(e.from);
+            const to = byId.get(e.to);
+            if (!from || !to) continue;
+            const alpha = edgeAlpha(turn - e.bornAt, 0.9, EDGE_FADE_BLOCKS);
+            if (alpha <= 0) continue;
+            edgeG
+              .moveTo(cx() + from.x, cy() + from.y)
+              .lineTo(cx() + to.x, cy() + to.y)
+              .stroke({ width: 1.6, color: 0xc084fc, alpha });
+          }
         }
         // Soft selection ring on the focused node — the primary focus signal
         // (replaces the old harsh dim-everything; non-focused nodes now only recede gently).

@@ -7,6 +7,7 @@ import type { ResearchProgress } from "@/types/research";
 import { RESEARCH_TREES } from "@/lib/research";
 import { buildCellsForRing, buildAllCells } from "@/lib/lattice";
 import { getNodeCpuPerTurn, getNodeTier as getNodeTierFromStore, getLevelUpCost, MINING_PRESETS } from "@/lib/nodeTier";
+import { EDGE_FADE_BLOCKS } from "@/lib/orbitalEdges";
 
 /** CPU Energy deducted per turn for each owned blocknode (maintenance cost) */
 export const NODE_CPU_PER_TURN = 1;
@@ -102,6 +103,12 @@ interface GameState {
   empireColor: number;
   activeDockPanel: DockPanelId | null;
   focusRequest: { nodeId: string; ts: number } | null;
+  /** Currently inspected orbital node (drives the NodeInspector toast). Synthetic
+   *  ids (e.g. the Singularity core) are allowed — this is decoupled from `agents`. */
+  focusedNodeId: string | null;
+  /** Decaying interaction "link" edges (e.g. homenode → Singularity ops). Rendered
+   *  in the orbital edge layer and faded out via orbitalEdges.edgeAlpha. */
+  interactionEdges: Array<{ from: string; to: string; bornAt: number }>;
 
   // Actions
   addAgent: (agent: Agent) => void;
@@ -160,6 +167,10 @@ interface GameState {
   switchAgent: (agentId: string) => void;
   requestFocus: (nodeId: string) => void;
   clearFocusRequest: () => void;
+  /** Set (or clear with null) the inspected orbital node for the NodeInspector. */
+  setFocusedNode: (nodeId: string | null) => void;
+  /** Append a decaying interaction link edge (bornAt = current turn for fade math). */
+  addInteractionEdge: (from: string, to: string) => void;
   allocateResearchEnergy: (researchId: string, amount: number) => boolean;
   unlockSkill: (skillId: string) => void;
   setMaxDeployTier: (tier: AgentTier) => void;
@@ -225,6 +236,8 @@ const initialState = {
   empireColor: 0xffffff, // default: Community tier white
   activeDockPanel: null as DockPanelId | null,
   focusRequest: null as { nodeId: string; ts: number } | null,
+  focusedNodeId: null as string | null,
+  interactionEdges: [] as Array<{ from: string; to: string; bornAt: number }>,
 };
 
 /** Voronoi: returns the nearest tier arm node's tier for a given cell coordinate. */
@@ -730,6 +743,18 @@ export const useGameStore = create<GameState>((set) => ({
   requestFocus: (nodeId) => set({ focusRequest: { nodeId, ts: Date.now() } }),
 
   clearFocusRequest: () => set({ focusRequest: null }),
+
+  setFocusedNode: (nodeId) => set({ focusedNodeId: nodeId }),
+
+  addInteractionEdge: (from, to) =>
+    set((s) => ({
+      // Stamp with the current turn so the edge layer can fade it via edgeAlpha.
+      // Drop edges older than the fade window + keep the list bounded.
+      interactionEdges: [
+        ...s.interactionEdges.filter((e) => s.turn - e.bornAt < EDGE_FADE_BLOCKS),
+        { from, to, bornAt: s.turn },
+      ].slice(-50),
+    })),
 
   allocateResearchEnergy: (researchId, amount) => {
     const s = useGameStore.getState();

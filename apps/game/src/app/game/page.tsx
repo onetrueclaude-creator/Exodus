@@ -10,6 +10,7 @@ import SkillsPanel from "@/components/SkillsPanel";
 import DockPanel from "@/components/DockPanel";
 import CellTooltip from "@/components/CellTooltip";
 import ScoresWidget from "@/components/ScoresWidget";
+import NodeInspector from "@/components/NodeInspector";
 import { startDebugListener } from "@/lib/debugListener";
 import dynamic from "next/dynamic";
 const DebugOverlay = dynamic(() => import("@/components/DebugOverlay"), { ssr: false });
@@ -385,6 +386,10 @@ export default function GamePage() {
           ) : (
             <LatticeGrid onSelectAgent={() => {}} onDeselect={() => {}} />
           )}
+
+          {/* Node inspector toast — top-right, store-driven (focusedNodeId).
+              Orbital view only; the legacy grid uses CellTooltip instead. */}
+          {orbital && <NodeInspector />}
 
           {/* Dock Panel — left edge */}
           <DockPanel
