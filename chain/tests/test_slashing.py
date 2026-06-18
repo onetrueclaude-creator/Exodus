@@ -152,3 +152,21 @@ class TestSlashingQueries:
 
         epoch_2 = engine.get_epoch_slashes(2)
         assert len(epoch_2) == 0
+
+
+def test_vault_proof_failure_reason_and_rate():
+    from agentic.economics.slashing import SlashReason, SLASH_RATES, SlashingEngine
+    from agentic.params import VAULT_SLASH_RATE
+
+    assert SlashReason.VAULT_PROOF_FAILURE.value == "vault_proof_failure"
+    assert SLASH_RATES[SlashReason.VAULT_PROOF_FAILURE] == VAULT_SLASH_RATE
+
+    engine = SlashingEngine()
+    ev = engine.slash(
+        validator_id=7,
+        reason=SlashReason.VAULT_PROOF_FAILURE,
+        staked_amount=1000,
+        epoch=3,
+    )
+    assert ev.amount_slashed == 100   # 10% of 1000
+    assert ev.burned is True

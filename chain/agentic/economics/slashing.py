@@ -12,6 +12,7 @@ class SlashReason(Enum):
     DOUBLE_SIGNING = "double_signing"                 # signing conflicting blocks
     LIVENESS_FAILURE = "liveness_failure"              # offline too long
     INVALID_PROOF = "invalid_proof"                    # submitting invalid ZK proof
+    VAULT_PROOF_FAILURE = "vault_proof_failure"        # failed/missed Proof-of-Vault challenge
 
 
 # Slash percentages of staked tokens
@@ -21,6 +22,7 @@ SLASH_RATES = {
     SlashReason.DOUBLE_SIGNING: 1.00,             # 100% -- critical
     SlashReason.LIVENESS_FAILURE: 0.01,           # 1% per epoch offline
     SlashReason.INVALID_PROOF: 0.10,              # 10% -- moderate
+    SlashReason.VAULT_PROOF_FAILURE: 0.10,        # 10% -- Proof-of-Vault miss (== params.VAULT_SLASH_RATE)
 }
 
 
