@@ -143,6 +143,9 @@ export default function OrbitalCanvas() {
       let dragStartY = 0;
       let dragBodyX = 0; // body world pos at drag start
       let dragBodyY = 0;
+      // Persisted drop positions for dragged subagents — survive rebuild() so a focus
+      // click (or any store update) doesn't snap a moved subagent back to its seat.
+      const draggedPos = new Map<string, { x: number; y: number }>();
 
       const computeFocusSet = (): void => {
         if (!focusedId) {
@@ -248,18 +251,28 @@ export default function OrbitalCanvas() {
             coreR,
             selfRing,
           };
+          // Restore a persisted drag position so a rebuild() (focus click, chain sync)
+          // keeps a moved subagent where the user dropped it instead of re-seating it.
+          const persisted = draggedPos.get(n.id);
+          if (persisted) {
+            b.x = persisted.x;
+            b.y = persisted.y;
+            b.anchor = { x: persisted.x, y: persisted.y };
+          }
           dot.on("pointerover", (e: PointerLike) => {
             if (panning) return;
             if (!isSing) dot.scale.set(baseScale * 1.4); // no hover-embiggen on the Singularity
             const m = metaById.get(n.id);
-            const short = n.id === SINGULARITY_ID ? "Singularity" : n.id.slice(0, 8);
-            const selfPrefix = m?.isSelf ? "Your homenode · " : "";
+            // "Your homenode" is identity enough for the player's own node — omit the
+            // raw id (a dev-seed id like "cell-0-0" reads coordinate-like; coordinates
+            // are retired, nodes are rank-seats). Other nodes show their short id.
+            const label = m?.isSelf ? "Your homenode" : n.id.slice(0, 8);
             tip.textContent =
               m?.kind === "singularity"
                 ? "Singularity · gateway + accumulator"
                 : m?.kind === "subagent"
-                  ? `${selfPrefix}${short} · subagent`
-                  : `${selfPrefix}${short} · rank ${m?.rank} · band ${m?.band} · ${m?.tier}`;
+                  ? "Sub-agent" // coordinate-free: ids are cell-keyed in mock mode
+                  : `${label} · rank ${m?.rank} · band ${m?.band} · ${m?.tier}`;
             tip.style.left = `${e.global.x}px`;
             tip.style.top = `${e.global.y}px`;
             tip.style.display = "block";
@@ -354,7 +367,16 @@ export default function OrbitalCanvas() {
       };
 
       rebuild();
-      const unsub = useGameStore.subscribe(rebuild);
+      // Rebuild only when the agent set actually changes (the store replaces `agents`
+      // immutably). Other store updates — notably setFocusedNode on a click — must NOT
+      // rebuild, or they'd reset dragged subagents to their phyllotaxis seats.
+      let lastAgents = useGameStore.getState().agents;
+      const unsub = useGameStore.subscribe(() => {
+        const next = useGameStore.getState().agents;
+        if (next === lastAgents) return;
+        lastAgents = next;
+        rebuild();
+      });
       cleanup.push(unsub);
       a.ticker.add(tick);
 
@@ -409,7 +431,10 @@ export default function OrbitalCanvas() {
       const endDrag = () => {
         if (!dragId) return;
         const body = byId.get(dragId);
-        if (body) body.pinned = false; // hand the body back to the physics tether (now anchored at the drop spot)
+        if (body) {
+          body.pinned = false; // hand the body back to the physics tether (anchored at the drop spot)
+          draggedPos.set(dragId, { x: body.x, y: body.y }); // persist the drop across rebuilds
+        }
         dragId = null;
         a.canvas.style.cursor = "";
         // Leave dragMoved set so the trailing pointertap is suppressed; the next
