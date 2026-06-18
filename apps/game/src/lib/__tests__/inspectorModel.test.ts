@@ -69,7 +69,7 @@ describe("inspectorModelFor", () => {
     }
   });
 
-  it("classifies a node with a parent as a subagent and shows its short id", () => {
+  it("classifies a node with a parent as a subagent with a coordinate-free role title", () => {
     const agents: Record<string, Agent> = {
       parent: agent({ id: "parent", userId: "u1", activity: 50 }),
       "sub-1234567890": agent({
@@ -81,8 +81,20 @@ describe("inspectorModelFor", () => {
     const m = inspectorModelFor("sub-1234567890", agents);
     expect(m?.kind).toBe("subagent");
     if (m && m.kind === "subagent") {
-      expect(m.title).toBe("sub-1234"); // first 8 chars
+      expect(m.title).toBe("Sub-agent"); // role, never the cell-keyed id
       expect(m.isSelf).toBe(false);
+    }
+  });
+
+  it("labels a subagent's parent 'Homenode' when the parent is the player's primary node", () => {
+    const agents: Record<string, Agent> = {
+      home: agent({ id: "home", userId: "u1", isPrimary: true, isSelf: true, tier: "founder" }),
+      "sub-x": agent({ id: "sub-x", userId: "u1", parentAgentId: "home" }),
+    };
+    const m = inspectorModelFor("sub-x", agents);
+    expect(m?.kind).toBe("subagent");
+    if (m && m.kind === "subagent") {
+      expect(m.parent).toBe("Homenode");
     }
   });
 

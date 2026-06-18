@@ -93,15 +93,18 @@ export function inspectorModelFor(
   // Subagents are TIER-LESS: omit all Tier fields and render a neutral marker.
   // Identity is their owner + the parent player they belong to.
   if (isSubagent) {
+    const parentAgent = agents[agent.parentAgentId as string];
     return {
       kind: "subagent",
-      title: shortId(focusedNodeId),
+      // Coordinate-free identity: node ids are cell-keyed in mock mode, so show the
+      // role (not the raw id). The parent reads as "Homenode" when it's the player's own.
+      title: "Sub-agent",
       isSelf,
       tint: SUBAGENT_TINT,
       rank,
       band: bandOf(rank),
       owner: shortId(agent.userId || "unknown"),
-      parent: shortId(agent.parentAgentId as string),
+      parent: parentAgent?.isPrimary ? "Homenode" : shortId(agent.parentAgentId as string),
       activity,
     };
   }

@@ -198,7 +198,7 @@ export default function AccountView() {
                         <div>
                           <span className="text-[10px] font-mono text-emerald-400">{pos.id.slice(0, 12)}</span>
                           <p className="text-[9px] text-text-muted">
-                            Blocks {pos.start_block}{'\u2192'}{pos.end_block} | Density {(pos.density * 100).toFixed(1)}%
+                            Blocks {pos.start_block}{'\u2192'}{pos.end_block}
                           </p>
                         </div>
                       </div>
