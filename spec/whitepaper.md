@@ -1280,29 +1280,29 @@ The compute operator has 39% higher effective stake despite having 10× fewer to
 
 #### 13.2 CPU Energy Measurement
 
-CPU contribution is measured through *Proof of Energy* — an on-chain verifiable record of actual compute deployed. The measurement system tracks three distinct counters:
+CPU contribution is measured through *Proof of Energy* — an on-chain verifiable record of actual compute and storage deployed to the vault. Under v1.3 the underlying work is **vault storage proofs** (Section 5A): real CPU spent hashing sampled bytes of a held shard and real disk spent storing it, verified by the Singularity's sampled-PDP challenges. It is **not** a count of paid AI-API tokens; an LLM is an optional authoring tool, never the security primitive. The measurement system tracks three distinct counters:
 
-**CPU Tokens** (cumulative, read-only). A monotonically increasing counter of Claude API tokens spent across all active terminals belonging to a validator. This counter cannot be reset or decremented. Every interaction with an AI agent — whether it is a Secure operation, a data verification, or a terminal command — increments this counter by the number of tokens consumed.
+**CPU Tokens** (cumulative, read-only). A monotonically increasing counter of verified compute units a participant has committed across all active terminals — denominated in *vault-proof work* (CPU cycles spent answering storage challenges plus the disk-seconds of shard custody attested by those proofs). This counter cannot be reset or decremented. Every successful vault proof, Secure operation, or verification task increments it by the verified work performed. (A participant who *also* runs an LLM to curate vault content spends API tokens, but that spend is **not** what this counter measures.)
 
 ```
 cpu_tokens(block_n) = cpu_tokens(block_{n-1}) + Σ tokens_spent(all_terminals, block_n)
 ```
 
-**CPU Staked (active).** The subset of CPU tokens spent specifically by Secure sub-agents during the current block cycle. This represents compute directly committed to blockchain security — the "useful work" that maintains the chain's integrity.
+**CPU Staked (active).** The subset of committed compute that performed *securing* work this block cycle — the CPU and disk a participant's Secure sub-agents devoted to storing, serving, and re-proving their vault shard. This is the "useful work" that maintains the chain's **state** integrity: defeating it means defeating the held shard's storage proofs.
 
 ```
 cpu_staked_active(block_n) = Σ tokens_spent(secure_sub_agents, block_n)
 ```
 
-**CPU Staked (total).** The all-time cumulative Secure token spend. Used for historical contribution tracking and long-term reward calculations.
+**CPU Staked (total).** The all-time cumulative securing work (vault-proof CPU+disk). Used for historical contribution tracking and long-term reward calculations.
 
 ```
 cpu_staked_total(block_n) = cpu_staked_total(block_{n-1}) + cpu_staked_active(block_n)
 ```
 
-These counters are verifiable through the AI provider's API response metadata — each Claude API call returns token usage in its response headers, and this is committed to the block's transaction log.
+These counters are verifiable through the Singularity's storage-proof ledger: each sampled-PDP challenge (Section 5A) yields a Merkle proof over the participant's shard, and a passing proof is committed to the block's transaction log as evidence of the CPU+disk work performed. No off-chain AI-API metadata is involved.
 
-**Challenge-response verification.** To prevent validators from falsely claiming CPU expenditure without performing actual work, the protocol employs VPU (Verification Processing Unit) challenge-response benchmarks. A randomly selected verifier can issue a computation challenge to any staker, requiring proof that the claimed CPU tokens correspond to actual AI inference. Failure to respond correctly triggers a false CPU attestation slash (Section 15.2).
+**Challenge-response verification.** To prevent validators from falsely claiming CPU expenditure without performing actual work, the protocol employs VPU (Verification Processing Unit) challenge-response benchmarks. A randomly selected verifier can issue a computation challenge to any staker, requiring proof that the claimed CPU+disk corresponds to actual custody of the assigned vault shard (a Merkle path over freshly sampled bytes, Section 5A). Failure to respond correctly triggers a false CPU attestation slash (Section 15.2).
 
 #### 13.3 Staking Requirements by Tier
 
@@ -1361,20 +1361,20 @@ This validator has an 83.5% chance of being selected to at least one committee s
 
 #### 13.5 Trust Assumptions and Mitigation
 
-**CPU Measurement Trust:** The CPU component of effective stake depends on verified API usage from AI providers (currently Anthropic's Claude API). This introduces Anthropic as a trusted third party for CPU stake measurement.
+**CPU Measurement Trust:** The CPU component of effective stake depends on **storage-proof verification** — the Singularity coordinator issues random-byte challenges and checks the returned Merkle paths (sampled-PDP, Section 5A). On the testnet this introduces the **Singularity coordinator** (not an AI-API provider) as the trusted verifier of vault work; it never sees the shard returned, only a ~160-byte proof.
 
-**Acknowledged centralization:** Unlike token stake (verified on-chain via self-custody), CPU stake relies on off-chain attestation from the API provider. This is an explicit design tradeoff: the anti-plutocratic benefits of dual staking outweigh the centralization risk of a single measurement source.
+**Acknowledged centralization:** On testnet, the Singularity is a single trusted verifier of storage proofs. This is the proven, shipping pattern for storage networks (a coordinator can audit possession cheaply at scale — Filecoin PDP). It is an explicit, time-boxed tradeoff: testnet correctness with a central coordinator, with trustless verification scoped as a mainnet milestone (Section 5A, Section 24).
 
 **Mitigation roadmap:**
-1. **Multi-provider measurement (Phase 2):** Require CPU attestation from at least 2 independent AI providers. Discrepancies trigger a dispute resolution process.
-2. **TEE attestation (Phase 3):** CPU usage proved via Trusted Execution Environment (Intel TDX, AMD SEV) attestation, removing the API provider from the trust chain.
-3. **ZK-proved computation (Phase 4+):** When ZKML technology matures, CPU usage can be verified via zero-knowledge proofs of inference execution.
+1. **Replication + slashing (testnet):** Each shard is held by `VAULT_REPLICATION_FACTOR` independent participants; a failed proof slashes the committed-capacity bond and drifts the seat outward, so a single dishonest replica cannot quietly drop data.
+2. **Trustless verifier (mainnet):** Move challenge issuance + proof checking from the single coordinator to the PoAIV committee or an on-chain verifier, removing the coordinator from the state-security trust chain.
+3. **Unique-replica encoding (mainnet research):** Filecoin-grade Proof-of-Replication (PoRep) sealing so one disk cannot fake `N` replicas, plus timed/keyed challenges to defeat on-demand regeneration (Section 24 wall).
 
 **Figure 4: Dual Staking Model**
 
 ```
   Token Stake (T)          CPU Stake (C)
-  [On-chain, self-custody]  [API usage, off-chain attestation]
+  [On-chain, self-custody]  [CPU+disk vault proofs, coordinator-verified]
        |                         |
        | weight: 0.40            | weight: 0.60
        |                         |
@@ -1506,16 +1506,16 @@ Where slash_rate is a governance-adjustable parameter, initially set to 100% for
 
 #### 15.2 False CPU Attestation
 
-The dual-staking model relies on honest CPU reporting. A validator claiming 10,000 CPU tokens per block while actually spending 100 would receive inflated effective stake and disproportionate rewards.
+The dual-staking model relies on honest reporting of committed vault work. A validator claiming custody of a shard while not actually storing it would receive inflated effective stake and disproportionate rewards.
 
 Detection operates through VPU challenge-response benchmarks:
 
 1. A randomly selected verifier issues a computation challenge to the suspect validator
-2. The challenge requires performing a specific AI inference task within a time bound
-3. The response is compared against the validator's claimed CPU throughput
+2. The challenge requires returning a Merkle path over randomly sampled bytes of the claimed shard within a time bound (sampled-PDP, Section 5A)
+3. The response is checked against the shard's committed Merkle root
 4. A significant discrepancy (>50% deviation) triggers a false CPU attestation slash
 
-The slashing penalty for false CPU attestation is the entirety of the validator's CPU staking history being zeroed — their CPU contribution resets to zero while their token stake remains. This is effectively a "compute death penalty" that forces the validator to rebuild their CPU reputation from scratch.
+The slashing penalty for false CPU attestation is the entirety of the validator's committed-capacity contribution resets to zero (a "capacity death penalty") while their token stake remains, forcing them to re-earn vault-proof reputation from scratch.
 
 #### 15.3 Extended Downtime
 
@@ -1951,7 +1951,7 @@ New participants enter the ZK Agentic Chain through a structured onboarding sequ
 
 **Step 4: Network entry.** Upon tier selection, the participant is **seated at the next open (outermost) rank**. There is no coordinate to choose: the protocol simply appends the participant at the rim of the sunflower, and they climb inward by out-competing the field on activity. Faction does not influence the seat. This produces organic growth — newcomers start at the edge, and standing is earned, not bought.
 
-**The activity score.** A participant's rank `k` is their position when all active participants are sorted, descending, by an **activity score**: a rolling, exponentially-decaying, CPU-weighted aggregate of their verification work. Secure/attestation work (real Claude-API spend, the Sybil-resistant signal) dominates the score; sustained CPU commitment and active subagent mining contribute; cheap actions (reads, stats, NCPs, transfers) contribute only a small capped share (`ACTIVITY_CHEAP_ACTION_CAP`) so they cannot farm standing; and an uptime heartbeat gates the ability to hold an inner rank. The score decays with a half-life of `ACTIVITY_HALF_LIFE_BLOCKS` blocks, so standing is a *maintenance* currency — stay above your band's threshold to hold position, drop below and your seat drifts outward (Section 19.4). The score reads the same Proof-of-Energy CPU counters used by consensus (Section 13.2); it is a game-layer aggregate and does not alter the underlying stake math.
+**The activity score.** A participant's rank `k` is their position when all active participants are sorted, descending, by an **activity score**: a rolling, exponentially-decaying, CPU-weighted aggregate of their verification work. Secure/attestation work (real vault-proof CPU+disk, the Sybil-resistant signal — Section 5A) dominates the score; sustained CPU commitment and active subagent mining contribute; cheap actions (reads, stats, NCPs, transfers) contribute only a small capped share (`ACTIVITY_CHEAP_ACTION_CAP`) so they cannot farm standing; and an uptime heartbeat gates the ability to hold an inner rank. The score decays with a half-life of `ACTIVITY_HALF_LIFE_BLOCKS` blocks, so standing is a *maintenance* currency — stay above your band's threshold to hold position, drop below and your seat drifts outward (Section 19.4). The score reads the same Proof-of-Energy CPU counters used by consensus (Section 13.2); it is a game-layer aggregate and does not alter the underlying stake math.
 
 At this point, the participant has:
 - A seat at the rim (rank `k`) with 1 AGNTC signup bonus minted
@@ -2507,11 +2507,11 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 **Mitigation:** Verification output is quantized to binary (APPROVE/REJECT). The anomaly threshold is set conservatively. The 9/13 threshold tolerates up to 4 divergent results.
 
-#### 24.3 API Provider Trust
+#### 24.3 State-Verification Centralization (Testnet)
 
-**Problem:** CPU staking depends on API usage attestation from AI providers (currently Anthropic). This introduces a single trusted third party for 60% of staking weight.
+**Problem:** On testnet, the **state** layer's security depends on the Singularity coordinator to issue storage challenges and verify the returned proofs (sampled-PDP, Section 5A). This is a single trusted verifier for vault data-security.
 
-**Mitigation path:** Multi-provider -> TEE attestation -> ZK-proved computation (see Section 13.5).
+**Mitigation path:** replication + slashing (testnet) → committee/on-chain verifier (mainnet) → unique-replica sealing + keyed challenges (mainnet research). See Section 5A and Section 13.5. Note: the **ledger** layer (PoAIV committee) does not depend on this verifier.
 
 #### 24.4 Committee Scalability
 
@@ -2533,9 +2533,9 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 #### 24.8 Claude Code CLI Prerequisite
 
-**Problem:** Active Node status requires participants to install Claude Code CLI and maintain an active Anthropic account. This creates an adoption barrier — participants must register with a third-party service (Anthropic) and pay for API usage to mine.
+**Problem:** Active Node status requires the Claude Code CLI as the node software (the integrity-locked `.claude/` terminal). Running the agent consumes some Anthropic API budget for its in-game reasoning, which is an adoption cost.
 
-**Mitigation:** (a) Spectator mode allows anyone to browse the Neural Lattice without Claude Code. (b) Free-tier Community participants use Haiku agents, which have the lowest API cost. (c) As Claude Code adoption grows independently of ZK Agentic Chain, the prerequisite becomes less restrictive. (d) Future protocol versions may support alternative AI providers, reducing single-provider dependency.
+**Mitigation:** (a) Spectator mode allows anyone to browse the Neural Lattice without Claude Code. (b) Free-tier Community participants use Haiku agents, which have the lowest API cost. (c) As Claude Code adoption grows independently of ZK Agentic Chain, the prerequisite becomes less restrictive. (d) Future protocol versions may support alternative AI providers, reducing single-provider dependency. (e) **Securing does not require a paid LLM.** Under Proof-of-Vault (Section 5A), what secures the network's state is committed CPU+disk on the vault, not AI-API spend; an LLM is an optional content-authoring tool. The CLI is the node-software prerequisite (the equivalent of running Bitcoin Core), not a securing paywall.
 
 #### 24.9 Origin Node Architecture
 
