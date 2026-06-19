@@ -31,7 +31,7 @@ This paper describes the protocol architecture, consensus mechanism, privacy sys
 - [1. Introduction](#1-introduction)
 - [2. Background and Related Work](#2-background-and-related-work)
 - [3. System Overview](#3-system-overview)
-- [4. The Neural Lattice: Phyllotaxis Standing Economy](#4-the-neural-lattice)
+- [4. The Neural Lattice: Phyllotaxis Standing Economy](#4-the-neural-lattice-phyllotaxis-standing-economy)
 - [5. Proof of AI Verification](#5-proof-of-ai-verification)
 - [5A. The Knowledge Vault and Proof-of-Vault](#5a-the-knowledge-vault-and-proof-of-vault)
 - [6. Privacy Architecture](#6-privacy-architecture)
@@ -47,7 +47,7 @@ This paper describes the protocol architecture, consensus mechanism, privacy sys
 - [16. Subgrid Allocation System](#16-subgrid-allocation-system)
 - [17. Per-Block Resource Calculations](#17-per-block-resource-calculations)
 - [18. Agent Terminal System](#18-agent-terminal-system)
-- [19. Network Topology and Standing Economy](#19-network-topology-and-spatial-economy)
+- [19. Network Topology and Standing Economy](#19-network-topology-and-standing-economy)
 - [20. Migration Path: Solana to Layer 1](#20-migration-path)
 - [21. Technical Roadmap](#21-technical-roadmap)
 - [22. Protocol Parameters](#22-protocol-parameters)
@@ -68,8 +68,8 @@ This paper describes the protocol architecture, consensus mechanism, privacy sys
 | S_eff(i) | Effective stake of validator i |
 | T, C | Token stake, CPU stake (normalized) |
 | alpha, beta | Staking weights (0.40, 0.60) |
-| N | Current epoch ring number |
-| H(N) | Hardness at ring N = 16 * N |
+| N | Radial band index (N = band under v1.2; legacy: epoch ring number) |
+| H(N) | Hardness at band N = 16 * N |
 | PPT | Probabilistic Polynomial Time (adversary) |
 | negl(lambda) | Negligible function of security parameter |
 
@@ -208,7 +208,7 @@ Existing blockchain projects can be positioned along two axes: (1) whether conse
 
 To our knowledge, no existing project as of April 2026 combines AI-powered intelligent verification with zero-knowledge privacy at the verification layer. ZK Agentic Chain targets this quadrant: agents reason about chain state (not just check signatures), and they do so within private channels (not on exposed data).
 
-The addition of a spatial coordinate economy (the Neural Lattice), CPU-weighted dual staking, and a gamified exploration interface further differentiates the protocol from both traditional blockchains and AI-blockchain hybrids.
+The addition of a phyllotaxis standing economy (the Neural Lattice), CPU-weighted dual staking, and a gamified exploration interface further differentiates the protocol from both traditional blockchains and AI-blockchain hybrids.
 
 ---
 
@@ -543,7 +543,7 @@ Traditional BFT validators execute deterministic checks: signature validity, sta
 
 1. **Economic anomaly detection.** An adversary constructs a valid state transition that is technically correct but economically suspicious -- e.g., a coordinated series of transactions that collectively constitute a wash trade or market manipulation. Deterministic validators approve each transaction individually; AI agents can detect the collective pattern.
 
-2. **Semantic state inconsistency.** After a complex sequence of subgrid reallocations, the resulting resource distribution may be technically valid per the state machine rules but violates higher-order invariants (e.g., a single entity controlling >50% of a ring's secure cells). AI agents cross-reference spatial patterns against economic invariants.
+2. **Semantic state inconsistency.** After a complex sequence of subgrid reallocations, the resulting resource distribution may be technically valid per the state machine rules but violates higher-order invariants (e.g., a single entity controlling >50% of a band's secure cells). AI agents cross-reference spatial patterns against economic invariants.
 
 3. **Slow-burn governance attacks.** A series of individually innocuous parameter change proposals that collectively steer the protocol toward adversarial conditions. AI agents maintain temporal context across blocks and flag cumulative drift.
 
@@ -647,7 +647,7 @@ The choice of depth 26 balances capacity (67 million leaves per user — suffici
 
 #### 6.3 Nullifier-Based Ownership
 
-The ownership proof system follows the Zcash Sapling design [5], adapted for the ZK Agentic Chain's coordinate-based state model.
+The ownership proof system follows the Zcash Sapling design [5], adapted for the ZK Agentic Chain's note-based private state model.
 
 **Note commitment.** Each state entry (a "note") is committed using a Poseidon hash:
 
@@ -680,7 +680,7 @@ Where `nk` is the nullifier deriving key (derived from the owner's spending key)
 
 The protocol's ZK proof requirements span three use cases, each with distinct performance characteristics:
 
-**Resource ownership proofs.** Prove "I own at least X AGNTC at coordinate (x,y)" without revealing the exact balance. These are frequent, small proofs triggered by Secure actions and transfers.
+**Resource ownership proofs.** Prove "I own at least X AGNTC" without revealing the exact balance. These are frequent, small proofs triggered by Secure actions and transfers.
 
 **Subgrid state proofs.** Prove that a user's 8x8 private subgrid (64 cells) has been correctly updated — that the new state root is a valid transformation of the old state root given the declared operations. These are moderate-frequency proofs triggered by subgrid allocation changes.
 
@@ -706,7 +706,7 @@ When a user modifies their subgrid state, the process is:
 3. Only the proof and the new state root hash are submitted to the network
 4. Verification agents validate the proof without ever seeing the subgrid contents
 
-This design ensures that subgrid allocation (which cells are assigned to Secure, Develop, Research, or Storage) remains private to the owner. Other users can see that a node exists at a coordinate, but not how its internal resources are allocated.
+This design ensures that subgrid allocation (which cells are assigned to Secure, Develop, Research, or Storage) remains private to the owner. Other users can see that a node exists at a seat (rank `k`), but not how its internal resources are allocated.
 
 #### 6.6 Circuit Architecture
 
@@ -728,7 +728,7 @@ Transaction Flow:
 | Circuit | Estimated Constraints | Proving Time (est.) |
 |---------|----------------------|---------------------|
 | Transfer (nullifier + commitment) | ~50,000 | ~2s (client-side) |
-| Claim coordinate | ~30,000 | ~1s |
+| Seat claim / rank advance | ~30,000 | ~1s |
 | Stake/unstake | ~40,000 | ~1.5s |
 | Batch aggregation (per block) | ~200,000 | ~10s (proposer) |
 
@@ -763,7 +763,7 @@ Transaction Flow:
 
 ZK Agentic Chain targets a block time of 60 seconds (BLOCK_TIME_MS = 60,000). Each block contains up to 50 transactions (MAX_TXS_PER_BLOCK = 50), ordered by a designated block proposer (leader) selected through the same VRF mechanism used for committee selection.
 
-Blocks are organized into epochs of 100 slots each (SLOTS_PER_EPOCH = 100). An epoch represents the base unit of network lifecycle management: agent warmup periods, probation durations, and epoch-ring expansion thresholds are all measured in epochs. At the standard block time, one epoch lasts approximately 100 minutes.
+Blocks are organized into epochs of 100 slots each (SLOTS_PER_EPOCH = 100). An epoch represents the base unit of network lifecycle management: agent warmup periods, probation durations, and activity-decay/seat-drift windows are all measured in epochs. At the standard block time, one epoch lasts approximately 100 minutes.
 
 The block production pipeline proceeds as follows:
 
@@ -985,7 +985,7 @@ The protocol follows a phased deployment strategy, beginning on Solana and migra
 
 **Phase 1 — Token Launch (current).** 1 billion AGNTC minted as a Solana SPL token. Initial liquidity to be established through decentralized exchanges (Raydium, Jupiter). Community building and early adopter distribution through the game interface.
 
-**Phase 2 — Testnet (current).** The ZK Agentic Chain testnet operates as a Python FastAPI simulation running the full protocol logic: PoAIV consensus, epoch-ring expansion, mining hardness, subgrid allocation, and faction distribution. The game UI (built in Next.js with PixiJS rendering) connects to the testnet, providing a functional prototype of the spatial coordinate economy.
+**Phase 2 — Testnet (current).** The ZK Agentic Chain testnet operates as a Python FastAPI simulation running the full protocol logic: PoAIV consensus, phyllotaxis band growth, mining hardness, subgrid allocation, and emergent mining distribution. The game UI (built in Next.js with PixiJS rendering) connects to the testnet, providing a functional prototype of the phyllotaxis standing economy.
 
 **Phase 3 — Mainnet development.** Production blockchain implementation in Rust. ZK proof system integration progressing through the stack defined in Section 6.4 (Groth16 to PLONK to Halo2). AI verification pipeline hardening, security audits, and formal verification of critical protocol components.
 
@@ -1222,7 +1222,7 @@ Every on-chain action in ZK Agentic Chain requires AGNTC as gas. Fee categories 
 | Transact | AGNTC transfer between wallets | Fixed base + size variable |
 | Chat / NCP | Neural Communication Packet transmission | Per-message |
 | Storage | Writing content on-chain (planets, posts) | Per-byte stored |
-| Deploy | Creating a new agent at a coordinate | Fixed per deployment |
+| Deploy | Creating a new subagent orbiting the seat | Fixed per deployment |
 
 Fees are denominated in AGNTC and collected at the protocol level. The fee amount for each action type is a protocol parameter adjustable through governance.
 
@@ -1246,11 +1246,11 @@ Slashed tokens (Section 15) are also permanently burned, adding to the deflation
 
 The interaction between organic supply growth (mining) and fee burns creates a self-regulating economic system:
 
-**Growing network (net inflationary).** When new users are actively claiming coordinates, the minting rate exceeds the burn rate. Supply expands to accommodate network growth. This is the expected state during early adoption.
+**Growing network (net inflationary).** When new participants are actively joining and securing, the minting rate exceeds the burn rate. Supply expands to accommodate network growth. This is the expected state during early adoption.
 
-**Mature network (equilibrium).** As the grid expands to higher rings with greater hardness, the minting rate decelerates. Meanwhile, increased network usage generates more fees and more burns. At some point, the burn rate equals the minting rate — circulating supply stabilizes.
+**Mature network (equilibrium).** As the field fills toward higher bands with greater hardness, the minting rate decelerates. Meanwhile, increased network usage generates more fees and more burns. At some point, the burn rate equals the minting rate — circulating supply stabilizes.
 
-**Active network (net deflationary).** In a mature network with high transaction volume but slowing coordinate claims, the burn rate exceeds the minting rate. Circulating supply contracts, increasing scarcity and token value. This mirrors Ethereum's "ultrasound money" thesis [26] — scarcity that intensifies as the network succeeds.
+**Active network (net deflationary).** In a mature network with high transaction volume but slowing participant inflow, the burn rate exceeds the minting rate. Circulating supply contracts, increasing scarcity and token value. This mirrors Ethereum's "ultrasound money" thesis [26] — scarcity that intensifies as the network succeeds.
 
 The 50% burn rate is calibrated to produce meaningful deflationary pressure without being so aggressive as to discourage usage. For comparison:
 
@@ -1382,7 +1382,7 @@ Protocol-managed roles (the Singularity core agent and the Founder tier) are det
 
 **Worked Example 1: Single Community Validator**
 
-A Community tier validator stakes 5,000 AGNTC (5% of a 100K total pool) and runs one Haiku agent generating 200 CPU tokens per block (2% of a 10,000 total CPU pool).
+A Community tier validator stakes 5,000 AGNTC (5% of a 100K total pool) and commits CPU + disk capacity measured at 200 CPU units per block (2% of a 10,000-unit total committed-capacity pool) through its vault storage proofs (Section 5A).
 
 ```
 S_eff = 0.40 * (5,000 / 100,000) + 0.60 * (200 / 10,000)
@@ -1391,9 +1391,9 @@ S_eff = 0.40 * (5,000 / 100,000) + 0.60 * (200 / 10,000)
      = 0.032  (3.2% of network)
 ```
 
-**Worked Example 2: Professional Validator with Opus Fleet**
+**Worked Example 2: Professional Validator with High Committed Capacity**
 
-A Professional tier validator stakes 2,000 AGNTC (2% of pool) but operates 5 Opus agents generating 2,000 CPU tokens per block (20% of CPU pool).
+A Professional tier validator stakes 2,000 AGNTC (2% of pool) but commits far more capacity — a homenode plus 4 orbiting subagents (5 nodes total, the SUBAGENT_CAP_PRO = 4 limit) — measured at 2,000 CPU units per block (20% of the committed-capacity pool) across their vault shards.
 
 ```
 S_eff = 0.40 * (2,000 / 100,000) + 0.60 * (2,000 / 10,000)
@@ -2177,12 +2177,12 @@ The 1 billion SPL tokens represent the total AGNTC supply that will eventually e
 
 The ZK Agentic Chain testnet is a simulation of the production protocol, implemented as a Python FastAPI server with a Next.js game UI frontend:
 
-- **Blockchain simulation.** GenesisState with 9 genesis nodes, epoch ring expansion, mining engine with hardness formula, subgrid allocation system
+- **Blockchain simulation.** GenesisState with the Singularity core seated at origin and competitive ranks open, phyllotaxis band growth, the mining engine with the hardness formula, and the subgrid allocation system
 - **Game UI.** PixiJS 2D Neural Lattice with faction-colored nodes, terminal-based agent interaction, resource tracking HUD
 - **Protocol validation.** All protocol parameters (Section 22) are implemented and tested against the formal specification
 - **Smart contract design.** Transaction validation logic, state machine transitions, and ZK circuit specifications are being refined through testnet operation
 
-The testnet serves as a living specification — protocol behavior that is ambiguous in the whitepaper is resolved through implementation, and the implementation is validated through automated testing (593+ tests covering consensus, economics, Neural Lattice mechanics, and privacy subsystems).
+The testnet serves as a living specification — protocol behavior that is ambiguous in the whitepaper is resolved through implementation, and the implementation is validated through a comprehensive automated test suite (1,000+ tests across consensus, economics, lattice, and privacy subsystems).
 
 #### 20.3 Phase 3 — Mainnet Development
 
@@ -2452,9 +2452,11 @@ Under v1.2, **only the Singularity core is seated at genesis** (`k = 0`, origin)
 
 #### 23.1 Hardness Curve Convergence
 
-**Theorem.** The total AGNTC minted approaches a finite limit as the number of rings approaches infinity, under the assumption that individual miners exit when the cost of mining exceeds the market value of the reward.
+**Theorem.** The total AGNTC minted approaches a finite limit as the number of bands approaches infinity, under the assumption that individual miners exit when the cost of mining exceeds the market value of the reward.
 
-**Proof sketch.** Consider a single miner at ring N with average density d = 0.5:
+> *Note: this proof retains the legacy ring parameterization (ring index `N`, with `8N` cells per ring) for continuity with earlier revisions. Under v1.2 the radial label is the band index `B`; the seat-count per band is `(2B − 1)·K1` and cumulative capacity is `∝ B²·K1` (Section 11.2). The quadratic growth that drives convergence is identical under either parameterization (`∝ N² ≡ ∝ B²·K1`), so the result is unchanged.*
+
+**Proof sketch.** Consider a single miner in band N with average density d = 0.5:
 
 ```
 yield_per_block(N) = BASE_RATE × d / hardness(N) = 0.5 × 0.5 / (16N) = 1/(64N)
@@ -2480,7 +2482,7 @@ T(N) = 512N² minutes = 8.53N² hours
 | 100 | 85,333 hours (9.7 years) | 40,400 AGNTC |
 | 324 | 896,000 hours (102 years) | ~421,500 AGNTC |
 
-For any individual miner, there exists a ring N* beyond which the mining cost (electricity, API compute) exceeds the AGNTC market value. At that point, the miner exits, and no further supply expansion occurs from that participant.
+For any individual miner, there exists a band N* beyond which the mining cost (electricity, CPU + disk to hold and re-prove the vault shard) exceeds the AGNTC market value. At that point, the miner exits, and no further supply expansion occurs from that participant.
 
 For M miners operating concurrently, the fill rate is M× faster, but the aggregate supply still follows:
 
@@ -2488,16 +2490,16 @@ For M miners operating concurrently, the fill rate is M× faster, but the aggreg
 S(N) = Σ_{k=1}^{N} 8k = 4N(N+1)
 ```
 
-The series S(N) grows quadratically, but the *rate of growth* (dS/dN = 8N+4) is bounded by the mining cost that grows at 16N. Since mining cost growth (16N) exceeds grid growth (8N), the economic incentive to mine diminishes monotonically. In equilibrium, the supply asymptotically approaches a value determined by the intersection of the mining cost curve and the AGNTC market price curve.
+The series S(N) grows quadratically, but the *rate of growth* (dS/dN = 8N+4) is bounded by the mining cost that grows at 16N. Since mining cost growth (16N) exceeds seat-count growth (8N), the economic incentive to mine diminishes monotonically. In equilibrium, the supply asymptotically approaches a value determined by the intersection of the mining cost curve and the AGNTC market price curve.
 
-**Corollary.** For a network of 1,000 active miners with electricity cost of $0.10/kWh and AGNTC price of $0.01, the equilibrium supply converges to approximately 42 million AGNTC — the natural "soft cap" at ring 324. ∎
+**Corollary.** Under the economic assumptions below, the equilibrium supply for a network of 1,000 active miners converges to approximately 42 million AGNTC — the natural "soft cap" at band 324. ∎
 
 **Economic assumptions (not mathematical constants):**
 - Electricity cost: $0.05/kWh (global average for data centers)
-- AGNTC price: $0.10 at ring 50, growing logarithmically
+- AGNTC price: $0.10 at band 50, growing logarithmically
 - Miner hardware: consumer GPU, 300W continuous
 
-These assumptions determine the convergence point (~42M AGNTC at ring 324) but are NOT part of the mathematical proof. The mathematical claim is only: the hardness function H(N) = 16N causes the marginal mining cost to increase linearly with ring distance, while the reward per coordinate decreases inversely.
+These assumptions determine the convergence point (~42M AGNTC at band 324) but are NOT part of the mathematical proof. The mathematical claim is only: the hardness function H(N) = 16N causes the marginal mining cost to increase linearly with band distance, while the reward per cell decreases inversely.
 
 #### 23.2 Byzantine Tolerance Proof
 
@@ -2805,5 +2807,5 @@ A natural question is whether the *AI compute* itself — agents running inferen
 
 ---
 
-*AGNTC Whitepaper v1.0 — ZK Agentic Chain*
+*AGNTC Whitepaper v1.3 — ZK Agentic Chain*
 *Copyright © 2026 ZK Agentic Network. All rights reserved.*
