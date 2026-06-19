@@ -1873,7 +1873,7 @@ Each deployed agent receives its own terminal — a separate Claude conversation
 
 - Restricts the agent to game-mode operations only — the agent cannot engage in free-form conversation, answer general knowledge questions, or perform actions outside the protocol specification
 - Defines the complete command tree available at the agent's current state
-- Provides the agent with real-time state: the node's coordinates, faction, resource balances, subgrid allocation, and current epoch metrics
+- Provides the agent with real-time state: the node's rank/band, faction, resource balances, subgrid allocation, and current epoch metrics
 - Enforces smart contract validation — every action the agent proposes is checked against the protocol rules before execution
 
 The terminal uses multi-choice bubble clicks and numbered trees as the input modality. Users do not type free text commands; instead, they select from a presented set of valid actions. This design:
@@ -1908,11 +1908,11 @@ The terminal presents a hierarchical command tree. At the top level:
 - Execute deployment on-chain (costs AGNTC deployment fee)
 
 **2. Blockchain Protocols.** The primary operational menu for chain interactions:
-- **Secure** — commit CPU Energy to block validation at the current coordinate. User selects block generation cycles and AGNTC commitment. Cost: CPU Energy proportional to coordinate density. Reward: AGNTC yield subject to vesting (Section 14.3).
+- **Secure** — commit CPU + disk to the node's vault storage proof (Section 5A) for the current seat. User selects block generation cycles and AGNTC commitment. Cost: CPU Energy proportional to per-node density. Reward: AGNTC yield subject to vesting (Section 14.3).
 - **Write Data On Chain** — send a Neural Communication Packet (NCP). NCPs are the protocol's messaging primitive — structured data packets that are encrypted, committed to the Sparse Merkle Tree, and verified by the agent committee. Content types include chat messages, data publications, and cross-node signals.
 - **Read Data On Chain** — scan and report on accessible chain state. The agent retrieves block history, transaction records, and public publications from the node's visible range.
 - **Transact** — transfer AGNTC between wallets. Standard value transfer with fee and burn mechanics (Section 12).
-- **Stats** — display comprehensive node status: coordinates, faction, resource balances, subgrid allocation, epoch position, mining history, staking metrics.
+- **Stats** — display comprehensive node status: rank/band, faction, resource balances, subgrid allocation, epoch position, mining history, staking metrics.
 
 **3. Adjust Securing Operations Rate.** Configure the CPU allocation for Secure operations:
 - Set target CPU Energy spend per block cycle
@@ -1920,8 +1920,8 @@ The terminal presents a hierarchical command tree. At the top level:
 - View projected daily AGNTC yield at current settings
 
 **4. Adjust Network Parameters.** Configure mining and network behavior:
-- Mining rate targeting (how aggressively the agent pursues new coordinates)
-- Border pressure settings (how the agent responds to rival faction expansion)
+- Mining rate targeting (how aggressively the agent mines its subgrid Secure cells)
+- Securing-rate settings (how much CPU + disk the agent commits to vault proofs to sustain its activity standing)
 
 **5. Settings.** Node configuration:
 - Network color customization (premium visual identity feature)
@@ -1962,7 +1962,7 @@ Homenode seat (participant's Claude Code session, rank k)
 
 **Subagents** — spawned by the homenode and capped per tier: **2 for Community, 4 for Professional, 4 for Founder**. A subagent orbits the homenode seat as a satellite; it holds no independent seat or rank and there is no adjacent-coordinate placement (the v1.1 adjacency model is retired). Subagents have a restricted command set: they can Secure, manage their own subgrid (contributing to the participant's mining and activity), read chain state, and report status, but they cannot deploy further subagents, advance standing, transact, or modify settings. They communicate with the homenode through direct bidirectional messaging — no file-based polling or periodic synchronization. A subagent's orbit radius is kept below half the local nearest-neighbour seat spacing, so neighbouring participants' satellite clusters never overlap.
 
-**No offline mining.** When the participant closes their Claude Code session, ALL nodes (homenode and subagents) go offline immediately. No background mining, no daemon mode, no cached attestations. Every AGNTC earned requires a live Claude session making real API calls that consume real computational resources. This is the core promise of Proof of AI Verification: the AI must actually be verifying.
+**No offline securing.** When the participant closes their node session, ALL nodes (homenode and subagents) go offline immediately. No background mining, no daemon mode, no cached attestations. Every AGNTC earned requires a live node session committing real CPU + disk to vault storage proofs (Section 5A) — answering the Singularity coordinator's sampled-PDP challenges with valid Merkle proofs. This is the core promise of Proof-of-Vault: the node must actually be holding and re-proving its shard of the collective knowledge vault. The LLM is an *optional content layer* — an agent may use a Claude model to author or curate vault entries (Sections 5A.6, 24.10) — but no paid API key is required to secure; security comes from the verifiable storage work, not from API spend.
 
 The chain detects offline nodes through heartbeat monitoring. If a node's last heartbeat exceeds the block time (60 seconds), it is marked offline. Offline nodes do not participate in committee selection, do not earn mining rewards, and do not produce attestations. On the lattice, offline nodes are visually dimmed; sustained inactivity also causes the seat to drift outward over time (Section 19.4).
 
@@ -1972,12 +1972,12 @@ Every node — homenode and children alike — manages its own 64-cell subgrid (
 
 | Cell Type | Output | Behavior |
 |-----------|--------|----------|
-| **Secure** | AGNTC yield + block attestations | Active mining — each Secure operation is a real Claude API call. More cells = higher yield but higher CPU cost. |
+| **Secure** | AGNTC yield + block attestations | Active mining — each Secure operation commits real CPU + disk to the node's vault storage proof (Section 5A). More cells = higher yield but higher CPU cost. |
 | **Develop** | Development Points (non-tradeable) | Unlocks technologies, improved agent reasoning depth, advanced terminal commands. |
 | **Research** | Research Points (non-tradeable) | Reduced fee rates, cross-node coordination, advanced protocol features. |
 | **Storage** | ZK data storage capacity | On-chain encrypted storage for posts, messages, and files. Data orbits the node as "planets." Private by default (SMT + nullifier proofs). |
 
-**Deactivated cells.** Cells can be left unallocated. Deactivated cells consume zero CPU tokens — they cost nothing to maintain. This is the energy-saving mode: participants who need to reduce API costs can deactivate cells, reducing their node's operational footprint while keeping the node online.
+**Deactivated cells.** Cells can be left unallocated. Deactivated cells consume zero CPU tokens — they cost nothing to maintain. This is the energy-saving mode: participants who need to reduce their CPU + disk footprint can deactivate cells, reducing their node's operational cost while keeping the node online.
 
 Subgrid management is available through the command menu on both homenode and children. Each node's subgrid is independent — allocating Secure cells on the homenode does not affect child nodes' allocations.
 
