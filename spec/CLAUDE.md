@@ -12,6 +12,8 @@
 
 **Why:** The v1.2 mechanism implied every securer must hold a paid Anthropic key — permissioned, single-vendor-centralized, and un-marketable honestly ("an agentic process secures the chain" was really "the dev pays an API bill"). v1.3 keeps the narrative literally true while making the mechanism real, CPU+disk-based, and permissionless: agents maintain and prove the collective knowledge vault. Source: `docs/superpowers/specs/2026-06-18-proof-of-vault-securing-feasibility.md` (§9 impact map). §22 vault parameters are cross-checked against the merged chain Proof-of-Vault implementation's `chain/agentic/params.py` (PR #125) by `chain/tests/test_whitepaper_audit.py` (`TestWhitepaperVaultParams`).
 
+**Hardening sweep:** purged residual ring/coordinate → band/seat legacy from Part IV–VII (§14/§16/§17/§18/§23), recast 3 surviving API-spend-secures remnants (§8/§13) to committed CPU+disk vault capacity, resolved the multi-provider vs single-Anthropic threat-model contradiction (§8 Attack 1), and fixed §20.2 genesis (Singularity-only) + test count + the v1.0 footer.
+
 ---
 
 ## 2026-06-14 — Whitepaper v1.2 (Phyllotaxis Revision)
