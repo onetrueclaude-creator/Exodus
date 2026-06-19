@@ -1,12 +1,12 @@
-# AGNTC Whitepaper v1.2
+# AGNTC Whitepaper v1.3
 
 > **ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification**
 >
-> Version 1.2 (Phyllotaxis Revision) | June 2026
+> Version 1.3 (Proof-of-Vault Consensus Revision) | June 2026
 >
-> v1.2 supersedes v1.1 (Open-Grid Revision, May 2026). The principal change is the replacement of the open coordinate grid with a **golden-angle phyllotaxis lattice** — a deterministic sunflower of agent seats around a central **Singularity** core (renamed from "Machines"). A participant's standing is an intrinsic activity rank `k`, not an `(x, y)` coordinate: activity draws a seat inward along the spiral, inactivity lets it drift outward. The empire/territory/adjacency/deploy-range model is retired in favour of one seat plus a small fixed family of orbiting subagents (2 for Community, 4 for Professional/Founder). Hardness tiers become equal-width radial **bands** (`hardness = 16 × band`); per-node density replaces per-coordinate density; the Singularity is a pure gateway + accumulator that never mines or secures. The economic core (subgrid mining as the sole mint path, dual staking, Burn-Mint Equilibrium, the 5% inflation ceiling, vesting) is preserved unchanged. See §4 "The Neural Lattice" for the phyllotaxis seating model and §19 for activity-rank movement.
+> v1.3 supersedes v1.2 (Phyllotaxis Revision). The principal change is the **two-layer security model**: the existing PoAIV committee secures the *ledger* (balances and ordering), while participants' real CPU and disk secure the *state* — the collective knowledge vault — through sampled storage proofs (**Proof-of-Vault**, §5A). Securing is recast from "holding a paid Claude API key" (a paywall, not consensus) into a verifiable resource commitment: replicating, serving, and re-proving a shard of the network's content-addressed knowledge vault, with the proof submitted through the Singularity link — no paid LLM is required to secure. The three economic verbs are kept distinct-but-coupled: **mining = issuance** (subgrid, unchanged), **securing = vault storage proofs** (the rewrite), **staking = the slashable bond** (AGNTC + committed CPU/disk capacity, slashed on failed proofs). The LLM flips from a consensus gate to an optional content layer. See §5A "The Knowledge Vault and Proof-of-Vault" and §24.10 "Decentralized-AI Incentive Layer (Future)". The economic core (subgrid mining as the sole mint path, dual staking weights, Burn-Mint Equilibrium, the 5% inflation ceiling, vesting, phyllotaxis seating) is preserved unchanged.
 >
-> *v1.1 (historical) replaced the v1.0 four-arm logarithmic spiral with a single open coordinate grid and made factions identity classes rather than territorial arms. v1.2 retains factions-as-identity but replaces the coordinate grid itself with the phyllotaxis seating described above.*
+> *v1.2 (historical) replaced the open coordinate grid with a **golden-angle phyllotaxis lattice** — a deterministic sunflower of agent seats around a central **Singularity** core (renamed from "Machines"). A participant's standing became an intrinsic activity rank `k`, not an `(x, y)` coordinate: activity draws a seat inward along the spiral, inactivity lets it drift outward. The empire/territory/adjacency/deploy-range model was retired in favour of one seat plus a small fixed family of orbiting subagents (2 for Community, 4 for Professional/Founder). Hardness tiers became equal-width radial **bands** (`hardness = 16 × band`); per-node density replaced per-coordinate density. See §4 "The Neural Lattice" for the phyllotaxis seating model and §19 for activity-rank movement. v1.1 (historical) had replaced the v1.0 four-arm logarithmic spiral with a single open coordinate grid and made factions identity classes rather than territorial arms.*
 
 ---
 
@@ -14,7 +14,7 @@
 
 We present ZK Agentic Chain, a Layer-1 blockchain protocol that introduces *Proof of AI Verification* (PoAIV) — a consensus mechanism in which autonomous AI agents verify chain integrity through zero-knowledge private channels. Unlike traditional proof-of-work systems that consume energy solving arbitrary hash puzzles, or proof-of-stake systems that concentrate power among the wealthiest token holders, PoAIV selects a committee of 13 AI verification agents per block, requiring a 9/13 supermajority attestation threshold for consensus. Verification agents apply *reasoning* to their audits — examining logical consistency, cross-referencing state across isolated ledger spaces, and flagging anomalous patterns — providing an additional verification layer whose capabilities improve as the underlying AI models advance.
 
-The protocol employs a dual-staking model that weights computational contribution (60%) over capital (40%), reducing plutocratic concentration inherent in pure proof-of-stake designs. Validators must commit both AGNTC tokens and CPU compute resources; the effective stake that determines committee selection and reward share is a weighted combination of both dimensions.
+The protocol employs a dual-staking model that weights computational contribution (60%) over capital (40%), reducing plutocratic concentration inherent in pure proof-of-stake designs. Validators must commit both AGNTC tokens and CPU compute resources; the effective stake that determines committee selection and reward share is a weighted combination of both dimensions. Security is two-layered: a 13-agent PoAIV committee secures the *ledger*, while participants' committed CPU and disk secure the *state* — the collective knowledge vault — through Proof-of-Vault sampled storage proofs.
 
 ZK Agentic Chain renders its network as a **golden-angle phyllotaxis lattice** — a deterministic sunflower of agent seats around a central Singularity core, in which standing is a function of activity rather than administrative allocation. Each participant occupies a single seat given by an integer rank `k` (the Singularity is the core at `k = 0`): seat `k` sits at angle `k × 137.50776°` and radius proportional to `√k`. Because the golden angle is the most irrational divergence angle, no two seats ever share a spoke to the core, and the disk packs evenly as participants join. Standing is intrinsic and shared: every client computes the identical seat from the on-chain rank, with no coordinate to claim or contest. Inner seats are high-standing; sustained activity draws a seat inward, while inactivity lets it drift outward. Mining remains the sole supply-expanding mechanism — new AGNTC enters circulation only through each node's private subgrid Secure cells. Hardness tiers are equal-width radial **bands** (`band(k) = ceil(√(k / 8))`, `hardness = 16 × band`), so inner bands are cheaper and higher-yield while outer bands naturally hold more seats; a per-node density function (a deterministic SHA-256 hash of the node identifier) creates a non-uniform value landscape independent of position. A soft cap with a 5% annual inflation ceiling prevents runaway supply expansion. A 50% transaction fee burn and the Singularity's permanent AGNTC accumulation at the core provide sustained deflationary pressure as network usage grows.
 
@@ -33,6 +33,7 @@ This paper describes the protocol architecture, consensus mechanism, privacy sys
 - [3. System Overview](#3-system-overview)
 - [4. The Neural Lattice: Phyllotaxis Standing Economy](#4-the-neural-lattice)
 - [5. Proof of AI Verification](#5-proof-of-ai-verification)
+- [5A. The Knowledge Vault and Proof-of-Vault](#5a-the-knowledge-vault-and-proof-of-vault)
 - [6. Privacy Architecture](#6-privacy-architecture)
 - [7. BFT Ordering and Finality](#7-bft-ordering-and-finality)
 - [8. Security Analysis](#8-security-analysis)
@@ -98,7 +99,7 @@ Finally, the emergence of autonomous AI agents as economic actors — systems th
 
 ZK Agentic Chain addresses these limitations with three design principles:
 
-**Democratic validation.** Any CPU can participate as a verifier. The protocol's dual-staking model weights computational contribution (60%) above capital (40%) in determining effective stake. A validator with modest token holdings but strong CPU resources earns proportionally more than a well-capitalized validator with minimal compute. This design directly addresses the wealth concentration problem inherent in pure PoS systems while avoiding the energy waste of PoW.
+**Democratic validation.** Any CPU can participate as a verifier. The protocol's dual-staking model weights computational contribution (60%) above capital (40%) in determining effective stake. A validator with modest token holdings but strong CPU resources earns proportionally more than a well-capitalized validator with minimal compute. This design directly addresses the wealth concentration problem inherent in pure PoS systems while avoiding the energy waste of PoW. Critically, the computational contribution that counts is **real, verifiable CPU and disk work** — replicating and re-proving a shard of the network's collective knowledge vault (Section 5A) — not a paid AI-API bill. No participant must hold a paid LLM key to secure the network.
 
 **Intelligent verification.** AI agents reason about chain integrity rather than executing purely deterministic checks. A committee of 13 AI verification agents audits each proposed block, examining transaction validity, state transition correctness, and proof integrity. Agents cross-reference state across isolated ledger spaces, flag anomalous patterns, and produce attestations that reflect semantic understanding of the data — not just cryptographic validity. This provides an additional verification layer whose detection capabilities improve as the underlying AI models advance.
 
@@ -111,6 +112,8 @@ ZK Agentic Chain represents blockchain state as a **golden-angle phyllotaxis lat
 The lattice is shared and deterministic. Every active participant — Community, Founders, Professional — holds exactly one seat, computed identically by every client from the on-chain rank: seat `k` lies at `angle(k) = k × 137.50776°` and `radius(k) = c·√k` (the Fermat-spiral phyllotaxis packing). The protocol-operated **Singularity** agent is bound to the centre (`k = 0`). Factions represent distinct participant classes (free-tier community users, the protocol's own core agent, founders and advisors, and professional paid-tier users) and govern subscription, governance weight, and protocol role; they do not own regions of the lattice. Newly minted AGNTC flows from the act of mining itself: each node's private subgrid mints AGNTC to its operator, irrespective of seat. Value emerges instead from two intrinsic properties: hardness (which radial **band** the seat falls in — `hardness = 16 × band`) and per-node density (a deterministic SHA-256 hash of the node identifier). This replaces arbitrary allocation percentages with an economy whose value gradient is observable, deterministic, and the same for every participant — and whose standing rewards real activity over capital or land-grabbing.
 
 Users explore the lattice through AI agent terminals — constrained Claude model instances that operate as in-game interfaces. Each participant runs a single homenode seat plus a small family of orbiting subagents (a "node" is one agent), and users interact with the blockchain exclusively through structured command menus presented by their agents. There is no free-text chat; every interaction is a validated game action that maps to an on-chain transaction.
+
+Security is two-layered and stated honestly throughout this document: the **ledger** (balances and ordering) is secured by the PoAIV committee (Section 5); the **state** — the agents' shared knowledge vault — is secured by participants' real CPU and disk via sampled storage proofs (**Proof-of-Vault**, Section 5A). The AI model is an *optional content layer* (an agent may use an LLM to author or curate vault entries), never a gate on participation.
 
 The protocol launches in phases: AGNTC begins as a Solana SPL token (1 billion units minted) to establish liquidity and community, while the ZK Agentic Chain testnet simulates the full protocol with a game-like interface. Upon mainnet launch, Solana-based AGNTC migrates to the native Layer-1 chain via a lock-and-mint bridge, and the phyllotaxis standing economy becomes the production blockchain.
 
@@ -226,7 +229,7 @@ ZK Agentic Chain is organized into five distinct layers, each handling a specifi
 
 **Layer 4 — Agent Layer.** AI verification agents are instantiated from Claude model variants organized into three tiers: Haiku (fast, low-cost inference for high-throughput verification), Sonnet (balanced reasoning for standard verification tasks), and Opus (deep reasoning for complex cross-ledger audits and anomaly detection). A committee of k=13 agents is selected per block via a verifiable random function weighted by effective stake. Each agent independently audits the proposed block and produces an attestation.
 
-**Layer 5 — Consensus Layer.** The topmost layer combines BFT ordering with ZK proof finality. Transaction ordering follows a Byzantine Fault Tolerant protocol (Section 7) with a target block time of 60 seconds. Blocks are organized into epochs of 100 slots each. A block achieves irreversible finality when at least 9 of 13 agents produce matching attestations and the corresponding ZK proofs are verified — targeted at 20 seconds after block proposal.
+**Layer 5 — Consensus Layer.** The topmost layer combines BFT ordering with ZK proof finality. Transaction ordering follows a Byzantine Fault Tolerant protocol (Section 7) with a target block time of 60 seconds. Blocks are organized into epochs of 100 slots each. A block achieves irreversible finality when at least 9 of 13 agents produce matching attestations and the corresponding ZK proofs are verified — targeted at 20 seconds after block proposal. Layer 5 secures the **ledger** (transaction ordering and finality). The **state layer** — the collective knowledge vault that the lattice renders — is secured separately by participants' committed CPU and disk through Proof-of-Vault storage proofs (Section 5A), metered by the Singularity coordinator. The two layers are independent: ledger Byzantine-safety does not depend on the vault, and vault data-security does not depend on the committee.
 
 #### 3.2 Design Principles
 
@@ -361,6 +364,8 @@ Both terms are deterministic and observable to every participant without permiss
 ---
 
 ### 5. Proof of AI Verification (PoAIV)
+
+**Scope of PoAIV: the ledger, not the state.** Proof of AI Verification secures the **ledger** — it decides which blocks of transactions are valid and final (balances, transfers, ordering). It is the conventional Byzantine-secured consensus layer (on the testnet, the coordinator fills the committee role). PoAIV does **not**, by itself, secure the network's *state* — the collective knowledge vault that the Neural Lattice renders. That second layer is **Proof-of-Vault** (Section 5A): participants commit real CPU and disk to replicate, serve, and re-prove shards of the vault, and the loss or unauthorized rewriting of vault data is what their work prevents. This document keeps the two layers separate everywhere: *ledger safety = committee; state/data security = player CPU+disk via storage proofs.*
 
 #### 5.1 Verification Agent Selection
 
@@ -542,7 +547,7 @@ Traditional BFT validators execute deterministic checks: signature validity, sta
 
 3. **Slow-burn governance attacks.** A series of individually innocuous parameter change proposals that collectively steer the protocol toward adversarial conditions. AI agents maintain temporal context across blocks and flag cumulative drift.
 
-**Limitation:** AI verification is probabilistic, not provably sound. The committee structure (13 agents, 9/13 threshold) provides statistical confidence rather than mathematical certainty. Section 24 discusses the ZKML gap -- current zero-knowledge proof systems cannot verify LLM inference, so AI verification relies on committee attestation rather than ZK-proved computation.
+**Limitation:** AI verification is probabilistic, not provably sound. The committee structure (13 agents, 9/13 threshold) provides statistical confidence rather than mathematical certainty for *ledger* decisions. Section 24 discusses the ZKML gap -- current zero-knowledge proof systems cannot verify LLM inference, so AI verification relies on committee attestation rather than ZK-proved computation. Note that this probabilistic property is confined to the ledger layer — the **state layer's** security (Proof-of-Vault, Section 5A) rests on *cryptographic* storage proofs (Merkle paths over sampled bytes), which are cheaply and deterministically verifiable and do not inherit the AI-soundness caveat.
 
 #### 5.8 Attack Analysis
 
@@ -568,6 +573,57 @@ Traditional BFT validators execute deterministic checks: signature validity, sta
 - *Vector:* Two honest agents running the same model at temperature=0 produce different outputs due to floating-point non-determinism across hardware.
 - *Mitigation:* (a) Verification outputs are quantized to APPROVE/REJECT (binary, not continuous). (b) The anomaly threshold is set conservatively so that minor numerical differences do not cross the threshold. (c) The 9/13 supermajority tolerates up to 4 divergent results.
 - *Residual risk:* Acknowledged as an open problem. See Section 24.
+
+---
+
+### 5A. The Knowledge Vault and Proof-of-Vault
+
+PoAIV (Section 5) secures the *ledger*. This section specifies how the network's *state* — the agents' collective knowledge — is secured by participants' real CPU and disk. This is **Proof-of-Vault**: not a novel Byzantine-consensus claim, but the proven, shipping pattern of storage networks (Filecoin, Chia, Arweave, Sia/Storj) applied to a shared knowledge graph, with the Singularity as the trusted coordinator. We state its guarantees honestly per deployment phase.
+
+#### 5A.1 The Vault
+
+The Singularity hosts a **content-addressed Merkle-DAG knowledge graph** — an Obsidian-vault-like structure of atoms (notes/entries) and links, each addressed by its content hash (CID); the root CID is the vault's state. This is the network's shared memory: the agents' collective brain. Crucially, **it is the same graph the /game page renders** — one data structure read two ways: as the security lattice (seats, bands, density) and as the knowledge vault (atoms, links). Agents may use an LLM to author or curate vault entries, but the vault's *security* comes from CPU+disk possession proofs, not from any LLM.
+
+#### 5A.2 Securing: Shard Custody and Sampled Proofs
+
+Participants are assigned vault **shards** by CID range (the vault's CID space is partitioned into `VAULT_SHARD_COUNT` shards) and commit **real disk** (storing the shard) and **real CPU** (hashing sampled bytes) to hold and serve them. The Singularity stores the vault root CID plus each shard's Merkle root, and periodically (every `VAULT_CHALLENGE_INTERVAL_BLOCKS`) issues a **sampled Provable-Data-Possession (PDP) challenge**:
+
+```
+challenge(shard, nonce):  return Merkle paths over VAULT_PROOF_SAMPLE_SIZE
+                          randomly-selected sub-units of the shard
+verify:                   recompute root from the returned paths; accept iff it
+                          matches the committed shard Merkle root, within
+                          VAULT_CHALLENGE_WINDOW_BLOCKS
+```
+
+The proof is **~160 bytes regardless of shard size**; random sampling of a small number of sub-units detects a missing fraction of the data with high probability (the Filecoin PDP profile, e.g. ~460 of 10,000 blocks for ~99% detection of a missing 1%; Section 22). The Singularity never receives the shard — only the proof. Each successful proof spawns or refreshes the **decaying interaction edge** to the core (the orbital "link spoke," fading over `EDGE_FADE_BLOCKS`): *interacting with the Singularity = submitting your proof = securing.* Each shard is held by `VAULT_REPLICATION_FACTOR` independent participants, so the vault survives any single failure.
+
+#### 5A.3 The Three Verbs, Coupled
+
+Proof-of-Vault completes the verb model introduced in Sections 10–11:
+
+| Verb | What it is | Layer | Can run alone? |
+|------|-----------|-------|----------------|
+| **Mining** | Local AGNTC *issuance* from a node's 64-cell subgrid (Section 16) | — | Yes, but unlinked mining is unfinalized/unrewarded |
+| **Securing** | Verifiable CPU+disk commitment: store, serve, re-prove a vault shard, proof submitted via the Singularity link | **State** | Requires the Singularity link |
+| **Staking** | The slashable bond (AGNTC + committed CPU/disk capacity, Section 13) that makes securing trustable + Sybil-resistant | Both | Does no work itself |
+
+**The loop:** mine locally → link to the Singularity to secure (prove useful vault work) → stake bonds it and earns the securing reward plus inward rank. Failed proofs slash the bond and drift the seat outward (Section 15.1a, Section 19.4).
+
+#### 5A.4 The Singularity as Coordinator
+
+The Singularity (Section 4.5, Section 10.3) is the vault's trusted coordinator: it holds the root + per-shard Merkle roots, assigns shards by CID range, issues PDP challenges, and verifies proofs (it is the origin agent, `SINGULARITY_WALLET_INDEX = 0`). This is the **proven pattern that ships** — a central coordinator can audit storage cheaply at scale (Filecoin PDP) — and we embrace it openly rather than claim a novel trustless result we cannot yet deliver. The coordinator role is *metering only*: the Singularity neither mines nor secures, holds no shard, has zero governance weight, and gains no AGNTC from coordinating (its accumulation comes solely from origin yield, Section 10.3).
+
+#### 5A.5 Honest Security by Phase
+
+We state the real guarantee at each phase, per the feasibility analysis:
+
+- **Testnet (buildable now on the FastAPI chain).** Content-address the vault as a Merkle-DAG; shard by CID; the Singularity stores roots and issues random-byte challenges; participants return Merkle proofs. This is **real disk + real CPU, verified cheaply, coordinator-metered** — a genuine "spend CPU+disk to secure the vault" mechanic, not simulated hand-waving. No cryptoeconomic novelty is required or claimed. The ledger is secured by the coordinator-as-committee (Section 5).
+- **Mainnet (the real wall — scoped as a research milestone).** A cheap *possession* proof alone is sybil-, outsourcing-, and generation-attackable: one disk can fake N replicas, and data can be regenerated on demand. Trustless state-security needs either **Filecoin-grade unique-replica sealing (PoRep)** or **timed/keyed challenges + slashing + a trustless (committee/on-chain) verifier**, plus **Merkle-CRDTs** for convergent collaborative edits. The central-coordinator design does not provide this. Mainnet therefore either adds that layer **or** keeps the PoAIV committee as the ledger root-of-trust with vault work as the reward/stake input (the recommended interim). Section 24 (Limitations) tracks this honestly.
+
+#### 5A.6 Why This Makes the Narrative True
+
+The product claim is "an agentic process secures the chain." Under Proof-of-Vault this is **literally true**: participants' agents maintain and continually re-prove the collective knowledge vault with real, verifiable CPU+disk work — and they can do so **without holding any paid LLM key**. The LLM flips from a consensus *paywall* (the v1.2 liability) to an *optional content layer*: an agent may use an LLM to write better vault entries, but security comes from the storage proofs. Decentralized-AI compute (proof-of-inference) is a compelling **future incentive layer** (Section 24.10), never the security base.
 
 ---
 
@@ -790,6 +846,8 @@ We consider a computationally bounded adversary A (PPT) operating under the foll
 - **Computational bound:** A runs in polynomial time in the security parameter lambda.
 - **AI model access:** A may fine-tune or replace AI models on corrupted agents. A may craft adversarial inputs (prompt injection) but cannot modify the verification schema enforced by honest agents.
 
+The adversary model above governs the **ledger** layer (PoAIV committee). The **state** layer (Proof-of-Vault, Section 5A) faces a distinct threat surface — sybil, outsourcing, and on-demand-regeneration attacks against cheap possession proofs — whose testnet mitigations (replication + slashing + a coordinator-verifier) and mainnet research milestones (unique-replica sealing, trustless verifier) are analyzed in Section 5A.5 and Section 24.
+
 #### 8.2 Security Properties
 
 We define three core security properties for PoAIV:
@@ -951,6 +1009,8 @@ AGNTC has a soft-capped supply with a **5% annual inflation ceiling** enforced p
 
 **Mining is the sole supply-expanding mechanism.** New AGNTC enters circulation only through one pathway: a node's private subgrid mints AGNTC from its active Secure cells (Section 16). There is no pre-mine beyond the genesis allocation, no scheduled emission curve, no treasury minting authority. If no node secures, no new AGNTC enters circulation.
 
+Note the verb separation introduced in v1.3: **mining** is local AGNTC *issuance* in a node's subgrid; **securing** is the *verifiable resource commitment* of CPU+disk to the collective knowledge vault, proven through the Singularity link (Section 5A). Mining can run locally, but mining that is not linked to the Singularity is unfinalized and unrewarded — issuance is attested by securing. The phrase "if no node secures, no new AGNTC enters circulation" means: without the securing link that attests vault work, mined AGNTC is not finalized.
+
 **Supply burns** contract the circulating supply through two channels:
 - **50% transaction fee burn** — permanently removes AGNTC on every on-chain action (Section 12)
 - **Singularity accumulation** — the Singularity is permanently bound to the core (`k = 0`, origin; Section 4.5) and never sells AGNTC; the continuous yield of the most productive single node on the lattice flows into a never-selling protocol reserve (Section 10.3)
@@ -986,6 +1046,8 @@ Founders vesting applies to AGNTC earned by Founders-tier participants through t
 The Singularity represents a protocol-enforced approach to token supply stability. Under v1.2's phyllotaxis model, it is implemented as a single protocol-operated AI agent permanently bound to the core (`k = 0`, origin). It cannot take a competitive seat, cannot be deployed elsewhere, and is not eligible to hold any other rank. Crucially, the Singularity is a **pure gateway and accumulator — it never mines and never secures.** It does not run a productive subgrid of its own; instead it passively accrues the origin's yield into its reserve and serves chain queries (Read / Stats / block data) and attestation submission as interaction spokes to the core. It is subject to a protocol-level economic constraint: **the Singularity never sells AGNTC at a loss.**
 
 The protocol enforces this through an economic constraint: any sale of AGNTC by the Singularity wallet below its acquisition cost is rejected by the verification committee. With `SINGULARITY_MIN_SELL_RATIO = 1.0`, it can only sell at or above cost — yielding zero profit, which eliminates any economic incentive to sell. This makes the Singularity a de facto permanent accumulator without requiring a hard transfer prohibition.
+
+Under v1.3 the Singularity additionally serves as the **vault coordinator** (Section 5A): it stores the vault's root CID and per-shard Merkle roots, assigns shards to participants by CID range, issues the random-byte storage challenges, and verifies the returned Merkle proofs. This is a *metering and coordination* role, not a productive one — the Singularity still neither mines nor secures (it holds no shard of its own and answers no challenge); it is the trusted referee that makes other participants' securing work checkable. This coordinator role carries no governance weight and does not alter the never-sell accumulator constraint.
 
 **Properties of the permanent accumulator:**
 
@@ -1040,7 +1102,7 @@ ZK Agentic Chain's supply model is fundamentally different from both fixed-sched
 - No treasury minting authority
 - **Mining is the sole supply-expanding mechanism**
 
-New AGNTC enters circulation through one and only one mechanism: a node's subgrid Secure cells mint AGNTC for the live verification work they perform. The rate at which supply grows is determined entirely by participant behavior — how many nodes are online, how much CPU Energy they deploy to Secure, and how deep in the bands they sit.
+New AGNTC enters circulation through one and only one mechanism: a node's subgrid **mines** it from active Secure cells (Section 16). Mining is *issuance*. The separate act of **securing** — committing CPU+disk to the knowledge vault and proving it through the Singularity link (Section 5A) — is what attests and finalizes that issuance and what earns the securing reward; the two are coupled (you mine locally, you link to secure) but distinct. The rate at which supply grows is determined entirely by participant behavior — how many nodes are online, how much CPU Energy they deploy to Secure, and how deep in the bands they sit.
 
 This means that in a period of low network activity, supply growth approaches zero. In a period of high activity, supply grows faster — but always bounded by two constraints:
 
@@ -1100,6 +1162,7 @@ Where:
 - BASE_MINING_RATE_PER_BLOCK = 0.5 AGNTC (at hardness 1, full density)
 - density(node) = SHA-256_unit(node_id) ∈ [0, 1] (per-node, Section 4.4)
 - hardness = 16 × band(k)
+- mining yield is *finalized* only while the node is actively **securing** (a live vault-proof link, Section 5A); an unlinked node still computes this yield but it remains unattested/unrewarded until the securing link is re-established
 
 **Worked examples** (assuming density = 0.5, the statistical average):
 
@@ -1155,7 +1218,7 @@ Every on-chain action in ZK Agentic Chain requires AGNTC as gas. Fee categories 
 
 | Action | Description | Fee Basis |
 |--------|------------|-----------|
-| Secure | Block validation staking | CPU Energy proportional |
+| Secure | Vault storage proof (securing) | CPU Energy proportional |
 | Transact | AGNTC transfer between wallets | Fixed base + size variable |
 | Chat / NCP | Neural Communication Packet transmission | Per-message |
 | Storage | Writing content on-chain (planets, posts) | Per-byte stored |
@@ -1239,6 +1302,8 @@ Inner-band standing is expensive to reach but yields AGNTC at the lowest hardnes
 
 ZK Agentic Chain introduces a *dual-staking* mechanism that combines token capital with computational contribution. Unlike pure proof-of-stake systems where validator influence is determined solely by wealth, or proof-of-work systems where influence is determined solely by hash rate, the ZK-CPU model creates a two-dimensional staking surface that resists single-axis concentration.
 
+Under v1.3 the computational leg is precisely **committed CPU + disk capacity bonded to the knowledge vault** — capacity a participant has pledged to store, serve, and re-prove vault shards (Section 5A). The bond does no work by itself; it makes the participant's securing work trustable and Sybil-resistant, and it is **slashable** if their storage proofs fail. This replaces the v1.2 reading of the CPU leg as "paid Claude-API tokens," which was a paywall rather than a stake.
+
 #### 13.1 Effective Stake Formula
 
 The effective stake of a validator is a weighted combination of their token stake and CPU contribution:
@@ -1251,12 +1316,12 @@ Where:
 - **S_eff(i)** is the effective stake of validator i, a value in [0, 1]
 - **T_i** is the AGNTC tokens staked by validator i
 - **T_total** is the total AGNTC staked across all validators
-- **C_i** is the CPU compute contributed by validator i (measured in Claude API tokens spent)
+- **C_i** is the verified vault-work capacity contributed by validator i (committed CPU+disk proven via sampled-PDP storage proofs, Section 5A — NOT paid AI-API tokens)
 - **C_total** is the total CPU compute contributed across all validators
 - **α = 0.40** — the token weight
 - **β = 0.60** — the CPU weight
 
-The choice of α = 0.40 and β = 0.60 is a deliberate design decision: computational contribution is weighted 50% more heavily than capital. This creates an economic structure where participants who deploy real compute resources — running AI verification agents, executing Secure operations, processing transactions — receive proportionally greater influence and rewards than those who merely lock tokens.
+The choice of α = 0.40 and β = 0.60 is a deliberate design decision: computational contribution is weighted 50% more heavily than capital. This creates an economic structure where participants who deploy real compute resources — storing and re-proving vault shards, executing Secure operations, processing transactions — receive proportionally greater influence and rewards than those who merely lock tokens.
 
 **Design rationale.** In pure proof-of-stake systems (α = 1, β = 0), validator power is directly proportional to wealth. This produces plutocratic concentration: the wealthiest participants earn the most rewards, accumulate more tokens, and entrench their position. The Gini coefficient of validator stake distributions in mature PoS networks is estimated to exceed 0.80 (e.g., Ethereum's validator set exhibits significant concentration among liquid staking providers [38]).
 
@@ -1276,29 +1341,29 @@ The compute operator has 39% higher effective stake despite having 10× fewer to
 
 #### 13.2 CPU Energy Measurement
 
-CPU contribution is measured through *Proof of Energy* — an on-chain verifiable record of actual compute deployed. The measurement system tracks three distinct counters:
+CPU contribution is measured through *Proof of Energy* — an on-chain verifiable record of actual compute and storage deployed to the vault. Under v1.3 the underlying work is **vault storage proofs** (Section 5A): real CPU spent hashing sampled bytes of a held shard and real disk spent storing it, verified by the Singularity's sampled-PDP challenges. It is **not** a count of paid AI-API tokens; an LLM is an optional authoring tool, never the security primitive. The measurement system tracks three distinct counters:
 
-**CPU Tokens** (cumulative, read-only). A monotonically increasing counter of Claude API tokens spent across all active terminals belonging to a validator. This counter cannot be reset or decremented. Every interaction with an AI agent — whether it is a Secure operation, a data verification, or a terminal command — increments this counter by the number of tokens consumed.
+**CPU Tokens** (cumulative, read-only). A monotonically increasing counter of verified compute units a participant has committed across all active terminals — denominated in *vault-proof work* (CPU cycles spent answering storage challenges plus the disk-seconds of shard custody attested by those proofs). This counter cannot be reset or decremented. Every successful vault proof, Secure operation, or verification task increments it by the verified work performed. (A participant who *also* runs an LLM to curate vault content spends API tokens, but that spend is **not** what this counter measures.)
 
 ```
 cpu_tokens(block_n) = cpu_tokens(block_{n-1}) + Σ tokens_spent(all_terminals, block_n)
 ```
 
-**CPU Staked (active).** The subset of CPU tokens spent specifically by Secure sub-agents during the current block cycle. This represents compute directly committed to blockchain security — the "useful work" that maintains the chain's integrity.
+**CPU Staked (active).** The subset of committed compute that performed *securing* work this block cycle — the CPU and disk a participant's Secure sub-agents devoted to storing, serving, and re-proving their vault shard. This is the "useful work" that maintains the chain's **state** integrity: defeating it means defeating the held shard's storage proofs.
 
 ```
 cpu_staked_active(block_n) = Σ tokens_spent(secure_sub_agents, block_n)
 ```
 
-**CPU Staked (total).** The all-time cumulative Secure token spend. Used for historical contribution tracking and long-term reward calculations.
+**CPU Staked (total).** The all-time cumulative securing work (vault-proof CPU+disk). Used for historical contribution tracking and long-term reward calculations.
 
 ```
 cpu_staked_total(block_n) = cpu_staked_total(block_{n-1}) + cpu_staked_active(block_n)
 ```
 
-These counters are verifiable through the AI provider's API response metadata — each Claude API call returns token usage in its response headers, and this is committed to the block's transaction log.
+These counters are verifiable through the Singularity's storage-proof ledger: each sampled-PDP challenge (Section 5A) yields a Merkle proof over the participant's shard, and a passing proof is committed to the block's transaction log as evidence of the CPU+disk work performed. No off-chain AI-API metadata is involved.
 
-**Challenge-response verification.** To prevent validators from falsely claiming CPU expenditure without performing actual work, the protocol employs VPU (Verification Processing Unit) challenge-response benchmarks. A randomly selected verifier can issue a computation challenge to any staker, requiring proof that the claimed CPU tokens correspond to actual AI inference. Failure to respond correctly triggers a false CPU attestation slash (Section 15.2).
+**Challenge-response verification.** To prevent validators from falsely claiming CPU expenditure without performing actual work, the protocol employs VPU (Verification Processing Unit) challenge-response benchmarks. A randomly selected verifier can issue a computation challenge to any staker, requiring proof that the claimed CPU+disk corresponds to actual custody of the assigned vault shard (a Merkle path over freshly sampled bytes, Section 5A). Failure to respond correctly triggers a false CPU attestation slash (Section 15.2).
 
 #### 13.3 Staking Requirements by Tier
 
@@ -1357,20 +1422,20 @@ This validator has an 83.5% chance of being selected to at least one committee s
 
 #### 13.5 Trust Assumptions and Mitigation
 
-**CPU Measurement Trust:** The CPU component of effective stake depends on verified API usage from AI providers (currently Anthropic's Claude API). This introduces Anthropic as a trusted third party for CPU stake measurement.
+**CPU Measurement Trust:** The CPU component of effective stake depends on **storage-proof verification** — the Singularity coordinator issues random-byte challenges and checks the returned Merkle paths (sampled-PDP, Section 5A). On the testnet this introduces the **Singularity coordinator** (not an AI-API provider) as the trusted verifier of vault work; it never sees the shard returned, only a ~160-byte proof.
 
-**Acknowledged centralization:** Unlike token stake (verified on-chain via self-custody), CPU stake relies on off-chain attestation from the API provider. This is an explicit design tradeoff: the anti-plutocratic benefits of dual staking outweigh the centralization risk of a single measurement source.
+**Acknowledged centralization:** On testnet, the Singularity is a single trusted verifier of storage proofs. This is the proven, shipping pattern for storage networks (a coordinator can audit possession cheaply at scale — Filecoin PDP). It is an explicit, time-boxed tradeoff: testnet correctness with a central coordinator, with trustless verification scoped as a mainnet milestone (Section 5A, Section 24).
 
 **Mitigation roadmap:**
-1. **Multi-provider measurement (Phase 2):** Require CPU attestation from at least 2 independent AI providers. Discrepancies trigger a dispute resolution process.
-2. **TEE attestation (Phase 3):** CPU usage proved via Trusted Execution Environment (Intel TDX, AMD SEV) attestation, removing the API provider from the trust chain.
-3. **ZK-proved computation (Phase 4+):** When ZKML technology matures, CPU usage can be verified via zero-knowledge proofs of inference execution.
+1. **Replication + slashing (testnet):** Each shard is held by `VAULT_REPLICATION_FACTOR` independent participants; a failed proof slashes the committed-capacity bond and drifts the seat outward, so a single dishonest replica cannot quietly drop data.
+2. **Trustless verifier (mainnet):** Move challenge issuance + proof checking from the single coordinator to the PoAIV committee or an on-chain verifier, removing the coordinator from the state-security trust chain.
+3. **Unique-replica encoding (mainnet research):** Filecoin-grade Proof-of-Replication (PoRep) sealing so one disk cannot fake `N` replicas, plus timed/keyed challenges to defeat on-demand regeneration (Section 24 wall).
 
 **Figure 4: Dual Staking Model**
 
 ```
   Token Stake (T)          CPU Stake (C)
-  [On-chain, self-custody]  [API usage, off-chain attestation]
+  [On-chain, self-custody]  [CPU+disk vault proofs, coordinator-verified]
        |                         |
        | weight: 0.40            | weight: 0.60
        |                         |
@@ -1500,18 +1565,28 @@ slash_amount = min(S_eff(i) * slash_rate, total_staked(i))
 
 Where slash_rate is a governance-adjustable parameter, initially set to 100% for provable falsehood.
 
+#### 15.1a Failed Vault Proof (State-Layer Slash)
+
+Securing under Proof-of-Vault (Section 5A) is a *bonded* commitment: a participant pledges CPU+disk capacity to hold and re-prove an assigned vault shard. When the Singularity coordinator issues a sampled-PDP challenge and the participant fails to return a valid Merkle proof within the time bound (`VAULT_CHALLENGE_WINDOW_BLOCKS`) — because they dropped the shard, never stored it, or cannot serve it — the protocol applies a **committed-capacity slash**:
+
+```
+slash_amount = min(S_eff(i) * VAULT_SLASH_RATE, total_staked(i))
+```
+
+A single missed proof that is recovered within the challenge window is treated as transient (network blip) and not slashed; failure to answer beyond that window triggers the slash and an **outward seat drift** (the seat slips to a harder band, Section 19.4), reflecting the lost securing contribution. Because each shard is replicated across `VAULT_REPLICATION_FACTOR` independent participants, the vault survives any single failure while the failing participant bears the cost. This is the state-layer analogue of false attestation: false attestation protects the *ledger*; the failed-vault-proof slash protects the *state*.
+
 #### 15.2 False CPU Attestation
 
-The dual-staking model relies on honest CPU reporting. A validator claiming 10,000 CPU tokens per block while actually spending 100 would receive inflated effective stake and disproportionate rewards.
+The dual-staking model relies on honest reporting of committed vault work. A validator claiming custody of a shard while not actually storing it would receive inflated effective stake and disproportionate rewards.
 
 Detection operates through VPU challenge-response benchmarks:
 
 1. A randomly selected verifier issues a computation challenge to the suspect validator
-2. The challenge requires performing a specific AI inference task within a time bound
-3. The response is compared against the validator's claimed CPU throughput
+2. The challenge requires returning a Merkle path over randomly sampled bytes of the claimed shard within a time bound (sampled-PDP, Section 5A)
+3. The response is checked against the shard's committed Merkle root
 4. A significant discrepancy (>50% deviation) triggers a false CPU attestation slash
 
-The slashing penalty for false CPU attestation is the entirety of the validator's CPU staking history being zeroed — their CPU contribution resets to zero while their token stake remains. This is effectively a "compute death penalty" that forces the validator to rebuild their CPU reputation from scratch.
+The slashing penalty for false CPU attestation is the entirety of the validator's committed-capacity contribution resets to zero (a "capacity death penalty") while their token stake remains, forcing them to re-earn vault-proof reputation from scratch.
 
 #### 15.3 Extended Downtime
 
@@ -1523,8 +1598,9 @@ Validators are expected to maintain continuous operation during their active sta
 | 1 block - 1 epoch (100 blocks) | Reduced reward share; proportional to uptime |
 | > 1 full epoch | Status changed to COOLDOWN; 3-epoch probation |
 | > 3 epochs (probation) | Must re-stake and undergo WARMUP (1 epoch) |
+| Vault proof unanswered beyond `VAULT_CHALLENGE_WINDOW_BLOCKS` | Committed-capacity slash (§15.1a) + outward seat drift; token stake retained |
 
-Extended downtime does not burn tokens — the penalty is lost opportunity cost and re-activation delay. This is a deliberate design choice: network instability (power outages, connectivity issues) should not trigger punitive token destruction. Only intentional misbehavior (Sections 15.1, 15.2) results in permanent loss.
+Extended downtime does not burn tokens — the penalty is lost opportunity cost and re-activation delay. This is a deliberate design choice: network instability (power outages, connectivity issues) should not trigger punitive token destruction. Only intentional misbehavior (Sections 15.1, 15.2) results in permanent loss. The one exception is the **state layer**: persistent failure to answer vault storage challenges (Section 15.1a) does slash the committed-capacity bond, because holding the vault is an active, bonded duty rather than mere liveness. Ordinary node downtime (no inner-rank claim, no held shard) still incurs only opportunity cost.
 
 #### 15.4 Dispute Resolution
 
@@ -1947,7 +2023,7 @@ New participants enter the ZK Agentic Chain through a structured onboarding sequ
 
 **Step 4: Network entry.** Upon tier selection, the participant is **seated at the next open (outermost) rank**. There is no coordinate to choose: the protocol simply appends the participant at the rim of the sunflower, and they climb inward by out-competing the field on activity. Faction does not influence the seat. This produces organic growth — newcomers start at the edge, and standing is earned, not bought.
 
-**The activity score.** A participant's rank `k` is their position when all active participants are sorted, descending, by an **activity score**: a rolling, exponentially-decaying, CPU-weighted aggregate of their verification work. Secure/attestation work (real Claude-API spend, the Sybil-resistant signal) dominates the score; sustained CPU commitment and active subagent mining contribute; cheap actions (reads, stats, NCPs, transfers) contribute only a small capped share (`ACTIVITY_CHEAP_ACTION_CAP`) so they cannot farm standing; and an uptime heartbeat gates the ability to hold an inner rank. The score decays with a half-life of `ACTIVITY_HALF_LIFE_BLOCKS` blocks, so standing is a *maintenance* currency — stay above your band's threshold to hold position, drop below and your seat drifts outward (Section 19.4). The score reads the same Proof-of-Energy CPU counters used by consensus (Section 13.2); it is a game-layer aggregate and does not alter the underlying stake math.
+**The activity score.** A participant's rank `k` is their position when all active participants are sorted, descending, by an **activity score**: a rolling, exponentially-decaying, CPU-weighted aggregate of their verification work. Secure/attestation work (real vault-proof CPU+disk, the Sybil-resistant signal — Section 5A) dominates the score; sustained CPU commitment and active subagent mining contribute; cheap actions (reads, stats, NCPs, transfers) contribute only a small capped share (`ACTIVITY_CHEAP_ACTION_CAP`) so they cannot farm standing; and an uptime heartbeat gates the ability to hold an inner rank. The score decays with a half-life of `ACTIVITY_HALF_LIFE_BLOCKS` blocks, so standing is a *maintenance* currency — stay above your band's threshold to hold position, drop below and your seat drifts outward (Section 19.4). The score reads the same Proof-of-Energy CPU counters used by consensus (Section 13.2); it is a game-layer aggregate and does not alter the underlying stake math.
 
 At this point, the participant has:
 - A seat at the rim (rank `k`) with 1 AGNTC signup bonus minted
@@ -2307,6 +2383,21 @@ The following table provides the complete set of protocol-level parameters that 
 | BASE_STORAGE_RATE | 1.0 | Storage Units per block per Storage cell (level 1) |
 | LEVEL_EXPONENT | 0.8 | Sub-linear scaling: output = base × level^0.8 |
 
+#### Vault and Proof-of-Vault Parameters
+
+> These parameters govern the state-layer security model (Section 5A). They are the authoritative source; the reference chain implementation in `chain/agentic/params.py` mirrors them, and `chain/tests/test_whitepaper_audit.py` (`TestWhitepaperVaultParams`) asserts equality per parameter. The challenge cadence is denominated in blocks (the testnet runs ~60 s blocks); a sampled-PDP challenge spot-checks a small random sample of a shard's sub-units, giving high cheat-detection probability with a ~160-byte proof regardless of shard size (Section 5A; feasibility analysis).
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| VAULT_SHARD_COUNT | 16 | Number of CID-range shards the knowledge vault is partitioned into |
+| VAULT_REPLICATION_FACTOR | 3 | Independent participants assigned each shard; the vault survives up to `factor − 1` simultaneous failures |
+| VAULT_CHALLENGE_INTERVAL_BLOCKS | 30 | Blocks between sampled-PDP challenges per shard (~30 min; aligned to `EDGE_FADE_BLOCKS`) |
+| VAULT_CHALLENGE_WINDOW_BLOCKS | 30 | Blocks within which a valid Merkle proof must arrive after a challenge is issued |
+| VAULT_PROOF_SAMPLE_SIZE | 8 | Sub-units spot-checked per sampled-PDP challenge (Merkle paths returned) |
+| VAULT_MIN_STAKE_CAPACITY | 100.0 | Dual-stake committed-capacity floor required to be assigned a shard |
+| VAULT_PROOF_CPU_CREDIT | 50.0 | CPU-equivalent credited to activity/reward for each passing vault proof |
+| VAULT_SLASH_RATE ‡ | 0.10 | Fraction of committed capacity slashed on a missed/failed vault proof (Section 15.1a) |
+
 #### Agent Lifecycle Parameters
 
 | Parameter | Value | Description |
@@ -2503,11 +2594,11 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 **Mitigation:** Verification output is quantized to binary (APPROVE/REJECT). The anomaly threshold is set conservatively. The 9/13 threshold tolerates up to 4 divergent results.
 
-#### 24.3 API Provider Trust
+#### 24.3 State-Verification Centralization (Testnet)
 
-**Problem:** CPU staking depends on API usage attestation from AI providers (currently Anthropic). This introduces a single trusted third party for 60% of staking weight.
+**Problem:** On testnet, the **state** layer's security depends on the Singularity coordinator to issue storage challenges and verify the returned proofs (sampled-PDP, Section 5A). This is a single trusted verifier for vault data-security.
 
-**Mitigation path:** Multi-provider -> TEE attestation -> ZK-proved computation (see Section 13.5).
+**Mitigation path:** replication + slashing (testnet) → committee/on-chain verifier (mainnet) → unique-replica sealing + keyed challenges (mainnet research). See Section 5A and Section 13.5. Note: the **ledger** layer (PoAIV committee) does not depend on this verifier.
 
 #### 24.4 Committee Scalability
 
@@ -2529,13 +2620,23 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 #### 24.8 Claude Code CLI Prerequisite
 
-**Problem:** Active Node status requires participants to install Claude Code CLI and maintain an active Anthropic account. This creates an adoption barrier — participants must register with a third-party service (Anthropic) and pay for API usage to mine.
+**Problem:** Active Node status requires the Claude Code CLI as the node software (the integrity-locked `.claude/` terminal). Running the agent consumes some Anthropic API budget for its in-game reasoning, which is an adoption cost.
 
-**Mitigation:** (a) Spectator mode allows anyone to browse the Neural Lattice without Claude Code. (b) Free-tier Community participants use Haiku agents, which have the lowest API cost. (c) As Claude Code adoption grows independently of ZK Agentic Chain, the prerequisite becomes less restrictive. (d) Future protocol versions may support alternative AI providers, reducing single-provider dependency.
+**Mitigation:** (a) Spectator mode allows anyone to browse the Neural Lattice without Claude Code. (b) Free-tier Community participants use Haiku agents, which have the lowest API cost. (c) As Claude Code adoption grows independently of ZK Agentic Chain, the prerequisite becomes less restrictive. (d) Future protocol versions may support alternative AI providers, reducing single-provider dependency. (e) **Securing does not require a paid LLM.** Under Proof-of-Vault (Section 5A), what secures the network's state is committed CPU+disk on the vault, not AI-API spend; an LLM is an optional content-authoring tool. The CLI is the node-software prerequisite (the equivalent of running Bitcoin Core), not a securing paywall.
 
 #### 24.9 Origin Node Architecture
 
 **Status:** The origin node at coordinate (0,0) will serve as the protocol's root — embedding the final whitepaper version and serving as the genesis anchor for the Neural Lattice. The architecture of this node, including its role in governance, network bootstrapping, and protocol upgrades, is deferred to a dedicated design session.
+
+#### 24.10 Decentralized-AI Incentive Layer (Future)
+
+A natural question is whether the *AI compute* itself — agents running inference to curate the vault or reason about chain state — could be made a first-class, rewarded, and verifiable contribution. The feasibility analysis is clear that this is a **future incentive layer, never a consensus base**:
+
+- **zkML cannot yet prove training or large-model inference** (~4 orders of magnitude overhead; only small models, e.g. GPT-2-scale, have end-to-end proofs today). It is viable only on narrow, small-model paths in the near term.
+- **Optimistic re-execution (e.g. Gensyn-style)** secures *task results* under an honest-minority assumption — useful for rewarding work, but not a ledger-security primitive.
+- **Subjective validator scoring (e.g. Bittensor Yuma)** ranks AI output quality; it is not a cryptographic proof.
+
+**Design direction:** treat agentic/LLM compute as a **proof-of-inference receipt** that gates **rewards, never consensus** — start with TEE attestation or optimistic re-run plus bonding, and add zkML only on narrow small-model paths. Revisit zk-proved training in roughly two to three years. The state layer's security (Proof-of-Vault, Section 5A) stands entirely on CPU+disk storage proofs and does not wait on any of this.
 
 ---
 
@@ -2553,8 +2654,8 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **Node density** | Resource richness of a node, d(node) = SHA-256(node_id) → [0,1], immutable per node (origin clamped to 1.0) |
 | **Activity rank** | A participant's seat index `k` = position when active participants are sorted by activity score (rank 1 = innermost) |
 | **CPU Energy** | The computational resource budget allocated per subscription tier |
-| **CPU Staked** | Claude API tokens spent by Secure sub-agents, measuring actual compute committed |
-| **CPU Tokens** | Cumulative, read-only counter of all Claude API tokens spent across terminals |
+| **CPU Staked** | Committed CPU+disk that performed vault storage-proof work this cycle, measuring actual securing committed (NOT paid AI-API tokens) |
+| **CPU Tokens** | Cumulative, read-only counter of verified compute committed across terminals, denominated in vault-proof work (NOT paid AI-API tokens) |
 | **Density** | See Node density |
 | **Develop** | Sub-cell type producing Development Points for leveling up other sub-cells |
 | **Epoch** | A period of 100 blocks (SLOTS_PER_EPOCH = 100) |
@@ -2572,9 +2673,10 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **Groth16** | ZK-SNARK proving system [6] with ~192-byte proofs and ~6ms verification |
 | **Halo2** | Recursive proof system [8] without trusted setup, target for mainnet epoch proofs |
 | **Hardness** | Mining difficulty multiplier: hardness = 16 × band(k) |
+| **Knowledge Vault** | The network's shared, content-addressed Merkle-DAG knowledge graph (atoms + links → CIDs; root CID = vault state) — the agents' collective memory and the same graph the /game lattice renders. Secured by participants' CPU+disk via Proof-of-Vault. Section 5A. *(alias: Vault)* |
 | **Open rank** | An unfilled seat index at the rim where new participants are seated |
 | **Level** | Upgrade tier for sub-cells, scaling output by level^0.8 |
-| **Singularity** | Protocol-operated core agent at `k=0` (origin); pure gateway + accumulator with a never-sell-below-cost constraint; never mines or secures; zero governance weight. Renamed from the v1.0/v1.1 "Machines Faction" |
+| **Singularity** | Protocol-operated core agent at `k=0` (origin); pure gateway + accumulator with a never-sell-below-cost constraint; never mines or secures; zero governance weight. Renamed from the v1.0/v1.1 "Machines Faction". Under v1.3 it additionally serves as the vault coordinator (assigns shards, issues PDP challenges, verifies proofs) — a metering role only; it still never mines or secures |
 | **NCP** | Neural Communication Packet — structured encrypted message between agents |
 | **Noir** | Domain-specific language for ZK circuit development (Barretenberg backend) |
 | **Nullifier** | Unique value derived from commitment, preventing double-spend without revealing owner |
@@ -2582,21 +2684,28 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **Planet** | Content storage unit (post, chat, prompt) orbiting a node |
 | **PLONK** | Universal ZK proving system [7] — single ceremony for all circuits |
 | **PoAIV** | Proof of AI Verification — consensus mechanism using AI agent reasoning |
+| **Proof of Energy** | On-chain record of committed compute+disk (vault-proof work), the measurement substrate for the CPU leg of dual-stake. Section 13.2. (Renamed in meaning under v1.3 from "AI-API tokens spent" to "verified vault work.") |
+| **Proof-of-Vault** | The state-layer security model: participants commit real CPU+disk to hold vault shards and answer the Singularity's random-byte challenges with a Merkle proof (sampled-PDP). Secures the network's *state* (the knowledge vault); the *ledger* is secured separately by PoAIV (Section 5). Section 5A |
 | **Poseidon** | SNARK-friendly hash function [11] (~100× fewer constraints than SHA-256) |
+| **Replication factor** | The number of independent participants holding each vault shard (`VAULT_REPLICATION_FACTOR`); the vault survives up to `factor − 1` simultaneous failures. Section 5A |
 | **Research** | Sub-cell type producing Research Points for unlocking technologies |
 | **Ring** | *(legacy — see Band)* The v1.0/v1.1 Chebyshev expansion boundary, replaced by the radial band under v1.2 |
 | **RLN** | Rate-Limiting Nullifiers [44] — spam-resistant anonymous messaging primitive |
 | **S_eff** | Effective stake: α(T/T_total) + β(C/C_total), determines validator influence |
 | **Safe mode** | Emergency state triggered when >20% validators offline |
-| **Secure** | Sub-cell type producing AGNTC through blockchain validation; primary mining activity |
+| **Secure** | Sub-cell type committing CPU+disk to vault storage proofs (the **securing** verb, Section 5A) and minting AGNTC as the coupled mining issuance. Securing ≠ mining: securing proves vault work, mining issues supply |
+| **Securing** | The verifiable-resource-commitment verb: spending real CPU+disk to replicate, serve, and re-prove a shard of the knowledge vault, with the proof submitted through the Singularity link. Distinct from mining (issuance) and staking (the bond). Section 5A |
+| **Shard** | A CID-range slice of the knowledge vault assigned to a participant to store and re-prove; replicated across `VAULT_REPLICATION_FACTOR` participants. Section 5A |
 | **Slashing** | Punitive token destruction for integrity violations |
 | **SMT** | Sparse Merkle Tree — depth-26 authenticated data structure for user ledger spaces |
 | **Sonnet** | Mid-tier Claude AI model — balanced reasoning and cost |
 | **Star system** | *(deprecated — see Node)* Legacy term for an individual agent node |
-| **Storage** | Sub-cell type producing Storage Size via ZK tunnel agents (private on-chain data) |
+| **Storage** | Sub-cell type producing Storage Size via ZK tunnel agents (private on-chain data). Under v1.3, Storage cells also constitute the participant's local custody of their assigned vault shard, which Proof-of-Vault challenges audit (Section 5A) |
+| **Storage proof (PDP)** | Provable Data Possession: a random-sample possession proof (~160 bytes regardless of dataset size) returning a Merkle path over sampled bytes; the Singularity verifies it without ever receiving the shard. The cryptographic basis of securing. Section 5A |
 | **Subgrid** | Private 8×8 inner grid of 64 sub-cells within each homenode |
 | **Territory** | *(retired)* A user's single seat plus its orbiting subagents — there is no aggregate claimed land under v1.2 |
 | **VRF** | Verifiable Random Function [41] — cryptographic tool for fair committee selection |
+| **Vault** | See Knowledge Vault |
 | **Vesting** | Time-locked reward release: 50% immediate, 50% linear over 30 days |
 | **WARMUP** | Agent lifecycle state before becoming ACTIVE (1 epoch duration) |
 
