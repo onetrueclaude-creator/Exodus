@@ -636,6 +636,51 @@ def _do_mine(g: GenesisState) -> dict:
                             amount=micro, slot=block_slot,
                         ), g.ledger_state)
 
+            # --- Proof-of-Vault: drain accepted proofs (reward/activity input) ---
+            # Inside `if block_fees:` so fee_for_stakers_agntc is in scope. Vault
+            # proofs are a reward/stake INPUT — they NEVER gate finalization.
+            vault_passes = g.vault_registry.take_passes(block_slot)
+            if vault_passes:
+                # Mint immediate securing-style reward proportional to vault CPU
+                # credit out of this block's staker fee pool, and count passes.
+                if not hasattr(g, "_vault_secured_passes"):
+                    g._vault_secured_passes = {}
+                total_credit = sum(vault_passes.values())
+                for owner_hex, credit in vault_passes.items():
+                    owner = bytes.fromhex(owner_hex)
+                    g._vault_secured_passes[owner] = g._vault_secured_passes.get(owner, 0) + 1
+                    if total_credit > 0 and fee_for_stakers_agntc > 0:
+                        share = (credit / total_credit) * fee_for_stakers_agntc * SECURE_REWARD_IMMEDIATE
+                        micro = round(share * 1_000_000)
+                        if micro > 0:
+                            from agentic.ledger.transaction import MintTx, validate_mint
+                            vk = g.viewing_keys.get(owner, owner)
+                            validate_mint(MintTx(
+                                recipient=owner, recipient_viewing_key=vk,
+                                amount=micro, slot=block_slot,
+                            ), g.ledger_state)
+                    # NOTE: when the live ActivityTracker is wired into _do_mine
+                    # (see the ActivityTracker note further down), record vault
+                    # credit as secure work here:
+                    #   g.activity_tracker.record(owner_hex, secure_cpu=credit)
+
+            # --- Proof-of-Vault: drain misses (slash committed capacity) ---
+            vault_misses = g.vault_registry.take_misses(block_slot)
+            if vault_misses:
+                from agentic.economics.slashing import SlashReason
+                if not hasattr(g, "_slashing_engine"):
+                    from agentic.economics.slashing import SlashingEngine
+                    g._slashing_engine = SlashingEngine()
+                epoch = g.epoch_tracker.current_ring
+                for owner_hex in vault_misses:
+                    owner = bytes.fromhex(owner_hex)
+                    staked = g.securing_registry.get_cpu_for_owner(owner, block_slot)
+                    if staked > 0:
+                        g._slashing_engine.slash(
+                            validator_id=-1, reason=SlashReason.VAULT_PROOF_FAILURE,
+                            staked_amount=int(staked), epoch=epoch,
+                        )
+
         # Distribute subgrid outputs — legacy per-wallet path or new per-node path
         if LEGACY_PER_WALLET_SUBGRID:
             for owner, alloc in g.subgrid_allocators.items():
@@ -713,6 +758,15 @@ def _g() -> GenesisState:
     if _genesis is None:
         raise RuntimeError("Genesis state not initialized")
     return _genesis
+
+
+def _refresh_vault_owners() -> None:
+    """Recompute vault shard ownership from current claims (call after seats change)."""
+    g = _g()
+    owner_ids = sorted({
+        c["owner"].hex() for c in g.claim_registry.as_mining_claims()
+    })
+    g.vault_registry.set_owners(owner_ids)
 
 
 # ---------------------------------------------------------------------------
@@ -1046,6 +1100,139 @@ def get_securing_status(wallet_index: int):
         total_secured_chains=g.securing_registry.get_secured_chains(wallet_index),
         total_cpu_committed=round(sum(p.cpu_committed for p in positions), 2),
         total_rewards_earned=round(sum(p.total_reward for p in positions), 6),
+    )
+
+
+# ── Proof-of-Vault endpoints ────────────────────────────────────────────────
+
+class VaultRootResponse(BaseModel):
+    root_cid: str
+    atom_count: int
+    shard_count: int
+    replication_factor: int
+
+
+class VaultAssignmentResponse(BaseModel):
+    wallet_index: int
+    owner: str
+    shards: list[int]
+
+
+class VaultChallengeRequest(BaseModel):
+    wallet_index: int
+    shard_id: int
+
+
+class VaultChallengeResponse(BaseModel):
+    shard_id: int
+    indices: list[int]
+    issued_block: int
+    expires_block: int
+    block_seed_hex: str
+
+
+class VaultSubmitProofRequest(BaseModel):
+    wallet_index: int
+    shard_id: int
+    issued_block: int
+    expires_block: int
+    indices: list[int]
+    block_seed_hex: str
+    proof: dict
+
+
+class VaultSubmitProofResponse(BaseModel):
+    accepted: bool
+    cpu_credit: float
+
+
+class VaultStatusResponse(BaseModel):
+    wallet_index: int
+    shards: list[int]
+    last_pass_block: int | None
+    secured_passes: int
+
+
+@app.get("/api/vault/root", response_model=VaultRootResponse)
+def get_vault_root() -> VaultRootResponse:
+    from agentic.params import VAULT_SHARD_COUNT, VAULT_REPLICATION_FACTOR
+    g = _g()
+    return VaultRootResponse(
+        root_cid=g.vault_dag.root_cid(),
+        atom_count=len(g.vault_dag.cids()),
+        shard_count=VAULT_SHARD_COUNT,
+        replication_factor=VAULT_REPLICATION_FACTOR,
+    )
+
+
+@app.get("/api/vault/assignment/{wallet_index}", response_model=VaultAssignmentResponse)
+def get_vault_assignment(wallet_index: int) -> VaultAssignmentResponse:
+    g = _g()
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    owner = g.wallets[wallet_index].public_key.hex()
+    return VaultAssignmentResponse(
+        wallet_index=wallet_index, owner=owner,
+        shards=g.vault_registry.shards_for_owner(owner),
+    )
+
+
+@app.post("/api/vault/challenge", response_model=VaultChallengeResponse)
+def post_vault_challenge(req: VaultChallengeRequest) -> VaultChallengeResponse:
+    g = _g()
+    if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    owner = g.wallets[req.wallet_index].public_key.hex()
+    block_slot = g.mining_engine.total_blocks_processed
+    ch = g.vault_registry.issue_challenge(owner, req.shard_id, block_slot)
+    if ch is None:
+        raise HTTPException(status_code=404, detail="Wallet not responsible for this shard")
+    return VaultChallengeResponse(
+        shard_id=ch.shard_id, indices=ch.indices,
+        issued_block=ch.issued_block, expires_block=ch.expires_block,
+        block_seed_hex=ch.block_seed_hex,
+    )
+
+
+@app.post("/api/vault/submit-proof", response_model=VaultSubmitProofResponse)
+def post_vault_submit_proof(req: VaultSubmitProofRequest) -> VaultSubmitProofResponse:
+    from agentic.params import VAULT_PROOF_CPU_CREDIT
+    from agentic.vault.registry import Challenge
+    g = _g()
+    if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    owner = g.wallets[req.wallet_index].public_key.hex()
+    # JSON object keys arrive as strings; normalise proof leaves/paths to int keys.
+    proof = {
+        "root": req.proof.get("root", ""),
+        "leaves": {int(k): v for k, v in req.proof.get("leaves", {}).items()},
+        "paths": {int(k): v for k, v in req.proof.get("paths", {}).items()},
+    }
+    challenge = Challenge(
+        shard_id=req.shard_id, indices=req.indices,
+        issued_block=req.issued_block, expires_block=req.expires_block,
+        block_seed_hex=req.block_seed_hex,
+    )
+    block_slot = g.mining_engine.total_blocks_processed
+    accepted = g.vault_registry.submit_proof(owner, challenge, proof, block_slot)
+    return VaultSubmitProofResponse(
+        accepted=accepted,
+        cpu_credit=VAULT_PROOF_CPU_CREDIT if accepted else 0.0,
+    )
+
+
+@app.get("/api/vault/status/{wallet_index}", response_model=VaultStatusResponse)
+def get_vault_status(wallet_index: int) -> VaultStatusResponse:
+    g = _g()
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    owner_hex = g.wallets[wallet_index].public_key.hex()
+    owner_bytes = g.wallets[wallet_index].public_key
+    return VaultStatusResponse(
+        wallet_index=wallet_index,
+        shards=g.vault_registry.shards_for_owner(owner_hex),
+        last_pass_block=g.vault_registry.last_pass_block(owner_hex),
+        secured_passes=g._vault_secured_passes.get(owner_bytes, 0) if hasattr(g, "_vault_secured_passes") else 0,
     )
 
 
@@ -1425,6 +1612,12 @@ def claim_node(request: Request, req: ClaimNodeRequest) -> ClaimNodeResult:
         sync_to_supabase(g, next_block_in=_next_block_in())
     except Exception:
         pass  # never crash the claim endpoint
+
+    # Proof-of-Vault: a new seat changes shard ownership — reassign.
+    try:
+        _refresh_vault_owners()
+    except Exception:
+        pass  # never break the claim on vault-bookkeeping errors
 
     return ClaimNodeResult(
         coordinate={"x": x, "y": y}, stake=stake,
@@ -1860,6 +2053,11 @@ def reset_testnet(
     _machine_behavior = MachineAgentBehavior(state=_genesis)
     clear_sessions()
     g = _genesis
+    # Proof-of-Vault: assign shard ownership over the freshly-seated claims.
+    try:
+        _refresh_vault_owners()
+    except Exception:
+        pass  # never break reset on vault-bookkeeping errors
     return ResetResult(
         state_root=g.ledger_state.get_state_root().hex(),
         record_count=g.ledger_state.record_count,

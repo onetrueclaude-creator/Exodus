@@ -831,3 +831,71 @@ class TestFixG002RingGating:
         assert max(abs(20), abs(10)) // params.NODE_GRID_SPACING == 2
         # (-30, 20) → ring 3
         assert max(abs(-30), abs(20)) // params.NODE_GRID_SPACING == 3
+
+
+class TestWhitepaperVaultParams:
+    """Proof-of-Vault securing parameters (feasibility report 2026-06-18 §5/§9)."""
+
+    def test_vault_shard_count(self):
+        assert params.VAULT_SHARD_COUNT == 16, (
+            "Proof-of-Vault: VAULT_SHARD_COUNT must be 16"
+        )
+
+    def test_vault_replication_factor(self):
+        assert params.VAULT_REPLICATION_FACTOR == 3, (
+            "Proof-of-Vault: each shard replicated across 3 owners"
+        )
+
+    def test_vault_challenge_interval_blocks(self):
+        # Report says "daily" challenges; the testnet runs ~60s blocks, so we
+        # denominate cadence in blocks aligned to EDGE_FADE_BLOCKS (~30 min).
+        assert params.VAULT_CHALLENGE_INTERVAL_BLOCKS == 30, (
+            "Proof-of-Vault: challenge cadence is 30 blocks (matches EDGE_FADE_BLOCKS)"
+        )
+
+    def test_vault_challenge_window_blocks(self):
+        assert params.VAULT_CHALLENGE_WINDOW_BLOCKS == 30, (
+            "Proof-of-Vault: a proof must land within 30 blocks of its challenge"
+        )
+
+    def test_vault_proof_sample_size(self):
+        assert params.VAULT_PROOF_SAMPLE_SIZE == 8, (
+            "Proof-of-Vault: sampled-PDP spot-checks 8 sub-units per challenge"
+        )
+
+    def test_vault_min_stake_capacity(self):
+        assert params.VAULT_MIN_STAKE_CAPACITY == 100.0, (
+            "Proof-of-Vault: dual-stake committed-capacity floor"
+        )
+
+    def test_vault_proof_cpu_credit(self):
+        assert params.VAULT_PROOF_CPU_CREDIT == 50.0, (
+            "Proof-of-Vault: a passing proof credits 50 CPU-equivalent to activity/reward"
+        )
+
+    def test_vault_slash_rate(self):
+        assert params.VAULT_SLASH_RATE == 0.10, (
+            "Proof-of-Vault: missed/failed proof slashes 10% of committed capacity"
+        )
+
+
+class TestProofOfVaultInvariants:
+    """Securing = reward/stake INPUT via vault proofs, NOT consensus (report §3)."""
+
+    def test_vault_slash_rate_matches_slashing_table(self):
+        from agentic.economics.slashing import SlashReason, SLASH_RATES
+        assert SLASH_RATES[SlashReason.VAULT_PROOF_FAILURE] == params.VAULT_SLASH_RATE
+
+    def test_securing_reward_is_fee_pool_split_not_consensus(self):
+        # Securing rewards come from the fee pool (a reward INPUT), the immediate
+        # split is unchanged, and vault proofs feed the same path.
+        assert params.SECURE_REWARD_IMMEDIATE == 0.50
+        assert params.VAULT_PROOF_CPU_CREDIT > 0
+
+    def test_replication_factor_at_least_two_for_redundancy(self):
+        assert params.VAULT_REPLICATION_FACTOR >= 2
+
+    def test_challenge_window_not_shorter_than_block_cadence(self):
+        # A proof must have at least one block to land within its window.
+        assert params.VAULT_CHALLENGE_WINDOW_BLOCKS >= 1
+        assert params.VAULT_CHALLENGE_INTERVAL_BLOCKS >= 1
