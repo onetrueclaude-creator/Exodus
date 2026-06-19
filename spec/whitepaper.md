@@ -2329,6 +2329,21 @@ The following table provides the complete set of protocol-level parameters that 
 | BASE_STORAGE_RATE | 1.0 | Storage Units per block per Storage cell (level 1) |
 | LEVEL_EXPONENT | 0.8 | Sub-linear scaling: output = base × level^0.8 |
 
+#### Vault and Proof-of-Vault Parameters
+
+> These parameters govern the state-layer security model (Section 5A). They are the authoritative source; the reference chain implementation in `chain/agentic/params.py` mirrors them, and `chain/tests/test_whitepaper_audit.py` (`TestWhitepaperVaultParams`) asserts equality per parameter. The challenge cadence is denominated in blocks (the testnet runs ~60 s blocks); a sampled-PDP challenge spot-checks a small random sample of a shard's sub-units, giving high cheat-detection probability with a ~160-byte proof regardless of shard size (Section 5A; feasibility analysis).
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| VAULT_SHARD_COUNT | 16 | Number of CID-range shards the knowledge vault is partitioned into |
+| VAULT_REPLICATION_FACTOR | 3 | Independent participants assigned each shard; the vault survives up to `factor − 1` simultaneous failures |
+| VAULT_CHALLENGE_INTERVAL_BLOCKS | 30 | Blocks between sampled-PDP challenges per shard (~30 min; aligned to `EDGE_FADE_BLOCKS`) |
+| VAULT_CHALLENGE_WINDOW_BLOCKS | 30 | Blocks within which a valid Merkle proof must arrive after a challenge is issued |
+| VAULT_PROOF_SAMPLE_SIZE | 8 | Sub-units spot-checked per sampled-PDP challenge (Merkle paths returned) |
+| VAULT_MIN_STAKE_CAPACITY | 100.0 | Dual-stake committed-capacity floor required to be assigned a shard |
+| VAULT_PROOF_CPU_CREDIT | 50.0 | CPU-equivalent credited to activity/reward for each passing vault proof |
+| VAULT_SLASH_RATE ‡ | 0.10 | Fraction of committed capacity slashed on a missed/failed vault proof (Section 15.1a) |
+
 #### Agent Lifecycle Parameters
 
 | Parameter | Value | Description |
@@ -2575,8 +2590,8 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **Node density** | Resource richness of a node, d(node) = SHA-256(node_id) → [0,1], immutable per node (origin clamped to 1.0) |
 | **Activity rank** | A participant's seat index `k` = position when active participants are sorted by activity score (rank 1 = innermost) |
 | **CPU Energy** | The computational resource budget allocated per subscription tier |
-| **CPU Staked** | Claude API tokens spent by Secure sub-agents, measuring actual compute committed |
-| **CPU Tokens** | Cumulative, read-only counter of all Claude API tokens spent across terminals |
+| **CPU Staked** | Committed CPU+disk that performed vault storage-proof work this cycle, measuring actual securing committed (NOT paid AI-API tokens) |
+| **CPU Tokens** | Cumulative, read-only counter of verified compute committed across terminals, denominated in vault-proof work (NOT paid AI-API tokens) |
 | **Density** | See Node density |
 | **Develop** | Sub-cell type producing Development Points for leveling up other sub-cells |
 | **Epoch** | A period of 100 blocks (SLOTS_PER_EPOCH = 100) |
@@ -2594,9 +2609,10 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **Groth16** | ZK-SNARK proving system [6] with ~192-byte proofs and ~6ms verification |
 | **Halo2** | Recursive proof system [8] without trusted setup, target for mainnet epoch proofs |
 | **Hardness** | Mining difficulty multiplier: hardness = 16 × band(k) |
+| **Knowledge Vault** | The network's shared, content-addressed Merkle-DAG knowledge graph (atoms + links → CIDs; root CID = vault state) — the agents' collective memory and the same graph the /game lattice renders. Secured by participants' CPU+disk via Proof-of-Vault. Section 5A. *(alias: Vault)* |
 | **Open rank** | An unfilled seat index at the rim where new participants are seated |
 | **Level** | Upgrade tier for sub-cells, scaling output by level^0.8 |
-| **Singularity** | Protocol-operated core agent at `k=0` (origin); pure gateway + accumulator with a never-sell-below-cost constraint; never mines or secures; zero governance weight. Renamed from the v1.0/v1.1 "Machines Faction" |
+| **Singularity** | Protocol-operated core agent at `k=0` (origin); pure gateway + accumulator with a never-sell-below-cost constraint; never mines or secures; zero governance weight. Renamed from the v1.0/v1.1 "Machines Faction". Under v1.3 it additionally serves as the vault coordinator (assigns shards, issues PDP challenges, verifies proofs) — a metering role only; it still never mines or secures |
 | **NCP** | Neural Communication Packet — structured encrypted message between agents |
 | **Noir** | Domain-specific language for ZK circuit development (Barretenberg backend) |
 | **Nullifier** | Unique value derived from commitment, preventing double-spend without revealing owner |
@@ -2604,21 +2620,28 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 | **Planet** | Content storage unit (post, chat, prompt) orbiting a node |
 | **PLONK** | Universal ZK proving system [7] — single ceremony for all circuits |
 | **PoAIV** | Proof of AI Verification — consensus mechanism using AI agent reasoning |
+| **Proof of Energy** | On-chain record of committed compute+disk (vault-proof work), the measurement substrate for the CPU leg of dual-stake. Section 13.2. (Renamed in meaning under v1.3 from "AI-API tokens spent" to "verified vault work.") |
+| **Proof-of-Vault** | The state-layer security model: participants commit real CPU+disk to hold vault shards and answer the Singularity's random-byte challenges with a Merkle proof (sampled-PDP). Secures the network's *state* (the knowledge vault); the *ledger* is secured separately by PoAIV (Section 5). Section 5A |
 | **Poseidon** | SNARK-friendly hash function [11] (~100× fewer constraints than SHA-256) |
+| **Replication factor** | The number of independent participants holding each vault shard (`VAULT_REPLICATION_FACTOR`); the vault survives up to `factor − 1` simultaneous failures. Section 5A |
 | **Research** | Sub-cell type producing Research Points for unlocking technologies |
 | **Ring** | *(legacy — see Band)* The v1.0/v1.1 Chebyshev expansion boundary, replaced by the radial band under v1.2 |
 | **RLN** | Rate-Limiting Nullifiers [44] — spam-resistant anonymous messaging primitive |
 | **S_eff** | Effective stake: α(T/T_total) + β(C/C_total), determines validator influence |
 | **Safe mode** | Emergency state triggered when >20% validators offline |
-| **Secure** | Sub-cell type producing AGNTC through blockchain validation; primary mining activity |
+| **Secure** | Sub-cell type committing CPU+disk to vault storage proofs (the **securing** verb, Section 5A) and minting AGNTC as the coupled mining issuance. Securing ≠ mining: securing proves vault work, mining issues supply |
+| **Securing** | The verifiable-resource-commitment verb: spending real CPU+disk to replicate, serve, and re-prove a shard of the knowledge vault, with the proof submitted through the Singularity link. Distinct from mining (issuance) and staking (the bond). Section 5A |
+| **Shard** | A CID-range slice of the knowledge vault assigned to a participant to store and re-prove; replicated across `VAULT_REPLICATION_FACTOR` participants. Section 5A |
 | **Slashing** | Punitive token destruction for integrity violations |
 | **SMT** | Sparse Merkle Tree — depth-26 authenticated data structure for user ledger spaces |
 | **Sonnet** | Mid-tier Claude AI model — balanced reasoning and cost |
 | **Star system** | *(deprecated — see Node)* Legacy term for an individual agent node |
-| **Storage** | Sub-cell type producing Storage Size via ZK tunnel agents (private on-chain data) |
+| **Storage** | Sub-cell type producing Storage Size via ZK tunnel agents (private on-chain data). Under v1.3, Storage cells also constitute the participant's local custody of their assigned vault shard, which Proof-of-Vault challenges audit (Section 5A) |
+| **Storage proof (PDP)** | Provable Data Possession: a random-sample possession proof (~160 bytes regardless of dataset size) returning a Merkle path over sampled bytes; the Singularity verifies it without ever receiving the shard. The cryptographic basis of securing. Section 5A |
 | **Subgrid** | Private 8×8 inner grid of 64 sub-cells within each homenode |
 | **Territory** | *(retired)* A user's single seat plus its orbiting subagents — there is no aggregate claimed land under v1.2 |
 | **VRF** | Verifiable Random Function [41] — cryptographic tool for fair committee selection |
+| **Vault** | See Knowledge Vault |
 | **Vesting** | Time-locked reward release: 50% immediate, 50% linear over 30 days |
 | **WARMUP** | Agent lifecycle state before becoming ACTIVE (1 epoch duration) |
 
