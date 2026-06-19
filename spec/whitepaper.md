@@ -1453,7 +1453,7 @@ This validator has an 83.5% chance of being selected to at least one committee s
 
 #### 14.1 Block Reward Split
 
-Each block produces rewards from two sources: newly minted AGNTC (from coordinate claims within the block) and transaction fees collected. The fee-derived rewards (the 50% not burned) are distributed according to fixed protocol parameters:
+Each block produces rewards from two sources: newly minted AGNTC (from subgrid Secure mining within the block) and transaction fees collected. The fee-derived rewards (the 50% not burned) are distributed according to fixed protocol parameters:
 
 ```
 REWARD_SPLIT_VERIFIER = 0.60    (60% to the block's verification committee)
@@ -1477,10 +1477,10 @@ reward_staker(i) = (total_fees * (1 - FEE_BURN_RATE) * REWARD_SPLIT_STAKER) * S_
 
 #### 14.2 Secure Action Rewards
 
-Beyond the block-level fee distribution, validators earn rewards specifically from Secure operations — the act of committing CPU Energy to validate and defend blockchain state at a specific coordinate. The Secure yield at a given coordinate depends on:
+Beyond the block-level fee distribution, validators earn rewards specifically from Secure operations — the act of committing CPU and disk to hold, serve, and continually re-prove the node's vault shard (Section 5A) for the seat at rank `k`. The Secure yield for a given seat depends on:
 
 ```
-secure_yield = BASE_SECURE_RATE * n_secure_cells * level^LEVEL_EXPONENT * density(x, y) / hardness(ring)
+secure_yield = BASE_SECURE_RATE * n_secure_cells * level^LEVEL_EXPONENT * density(node) / hardness(band(k))
 ```
 
 Where:
@@ -1488,10 +1488,10 @@ Where:
 - n_secure_cells is the number of sub-cells assigned to Secure operations (out of 64)
 - level is the upgrade level of the Secure sub-cells
 - LEVEL_EXPONENT = 0.8 (diminishing returns)
-- density(x, y) is the coordinate's resource density [0, 1]
-- hardness(ring) = 16 × ring
+- density(node) is the node's resource density [0, 1] (Section 4.4)
+- hardness(band(k)) = 16 × band(k)
 
-This formula makes Secure rewards a function of both strategic positioning (high-density coordinates in early rings) and operational investment (more cells assigned, higher levels achieved).
+This formula makes Secure rewards a function of both strategic positioning (high-density seats in inner bands) and operational investment (more cells assigned, higher levels achieved).
 
 #### 14.3 Vesting Schedule
 
@@ -1521,9 +1521,9 @@ The vesting mechanism serves two purposes:
 
 #### 14.4 Reward Projections
 
-**Expected annual returns** for a single homenode with 16 Secure sub-cells at level 1, average density (0.5), at various ring positions:
+**Expected annual returns** for a single homenode with 16 Secure sub-cells at level 1, average density (0.5), at various band positions:
 
-| Ring | Hardness | AGNTC per Block | AGNTC per Day (1440 blocks) | Annual AGNTC |
+| Band | Hardness | AGNTC per Block | AGNTC per Day (1440 blocks) | Annual AGNTC |
 |------|----------|----------------|---------------------------|-------------|
 | 1 | 16 | 0.250 | 360 | 131,400 |
 | 5 | 80 | 0.050 | 72 | 26,280 |
@@ -1531,11 +1531,11 @@ The vesting mechanism serves two purposes:
 | 50 | 800 | 0.005 | 7.2 | 2,628 |
 | 100 | 1,600 | 0.0025 | 3.6 | 1,314 |
 
-APY depends on the AGNTC market price, the validator's token stake, and their CPU cost. The break-even point — where staking rewards exceed the cost of CPU Energy (Claude API usage) — is a function of network maturity. In early rings with low hardness, the break-even is trivially achieved. As the network matures and hardness increases, only efficient operators with optimized CPU usage and high-density coordinates will maintain profitability.
+APY depends on the AGNTC market price, the validator's token stake, and their CPU cost. The break-even point — where staking rewards exceed the cost of the CPU + disk committed to vault storage proofs — is a function of network maturity. In inner bands with low hardness, the break-even is trivially achieved. As the network matures and hardness increases, only efficient operators with optimized resource commitment and high-density seats will maintain profitability.
 
 **Network-level APY projections** (block reward + fee share, assuming 60s blocks):
 
-| Epoch Ring | Total Supply (est.) | Staking Ratio (est.) | Block Reward | Verifier APY | Staker APY |
+| Band | Total Supply (est.) | Staking Ratio (est.) | Block Reward | Verifier APY | Staker APY |
 |-----------|--------------------|--------------------|-------------|-------------|-----------|
 | 1 (genesis) | 900 | 50% | 0.5 AGNTC | ~40% | ~27% |
 | 5 | ~5,000 | 40% | 0.3 AGNTC | ~22% | ~15% |
@@ -1666,10 +1666,10 @@ Each sub-cell type corresponds to an autonomous agent operation that produces a 
 
 **Secure** (produces AGNTC + Secured Chains). Secure sub-cells represent CPU committed to blockchain validation. Each Secure cell deploys AI compute to verify transactions, attest to blocks, and defend the chain's integrity. Output is denominated in AGNTC and is the primary mechanism for earning the protocol's native token through active participation.
 
-Secure output is the only sub-cell type affected by both coordinate density and epoch hardness:
+Secure output is the only sub-cell type affected by both per-node density and band hardness:
 
 ```
-agntc_output = BASE_SECURE_RATE * n_cells * level^LEVEL_EXPONENT * density(x,y) / hardness(ring)
+agntc_output = BASE_SECURE_RATE * n_cells * level^LEVEL_EXPONENT * density(node) / hardness(band(k))
 ```
 
 Where BASE_SECURE_RATE = 0.5 AGNTC per block per cell at level 1, hardness 1, full density.
@@ -1735,13 +1735,14 @@ This section formalizes the complete per-block resource output calculation for a
 
 #### 17.1 Formal Yield Formulas
 
-For a homenode at coordinate (x, y) in epoch ring R, with sub-cell allocations and levels as follows:
+For a homenode seated at rank `k` in band `B`, with sub-cell allocations and levels as follows:
 
 Let:
 - n_s, n_d, n_r, n_st = number of sub-cells assigned to Secure, Develop, Research, Storage
 - l_s, l_d, l_r, l_st = levels of each sub-cell type
-- d = density(x, y) ∈ [0, 1]
-- H = hardness(R) = 16R
+- d = density(node) ∈ [0, 1]
+- B = band(k) = ⌈√(k/8)⌉
+- H = hardness(B) = 16B
 
 Constraint: n_s + n_d + n_r + n_st ≤ 64
 
@@ -1749,7 +1750,7 @@ Constraint: n_s + n_d + n_r + n_st ≤ 64
 
 ```
 Δ_agntc = BASE_SECURE_RATE × n_s × l_s^0.8 × d / H
-        = 0.5 × n_s × l_s^0.8 × d / (16R)
+        = 0.5 × n_s × l_s^0.8 × d / (16B)
 ```
 
 **Development Points per block:**
@@ -1785,13 +1786,13 @@ Constraint: n_s + n_d + n_r + n_st ≤ 64
 Δ_cpu_staked = Σ tokens_spent(secure_sub_agents, this_block)
 ```
 
-Note: Development Points, Research Points, and Storage Units are not affected by coordinate density or epoch hardness. Only AGNTC mining (Secure operations) bears the cost of grid expansion and positional scarcity. This means non-Secure sub-cells produce identical output regardless of coordinate position — a deliberate design choice that allows participants at high-ring, low-density coordinates to remain competitive in development and research even when their mining yield is low.
+Note: Development Points, Research Points, and Storage Units are not affected by per-node density or band hardness. Only AGNTC mining (Secure operations) bears the cost of band hardness and positional scarcity. This means non-Secure sub-cells produce identical output regardless of seat position — a deliberate design choice that allows participants at outer-band, low-density seats to remain competitive in development and research even when their mining yield is low.
 
 #### 17.2 Worked Examples
 
-**Example 1: Balanced Allocation at Ring 1**
+**Example 1: Balanced Allocation at Band 1**
 
-A homenode at ring 1, density 0.6, all levels at 1:
+A homenode in band 1, density 0.6, all levels at 1:
 - 16 Secure, 16 Develop, 16 Research, 16 Storage
 
 ```
@@ -1807,9 +1808,9 @@ Per day (1,440 blocks):
 - Research Points: 11,520
 - Storage Units: 23,040
 
-**Example 2: Max Secure at Ring 10**
+**Example 2: Max Secure at Band 10**
 
-A homenode at ring 10, density 0.5, Secure level 5:
+A homenode in band 10, density 0.5, Secure level 5:
 - 64 Secure, 0 Develop, 0 Research, 0 Storage
 
 ```
@@ -1820,7 +1821,7 @@ Per day: 521 AGNTC — but with zero Development Points, the operator cannot lev
 
 **Example 3: Development-Heavy Growth Strategy**
 
-A homenode at ring 5, density 0.4, Secure level 1, Develop level 3:
+A homenode in band 5, density 0.4, Secure level 1, Develop level 3:
 - 8 Secure, 48 Develop, 4 Research, 4 Storage
 
 ```
@@ -1832,30 +1833,29 @@ Storage/block  = 1.0 × 4 × 1.0                  = 4.000
 
 This operator sacrifices immediate AGNTC yield (only 28.8 AGNTC/day) to rapidly accumulate Development Points (166,464/day). Once sufficient development is accumulated, they can level up their 8 Secure cells to level 10+ and reassign Develop cells to Secure, achieving higher sustained yield than the "all-in Secure" approach.
 
-**Example 4: Multi-Node Fleet**
+**Example 4: One Seat Across Bands (Yield Sensitivity)**
 
-A Professional tier operator with 5 claimed nodes across rings 1-5, each with 32 Secure (level 3) and 32 Develop (level 1), average density 0.5:
+A Professional operator holds a single seat (homenode plus up to 4 orbiting subagents, Section 18.5 — 5 nodes total, contributing to one seat's standing). As activity moves the seat inward or outward, its band changes; with 32 Secure (level 3) and 32 Develop (level 1) and average density 0.5, the seat's Secure yield at each band is:
 
-| Node | Ring | Hardness | AGNTC/block | AGNTC/day |
-|------|------|----------|-------------|-----------|
-| 1 | 1 | 16 | 1.204 | 1,734 |
-| 2 | 2 | 32 | 0.602 | 867 |
-| 3 | 3 | 48 | 0.401 | 578 |
-| 4 | 4 | 64 | 0.301 | 434 |
-| 5 | 5 | 80 | 0.241 | 347 |
-| **Total** | | | **2.749** | **3,960** |
+| Seat band | Hardness | AGNTC/block | AGNTC/day |
+|------|----------|-------------|-----------|
+| 1 | 16 | 1.204 | 1,734 |
+| 2 | 32 | 0.602 | 867 |
+| 3 | 48 | 0.401 | 578 |
+| 4 | 64 | 0.301 | 434 |
+| 5 | 80 | 0.241 | 347 |
 
-The fleet generates 3,960 AGNTC per day — with inner-ring nodes contributing disproportionately. This demonstrates the strategic value of early coordinate claims: ring 1 alone produces 44% of the fleet's total output.
+Inner-band positions yield disproportionately: band 1 produces roughly 5× the per-block AGNTC of band 5. This demonstrates the strategic value of pushing a seat inward through sustained activity — a band-1 seat earns far more from the same allocation than the identical seat drifted out to band 5.
 
 #### 17.3 Optimization Strategy
 
 The four sub-cell types create a rich strategic space. The optimal allocation depends on the participant's time horizon, risk tolerance, and current network conditions:
 
-**Early game (rings 1-10, network < 100 participants).** AGNTC scarcity is maximal — few coordinates have been claimed, market supply is thin, and early AGNTC commands a premium. Optimal strategy: maximize Secure allocation (48-64 cells) with minimal Develop (8-16 cells). The low hardness at early rings means even level 1 Secure cells produce substantial yield.
+**Early game (inner bands 1-10, network < 100 participants).** AGNTC scarcity is maximal — few seats are active, market supply is thin, and early AGNTC commands a premium. Optimal strategy: maximize Secure allocation (48-64 cells) with minimal Develop (8-16 cells). The low hardness in inner bands means even level 1 Secure cells produce substantial yield.
 
-**Mid game (rings 10-100, network 100-1000 participants).** Hardness has increased 10-100×, making raw Secure yield per cell much lower. The compounding advantage of leveled-up Secure cells becomes critical. Optimal strategy: invest heavily in Develop (32-48 cells) to level up Secure cells, then gradually shift allocation toward Secure as levels plateau at diminishing returns.
+**Mid game (bands 10-100, network 100-1000 participants).** Hardness has increased 10-100×, making raw Secure yield per cell much lower. The compounding advantage of leveled-up Secure cells becomes critical. Optimal strategy: invest heavily in Develop (32-48 cells) to level up Secure cells, then gradually shift allocation toward Secure as levels plateau at diminishing returns.
 
-**Late game (rings 100+, mature network).** Mining yield has decayed to the point where raw AGNTC production is marginal. The data economy — content stored on-chain, NCP communication, agent services — becomes the dominant economic activity. Optimal strategy: shift toward Storage (ZK data on-chain) and Research (unlocking advanced capabilities). AGNTC is earned primarily through transaction fees rather than mining.
+**Late game (outer bands 100+, mature network).** Mining yield has decayed to the point where raw AGNTC production is marginal. The data economy — content stored on-chain, NCP communication, agent services — becomes the dominant economic activity. Optimal strategy: shift toward Storage (ZK data on-chain) and Research (unlocking advanced capabilities). AGNTC is earned primarily through transaction fees rather than mining.
 
 This progression — from mining economy to service economy — mirrors the historical evolution of real-world economies from resource extraction to service-based GDP. The subgrid system ensures this transition is gradual and participant-driven rather than imposed by protocol schedule.
 
