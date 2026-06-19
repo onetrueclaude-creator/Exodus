@@ -955,6 +955,8 @@ AGNTC has a soft-capped supply with a **5% annual inflation ceiling** enforced p
 
 **Mining is the sole supply-expanding mechanism.** New AGNTC enters circulation only through one pathway: a node's private subgrid mints AGNTC from its active Secure cells (Section 16). There is no pre-mine beyond the genesis allocation, no scheduled emission curve, no treasury minting authority. If no node secures, no new AGNTC enters circulation.
 
+Note the verb separation introduced in v1.3: **mining** is local AGNTC *issuance* in a node's subgrid; **securing** is the *verifiable resource commitment* of CPU+disk to the collective knowledge vault, proven through the Singularity link (Section 5A). Mining can run locally, but mining that is not linked to the Singularity is unfinalized and unrewarded — issuance is attested by securing. The phrase "if no node secures, no new AGNTC enters circulation" means: without the securing link that attests vault work, mined AGNTC is not finalized.
+
 **Supply burns** contract the circulating supply through two channels:
 - **50% transaction fee burn** — permanently removes AGNTC on every on-chain action (Section 12)
 - **Singularity accumulation** — the Singularity is permanently bound to the core (`k = 0`, origin; Section 4.5) and never sells AGNTC; the continuous yield of the most productive single node on the lattice flows into a never-selling protocol reserve (Section 10.3)
@@ -990,6 +992,8 @@ Founders vesting applies to AGNTC earned by Founders-tier participants through t
 The Singularity represents a protocol-enforced approach to token supply stability. Under v1.2's phyllotaxis model, it is implemented as a single protocol-operated AI agent permanently bound to the core (`k = 0`, origin). It cannot take a competitive seat, cannot be deployed elsewhere, and is not eligible to hold any other rank. Crucially, the Singularity is a **pure gateway and accumulator — it never mines and never secures.** It does not run a productive subgrid of its own; instead it passively accrues the origin's yield into its reserve and serves chain queries (Read / Stats / block data) and attestation submission as interaction spokes to the core. It is subject to a protocol-level economic constraint: **the Singularity never sells AGNTC at a loss.**
 
 The protocol enforces this through an economic constraint: any sale of AGNTC by the Singularity wallet below its acquisition cost is rejected by the verification committee. With `SINGULARITY_MIN_SELL_RATIO = 1.0`, it can only sell at or above cost — yielding zero profit, which eliminates any economic incentive to sell. This makes the Singularity a de facto permanent accumulator without requiring a hard transfer prohibition.
+
+Under v1.3 the Singularity additionally serves as the **vault coordinator** (Section 5A): it stores the vault's root CID and per-shard Merkle roots, assigns shards to participants by CID range, issues the random-byte storage challenges, and verifies the returned Merkle proofs. This is a *metering and coordination* role, not a productive one — the Singularity still neither mines nor secures (it holds no shard of its own and answers no challenge); it is the trusted referee that makes other participants' securing work checkable. This coordinator role carries no governance weight and does not alter the never-sell accumulator constraint.
 
 **Properties of the permanent accumulator:**
 
@@ -1044,7 +1048,7 @@ ZK Agentic Chain's supply model is fundamentally different from both fixed-sched
 - No treasury minting authority
 - **Mining is the sole supply-expanding mechanism**
 
-New AGNTC enters circulation through one and only one mechanism: a node's subgrid Secure cells mint AGNTC for the live verification work they perform. The rate at which supply grows is determined entirely by participant behavior — how many nodes are online, how much CPU Energy they deploy to Secure, and how deep in the bands they sit.
+New AGNTC enters circulation through one and only one mechanism: a node's subgrid **mines** it from active Secure cells (Section 16). Mining is *issuance*. The separate act of **securing** — committing CPU+disk to the knowledge vault and proving it through the Singularity link (Section 5A) — is what attests and finalizes that issuance and what earns the securing reward; the two are coupled (you mine locally, you link to secure) but distinct. The rate at which supply grows is determined entirely by participant behavior — how many nodes are online, how much CPU Energy they deploy to Secure, and how deep in the bands they sit.
 
 This means that in a period of low network activity, supply growth approaches zero. In a period of high activity, supply grows faster — but always bounded by two constraints:
 
@@ -1104,6 +1108,7 @@ Where:
 - BASE_MINING_RATE_PER_BLOCK = 0.5 AGNTC (at hardness 1, full density)
 - density(node) = SHA-256_unit(node_id) ∈ [0, 1] (per-node, Section 4.4)
 - hardness = 16 × band(k)
+- mining yield is *finalized* only while the node is actively **securing** (a live vault-proof link, Section 5A); an unlinked node still computes this yield but it remains unattested/unrewarded until the securing link is re-established
 
 **Worked examples** (assuming density = 0.5, the statistical average):
 
@@ -1159,7 +1164,7 @@ Every on-chain action in ZK Agentic Chain requires AGNTC as gas. Fee categories 
 
 | Action | Description | Fee Basis |
 |--------|------------|-----------|
-| Secure | Block validation staking | CPU Energy proportional |
+| Secure | Vault storage proof (securing) | CPU Energy proportional |
 | Transact | AGNTC transfer between wallets | Fixed base + size variable |
 | Chat / NCP | Neural Communication Packet transmission | Per-message |
 | Storage | Writing content on-chain (planets, posts) | Per-byte stored |
