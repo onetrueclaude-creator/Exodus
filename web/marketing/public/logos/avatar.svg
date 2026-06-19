@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <filter id="brush-a" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="turbulence" baseFrequency="0.012" numOctaves="4" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="glow-a">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feComposite in="blur" in2="SourceGraphic" operator="over"/>
+    </filter>
+    <filter id="bg-grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" result="grain"/>
+      <feColorMatrix type="saturate" values="0" in="grain" result="bw"/>
+      <feBlend in="SourceGraphic" in2="bw" mode="soft-light"/>
+    </filter>
+    <linearGradient id="grad-ra" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.5"/>
+    </linearGradient>
+    <linearGradient id="grad-pa" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.25"/>
+    </linearGradient>
+    <radialGradient id="nc-a" cx="40%" cy="35%">
+      <stop offset="0%" stop-color="#67FFFF"/>
+      <stop offset="100%" stop-color="#00D4FF"/>
+    </radialGradient>
+    <radialGradient id="np-a" cx="40%" cy="35%">
+      <stop offset="0%" stop-color="#A78BFA"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </radialGradient>
+    <!-- Subtle ring border -->
+    <radialGradient id="ring-grad" cx="50%" cy="50%">
+      <stop offset="85%" stop-color="transparent"/>
+      <stop offset="92%" stop-color="#00D4FF" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.12"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Dark background with subtle grain -->
+  <rect width="400" height="400" rx="32" fill="#0A0A0F"/>
+  <rect width="400" height="400" rx="32" fill="url(#ring-grad)"/>
+  <rect width="400" height="400" rx="32" fill="transparent" filter="url(#bg-grain)" opacity="0.04"/>
+
+  <!-- Network mark (centered, scaled up from icon) -->
+  <g transform="translate(100, 95)" filter="url(#brush-a)">
+    <!-- Perimeter connections -->
+    <path d="M95,24 Q140,18 168,56" stroke="url(#grad-pa)" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    <path d="M168,56 Q178,110 153,152" stroke="url(#grad-pa)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M153,152 Q100,175 44,146" stroke="url(#grad-pa)" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M44,146 Q18,108 30,68" stroke="url(#grad-pa)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M30,68 Q48,32 95,24" stroke="url(#grad-pa)" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+
+    <!-- Radial connections (double-stroke brush technique) -->
+    <path d="M100,100 Q96,58 95,24" stroke="#00D4FF" stroke-width="5.5" fill="none" stroke-linecap="round" opacity="0.12"/>
+    <path d="M100,100 Q96,58 95,24" stroke="url(#grad-ra)" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+    <path d="M100,100 Q140,72 168,56" stroke="#8B5CF6" stroke-width="5.5" fill="none" stroke-linecap="round" opacity="0.12"/>
+    <path d="M100,100 Q140,72 168,56" stroke="url(#grad-ra)" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+    <path d="M100,100 Q132,132 153,152" stroke="#00D4FF" stroke-width="5.5" fill="none" stroke-linecap="round" opacity="0.12"/>
+    <path d="M100,100 Q132,132 153,152" stroke="url(#grad-ra)" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M100,100 Q66,128 44,146" stroke="#8B5CF6" stroke-width="5.5" fill="none" stroke-linecap="round" opacity="0.12"/>
+    <path d="M100,100 Q66,128 44,146" stroke="url(#grad-ra)" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M100,100 Q58,82 30,68" stroke="#00D4FF" stroke-width="5.5" fill="none" stroke-linecap="round" opacity="0.12"/>
+    <path d="M100,100 Q58,82 30,68" stroke="url(#grad-ra)" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+
+    <!-- ZK hidden cross -->
+    <path d="M95,24 Q105,140 44,146" stroke="#8B5CF6" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-dasharray="8 10" opacity="0.25"/>
+  </g>
+
+  <!-- Nodes -->
+  <g transform="translate(100, 95)" filter="url(#glow-a)">
+    <circle cx="100" cy="100" r="14" fill="url(#nc-a)" opacity="0.95"/>
+    <circle cx="100" cy="100" r="8" fill="#fff" opacity="0.2"/>
+    <circle cx="95" cy="24" r="9" fill="url(#nc-a)" opacity="0.9"/>
+    <circle cx="168" cy="56" r="9.5" fill="url(#np-a)" opacity="0.9"/>
+    <circle cx="153" cy="152" r="8" fill="url(#nc-a)" opacity="0.85"/>
+    <circle cx="44" cy="146" r="9.5" fill="url(#np-a)" opacity="0.9"/>
+    <circle cx="30" cy="68" r="8.5" fill="url(#nc-a)" opacity="0.9"/>
+  </g>
+</svg>

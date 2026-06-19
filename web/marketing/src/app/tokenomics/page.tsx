@@ -5,33 +5,33 @@ import FeatureCard from "@/components/FeatureCard";
 import { ZapIcon, LockIcon, VoteIcon, ShieldIcon, DiamondIcon } from "@/components/Icons";
 
 const healthMetrics = [
-  { label: "Total Supply", value: "1,000,000,000", unit: "AGNTC" },
-  { label: "Genesis Circulating", value: "900", unit: "AGNTC" },
-  { label: "Current APY", value: "9.2", unit: "%", trend: "up" as const },
-  { label: "Active Verifiers", value: "8,240", trend: "up" as const },
-  { label: "CPU Staked", value: "2.1M", unit: "vCPUs", trend: "up" as const },
+  { label: "Soft Cap", value: "1B", unit: "AGNTC" },
+  { label: "Genesis Supply", value: "900", unit: "AGNTC" },
+  { label: "Inflation Ceiling", value: "5", unit: "%/yr" },
+  { label: "Fee Burn", value: "50", unit: "%" },
+  { label: "Signup Bonus", value: "1", unit: "AGNTC" },
 ];
 
+// Supply is mining-driven: there is no pre-allocated faction distribution.
+// New AGNTC enters circulation only through subgrid Secure mining (the sole mint path).
 const distribution = [
-  { label: "Community (Free Tier)", percentage: 25, color: "#0D9488" },
-  { label: "Machines (AI Agents)", percentage: 25, color: "#DC2680" },
-  { label: "Founders (Team & Advisors)", percentage: 25, color: "#F59E0B" },
-  { label: "Professional (Paid Tier)", percentage: 25, color: "#3B82F6" },
+  { label: "Mined via subgrid Secure (sole mint path)", percentage: 99, color: "#00D4FF" },
+  { label: "Genesis (900 AGNTC, 100 to Singularity core)", percentage: 1, color: "#8B5CF6" },
 ];
 
 const utilities = [
-  { icon: <ZapIcon size={28} />, title: "Gas", description: "AGNTC is the native gas token. Every transaction on ZK Agentic Chain requires AGNTC to pay for compute and verification." },
-  { icon: <LockIcon size={28} />, title: "Staking", description: "Stake AGNTC alongside your CPU commitment to become a verifier. Higher stake = priority verification assignments and higher rewards." },
-  { icon: <VoteIcon size={28} />, title: "Governance", description: "AGNTC holders vote on protocol upgrades, parameter changes, and treasury allocations. One token, one vote." },
+  { icon: <ZapIcon size={28} />, title: "Gas", description: "AGNTC is the native gas token. Every on-chain transaction requires AGNTC — 50% of each fee is permanently burned, the rest split between verifiers and stakers." },
+  { icon: <LockIcon size={28} />, title: "Dual Staking", description: "Bond AGNTC alongside committed CPU + disk capacity to participate in verification. The compute leg is weighted 60% over capital — and is slashed if your vault proofs fail." },
+  { icon: <VoteIcon size={28} />, title: "Governance", description: "Human holders vote on protocol parameters and upgrades, weighted by staked AGNTC. The Singularity has zero governance weight — humans govern, the protocol agent executes." },
 ];
 
 const comparisons = [
-  { metric: "Consensus", agntc: "PoAI Verification", sol: "Tower BFT", aleo: "Proof of Succinct Work", mina: "Ouroboros" },
-  { metric: "Staking Model", agntc: "CPU + Token", sol: "Token Only", aleo: "GPU (Proving)", mina: "Token Only" },
-  { metric: "Privacy", agntc: "Isolated Ledger Spaces", sol: "Public", aleo: "Private by Default", mina: "Public" },
-  { metric: "Supply", agntc: "1B (Organic Growth)", sol: "~600M (Inflationary)", aleo: "1.5B (Fixed)", mina: "~1.2B (Inflationary)" },
-  { metric: "Genesis Circulating", agntc: "900 (0.00009%)", sol: "~260M (43%)", aleo: "~187M (12.5%)", mina: "~800M (67%)" },
-  { metric: "Verifier Work", agntc: "AI Chain Auditing", sol: "Vote Confirmation", aleo: "ZK Proof Generation", mina: "SNARK Production" },
+  { metric: "Ledger Consensus", agntc: "PoAIV (9/13 committee)", sol: "Tower BFT", aleo: "Proof of Succinct Work", mina: "Ouroboros" },
+  { metric: "Staking Model", agntc: "CPU + Disk + Token", sol: "Token Only", aleo: "GPU (Proving)", mina: "Token Only" },
+  { metric: "Privacy", agntc: "Private by Default (SMT)", sol: "Public", aleo: "Private by Default", mina: "Public" },
+  { metric: "Supply", agntc: "1B Soft Cap (5% ceiling)", sol: "~600M (Inflationary)", aleo: "1.5B (Fixed)", mina: "~1.2B (Inflationary)" },
+  { metric: "Genesis Supply", agntc: "900 AGNTC (mining-driven)", sol: "~260M (43%)", aleo: "~187M (12.5%)", mina: "~800M (67%)" },
+  { metric: "State Security", agntc: "Proof-of-Vault (CPU+disk)", sol: "Full replication", aleo: "Full replication", mina: "Recursive SNARK" },
 ];
 
 export default function TokenomicsPage() {
@@ -40,51 +40,38 @@ export default function TokenomicsPage() {
       <Hero
         title="AGNTC"
         highlight="Tokenomics"
-        subtitle="Agentic Coin — the dual-utility token powering ZK Agentic Chain. Gas, staking, and governance in one."
+        subtitle="Agentic Coin — the native token of ZK Agentic Chain. Gas, dual staking, and governance. Mining is the sole mint path; a 5% annual ceiling and 50% fee burn keep supply honest."
       />
 
-      {/* Contract Address */}
-      <section className="py-6 border-y border-card-border">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <p className="text-xs text-text-muted uppercase tracking-widest mb-2">Solana Mainnet Contract</p>
-          <a
-            href="https://solscan.io/token/3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block font-mono text-sm text-accent-cyan hover:text-white transition-colors break-all"
-          >
-            3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd
-          </a>
-        </div>
-      </section>
-
-      {/* Chain Health */}
+      {/* Token Economics at a glance */}
       <section className="py-8 border-y border-card-border">
         <div className="max-w-7xl mx-auto px-6">
-          <p className="text-xs text-text-muted uppercase tracking-widest text-center mb-4">Network Health</p>
+          <p className="text-xs text-text-muted uppercase tracking-widest text-center mb-4">Token Economics</p>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {healthMetrics.map((m) => (
               <StatCard key={m.label} {...m} />
             ))}
           </div>
+          <p className="text-center text-xs text-text-muted mt-4">
+            Solana SPL mint <span className="font-mono text-text-secondary break-all">3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd</span> &middot; 1:1 migration to L1 &middot; mint + freeze authority renounced
+          </p>
         </div>
       </section>
 
-      {/* Token Distribution */}
+      {/* Supply Model */}
       <section className="py-20 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-accent-cyan/5 rounded-full blur-[100px]" />
         <div className="relative z-10 max-w-5xl mx-auto px-6">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-            Token <span className="gradient-text">Distribution</span>
+            Supply <span className="gradient-text">Model</span>
           </h2>
           <div className="glass-card p-8 flex justify-center">
             <TokenDistChart segments={distribution} />
           </div>
           <div className="mt-6 glass-card p-5 border-l-2 border-accent-cyan/40">
             <p className="text-sm text-text-secondary leading-relaxed">
-              <span className="text-text-primary font-medium">31,623 &times; 31,623 Grid = 1B AGNTC</span> — The galaxy grid IS the supply.
-              Each coordinate yields 1 AGNTC when claimed. Supply grows organically as players explore.
-              Equal 25% allocation across all four factions.
+              <span className="text-text-primary font-medium">No pre-allocated distribution.</span> There is no 25%-per-faction split, no team allocation, and no treasury minting authority.
+              New AGNTC enters circulation only through one pathway: each node&apos;s private 8×8 subgrid mints AGNTC from its active Secure cells. At genesis only the Singularity is seated, with its 100 AGNTC minted to a never-selling reserve at the core; the remaining 800 of the 900 genesis supply enters as participants join and mine. Founders&apos; own mined AGNTC vests over 4 years with a 12-month cliff.
             </p>
           </div>
         </div>
@@ -115,17 +102,17 @@ export default function TokenomicsPage() {
             Economic <span className="gradient-text">Model</span>
           </h2>
           <p className="text-center text-text-secondary mb-12 max-w-2xl mx-auto">
-            Organic growth — no scheduled inflation. Supply grows only when coordinates are claimed.
+            Mining-only issuance under a hard ceiling, with two channels of permanent deflationary pressure.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="glass-card p-6 text-center group hover:border-accent-cyan/30 transition-colors">
               <div className="w-10 h-10 mx-auto mb-3 rounded-lg bg-accent-cyan/10 flex items-center justify-center text-accent-cyan">
                 <DiamondIcon size={20} />
               </div>
-              <p className="text-sm text-text-muted uppercase tracking-widest mb-2">Growth</p>
-              <p className="text-3xl font-bold gradient-text">Organic</p>
-              <p className="text-sm text-text-secondary mt-2">1 AGNTC per coordinate claimed</p>
-              <p className="text-xs text-text-muted mt-1">No scheduled inflation</p>
+              <p className="text-sm text-text-muted uppercase tracking-widest mb-2">Inflation Ceiling</p>
+              <p className="text-3xl font-bold gradient-text">5%</p>
+              <p className="text-sm text-text-secondary mt-2">Hard annual cap, enforced per epoch</p>
+              <p className="text-xs text-text-muted mt-1">Mining hardness (16·band) keeps it well below</p>
             </div>
             <div className="glass-card p-6 text-center group hover:border-accent-cyan/30 transition-colors">
               <div className="w-10 h-10 mx-auto mb-3 rounded-lg bg-accent-cyan/10 flex items-center justify-center text-accent-cyan">
@@ -133,17 +120,17 @@ export default function TokenomicsPage() {
               </div>
               <p className="text-sm text-text-muted uppercase tracking-widest mb-2">Fee Burn</p>
               <p className="text-3xl font-bold text-accent-cyan">50%</p>
-              <p className="text-sm text-text-secondary mt-2">Of fees burned, 50% to verifiers &amp; treasury</p>
-              <p className="text-xs text-text-muted mt-1">Sustained deflationary pressure</p>
+              <p className="text-sm text-text-secondary mt-2">Of every fee burned; remainder splits 60/40 to verifiers &amp; stakers</p>
+              <p className="text-xs text-text-muted mt-1">Claims use Burn-Mint Equilibrium (50/50)</p>
             </div>
             <div className="glass-card p-6 text-center group hover:border-accent-purple/30 transition-colors">
               <div className="w-10 h-10 mx-auto mb-3 rounded-lg bg-accent-purple/10 flex items-center justify-center text-accent-purple">
                 <ShieldIcon size={20} />
               </div>
-              <p className="text-sm text-text-muted uppercase tracking-widest mb-2">Slashing</p>
-              <p className="text-3xl font-bold text-accent-purple">Active</p>
-              <p className="text-sm text-text-secondary mt-2">False attestation, incorrect results</p>
-              <p className="text-xs text-text-muted mt-1">Slashed AGNTC is burned</p>
+              <p className="text-sm text-text-muted uppercase tracking-widest mb-2">Singularity Reserve</p>
+              <p className="text-3xl font-bold text-accent-purple">Never Sells</p>
+              <p className="text-sm text-text-secondary mt-2">Core accrues the top single-node yield into a never-selling reserve</p>
+              <p className="text-xs text-text-muted mt-1">Monotonic growth = protocol health metric</p>
             </div>
           </div>
         </div>
@@ -156,19 +143,19 @@ export default function TokenomicsPage() {
             ZK-CPU <span className="gradient-text">Dual Staking</span>
           </h2>
           <p className="text-center text-text-secondary mb-12 max-w-2xl mx-auto">
-            Effective stake combines token weight and CPU contribution — rewarding computation over pure capital.
+            Effective stake combines token capital with committed CPU + disk capacity — rewarding real vault work over pure capital.
           </p>
           <div className="glass-card p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
               <div>
                 <p className="text-sm text-text-secondary leading-relaxed">
-                  The <span className="text-text-primary font-medium">effective stake</span> determines each validator&apos;s share of block rewards:
+                  The <span className="text-text-primary font-medium">effective stake</span> determines each validator&apos;s committee-selection probability and reward share:
                 </p>
                 <div className="mt-4 glass-card p-4 bg-white/[0.02] font-mono text-sm text-accent-cyan">
-                  S<sub>eff</sub> = 0.40 &middot; (token_stake / total_tokens) + 0.60 &middot; (cpu_vpu / total_cpu)
+                  S<sub>eff</sub> = 0.40 &middot; (token_stake / total_tokens) + 0.60 &middot; (cpu_disk / total_cpu)
                 </div>
                 <p className="mt-4 text-sm text-text-secondary leading-relaxed">
-                  With <span className="text-accent-cyan font-medium">&beta; = 60%</span> &gt; <span className="text-accent-purple font-medium">&alpha; = 40%</span>, validators who contribute stronger ZK proof hardware earn proportionally more — preventing plutocratic concentration.
+                  With <span className="text-accent-cyan font-medium">&beta; = 60%</span> &gt; <span className="text-accent-purple font-medium">&alpha; = 40%</span>, participants who commit real CPU + disk to vault storage proofs earn proportionally more — preventing plutocratic concentration. The committed capacity is slashable: a failed vault proof slashes the bond and drifts your seat outward.
                 </p>
               </div>
               <div className="flex items-end justify-center gap-8 h-48">
@@ -179,21 +166,23 @@ export default function TokenomicsPage() {
                 </div>
                 <div className="flex flex-col items-center">
                   <div className="w-16 bg-gradient-to-t from-accent-cyan to-accent-cyan/60 rounded-t-lg" style={{ height: "60%" }} />
-                  <p className="mt-2 text-xs text-text-muted">CPU (&beta;)</p>
+                  <p className="mt-2 text-xs text-text-muted">CPU + Disk (&beta;)</p>
                   <p className="text-lg font-bold text-accent-cyan">60%</p>
                 </div>
               </div>
             </div>
-            <div className="mt-6 grid grid-cols-2 gap-4 text-center">
+            <p className="text-center text-xs text-text-muted uppercase tracking-widest mt-8 mb-3">Block Reward Split</p>
+            <div className="grid grid-cols-2 gap-4 text-center max-w-md mx-auto">
               <div className="glass-card p-3">
-                <p className="text-xs text-text-muted uppercase tracking-wider">Verifier</p>
+                <p className="text-xs text-text-muted uppercase tracking-wider">Verifier Committee</p>
                 <p className="text-lg font-bold text-accent-cyan mt-1">60%</p>
               </div>
               <div className="glass-card p-3">
-                <p className="text-xs text-text-muted uppercase tracking-wider">Staker</p>
+                <p className="text-xs text-text-muted uppercase tracking-wider">Staking Pool</p>
                 <p className="text-lg font-bold text-accent-purple mt-1">40%</p>
               </div>
             </div>
+            <p className="text-center text-xs text-text-muted mt-3">No orderer share &middot; Secure rewards: 50% immediate, 50% vesting over 30 days</p>
           </div>
         </div>
       </section>
@@ -242,7 +231,7 @@ export default function TokenomicsPage() {
             Tokenomics <span className="gradient-text">Dashboard</span>
           </h2>
           <p className="text-center text-text-secondary mb-8 max-w-2xl mx-auto">
-            Explore inflation projections, staking yields, fee burn dynamics, and sustainability crossover — powered by our on-chain simulation engine.
+            Explore supply growth across radial bands, mining hardness, fee-burn dynamics, and staking yields — powered by our on-chain simulation engine.
           </p>
           <div className="glass-card overflow-hidden" style={{ minHeight: "800px" }}>
             <iframe
