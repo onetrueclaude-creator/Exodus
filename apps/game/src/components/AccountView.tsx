@@ -101,7 +101,8 @@ export default function AccountView() {
                         <div className="text-[10px] text-text-muted font-mono">
                           <span className={tierClass}>{TIER_DISPLAY_NAME[tier]}</span>
                           <span className="mx-1.5 text-text-muted/40">{'\u00B7'}</span>
-                          <span>({Math.round(a.position.x)}, {Math.round(a.position.y)})</span>
+                          {/* Coordinates retired (orbital rank-seat model) \u2014 show role instead. */}
+                          <span>{a.isPrimary ? 'Homenode' : 'Subagent'}</span>
                           <span className="mx-1.5 text-text-muted/40">{'\u00B7'}</span>
                           <span>{planetCountFor(a.id)} packets</span>
                         </div>
@@ -197,7 +198,7 @@ export default function AccountView() {
                         <div>
                           <span className="text-[10px] font-mono text-emerald-400">{pos.id.slice(0, 12)}</span>
                           <p className="text-[9px] text-text-muted">
-                            Blocks {pos.start_block}{'\u2192'}{pos.end_block} | Density {(pos.density * 100).toFixed(1)}%
+                            Blocks {pos.start_block}{'\u2192'}{pos.end_block}
                           </p>
                         </div>
                       </div>
@@ -247,7 +248,9 @@ export default function AccountView() {
               <h2 className="text-lg font-heading font-bold text-text-primary tracking-wide">Vesting Schedule</h2>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard label="Faction" value={vesting.faction} valueClass="text-text-primary capitalize" />
+              {/* Chain serves the player's identity in vesting.faction (server contract
+                  field, not renamed here); displayed as the unified "Tier" label. */}
+              <StatCard label="Tier" value={vesting.faction} valueClass="text-text-primary capitalize" />
               <StatCard label="Total Allocation" value={String(vesting.total_allocation)} valueClass="text-accent-cyan" />
               <StatCard label="Vested" value={String(vesting.vested)} valueClass="text-emerald-400" />
               <StatCard label="Locked" value={String(vesting.locked)} valueClass="text-yellow-400" />

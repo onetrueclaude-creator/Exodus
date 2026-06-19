@@ -1,5 +1,5 @@
-export type { FactionId } from "./grid";
-import type { GridPosition } from "./grid";
+export type { Tier } from "./grid";
+import type { GridPosition, Tier } from "./grid";
 import type { NodeTier } from "@/lib/nodeTier";
 
 // Re-export NodeTier as AgentTier for transitional compatibility.
@@ -42,6 +42,8 @@ export interface Agent {
   activity?: number; // rolling chain activity score (drives orbital rank)
   rank?: number; // phyllotaxis seat: 0 = Singularity core, 1 = innermost player
   isSingularity?: boolean; // true for the origin protocol node (the core)
+  isSelf?: boolean; // true for the current player's own homenode (drives the "YOU" marker)
+  tier?: Tier; // player Tier identity of this node's owner (community/professional/founder)
 }
 
 // === Tier-keyed cost tables, re-keyed by NodeTier ===

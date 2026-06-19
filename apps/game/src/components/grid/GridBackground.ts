@@ -1,14 +1,13 @@
 import { Container, Graphics, Sprite, Texture } from "pixi.js";
-import type { BlockNode, FactionId } from "@/types";
+import type { BlockNode, Tier } from "@/types";
 import { CELL_SIZE, cellToPixel } from "@/lib/lattice";
 import { MAX_LATTICE_RING } from "@/lib/spawn";
 
-/** Faction fill colors — used by Task 14 (owned-cell tints). */
-export const FACTION_COLORS: Record<FactionId, number> = {
+/** Tier fill colors — used by Task 14 (owned-cell tints). */
+export const TIER_COLORS: Record<Tier, number> = {
   community: 0x0d9488, // teal
-  treasury: 0xdc2680,  // pink (Machines)
-  founder: 0xf59e0b,   // amber
-  "pro-max": 0x3b82f6, // blue (Professional)
+  professional: 0x3b82f6, // blue
+  founder: 0xf59e0b, // amber
 };
 
 const GRID_LINE_COLOR = 0xffffff;
@@ -52,7 +51,7 @@ function createDensityHeatmapSprite(): Sprite {
  *   [0] density heatmap Sprite (radial cyan gradient from origin)
  *   [1] Graphics layer with placeholder dots + grid lines
  *
- * Pass 1: Faction-tinted dot per owned blocknode cell; neutral dot for unclaimed cells.
+ * Pass 1: Tier-tinted dot per owned blocknode cell; neutral dot for unclaimed cells.
  * Pass 2: Grid lines on top.
  *
  * @param blocknodes All current blocknodes (keyed by id)
@@ -76,11 +75,11 @@ export function createGridBackground(
 
   for (const node of Object.values(blocknodes)) {
     const { px, py } = cellToPixel(node.cx, node.cy);
-    if (node.faction !== null) {
-      // Owned: faction-tinted dot, slightly larger, higher alpha
+    if (node.tier !== null) {
+      // Owned: tier-tinted dot, slightly larger, higher alpha
       graphics
         .circle(px, py, 3)
-        .fill({ color: FACTION_COLORS[node.faction], alpha: 0.85 });
+        .fill({ color: TIER_COLORS[node.tier], alpha: 0.85 });
     } else {
       // Unclaimed: neutral off-white, smaller, lower alpha
       graphics
@@ -136,11 +135,11 @@ export function updateGridBackground(
 
   for (const node of Object.values(blocknodes)) {
     const { px, py } = cellToPixel(node.cx, node.cy);
-    if (node.faction !== null) {
-      // Owned: faction-tinted dot, slightly larger, higher alpha
+    if (node.tier !== null) {
+      // Owned: tier-tinted dot, slightly larger, higher alpha
       graphics
         .circle(px, py, 3)
-        .fill({ color: FACTION_COLORS[node.faction], alpha: 0.85 });
+        .fill({ color: TIER_COLORS[node.tier], alpha: 0.85 });
     } else {
       // Unclaimed: neutral off-white, smaller, lower alpha
       graphics
