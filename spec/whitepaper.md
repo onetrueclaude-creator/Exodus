@@ -1248,6 +1248,8 @@ Inner-band standing is expensive to reach but yields AGNTC at the lowest hardnes
 
 ZK Agentic Chain introduces a *dual-staking* mechanism that combines token capital with computational contribution. Unlike pure proof-of-stake systems where validator influence is determined solely by wealth, or proof-of-work systems where influence is determined solely by hash rate, the ZK-CPU model creates a two-dimensional staking surface that resists single-axis concentration.
 
+Under v1.3 the computational leg is precisely **committed CPU + disk capacity bonded to the knowledge vault** — capacity a participant has pledged to store, serve, and re-prove vault shards (Section 5A). The bond does no work by itself; it makes the participant's securing work trustable and Sybil-resistant, and it is **slashable** if their storage proofs fail. This replaces the v1.2 reading of the CPU leg as "paid Claude-API tokens," which was a paywall rather than a stake.
+
 #### 13.1 Effective Stake Formula
 
 The effective stake of a validator is a weighted combination of their token stake and CPU contribution:
@@ -1260,12 +1262,12 @@ Where:
 - **S_eff(i)** is the effective stake of validator i, a value in [0, 1]
 - **T_i** is the AGNTC tokens staked by validator i
 - **T_total** is the total AGNTC staked across all validators
-- **C_i** is the CPU compute contributed by validator i (measured in Claude API tokens spent)
+- **C_i** is the verified vault-work capacity contributed by validator i (committed CPU+disk proven via sampled-PDP storage proofs, Section 5A — NOT paid AI-API tokens)
 - **C_total** is the total CPU compute contributed across all validators
 - **α = 0.40** — the token weight
 - **β = 0.60** — the CPU weight
 
-The choice of α = 0.40 and β = 0.60 is a deliberate design decision: computational contribution is weighted 50% more heavily than capital. This creates an economic structure where participants who deploy real compute resources — running AI verification agents, executing Secure operations, processing transactions — receive proportionally greater influence and rewards than those who merely lock tokens.
+The choice of α = 0.40 and β = 0.60 is a deliberate design decision: computational contribution is weighted 50% more heavily than capital. This creates an economic structure where participants who deploy real compute resources — storing and re-proving vault shards, executing Secure operations, processing transactions — receive proportionally greater influence and rewards than those who merely lock tokens.
 
 **Design rationale.** In pure proof-of-stake systems (α = 1, β = 0), validator power is directly proportional to wealth. This produces plutocratic concentration: the wealthiest participants earn the most rewards, accumulate more tokens, and entrench their position. The Gini coefficient of validator stake distributions in mature PoS networks is estimated to exceed 0.80 (e.g., Ethereum's validator set exhibits significant concentration among liquid staking providers [38]).
 
@@ -1509,6 +1511,16 @@ slash_amount = min(S_eff(i) * slash_rate, total_staked(i))
 
 Where slash_rate is a governance-adjustable parameter, initially set to 100% for provable falsehood.
 
+#### 15.1a Failed Vault Proof (State-Layer Slash)
+
+Securing under Proof-of-Vault (Section 5A) is a *bonded* commitment: a participant pledges CPU+disk capacity to hold and re-prove an assigned vault shard. When the Singularity coordinator issues a sampled-PDP challenge and the participant fails to return a valid Merkle proof within the time bound (`VAULT_CHALLENGE_WINDOW_BLOCKS`) — because they dropped the shard, never stored it, or cannot serve it — the protocol applies a **committed-capacity slash**:
+
+```
+slash_amount = min(S_eff(i) * VAULT_SLASH_RATE, total_staked(i))
+```
+
+A single missed proof that is recovered within the challenge window is treated as transient (network blip) and not slashed; failure to answer beyond that window triggers the slash and an **outward seat drift** (the seat slips to a harder band, Section 19.4), reflecting the lost securing contribution. Because each shard is replicated across `VAULT_REPLICATION_FACTOR` independent participants, the vault survives any single failure while the failing participant bears the cost. This is the state-layer analogue of false attestation: false attestation protects the *ledger*; the failed-vault-proof slash protects the *state*.
+
 #### 15.2 False CPU Attestation
 
 The dual-staking model relies on honest reporting of committed vault work. A validator claiming custody of a shard while not actually storing it would receive inflated effective stake and disproportionate rewards.
@@ -1532,8 +1544,9 @@ Validators are expected to maintain continuous operation during their active sta
 | 1 block - 1 epoch (100 blocks) | Reduced reward share; proportional to uptime |
 | > 1 full epoch | Status changed to COOLDOWN; 3-epoch probation |
 | > 3 epochs (probation) | Must re-stake and undergo WARMUP (1 epoch) |
+| Vault proof unanswered beyond `VAULT_CHALLENGE_WINDOW_BLOCKS` | Committed-capacity slash (§15.1a) + outward seat drift; token stake retained |
 
-Extended downtime does not burn tokens — the penalty is lost opportunity cost and re-activation delay. This is a deliberate design choice: network instability (power outages, connectivity issues) should not trigger punitive token destruction. Only intentional misbehavior (Sections 15.1, 15.2) results in permanent loss.
+Extended downtime does not burn tokens — the penalty is lost opportunity cost and re-activation delay. This is a deliberate design choice: network instability (power outages, connectivity issues) should not trigger punitive token destruction. Only intentional misbehavior (Sections 15.1, 15.2) results in permanent loss. The one exception is the **state layer**: persistent failure to answer vault storage challenges (Section 15.1a) does slash the committed-capacity bond, because holding the vault is an active, bonded duty rather than mere liveness. Ordinary node downtime (no inner-rank claim, no held shard) still incurs only opportunity cost.
 
 #### 15.4 Dispute Resolution
 
