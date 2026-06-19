@@ -33,6 +33,7 @@ This paper describes the protocol architecture, consensus mechanism, privacy sys
 - [3. System Overview](#3-system-overview)
 - [4. The Neural Lattice: Phyllotaxis Standing Economy](#4-the-neural-lattice)
 - [5. Proof of AI Verification](#5-proof-of-ai-verification)
+- [5A. The Knowledge Vault and Proof-of-Vault](#5a-the-knowledge-vault-and-proof-of-vault)
 - [6. Privacy Architecture](#6-privacy-architecture)
 - [7. BFT Ordering and Finality](#7-bft-ordering-and-finality)
 - [8. Security Analysis](#8-security-analysis)
@@ -572,6 +573,57 @@ Traditional BFT validators execute deterministic checks: signature validity, sta
 - *Vector:* Two honest agents running the same model at temperature=0 produce different outputs due to floating-point non-determinism across hardware.
 - *Mitigation:* (a) Verification outputs are quantized to APPROVE/REJECT (binary, not continuous). (b) The anomaly threshold is set conservatively so that minor numerical differences do not cross the threshold. (c) The 9/13 supermajority tolerates up to 4 divergent results.
 - *Residual risk:* Acknowledged as an open problem. See Section 24.
+
+---
+
+### 5A. The Knowledge Vault and Proof-of-Vault
+
+PoAIV (Section 5) secures the *ledger*. This section specifies how the network's *state* — the agents' collective knowledge — is secured by participants' real CPU and disk. This is **Proof-of-Vault**: not a novel Byzantine-consensus claim, but the proven, shipping pattern of storage networks (Filecoin, Chia, Arweave, Sia/Storj) applied to a shared knowledge graph, with the Singularity as the trusted coordinator. We state its guarantees honestly per deployment phase.
+
+#### 5A.1 The Vault
+
+The Singularity hosts a **content-addressed Merkle-DAG knowledge graph** — an Obsidian-vault-like structure of atoms (notes/entries) and links, each addressed by its content hash (CID); the root CID is the vault's state. This is the network's shared memory: the agents' collective brain. Crucially, **it is the same graph the /game page renders** — one data structure read two ways: as the security lattice (seats, bands, density) and as the knowledge vault (atoms, links). Agents may use an LLM to author or curate vault entries, but the vault's *security* comes from CPU+disk possession proofs, not from any LLM.
+
+#### 5A.2 Securing: Shard Custody and Sampled Proofs
+
+Participants are assigned vault **shards** by CID range (the vault's CID space is partitioned into `VAULT_SHARD_COUNT` shards) and commit **real disk** (storing the shard) and **real CPU** (hashing sampled bytes) to hold and serve them. The Singularity stores the vault root CID plus each shard's Merkle root, and periodically (every `VAULT_CHALLENGE_INTERVAL_BLOCKS`) issues a **sampled Provable-Data-Possession (PDP) challenge**:
+
+```
+challenge(shard, nonce):  return Merkle paths over VAULT_PROOF_SAMPLE_SIZE
+                          randomly-selected sub-units of the shard
+verify:                   recompute root from the returned paths; accept iff it
+                          matches the committed shard Merkle root, within
+                          VAULT_CHALLENGE_WINDOW_BLOCKS
+```
+
+The proof is **~160 bytes regardless of shard size**; random sampling of a small number of sub-units detects a missing fraction of the data with high probability (the Filecoin PDP profile, e.g. ~460 of 10,000 blocks for ~99% detection of a missing 1%; Section 22). The Singularity never receives the shard — only the proof. Each successful proof spawns or refreshes the **decaying interaction edge** to the core (the orbital "link spoke," fading over `EDGE_FADE_BLOCKS`): *interacting with the Singularity = submitting your proof = securing.* Each shard is held by `VAULT_REPLICATION_FACTOR` independent participants, so the vault survives any single failure.
+
+#### 5A.3 The Three Verbs, Coupled
+
+Proof-of-Vault completes the verb model introduced in Sections 10–11:
+
+| Verb | What it is | Layer | Can run alone? |
+|------|-----------|-------|----------------|
+| **Mining** | Local AGNTC *issuance* from a node's 64-cell subgrid (Section 16) | — | Yes, but unlinked mining is unfinalized/unrewarded |
+| **Securing** | Verifiable CPU+disk commitment: store, serve, re-prove a vault shard, proof submitted via the Singularity link | **State** | Requires the Singularity link |
+| **Staking** | The slashable bond (AGNTC + committed CPU/disk capacity, Section 13) that makes securing trustable + Sybil-resistant | Both | Does no work itself |
+
+**The loop:** mine locally → link to the Singularity to secure (prove useful vault work) → stake bonds it and earns the securing reward plus inward rank. Failed proofs slash the bond and drift the seat outward (Section 15.1a, Section 19.4).
+
+#### 5A.4 The Singularity as Coordinator
+
+The Singularity (Section 4.5, Section 10.3) is the vault's trusted coordinator: it holds the root + per-shard Merkle roots, assigns shards by CID range, issues PDP challenges, and verifies proofs (it is the origin agent, `SINGULARITY_WALLET_INDEX = 0`). This is the **proven pattern that ships** — a central coordinator can audit storage cheaply at scale (Filecoin PDP) — and we embrace it openly rather than claim a novel trustless result we cannot yet deliver. The coordinator role is *metering only*: the Singularity neither mines nor secures, holds no shard, has zero governance weight, and gains no AGNTC from coordinating (its accumulation comes solely from origin yield, Section 10.3).
+
+#### 5A.5 Honest Security by Phase
+
+We state the real guarantee at each phase, per the feasibility analysis:
+
+- **Testnet (buildable now on the FastAPI chain).** Content-address the vault as a Merkle-DAG; shard by CID; the Singularity stores roots and issues random-byte challenges; participants return Merkle proofs. This is **real disk + real CPU, verified cheaply, coordinator-metered** — a genuine "spend CPU+disk to secure the vault" mechanic, not simulated hand-waving. No cryptoeconomic novelty is required or claimed. The ledger is secured by the coordinator-as-committee (Section 5).
+- **Mainnet (the real wall — scoped as a research milestone).** A cheap *possession* proof alone is sybil-, outsourcing-, and generation-attackable: one disk can fake N replicas, and data can be regenerated on demand. Trustless state-security needs either **Filecoin-grade unique-replica sealing (PoRep)** or **timed/keyed challenges + slashing + a trustless (committee/on-chain) verifier**, plus **Merkle-CRDTs** for convergent collaborative edits. The central-coordinator design does not provide this. Mainnet therefore either adds that layer **or** keeps the PoAIV committee as the ledger root-of-trust with vault work as the reward/stake input (the recommended interim). Section 24 (Limitations) tracks this honestly.
+
+#### 5A.6 Why This Makes the Narrative True
+
+The product claim is "an agentic process secures the chain." Under Proof-of-Vault this is **literally true**: participants' agents maintain and continually re-prove the collective knowledge vault with real, verifiable CPU+disk work — and they can do so **without holding any paid LLM key**. The LLM flips from a consensus *paywall* (the v1.2 liability) to an *optional content layer*: an agent may use an LLM to write better vault entries, but security comes from the storage proofs. Decentralized-AI compute (proof-of-inference) is a compelling **future incentive layer** (Section 24.10), never the security base.
 
 ---
 
@@ -2573,6 +2625,16 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 #### 24.9 Origin Node Architecture
 
 **Status:** The origin node at coordinate (0,0) will serve as the protocol's root — embedding the final whitepaper version and serving as the genesis anchor for the Neural Lattice. The architecture of this node, including its role in governance, network bootstrapping, and protocol upgrades, is deferred to a dedicated design session.
+
+#### 24.10 Decentralized-AI Incentive Layer (Future)
+
+A natural question is whether the *AI compute* itself — agents running inference to curate the vault or reason about chain state — could be made a first-class, rewarded, and verifiable contribution. The feasibility analysis is clear that this is a **future incentive layer, never a consensus base**:
+
+- **zkML cannot yet prove training or large-model inference** (~4 orders of magnitude overhead; only small models, e.g. GPT-2-scale, have end-to-end proofs today). It is viable only on narrow, small-model paths in the near term.
+- **Optimistic re-execution (e.g. Gensyn-style)** secures *task results* under an honest-minority assumption — useful for rewarding work, but not a ledger-security primitive.
+- **Subjective validator scoring (e.g. Bittensor Yuma)** ranks AI output quality; it is not a cryptographic proof.
+
+**Design direction:** treat agentic/LLM compute as a **proof-of-inference receipt** that gates **rewards, never consensus** — start with TEE attestation or optimistic re-run plus bonding, and add zkML only on narrow small-model paths. Revisit zk-proved training in roughly two to three years. The state layer's security (Proof-of-Vault, Section 5A) stands entirely on CPU+disk storage proofs and does not wait on any of this.
 
 ---
 
