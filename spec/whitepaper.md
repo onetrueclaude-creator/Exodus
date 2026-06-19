@@ -1664,7 +1664,7 @@ This lifecycle prevents rapid type-switching to exploit temporary market conditi
 
 Each sub-cell type corresponds to an autonomous agent operation that produces a distinct resource:
 
-**Secure** (produces AGNTC + Secured Chains). Secure sub-cells represent CPU committed to blockchain validation. Each Secure cell deploys AI compute to verify transactions, attest to blocks, and defend the chain's integrity. Output is denominated in AGNTC and is the primary mechanism for earning the protocol's native token through active participation.
+**Secure** (produces AGNTC + Secured Chains). Secure sub-cells represent real CPU committed to the protocol — not a paid AI-model key. They earn AGNTC through the node's subgrid issuance (mining, Section 5A.3); block verification and finality are the PoAIV committee's role (Section 5), while securing the network's *state* is committed CPU+disk via Proof-of-Vault (Section 5A). Output is denominated in AGNTC and is the primary mechanism for earning the protocol's native token through active participation.
 
 Secure output is the only sub-cell type affected by both per-node density and band hardness:
 
