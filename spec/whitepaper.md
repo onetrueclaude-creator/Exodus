@@ -552,9 +552,9 @@ Traditional BFT validators execute deterministic checks: signature validity, sta
 #### 5.8 Attack Analysis
 
 **Attack 1: Model Poisoning**
-- *Vector:* Adversary fine-tunes or replaces the AI model used by corrupted committee members to always approve invalid blocks.
-- *Mitigation:* Heterogeneous model requirement -- the protocol mandates that each committee of 13 must include agents running at least 3 distinct model providers. A single compromised model family can corrupt at most ~4 of 13 agents, below the 5-agent Byzantine threshold.
-- *Residual risk:* If all major model providers are simultaneously compromised (supply chain attack on AI infrastructure), the committee loses its AI advantage and degrades to deterministic-only verification.
+- *Vector:* Adversary fine-tunes or replaces the AI model used by corrupted committee members to always approve invalid blocks. All verification models are Anthropic Claude (Haiku/Sonnet/Opus), so this is a single-vendor exposure rather than a cross-provider one.
+- *Mitigation:* Defense is layered, not premised on multiple model vendors. (a) **Deterministic-check floor** — PoAIV's deterministic safety checks (signatures, state-transition correctness, ZK-proof and Merkle validity) do not depend on the model and reject invalid blocks regardless of model output, so a poisoned model cannot push through a block that fails the math. (b) **Model-tier and version diversity within Anthropic** — committees mix Haiku/Sonnet/Opus and pinned model versions (Sections 8.4, 8.6); different tiers and versions have different failure modes, so a flaw specific to one is unlikely to corrupt the 9/13 supermajority. (c) **Probabilistic-confidence caveat** — AI verification is acknowledged as statistical, not provably sound (Sections 5.7, 24); the committee-attestation layer is explicitly the soft layer of security. (d) **Two-layer containment (v1.3)** — ledger safety rests on the PoAIV committee and state security is *cryptographic* (Proof-of-Vault storage proofs, Section 5A), so even a successful single-provider model compromise degrades verification *quality* but does **not** break state security: held data and its possession proofs remain cryptographically verifiable independent of any model.
+- *Residual risk:* A simultaneous compromise of Anthropic's model supply chain would remove the AI advantage above the deterministic floor, collapsing verification to deterministic-only. This single-vendor dependence is disclosed honestly as an open problem (Section 24); diversifying the verification model set is a mainnet research direction, not a shipped guarantee.
 
 **Attack 2: Prompt Injection**
 - *Vector:* Adversary crafts transaction data containing prompt injection payloads that cause verification agents to approve invalid state transitions.
@@ -932,7 +932,7 @@ Dispute resolution provides an additional economic deterrent: if the original 13
 | Single AI model family | VER-INT (threshold), VER-PRIV, COM-UNBIAS | None (below threshold) |
 | All AI models (catastrophic) | VER-PRIV (ZK still holds), COM-UNBIAS | VER-INT degrades to deterministic-only |
 | Trusted setup (Groth16) | VER-PRIV (soundness lost, but ZK preserved) | VER-INT (adversary can forge proofs) |
-| API provider (Anthropic) | VER-INT, VER-PRIV | COM-UNBIAS (CPU stake measurement unreliable) |
+| Singularity coordinator (testnet trust assumption) | VER-INT, VER-PRIV, COM-UNBIAS (ledger safety intact) | State-layer measurement reliability — CPU/storage-proof metering can be biased until the mainnet committee/on-chain verifier replaces it (Sections 13.5, 24.3) |
 
 #### Sybil Cost Derivation
 
@@ -943,9 +943,9 @@ Dispute resolution provides an additional economic deterrent: if the original 13
 - In dual staking: S_eff = 0.40*(T/T_total) + 0.60*(C/C_total)
 - To achieve S_eff >= 1/3, adversary needs both token and CPU components
 - Token cost scales linearly with market cap (liquid market)
-- CPU cost scales with ongoing operational expenditure (API subscriptions, not one-time purchase)
-- The CPU component introduces a continuous cost floor: even if an adversary acquires tokens cheaply, maintaining 55.6% of network compute requires sustained operational spending
-- **Empirical estimate:** At current Claude API pricing ($15/M output tokens for Opus), maintaining 55.6% of network compute for a 100-validator network costs ~$50K/month ongoing, compared to a one-time token acquisition cost
+- CPU cost scales with ongoing operational expenditure — the opex of provisioning and continuously operating real CPU + disk capacity to hold, serve, and re-prove vault shards (Proof-of-Vault, Sections 5A and 13.2), not a one-time purchase
+- The CPU component introduces a continuous cost floor: even if an adversary acquires tokens cheaply, holding 55.6% of the network's committed storage capacity requires sustained spending on hardware, power, bandwidth, and the compute to answer sampled-PDP challenges every cycle
+- **Empirical estimate:** matching 55.6% of a 100-validator network's committed CPU + disk capacity is an ongoing infrastructure cost (servers, storage, power, bandwidth) that recurs for the full duration of the attack, in contrast to a one-time token acquisition cost; an adversary who lets shards lapse fails challenges and is slashed (Section 15.1a)
 - The ratio of total cost (one-time + ongoing) to pure-PoS cost (one-time only) ranges from 2.0x to 3.0x depending on attack duration; we conservatively estimate 2.5x
 
 ---
