@@ -17,6 +17,7 @@ import {
 import { getDistance } from '@/lib/proximity';
 import { visualToChain } from '@/services/testnetChainService';
 import { postTransact, getStatus as fetchChainStats } from '@/services/testnetApi';
+import { getWalletIndex } from '@/lib/walletIndex';
 import { logAction } from '@/lib/actionLogger';
 import { CELL_SIZE } from '@/lib/lattice';
 import { computeDeployCandidates } from '@/lib/deploy';
@@ -1242,8 +1243,9 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                       setMenuLevel(null);
                       setProcessing(true);
                       try {
-                        logAction('chain-call', 'POST /api/transact', `from=0 to=${recipient} amount=${amount}`);
-                        const result = await postTransact(0, recipient, amount);
+                        const senderWallet = getWalletIndex();
+                        logAction('chain-call', 'POST /api/transact', `from=${senderWallet} to=${recipient} amount=${amount}`);
+                        const result = await postTransact(senderWallet, recipient, amount);
                         logAction('chain-ok', 'Transfer confirmed', `amount=${result.amount} fee=${result.fee}`);
                         const store = useGameStore.getState();
                         store.flashDelta('agntc', -(amount + result.fee));

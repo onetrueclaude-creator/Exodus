@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useGameStore } from "@/store";
 import * as api from "@/services/testnetApi";
+import { getWalletIndex } from "@/lib/walletIndex";
 
 const WS_BASE = (process.env.NEXT_PUBLIC_TESTNET_API ?? "http://localhost:8080").replace(
   /^http/,
@@ -67,7 +68,7 @@ export function useChainWebSocket(enabled: boolean) {
         }).catch(() => {});
 
         // Refresh wallet resources (secured chains, mined chains, rates)
-        api.getSettings(0).then(settings => {
+        api.getSettings(getWalletIndex()).then(settings => {
           useGameStore.getState().setWalletState({
             securedChains: settings.total_secured_chains,
             minedChains: settings.total_mined_chains,

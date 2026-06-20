@@ -20,6 +20,7 @@ import { MockChainService } from "@/services/chainService";
 import type { ChainService } from "@/services/chainService";
 import { TestnetChainService } from "@/services/testnetChainService";
 import { isTestnetOnline, getSettings } from "@/services/testnetApi";
+import { getWalletIndex } from "@/lib/walletIndex";
 import { useChainWebSocket } from "@/hooks/useChainWebSocket";
 import type { SubscriptionTier } from "@/types";
 import type { Tier } from "@/types";
@@ -171,7 +172,7 @@ export default function GamePage() {
 
     // Sync wallet state (secured chains, mined chains, rates, effective stake)
     try {
-      const settings = await getSettings(0);  // wallet 0 for testnet
+      const settings = await getSettings(getWalletIndex());  // ?wallet=N / env, default 0
       store.setWalletState({
         securedChains: settings.total_secured_chains,
         minedChains: settings.total_mined_chains,
@@ -394,8 +395,9 @@ export default function GamePage() {
           )}
 
           {/* Node inspector toast — top-right, store-driven (focusedNodeId).
-              Orbital view only; the legacy grid uses CellTooltip instead. */}
-          {orbital && <NodeInspector />}
+              Orbital view only; the legacy grid uses CellTooltip instead.
+              The Singularity gate (Secure/Read/Stats) needs the chain service. */}
+          {orbital && <NodeInspector chainService={chainRef.current} />}
 
           {/* Dock Panel — left edge */}
           <DockPanel
