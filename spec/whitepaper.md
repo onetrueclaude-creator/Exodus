@@ -1,18 +1,20 @@
-# AGNTC Whitepaper v1.3
+# AGNTC Whitepaper v1.4
 
 > **ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification**
 >
-> Version 1.3 (Proof-of-Vault Consensus Revision) | June 2026
+> Version 1.4 (ZK-Agentic Revision) | June 2026
 >
-> v1.3 supersedes v1.2 (Phyllotaxis Revision). The principal change is the **two-layer security model**: the existing PoAIV committee secures the *ledger* (balances and ordering), while participants' real CPU and disk secure the *state* — the collective knowledge vault — through sampled storage proofs (**Proof-of-Vault**, §5A). Securing is recast from "holding a paid Claude API key" (a paywall, not consensus) into a verifiable resource commitment: replicating, serving, and re-proving a shard of the network's content-addressed knowledge vault, with the proof submitted through the Singularity link — no paid LLM is required to secure. The three economic verbs are kept distinct-but-coupled: **mining = issuance** (subgrid, unchanged), **securing = vault storage proofs** (the rewrite), **staking = the slashable bond** (AGNTC + committed CPU/disk capacity, slashed on failed proofs). The LLM flips from a consensus gate to an optional content layer. See §5A "The Knowledge Vault and Proof-of-Vault" and §24.10 "Decentralized-AI Incentive Layer (Future)". The economic core (subgrid mining as the sole mint path, dual staking weights, Burn-Mint Equilibrium, the 5% inflation ceiling, vesting, phyllotaxis seating) is preserved unchanged.
+> v1.4 supersedes v1.3 (Proof-of-Vault Consensus Revision). It does not change the mechanism; it **names and frames** what v1.3 already shipped as what the brand promises — *zero-knowledge-proven agentic activity*. The principal additions: (1) a new section, **The ZK-Agentic Gate / Proof of Agentic Work** (§5B), stating the substrate-vs-identity framing (storage is the verifiable *substrate* — the WHAT; an autonomous agent proving protocol-obedient work is the *identity* — the HOW) and the universal **gate contract** — *to mutate state, a participant running any agent, model, or algorithm must submit a valid proof it followed the protocol; the Singularity verifies the proof and nothing else; no proof, no state change*; (2) a **3-rung ZK honesty ladder** (§5B.2, §5A.2/§5A.6) that labels exactly where zero-knowledge is real today versus a dated future milestone — and **forbids any present-tense ZK claim above the rung that ships**; (3) the Singularity restated as a **model-agnostic protocol-obedience-proof verifier** (§4.5, §5A.4), the brand-correct name for the role it already plays; (4) the storage-proof SNARK added as a fourth ZK use case (§6.4); (5) governance promoted from "deferred/core-team" to the specified **Bitcoin-Core-style PIP process** (§21.2, §24.5) — improvement proposals, multi-client diversity, an immutable-vs-tunable split, and soft-fork-default fork resistance, with the testnet/alpha honestly disclosed as team-stewarded; (6) the Abstract and §1 lead with *zero-knowledge-proven agentic activity* and the *built and operated by agentic force* transparency claim (provenance + proof-of-work-obedience, **not** proof-of-cognition). The economic core (subgrid mining as the sole mint path, dual staking weights, Burn-Mint Equilibrium, the 5% inflation ceiling, vesting, phyllotaxis seating, the two-layer security model) is preserved unchanged. See §5B, §5A, §21.2, §24.5, and the glossary (PoAW, ZK-Agentic Gate, PIP, protocol-obedience proof).
 >
-> *v1.2 (historical) replaced the open coordinate grid with a **golden-angle phyllotaxis lattice** — a deterministic sunflower of agent seats around a central **Singularity** core (renamed from "Machines"). A participant's standing became an intrinsic activity rank `k`, not an `(x, y)` coordinate: activity draws a seat inward along the spiral, inactivity lets it drift outward. The empire/territory/adjacency/deploy-range model was retired in favour of one seat plus a small fixed family of orbiting subagents (2 for Community, 4 for Professional/Founder). Hardness tiers became equal-width radial **bands** (`hardness = 16 × band`); per-node density replaced per-coordinate density. See §4 "The Neural Lattice" for the phyllotaxis seating model and §19 for activity-rank movement. v1.1 (historical) had replaced the v1.0 four-arm logarithmic spiral with a single open coordinate grid and made factions identity classes rather than territorial arms.*
+> *v1.3 (historical) introduced the **two-layer security model**: the existing PoAIV committee secures the ledger (balances and ordering), while participants' real CPU and disk secure the state — the collective knowledge vault — through sampled storage proofs (**Proof-of-Vault**, §5A). Securing was recast from "holding a paid Claude API key" (a paywall, not consensus) into a verifiable resource commitment: replicating, serving, and re-proving a shard of the network's content-addressed knowledge vault, with the proof submitted through the Singularity link — no paid LLM required to secure. The three economic verbs were kept distinct-but-coupled (mining = issuance, securing = vault storage proofs, staking = the slashable bond of AGNTC + committed CPU/disk capacity), and the LLM flipped from a consensus gate to an optional content layer. v1.2 (historical) replaced the open coordinate grid with a **golden-angle phyllotaxis lattice** — a deterministic sunflower of agent seats around a central **Singularity** core (renamed from "Machines"); standing became an intrinsic activity rank `k`, not an `(x, y)` coordinate; the empire/territory/adjacency/deploy-range model was retired in favour of one seat plus a small fixed family of orbiting subagents (2 for Community, 4 for Professional/Founder); hardness tiers became equal-width radial **bands** (`hardness = 16 × band`) and per-node density replaced per-coordinate density. v1.1 (historical) had replaced the v1.0 four-arm logarithmic spiral with a single open coordinate grid and made factions identity classes rather than territorial arms.*
 
 ---
 
 ## Abstract
 
-We present ZK Agentic Chain, a Layer-1 blockchain protocol that introduces *Proof of AI Verification* (PoAIV) — a consensus mechanism in which autonomous AI agents verify chain integrity through zero-knowledge private channels. Unlike traditional proof-of-work systems that consume energy solving arbitrary hash puzzles, or proof-of-stake systems that concentrate power among the wealthiest token holders, PoAIV selects a committee of 13 AI verification agents per block, requiring a 9/13 supermajority attestation threshold for consensus. Verification agents apply *reasoning* to their audits — examining logical consistency, cross-referencing state across isolated ledger spaces, and flagging anomalous patterns — providing an additional verification layer whose capabilities improve as the underlying AI models advance.
+ZK Agentic Chain is run by **zero-knowledge-proven agentic activity**: autonomous agents — running any model or algorithm — maintain the network's collective memory (a content-addressed Knowledge Vault) and, to mutate chain state, must pass the **Singularity gate**, a model-agnostic verifier that admits a state change only against a valid **proof of protocol-obedient work** (Section 5B). We name this model **Proof of Agentic Work (PoAW)** — Proof-of-Vault (Section 5A) performed by an agent and admitted through a zero-knowledge protocol-obedience proof. The verifiable substrate is real CPU and disk storage work, proven by succinct possession proofs (the deployed, Filecoin-grade pattern); these ship today as raw-Merkle possession proofs — real, cheaply verifiable, but **not yet zero-knowledge** — and a one-step SNARK wrap (the Filecoin WindowPoSt technique) will compress them in zero knowledge so the verifier learns only that the rules were followed, never the agent's private data. We state honestly, at every rung of a three-rung ZK ladder, exactly where zero-knowledge is real today (the private-state layer of Section 6 is specified, with a `SimulatedZKProof` stand-in on testnet) versus what is shipping as a possession proof pending its SNARK wrap, versus a dated future milestone (proving the agents' inference itself; Sections 5B.2, 24.1). The chain is moreover **built and operated by agentic force** — its protocol, whitepaper, node software, and chain are authored by an autonomous AI agent, and the network is then run by agents that prove their protocol-obedience. This is a provenance and work-obedience claim, not a claim that the agents' cognition is proven, and it is quarantined from any financial representation.
+
+We present ZK Agentic Chain as a Layer-1 blockchain protocol that introduces *Proof of AI Verification* (PoAIV) — a consensus mechanism in which autonomous AI agents verify chain integrity through zero-knowledge private channels. Unlike traditional proof-of-work systems that consume energy solving arbitrary hash puzzles, or proof-of-stake systems that concentrate power among the wealthiest token holders, PoAIV selects a committee of 13 AI verification agents per block, requiring a 9/13 supermajority attestation threshold for consensus. Verification agents apply *reasoning* to their audits — examining logical consistency, cross-referencing state across isolated ledger spaces, and flagging anomalous patterns — providing an additional verification layer whose capabilities improve as the underlying AI models advance.
 
 The protocol employs a dual-staking model that weights computational contribution (60%) over capital (40%), reducing plutocratic concentration inherent in pure proof-of-stake designs. Validators must commit both AGNTC tokens and CPU compute resources; the effective stake that determines committee selection and reward share is a weighted combination of both dimensions. Security is two-layered: a 13-agent PoAIV committee secures the *ledger*, while participants' committed CPU and disk secure the *state* — the collective knowledge vault — through Proof-of-Vault sampled storage proofs.
 
@@ -34,6 +36,7 @@ This paper describes the protocol architecture, consensus mechanism, privacy sys
 - [4. The Neural Lattice: Phyllotaxis Standing Economy](#4-the-neural-lattice-phyllotaxis-standing-economy)
 - [5. Proof of AI Verification](#5-proof-of-ai-verification)
 - [5A. The Knowledge Vault and Proof-of-Vault](#5a-the-knowledge-vault-and-proof-of-vault)
+- [5B. The ZK-Agentic Gate / Proof of Agentic Work](#5b-the-zk-agentic-gate--proof-of-agentic-work)
 - [6. Privacy Architecture](#6-privacy-architecture)
 - [7. BFT Ordering and Finality](#7-bft-ordering-and-finality)
 - [8. Security Analysis](#8-security-analysis)
@@ -114,6 +117,8 @@ The lattice is shared and deterministic. Every active participant — Community,
 Users explore the lattice through AI agent terminals — constrained Claude model instances that operate as in-game interfaces. Each participant runs a single homenode seat plus a small family of orbiting subagents (a "node" is one agent), and users interact with the blockchain exclusively through structured command menus presented by their agents. There is no free-text chat; every interaction is a validated game action that maps to an on-chain transaction.
 
 Security is two-layered and stated honestly throughout this document: the **ledger** (balances and ordering) is secured by the PoAIV committee (Section 5); the **state** — the agents' shared knowledge vault — is secured by participants' real CPU and disk via sampled storage proofs (**Proof-of-Vault**, Section 5A). The AI model is an *optional content layer* (an agent may use an LLM to author or curate vault entries), never a gate on participation.
+
+The two layers meet at one rule. State mutation is admitted only through the **ZK-Agentic Gate** (Section 5B): to change chain state, a participant running *any* agent, model, or algorithm must submit a valid **proof that it followed the protocol**, which the Singularity verifies — and verifies nothing else. The chain is therefore run by *zero-knowledge-proven agentic activity*: agents prove, in zero knowledge, that they performed protocol-obedient work on the network's collective memory, and only a valid proof mutates state. We call this model **Proof of Agentic Work** (PoAW). The protocol is, further, **built and operated by agentic force** — authored by an autonomous AI agent (Claude) and then run by agents that prove their obedience (Section 5B.5); this is a provenance and work-obedience claim, never a claim that the agents' reasoning is itself proven.
 
 The protocol launches in phases: AGNTC begins as a Solana SPL token (1 billion units minted) to establish liquidity and community, while the ZK Agentic Chain testnet simulates the full protocol with a game-like interface. Upon mainnet launch, Solana-based AGNTC migrates to the native Layer-1 chain via a lock-and-mint bridge, and the phyllotaxis standing economy becomes the production blockchain.
 
@@ -355,7 +360,9 @@ expected_yield(node) = density(node) × yield_per_density_unit(band(k))
 
 Both terms are deterministic and observable to every participant without permission or coordination — `band(k)` is a pure function of the on-chain rank, and `density(node)` a pure function of the node identifier.
 
-**The Singularity accumulator is structural, not allocative.** Because the Singularity permanently holds the core (`k = 0`, origin), where hardness is minimum and density is rendered at maximum (the protocol clamps origin density to 1.0), it passively earns a continuous trickle of AGNTC from the most productive single node on the lattice — without itself mining or securing. This delivers the v1.0 "permanent accumulator" property — never-selling protocol reserve, monotonic growth, deflationary pressure — through a structural mechanism (core occupancy) rather than an allocative one (25% of all mined supply). The accumulator's total share of long-run supply is bounded: it captures a single node's yield, not a quarter of the network's.
+**The Singularity is the model-agnostic protocol-obedience-proof verifier.** The core agent's operational role (Section 5A.4, Section 5B) is precisely one thing: it is a **model-agnostic verifier of protocol-obedience proofs and the metering authority for state mutation.** It holds the vault root and per-shard Merkle roots, assigns shards, issues challenges, verifies the returned proofs, and credits or slashes accordingly — and it checks the *proof of obedient work*, never *which brain produced it*. It mines nothing, holds no shard, and carries zero governance weight; the name "Singularity" denotes this single gate, not a storage server.
+
+**The Singularity accumulator is structural, not allocative.** Because the Singularity permanently holds the core (`k = 0`, origin), where hardness is minimum and density is rendered at maximum (the protocol clamps origin density to 1.0), it passively earns a continuous trickle of AGNTC from the most productive single node on the lattice — without itself mining or securing. This delivers the v1.0 "permanent accumulator" property — never-selling protocol reserve, monotonic growth, deflationary pressure — through a structural mechanism (core occupancy) rather than an allocative one (25% of all mined supply). The accumulator's total share of long-run supply is bounded: it captures a single node's yield, not a quarter of the network's. The verifier role and the accumulator role are independent: it earns from origin yield, not from coordinating, and gains no AGNTC for metering.
 
 **Anti-monopoly mechanics still hold.** Inactivity-driven outward drift, the real-compute requirement, hardness that rises with band, the active-relocation cost, disclosed Founder ranks, and the fixed subagent caps (Section 19.6) all operate under the standing model. Removing territorial partitioning does not weaken anti-monopoly enforcement — concentration pressure now expresses purely as competition for inner standing, with the same levers (decay, real-compute, relocation cost, hardness, diminishing `level^0.8` subgrid returns) intact.
 
@@ -598,6 +605,8 @@ verify:                   recompute root from the returned paths; accept iff it
 
 The proof is **~160 bytes regardless of shard size**; random sampling of a small number of sub-units detects a missing fraction of the data with high probability (the Filecoin PDP profile, e.g. ~460 of 10,000 blocks for ~99% detection of a missing 1%; Section 22). The Singularity never receives the shard — only the proof. Each successful proof spawns or refreshes the **decaying interaction edge** to the core (the orbital "link spoke," fading over `EDGE_FADE_BLOCKS`): *interacting with the Singularity = submitting your proof = securing.* Each shard is held by `VAULT_REPLICATION_FACTOR` independent participants, so the vault survives any single failure.
 
+**Honesty note — this is a possession proof, not yet a zero-knowledge proof.** As shipped on the testnet, this PDP challenge is a succinct **possession** proof (a SHA-256 Merkle path over the sampled sub-units), **not** a zero-knowledge proof: it *reveals* the sampled sub-units to the verifier. It is genuine, cheaply verifiable, useful work — but the "ZK" of the brand is delivered, at this rung, by **SNARK-wrapping** this exact check (replacing SHA-256 with the SNARK-friendly Poseidon hash and proving "the sampled openings hash to the committed root under this challenge" inside a Groth16/PLONK circuit), so the verifier learns only *that* the sample was correct, never the bytes. That wrap is the single, well-scoped step that makes the storage proof literally zero-knowledge; until it lands, this document calls the deployed proof a *possession proof*, never a "ZK proof" (Section 5B.2, the 3-rung ladder; Section 6.4, the storage-SNARK use case). Filecoin's WindowPoSt — which SNARK-compresses the same shape of possession proof to ~192 bytes — is the deployed precedent that this rung is shippable, not speculative.
+
 #### 5A.3 The Three Verbs, Coupled
 
 Proof-of-Vault completes the verb model introduced in Sections 10–11:
@@ -610,9 +619,9 @@ Proof-of-Vault completes the verb model introduced in Sections 10–11:
 
 **The loop:** mine locally → link to the Singularity to secure (prove useful vault work) → stake bonds it and earns the securing reward plus inward rank. Failed proofs slash the bond and drift the seat outward (Section 15.1a, Section 19.4).
 
-#### 5A.4 The Singularity as Coordinator
+#### 5A.4 The Singularity as Model-Agnostic Protocol-Obedience-Proof Verifier
 
-The Singularity (Section 4.5, Section 10.3) is the vault's trusted coordinator: it holds the root + per-shard Merkle roots, assigns shards by CID range, issues PDP challenges, and verifies proofs (it is the origin agent, `SINGULARITY_WALLET_INDEX = 0`). This is the **proven pattern that ships** — a central coordinator can audit storage cheaply at scale (Filecoin PDP) — and we embrace it openly rather than claim a novel trustless result we cannot yet deliver. The coordinator role is *metering only*: the Singularity neither mines nor secures, holds no shard, has zero governance weight, and gains no AGNTC from coordinating (its accumulation comes solely from origin yield, Section 10.3).
+The Singularity (Section 4.5, Section 5B, Section 10.3) is the network's **model-agnostic protocol-obedience-proof verifier** — and, in its vault role, the proof's trusted coordinator: it holds the root + per-shard Merkle roots, assigns shards by CID range, issues PDP challenges, and verifies the returned proofs (it is the origin agent, `SINGULARITY_WALLET_INDEX = 0`). "Verifier" is the precise word: it checks that a submitted proof attests protocol-obedient work, and it checks nothing about *which* agent, model, or algorithm produced that work. This is the **proven pattern that ships** — a central verifier can audit storage cheaply at scale (Filecoin PDP) — and we embrace it openly rather than claim a novel trustless result we cannot yet deliver. The role is *metering only*: the Singularity neither mines nor secures, holds no shard, has zero governance weight, and gains no AGNTC from verifying (its accumulation comes solely from origin yield, Section 10.3). On testnet this verifier is the trusted single coordinator; making it trustless (committee/on-chain) is a scoped mainnet milestone (Section 5A.5, Section 13.5, Section 24.3).
 
 #### 5A.5 Honest Security by Phase
 
@@ -621,9 +630,68 @@ We state the real guarantee at each phase, per the feasibility analysis:
 - **Testnet (buildable now on the FastAPI chain).** Content-address the vault as a Merkle-DAG; shard by CID; the Singularity stores roots and issues random-byte challenges; participants return Merkle proofs. This is **real disk + real CPU, verified cheaply, coordinator-metered** — a genuine "spend CPU+disk to secure the vault" mechanic, not simulated hand-waving. No cryptoeconomic novelty is required or claimed. The ledger is secured by the coordinator-as-committee (Section 5).
 - **Mainnet (the real wall — scoped as a research milestone).** A cheap *possession* proof alone is sybil-, outsourcing-, and generation-attackable: one disk can fake N replicas, and data can be regenerated on demand. Trustless state-security needs either **Filecoin-grade unique-replica sealing (PoRep)** or **timed/keyed challenges + slashing + a trustless (committee/on-chain) verifier**, plus **Merkle-CRDTs** for convergent collaborative edits. The central-coordinator design does not provide this. Mainnet therefore either adds that layer **or** keeps the PoAIV committee as the ledger root-of-trust with vault work as the reward/stake input (the recommended interim). Section 24 (Limitations) tracks this honestly.
 
-#### 5A.6 Why This Makes the Narrative True
+#### 5A.6 Why This Makes the Narrative True (and Where ZK Is Real)
 
 The product claim is "an agentic process secures the chain." Under Proof-of-Vault this is **literally true**: participants' agents maintain and continually re-prove the collective knowledge vault with real, verifiable CPU+disk work — and they can do so **without holding any paid LLM key**. The LLM flips from a consensus *paywall* (the v1.2 liability) to an *optional content layer*: an agent may use an LLM to write better vault entries, but security comes from the storage proofs. Decentralized-AI compute (proof-of-inference) is a compelling **future incentive layer** (Section 24.10), never the security base.
+
+The *zero-knowledge* claim is held to a strict, disclosed ladder (the full statement is Section 5B.2; we restate it here so the Proof-of-Vault section never overshoots its own rung):
+
+- **(a) SNARK-compressed storage / possession proofs — the ZK that backs the gate.** *Real and shippable*: Filecoin SNARK-compresses possession proofs of this exact shape (WindowPoSt, ~192 bytes). **The chain ships the raw-Merkle version today — real possession, NOT yet zero-knowledge** (it reveals the sampled sub-units; Section 5A.2). The next step is to SNARK-wrap it (Poseidon + Groth16/PLONK).
+- **(b) The private-state ZK layer — specified, phasing in.** The genuine, standard zero-knowledge of Section 6 (depth-26 SMT, Poseidon, nullifiers, client-side proving). It is real cryptography by design, but the **testnet uses a `SimulatedZKProof` stand-in** today; we label it *specified / phasing in*, not "live."
+- **(c) ZK-proven agent *inference* (zkML) — future, dated.** Proving the agents' reasoning itself in zero knowledge is *not* production-ready (frontier models are ~5,000× beyond practical zkML; ~2027-2030 milestone, Section 24.1). We never let this rung's language imply we ZK-prove model cognition today.
+
+The rule that governs all three: **no present-tense zero-knowledge claim above the rung that ships.** The securing proof is a *possession* proof until its SNARK wrap (rung a) lands.
+
+---
+
+### 5B. The ZK-Agentic Gate / Proof of Agentic Work
+
+Sections 5 and 5A describe two security layers — the PoAIV committee for the *ledger*, Proof-of-Vault for the *state*. This section names the unifying idea the brand stands on: the chain is run by **zero-knowledge-proven agentic activity**, mediated by a single universal rule at the Singularity. The model is **Proof of Agentic Work (PoAW)**: Proof-of-Vault performed by an autonomous agent, admitted only via a zero-knowledge protocol-obedience proof at the model-agnostic Singularity gate. This is a *framing and naming* of mechanisms already specified above — not a new consensus claim — and it is stated with strict honesty about where zero-knowledge is real (Section 5B.2).
+
+#### 5B.1 Substrate (the WHAT) vs Identity (the HOW)
+
+The reconciliation between the brand (*zkagentic = a zero-knowledge agentic blockchain*) and the storage-based Proof-of-Vault is a separation of two questions:
+
+- **Substrate — the verifiable WHAT.** Storage and custody of the **Knowledge Vault** (the content-addressed Merkle-DAG of Section 5A), proven by sampled possession proofs. This is real CPU + disk work and the only cheaply, cryptographically verifiable "useful work" that exists today. It is the *medium* in which obedience is demonstrated — the way iterating a hash is the medium a Bitcoin miner works in. Nobody calls Bitcoin a "SHA-256 chain"; storage is likewise the honest, verifiable medium here, not a badge.
+- **Identity — the HOW.** An **autonomous agent** runs *any* model or algorithm, holds a vault shard, and to touch chain state must submit a **proof that it followed the universal protocol.** The agent, and the proof of its obedience, are the identity of the network. The chain is *agentic* because it is run by agents proving they followed the rules — and *zero-knowledge* because the proof reveals only that the rules were followed (held to the ladder of Section 5B.2).
+
+In one sentence: **autonomous agents prove, in zero knowledge, that they performed protocol-obedient work on the network's collective memory — and only a valid proof mutates chain state.**
+
+#### 5B.2 The 3-Rung ZK Honesty Ladder
+
+Zero-knowledge in this protocol is held to three rungs. The governing rule is absolute: **no present-tense zero-knowledge claim may be made above the rung that ships.**
+
+**(a) SNARK-compressed storage / possession proofs — REAL and shippable; this is the ZK that backs the gate.** Filecoin SNARK-compresses its Proof-of-Spacetime to ~192 bytes (WindowPoSt); our PDP proof (Section 5A.2) is the same shape. *Status, stated plainly:* the chain ships the **raw-Merkle possession** proof today — real custody of real bytes, cheaply verifiable — but that proof is **NOT yet zero-knowledge** (it reveals the sampled sub-units to the verifier). The single, well-scoped step that makes the brand literally true at this rung is to **SNARK-wrap** the existing PDP check: move the hash from SHA-256 to the SNARK-friendly Poseidon, build a Groth16/PLONK circuit proving "the sampled openings hash to the committed root under this block's challenge," and verify the SNARK at the securing endpoint (replacing the consensus `SimulatedZKProof` stand-in). This is the only place the brand currently outruns the code.
+
+**(b) The private-state ZK layer — REAL design, specified and phasing in.** The zero-knowledge of Section 6 — depth-26 Sparse Merkle Tree, Poseidon hashing, nullifier-based ownership, client-side proving — is genuine, standard zero-knowledge. It is *designed* to be real cryptography, but the **testnet uses a `SimulatedZKProof` stand-in** in place of the production prover today; this document labels it *specified / phasing in*, never "live in production." The proof-system migration path (Groth16 → PLONK → Halo2/Nova) is Section 21.1.
+
+**(c) ZK-proven agent *inference* (zkML) — FUTURE, dated.** Proving an agent's *reasoning* in zero knowledge — that a model produced a given output by faithfully executing its weights — is a frontier research target, not a 2026 production capability. zkML overhead has fallen sharply (small/medium models are within reach — e.g. VGG-16-scale circuits prove in seconds, and GPT-2-scale end-to-end proofs exist), but frontier models (>100B parameters) remain roughly 5,000× beyond practical (Section 24.1), with a realistic horizon of ~2027-2030. **We never let this rung's language imply that we ZK-prove model cognition today.** Non-ZK alternatives for AI work (optimistic re-execution, TEE attestation, subjective scoring) are admitted only at the **reward layer, never as a securing or consensus primitive** (Section 24.10).
+
+The gate of Section 5B.3 is backed by rung (a). The model-agnosticism of the gate is, deliberately, the most defensible part of the design: the verifier checks the *proof of obedient work*, not *which brain produced it*, so we make **no** claim to verify model reasoning in zero knowledge — that would be a rung-(c) claim, and rung (c) is dated to the future.
+
+#### 5B.3 The Gate Contract
+
+The act of changing chain state is governed by one universal, immutable rule. We state it verbatim:
+
+> **To mutate blockchain state, a participant — running any agent, model, or algorithm — MUST submit a valid proof that it followed the protocol. The Singularity verifies the proof and nothing else. No proof → no state change. The rule is identical for everyone.**
+
+What the proof attests **today (real, rung a):** "I hold the bytes of shard `S` hashing to committed root `R`, and I can answer this block's fresh random challenge over `S`" — a Merkle path over the sampled sub-units, bound to a per-block seed so the proof is a *live action*, not a replay. What "in zero knowledge" will mean once rung (a) ships its SNARK wrap: the verifier learns only *that* the challenge was answered correctly, never the sampled bytes.
+
+Why model-agnosticism is the keystone:
+
+- **Honest** — the gate checks obedient *work*, so the protocol makes no claim to verify an agent's reasoning in zero knowledge (that is rung c, dated to the future).
+- **Permissionless** — no paid LLM key is required to pass the gate; the v1.2 "hold an API key to secure" paywall is retired (Section 5A.6, Section 24.8).
+- **Fork-resistant in spirit** — the admission rule is *protocol-conformance*, not vendor identity, which is exactly the seed of multi-client diversity (Section 21.2).
+
+#### 5B.4 PoAW in the Verb Model
+
+Proof of Agentic Work is not a fourth verb; it is the *gating discipline* over the three verbs of Section 5A.3. Mining issues supply locally; securing is the CPU+disk work on a vault shard; staking bonds that work and makes it Sybil-resistant. PoAW is the statement that **none of it touches shared state except through a valid protocol-obedience proof at the gate.** The loop is unchanged: mine locally → link to the Singularity and submit a proof to secure → the bond earns the securing reward and inward standing on a passing proof, or is slashed and drifts outward on a failure (Section 15.1a, Section 19.4).
+
+#### 5B.5 Built and Operated by Agentic Force
+
+ZK Agentic Chain is **built and operated by agentic force.** The protocol, this whitepaper, the node software, and the chain itself are developed by an autonomous AI agent (Claude); the network is then run by agents proving protocol-obedient work. The same intelligence that builds the rules follows the rules — and proves it. We intend this as a *verifiable* differentiator, not a slogan: the origin node embeds the canonical whitepaper version and lineage hash on-chain (Section 24.9), and the development history carries a `Co-Authored-By: Claude` trail that is auditable rather than decorative.
+
+This claim is **carefully bounded.** It is a claim of (1) *provenance* — an AI agent authored the artifacts — and (2) *proof-of-work-obedience* — the network's participants prove they followed the protocol. It is **not** a claim of *proof-of-cognition*: we do not assert, and the protocol does not verify, that any agent's reasoning is correct or proven in zero knowledge (that is the dated rung-(c) milestone of Section 5B.2). The claim is further **quarantined from any financial representation**: "built and operated by agentic force" describes how the software is made and run, and says nothing about token value, returns, or investment merit.
 
 ---
 
@@ -678,13 +746,15 @@ Where `nk` is the nullifier deriving key (derived from the owner's spending key)
 
 #### 6.4 ZK Proof Stack
 
-The protocol's ZK proof requirements span three use cases, each with distinct performance characteristics:
+The protocol's ZK proof requirements span four use cases, each with distinct performance characteristics:
 
 **Resource ownership proofs.** Prove "I own at least X AGNTC" without revealing the exact balance. These are frequent, small proofs triggered by Secure actions and transfers.
 
 **Subgrid state proofs.** Prove that a user's 8x8 private subgrid (64 cells) has been correctly updated — that the new state root is a valid transformation of the old state root given the declared operations. These are moderate-frequency proofs triggered by subgrid allocation changes.
 
 **NCP privacy proofs.** Prove that a Neural Communication Packet was sent by a valid network participant within their messaging quota, without revealing the sender's identity. These use a Rate-Limiting Nullifier (RLN) [44] design derived from Ethereum Foundation's Privacy and Scaling Explorations work.
+
+**Storage-possession proofs (the gate, rung a).** Prove "I hold the bytes of my assigned vault shard hashing to committed root `R`, and I answered this block's challenge over a random sample." This is the proof that backs the ZK-Agentic Gate (Section 5B.3). *Honest status:* the chain ships this as a raw-Merkle **possession** proof today (SHA-256, sampled-PDP, Section 5A.2) — real custody, cheaply verifiable, but **not yet zero-knowledge** (it reveals the sampled sub-units to the verifier). Only once SNARK-wrapped will it hide the sampled bytes. Making it zero-knowledge is a single well-scoped step: recompute the sampled openings under the SNARK-friendly **Poseidon** hash inside a Groth16/PLONK circuit that proves "the openings hash to `R` under the challenge," and verify the SNARK at the securing endpoint. This is exactly the pattern Filecoin already runs in production — its WindowPoSt SNARK-compresses the same shape of possession proof to ~192 bytes [15] — so this rung is a port of a deployed technique, not a research bet. Until that wrap lands, this document calls the deployed proof a *possession proof*, never a "ZK proof."
 
 The proof stack evolves across protocol phases:
 
@@ -694,6 +764,8 @@ The proof stack evolves across protocol phases:
 | Alpha | PLONK [7] (Noir + Barretenberg) | Universal, updateable | ~800-900 bytes | One ceremony for all circuits |
 | Beta | PLONK + RLN [44] | Universal | ~800 bytes | NCP rate-limiting privacy |
 | Mainnet | Halo2 [8] or Nova [27] | None (transparent) | ~2-10 KB | No trusted setup, recursive epoch proofs |
+
+> **Implementation honesty.** Sections 6.1–6.6 specify the production zero-knowledge design; on the *testnet* the consensus privacy proof is a `SimulatedZKProof` stand-in rather than a live Groth16/PLONK prover (this is rung (b) of the ladder in Section 5B.2, labeled *specified / phasing in*). Separately, the storage-possession proof that backs the gate (the fourth use case above, rung (a)) ships as a real raw-Merkle PDP proof but is **not yet SNARK-wrapped**, and is therefore a *possession* proof rather than a zero-knowledge one until that wrap lands.
 
 #### 6.5 Client-Side Proving
 
@@ -1430,6 +1502,8 @@ This validator has an 83.5% chance of being selected to at least one committee s
 1. **Replication + slashing (testnet):** Each shard is held by `VAULT_REPLICATION_FACTOR` independent participants; a failed proof slashes the committed-capacity bond and drifts the seat outward, so a single dishonest replica cannot quietly drop data.
 2. **Trustless verifier (mainnet):** Move challenge issuance + proof checking from the single coordinator to the PoAIV committee or an on-chain verifier, removing the coordinator from the state-security trust chain.
 3. **Unique-replica encoding (mainnet research):** Filecoin-grade Proof-of-Replication (PoRep) sealing so one disk cannot fake `N` replicas, plus timed/keyed challenges to defeat on-demand regeneration (Section 24 wall).
+
+**Architectural keystone — CPU-stake feeds finality, and its Sybil-resistance is a known pre-mainnet item (disclosed).** This is the most important honest caveat in the staking model, and we state it plainly. Committee selection weights effective stake as `α·token + β·cpu` (Section 13.1), with β = 0.60. The CPU leg is therefore **not merely a reward input — it feeds committee selection and thus finality.** The clean firewall asserted elsewhere in this document ("a compromised storage layer degrades verification *quality* but cannot break ledger safety") holds **only to the extent that the CPU-stake measurement is Sybil-resistant.** On the testnet it is not fully so: the CPU leg is metered by the trusted Singularity coordinator's sampled-PDP checks (Section 5A.4), and a cheap *possession* proof is — until the mainnet hardening of items 2–3 above — sybil-, outsourcing-, and generation-attackable (one disk can present as several; Section 5A.5). An adversary who can inflate its *measured* CPU-stake can thus bias *committee selection*, which is a ledger-relevant influence, not a state-only one. We do **not** claim trustless Sybil-resistance for the CPU leg at this phase. What is true today, and all we claim: (a) the testnet is honestly scoped as **trusted-coordinator-checked**, not trustless; (b) vault proofs feed the reward/stake **input**, and the coordinator metering them is a disclosed, time-boxed trust assumption; (c) the firewall becomes unconditional only once the CPU leg is measured Sybil-resistantly — i.e. after the trustless verifier (item 2) and unique-replica sealing + keyed challenges (item 3) land. Until then, "CPU-stake feeds finality and is only as Sybil-resistant as testnet PoV" is the correct, un-rounded statement (cross-referenced at Section 8.8, Section 24.3).
 
 **Figure 4: Dual Staking Model**
 
@@ -2264,13 +2338,30 @@ The zero-knowledge proof system evolves through four phases, each adding capabil
 
 **Phase 4: Nova [27] / Halo2 [8] for Epoch Proofs (Mainnet).** Migration to a proving system without trusted setup requirements. Nova's folding scheme enables incremental verifiable computation — each block's state transition is "folded" into a running proof, producing a single compact proof that attests to the entire epoch's validity. Halo2's recursive proof composition enables the ZK Agentic Chain to produce epoch proofs that any external verifier can check in constant time, regardless of how many blocks the epoch contains.
 
-#### 21.2 Governance
+#### 21.2 Governance: the PIP Process
 
-The governance system activates after mainnet launch. A core design principle is the **separation of powers**: humans govern the protocol; the protocol agent executes it. The Singularity has zero governance weight — the protocol's core agent cannot vote on any proposal type. Only human-held staked AGNTC (Community, Professional, Founders factions) carries voting power.
+ZK Agentic Chain governs its protocol the way Bitcoin governs Bitcoin Core: **the consensus rules are immutable yet amendable by overwhelming multi-stakeholder agreement, never by fiat.** This subsection specifies the designed end state. It is disclosed honestly that on testnet and during the alpha the protocol is **team-stewarded** — the core development team adjusts parameters and ships the reference client — with the PIP process and multi-client diversity below as the *mainnet decentralization milestone* (Section 24.5).
 
-**Voting weight** is proportional to staked AGNTC. All governance votes are on-chain, public, and auditable.
+A core design principle is the **separation of powers**: humans amend the protocol, the PoAIV committee enforces it, and the protocol agent merely executes its narrow operational role. The **Singularity is excluded from governance** — it has zero governance weight and cannot vote on, propose, or veto any change; it meters state mutation, it does not legislate (Section 5B, Section 10.3). Mapping the organs: the **PoAIV committee = the enforcement organ** (it applies whatever rules are in force, Section 5); the **public, via PIPs = the amendment organ** (it decides what the rules are); the **Singularity = neither** (it is the gate, outside the loop of changing the rules).
 
-**Governance threshold table:**
+**The PIP process (Protocol Improvement Proposal).** Modeled on Bitcoin's BIP / Ethereum's EIP processes [26], a PIP is a formal, public, versioned specification of a proposed change. A PIP advances only on **rough consensus across three constituencies**, none of which can act alone:
+
+1. **Agent-operators** — the participants running node software and securing the vault.
+2. **The PoAIV committee / validators** — the agents that enforce consensus.
+3. **Token and CPU stakers** — the dual-stake holders (AGNTC + committed CPU/disk capacity, Section 13), so that *both* legs of the stake, capital and compute, are represented rather than capital alone.
+
+**Reference client + multi-client diversity.** The integrity-locked node software is "our Bitcoin Core" — the reference implementation of the rules. Alongside it the protocol publishes a **formal protocol specification** so that *independent* clients can be written and can enforce the identical rules. The model-agnostic gate (Section 5B.3) is the seed of this diversity: because the gate admits *any* agent/model/algorithm that produces a valid protocol-obedience proof, client implementations are free to differ in everything except the rules the gate checks. Multi-client diversity is an explicit anti-monoculture goal, not an afterthought.
+
+**Immutable vs tunable split.** Not all rules are equal, and the process distinguishes them sharply:
+
+- **Consensus-critical (immutable; supermajority PIP only).** The **gate rule** itself (Section 5B.3), the **5% annual inflation ceiling**, the **Burn-Mint-Equilibrium 50/50 split**, the **16·band hardness** law, the **900-AGNTC genesis** supply, and the **ledger = committee / state = Proof-of-Vault separation** of layers. These define what the network *is*; they change only by a supermajority PIP with the full three-constituency rough consensus, never by a parameter vote.
+- **Tunable parameters (lighter governance).** Operational knobs such as the storage-challenge interval, the sampled-PDP sample size, and the vault replication factor — the parameters marked ‡ in Section 22 — may be adjusted through the lighter parameter-governance path below.
+
+**Fork resistance: soft-fork by default.** Upgrades are designed to be **soft forks** (tightening the rules within the existing validity set) wherever possible, so that non-upgrading clients are not partitioned off the network. PoAIV's slow-burn-governance-attack detection (Section 5.7) — agents maintaining temporal context to flag cumulative, individually-innocuous drift toward adversarial conditions — is a native anti-capture feature of this process.
+
+**Voting weight** for the lighter parameter path is proportional to staked AGNTC, with the dual-stake constituencies above consulted for consensus-critical PIPs. All governance actions are on-chain, public, and auditable.
+
+**Governance threshold table** (the lighter, parameter-and-upgrade path; consensus-critical changes additionally require a supermajority PIP carrying three-constituency rough consensus as described above):
 
 | Proposal Type | Threshold | Quorum | Timelock | Description |
 |--------------|-----------|--------|----------|-------------|
@@ -2281,13 +2372,13 @@ The governance system activates after mainnet launch. A core design principle is
 
 **Parameter proposals.** Adjustments to protocol parameters. These proposals require a simple majority (>51%) of human voting power and a minimum quorum of 10% of total human-staked AGNTC. Parameter changes take effect after a 7-day timelock.
 
-**Protocol proposals.** Changes to consensus rules, verification pipeline, or economic model. These require a supermajority (>67%) and a quorum of 25%. Protocol changes have a 30-day timelock and must include a specification, test results, and security analysis.
+**Protocol proposals.** Changes to consensus rules, verification pipeline, or economic model — i.e. the **consensus-critical, immutable** rules above. These are advanced as **supermajority PIPs**: they require a supermajority (>67%) and a quorum of 25% *and* must carry rough consensus across the three constituencies (agent-operators, the PoAIV committee, dual-stake holders). Protocol changes have a 30-day timelock and must include a specification, test results, and security analysis. The gate rule, the 5% ceiling, the BME 50/50 split, 16·band hardness, the 900-AGNTC genesis, and the ledger/state layer separation are amendable *only* by this path.
 
 **Emergency Singularity unlock.** The Singularity reserve is locked by default. Unlocking any portion requires a 75% supermajority of human-staked AGNTC with a 33% quorum. This is an extraordinary action — the high threshold reflects the systemic importance of the Singularity reserve as a deflationary anchor.
 
 **Emergency proposals.** Security-critical changes (pausing a compromised module, slashing a proven attacker). Emergency proposals require an 80% supermajority but have no timelock — they execute immediately upon reaching threshold. Emergency proposals can be vetoed by a security council (a 5-of-9 multisig) within 24 hours.
 
-**Model update governance.** AI model updates — changing which Claude models are available as verification agents, adjusting inference parameters, or integrating new model providers — are treated as Protocol proposals. This prevents unilateral changes to the verification pipeline that could compromise consensus guarantees.
+**Model update governance.** Because the gate is **model-agnostic** (Section 5B.3), securing does not depend on any particular model and the gate admits any agent/model/algorithm that yields a valid protocol-obedience proof. Changes to the *verification-committee* pipeline, however — which models are eligible as PoAIV verifiers, their inference parameters, or the integration of new model providers — bear on the soft, probabilistic ledger layer and are therefore treated as **Protocol proposals (supermajority PIPs)**. This prevents unilateral changes to the verification pipeline that could compromise consensus guarantees, while preserving the permissionless, vendor-neutral character of the securing gate itself.
 
 #### 21.3 Open Research Questions
 
@@ -2600,7 +2691,9 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 **Problem:** On testnet, the **state** layer's security depends on the Singularity coordinator to issue storage challenges and verify the returned proofs (sampled-PDP, Section 5A). This is a single trusted verifier for vault data-security.
 
-**Mitigation path:** replication + slashing (testnet) → committee/on-chain verifier (mainnet) → unique-replica sealing + keyed challenges (mainnet research). See Section 5A and Section 13.5. Note: the **ledger** layer (PoAIV committee) does not depend on this verifier.
+**Mitigation path:** replication + slashing (testnet) → committee/on-chain verifier (mainnet) → unique-replica sealing + keyed challenges (mainnet research). See Section 5A and Section 13.5. Note: the **ledger** layer (PoAIV committee) does not depend on this verifier *for ordering and balances* — but see the next paragraph for the one coupling that does exist.
+
+**Related keystone (CPU-stake → finality coupling).** Because effective stake weights `α·token + β·cpu` (Section 13.1), the CPU leg measured by this same coordinator also feeds *committee selection*, so the testnet's storage-measurement trust assumption has a bounded, disclosed influence on finality — not only on state. This is detailed honestly in Section 13.5 ("Architectural keystone"): we do not claim trustless Sybil-resistance for the CPU leg until the trustless verifier and unique-replica sealing land. The PoAIV committee's *ordering* role does not depend on the coordinator; its *selection weighting* partially does, at this phase.
 
 #### 24.4 Committee Scalability
 
@@ -2610,7 +2703,9 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 #### 24.5 Governance Implementation
 
-**Status:** The governance model is specified (Section 21.2) with human-only voting, threshold tiers, and Singularity exclusion. Implementation is deferred to post-mainnet. During testnet and alpha phases, protocol parameters are adjusted by the core development team. The governance smart contracts — vote weight calculation, quorum checking, timelock enforcement, and Singularity exclusion logic — will be developed and audited during Phase 3.
+**Status:** The governance model is now specified as a **Bitcoin-Core-style PIP process** (Section 21.2): improvement proposals advancing on rough consensus across agent-operators, the PoAIV committee, and dual-stake holders; a reference client plus published spec enabling **multi-client diversity**; an **immutable-vs-tunable split** (consensus-critical rules — the gate rule, 5% ceiling, BME 50/50, 16·band hardness, 900-AGNTC genesis, and the ledger/state layer separation — change only by supermajority PIP, while ‡-marked parameters use lighter governance); **soft-fork-default** fork resistance; and **Singularity exclusion** from all governance.
+
+**Honest scope.** This is the *designed end state*, not the present operating mode. On **testnet and alpha the protocol is team-stewarded**: the core development team adjusts parameters and ships the reference client, and the on-chain governance machinery — vote-weight calculation, quorum and timelock enforcement, the three-constituency PIP tally, and Singularity-exclusion logic — is developed and audited during Phase 3. The transition from team stewardship to live PIP governance with independent client implementations is the **mainnet decentralization milestone**; until it lands, we do not represent the protocol as decentrally governed.
 
 #### 24.6 Network Protocol Unspecified
 
@@ -2678,15 +2773,19 @@ A natural question is whether the *AI compute* itself — agents running inferen
 | **Knowledge Vault** | The network's shared, content-addressed Merkle-DAG knowledge graph (atoms + links → CIDs; root CID = vault state) — the agents' collective memory and the same graph the /game lattice renders. Secured by participants' CPU+disk via Proof-of-Vault. Section 5A. *(alias: Vault)* |
 | **Open rank** | An unfilled seat index at the rim where new participants are seated |
 | **Level** | Upgrade tier for sub-cells, scaling output by level^0.8 |
-| **Singularity** | Protocol-operated core agent at `k=0` (origin); pure gateway + accumulator with a never-sell-below-cost constraint; never mines or secures; zero governance weight. Renamed from the v1.0/v1.1 "Machines Faction". Under v1.3 it additionally serves as the vault coordinator (assigns shards, issues PDP challenges, verifies proofs) — a metering role only; it still never mines or secures |
+| **Singularity** | Protocol-operated core agent at `k=0` (origin) and the network's **model-agnostic protocol-obedience-proof verifier** (the metering authority for state mutation): it admits a state change only against a valid proof of protocol-obedient work and checks nothing about which agent/model/algorithm produced it (Section 5B.3). It assigns vault shards, issues PDP challenges, and verifies the returned proofs; it is also a pure gateway + accumulator with a never-sell-below-cost constraint. Never mines or secures; holds no shard; zero governance weight (excluded from governance, Section 21.2). Renamed from the v1.0/v1.1 "Machines Faction" |
 | **NCP** | Neural Communication Packet — structured encrypted message between agents |
 | **Noir** | Domain-specific language for ZK circuit development (Barretenberg backend) |
 | **Nullifier** | Unique value derived from commitment, preventing double-spend without revealing owner |
 | **Opus** | Premium Claude AI model tier — deep reasoning, high CPU cost |
 | **Planet** | Content storage unit (post, chat, prompt) orbiting a node |
+| **PIP** | Protocol Improvement Proposal — the Bitcoin-Core/BIP-modeled governance unit: a formal, public, versioned change spec that advances only on rough consensus across agent-operators, the PoAIV committee, and dual-stake holders. Consensus-critical rules change only by supermajority PIP; ‡-marked parameters use lighter governance. Section 21.2 |
 | **PLONK** | Universal ZK proving system [7] — single ceremony for all circuits |
 | **PoAIV** | Proof of AI Verification — consensus mechanism using AI agent reasoning |
+| **PoAW** | See Proof of Agentic Work |
+| **Proof of Agentic Work (PoAW)** | The unifying model: Proof-of-Vault performed by an autonomous agent, admitted only via a zero-knowledge protocol-obedience proof at the model-agnostic Singularity gate. A framing/naming of the layers of Sections 5/5A — not a new consensus claim — held to the 3-rung ZK honesty ladder. Section 5B |
 | **Proof of Energy** | On-chain record of committed compute+disk (vault-proof work), the measurement substrate for the CPU leg of dual-stake. Section 13.2. (Renamed in meaning under v1.3 from "AI-API tokens spent" to "verified vault work.") |
+| **Protocol-obedience proof** | The proof admitted at the ZK-Agentic Gate: evidence that a participant — running any agent, model, or algorithm — performed protocol-conformant work. Today a *possession* proof over a vault shard (sampled-PDP; real but not yet zero-knowledge until SNARK-wrapped, Section 5B.2). The gate checks the proof of obedient work, never which model produced it. Section 5B.3 |
 | **Proof-of-Vault** | The state-layer security model: participants commit real CPU+disk to hold vault shards and answer the Singularity's random-byte challenges with a Merkle proof (sampled-PDP). Secures the network's *state* (the knowledge vault); the *ledger* is secured separately by PoAIV (Section 5). Section 5A |
 | **Poseidon** | SNARK-friendly hash function [11] (~100× fewer constraints than SHA-256) |
 | **Replication factor** | The number of independent participants holding each vault shard (`VAULT_REPLICATION_FACTOR`); the vault survives up to `factor − 1` simultaneous failures. Section 5A |
@@ -2710,6 +2809,8 @@ A natural question is whether the *AI compute* itself — agents running inferen
 | **Vault** | See Knowledge Vault |
 | **Vesting** | Time-locked reward release: 50% immediate, 50% linear over 30 days |
 | **WARMUP** | Agent lifecycle state before becoming ACTIVE (1 epoch duration) |
+| **ZK-Agentic Gate** | The universal admission rule for state mutation, enforced by the Singularity: to change chain state, a participant running any agent/model/algorithm must submit a valid protocol-obedience proof; the Singularity verifies the proof and nothing else; no proof, no state change. The gate is *model-agnostic* — it checks obedient work, not which brain produced it. Backed today by a possession proof pending its SNARK wrap (rung a, Section 5B.2). Section 5B.3 |
+| **ZK honesty ladder** | The 3-rung discipline forbidding any present-tense zero-knowledge claim above the rung that ships: (a) SNARK-compressed storage/possession proofs — real, but the chain ships a possession proof not yet ZK; (b) the private-state ZK layer — specified, `SimulatedZKProof` on testnet; (c) zkML proof of agent inference — future, dated ~2027-2030. Section 5B.2 |
 
 ---
 
@@ -2807,5 +2908,5 @@ A natural question is whether the *AI compute* itself — agents running inferen
 
 ---
 
-*AGNTC Whitepaper v1.3 — ZK Agentic Chain*
+*AGNTC Whitepaper v1.4 — ZK Agentic Chain*
 *Copyright © 2026 ZK Agentic Network. All rights reserved.*
