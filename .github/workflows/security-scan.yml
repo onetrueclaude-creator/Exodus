@@ -35,8 +35,11 @@ jobs:
         uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
         env:
           GITLEAKS_CONFIG: .gitleaks.toml
-          # No GITLEAKS_LICENSE: the action's org/PR-comment features need one,
-          # but plain repo scanning runs without it. Keep it advisory.
+          # gitleaks-action v2 requires GITHUB_TOKEN to read PR context. The
+          # auto-provided token is read-only here (top-level permissions:
+          # contents: read) and is enough — no GITLEAKS_LICENSE is needed for
+          # plain repo scanning (the org/PR-comment features need one). Advisory.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   bandit:
     name: bandit (python SAST)
