@@ -1118,6 +1118,12 @@ class VaultAssignmentResponse(BaseModel):
     shards: list[int]
 
 
+class VaultShardResponse(BaseModel):
+    shard_id: int
+    sub_units: list[str]
+    count: int
+
+
 class VaultChallengeRequest(BaseModel):
     wallet_index: int
     shard_id: int
@@ -1175,6 +1181,24 @@ def get_vault_assignment(wallet_index: int) -> VaultAssignmentResponse:
         wallet_index=wallet_index, owner=owner,
         shards=g.vault_registry.shards_for_owner(owner),
     )
+
+
+@app.get("/api/vault/shard/{shard_id}", response_model=VaultShardResponse)
+def get_vault_shard(shard_id: int, wallet_index: int) -> VaultShardResponse:
+    """Serve a shard's full sampled-PDP sub-units (hex) to the wallet
+    responsible for it, so a player's browser can recompute Merkle proofs
+    itself ("the player's machine proves" model). The whole sub-unit list is
+    returned — not just challenged indices — because the client needs every
+    sibling to rebuild the Merkle paths.
+    """
+    g = _g()
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    owner = g.wallets[wallet_index].public_key.hex()
+    if shard_id not in g.vault_registry.shards_for_owner(owner):
+        raise HTTPException(status_code=404, detail="Wallet not responsible for this shard")
+    units = [u.hex() for u in g.vault_registry.shard_sub_units(shard_id)]
+    return VaultShardResponse(shard_id=shard_id, sub_units=units, count=len(units))
 
 
 @app.post("/api/vault/challenge", response_model=VaultChallengeResponse)
