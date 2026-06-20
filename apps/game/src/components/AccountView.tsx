@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useGameStore } from '@/store';
 import { getRewards, getStaking, getSecuringStatus, getVesting, getSettings } from '@/services/testnetApi';
+import { getWalletIndex } from '@/lib/walletIndex';
 import type { RewardsResponse, SecuringStatusResponse, VestingResponse, WalletSettingsResponse } from '@/types';
 import { getNodeTier, TIER_DISPLAY_NAME } from '@/lib/nodeTier';
 import { sciFormat } from '@/lib/format';
@@ -45,12 +46,13 @@ export default function AccountView() {
     if (chainMode !== 'testnet') return;
     setLoading(true);
 
+    const walletIndex = getWalletIndex();
     Promise.allSettled([
-      getRewards(0),
-      getStaking(0),
-      getSecuringStatus(0),
-      getVesting(0),
-      getSettings(0),
+      getRewards(walletIndex),
+      getStaking(walletIndex),
+      getSecuringStatus(walletIndex),
+      getVesting(walletIndex),
+      getSettings(walletIndex),
     ]).then(([rRes, sRes, secRes, vRes, setRes]) => {
       if (rRes.status === 'fulfilled') setRewards(rRes.value);
       if (sRes.status === 'fulfilled') setStaking(sRes.value);

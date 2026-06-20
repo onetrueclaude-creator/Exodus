@@ -9,10 +9,16 @@
  *   Frontend grid: -4000 to 4000  (8000-unit visual space)
  *   Scale factor:  8000 / 6480 ≈ 1.2346
  */
-import type { Agent, AgentTier, HaikuMessage, GridPosition, ClaimInfo, ClaimNodeResult, NodeInfo, TestnetStatus, MessageResult, MessageInfo } from '@/types';
+import type {
+  Agent, AgentTier, HaikuMessage, GridPosition, ClaimInfo, ClaimNodeResult, NodeInfo,
+  TestnetStatus, MessageResult, MessageInfo,
+  VaultRootResponse, VaultAssignmentResponse, VaultChallengeResponse, VaultShardResponse,
+  VaultSubmitProofRequest, VaultSubmitProofResponse, VaultStatusResponse,
+} from '@/types';
 import { CHAIN_GRID_MIN, CHAIN_GRID_SPAN } from '@/types/testnet';
 import { TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
 import { getNodeTier, getNodeCpuPerTurn } from '@/lib/nodeTier';
+import { getWalletIndex } from '@/lib/walletIndex';
 import type { ChainService } from './chainService';
 import * as api from './testnetApi';
 
@@ -170,9 +176,9 @@ export class TestnetChainService implements ChainService {
   }
 
   async registerAgent(userId: string, tier: AgentTier): Promise<Agent> {
-    // For testnet, wallet_index defaults to 0 (first wallet)
-    // In production, this would be derived from the authenticated user
-    const result = await api.birthNode(0);
+    // Wallet index resolves from ?wallet=N / env, defaulting to 0 (first wallet).
+    // A full user→wallet mapping is a later milestone.
+    const result = await api.birthNode(getWalletIndex());
     const position = chainToVisual(result.coordinate.x, result.coordinate.y);
 
     // Map tier → starting level (shim for T7)
@@ -226,7 +232,7 @@ export class TestnetChainService implements ChainService {
   ): Promise<MessageResult> {
     const senderChain = visualToChain(senderCoord.x, senderCoord.y);
     const targetChain = visualToChain(targetCoord.x, targetCoord.y);
-    return api.sendMessage(0, senderChain, targetChain, text);
+    return api.sendMessage(getWalletIndex(), senderChain, targetChain, text);
   }
 
   async getMessages(coord: { x: number; y: number }): Promise<MessageInfo[]> {
@@ -236,16 +242,46 @@ export class TestnetChainService implements ChainService {
 
   async setIntro(coord: { x: number; y: number }, message: string): Promise<void> {
     const chain = visualToChain(coord.x, coord.y);
-    await api.setIntro(0, chain, message);
+    await api.setIntro(getWalletIndex(), chain, message);
   }
 
   async claimNode(chainX: number, chainY: number, stake: number = 200): Promise<ClaimNodeResult> {
-    // wallet_index 0 for testnet (single-user dev mode)
-    return api.claimNode(0, chainX, chainY, stake);
+    // Wallet index resolves from ?wallet=N / env (default 0) so two browsers can
+    // drive distinct nodes during a playtest.
+    return api.claimNode(getWalletIndex(), chainX, chainY, stake);
   }
 
   async moveAgent(agentId: string, position: GridPosition): Promise<Agent> {
     throw new Error('moveAgent not supported on testnet');
+  }
+
+  // ── Proof-of-Vault (PoAW gate) ────────────────────────────────────────────
+  // Thin pass-throughs to the chain vault endpoints. The NodeInspector gate
+  // drives these: assignment → (cache-or-fetch shard) → challenge → build proof
+  // client-side (vaultProof) → submit. Wallet index resolves per browser tab.
+
+  async getVaultRoot(): Promise<VaultRootResponse> {
+    return api.getVaultRoot();
+  }
+
+  async getVaultAssignment(walletIndex: number): Promise<VaultAssignmentResponse> {
+    return api.getVaultAssignment(walletIndex);
+  }
+
+  async getVaultChallenge(walletIndex: number, shardId: number): Promise<VaultChallengeResponse> {
+    return api.getVaultChallenge(walletIndex, shardId);
+  }
+
+  async getVaultShard(shardId: number, walletIndex: number): Promise<VaultShardResponse> {
+    return api.getVaultShard(shardId, walletIndex);
+  }
+
+  async submitVaultProof(req: VaultSubmitProofRequest): Promise<VaultSubmitProofResponse> {
+    return api.submitVaultProof(req);
+  }
+
+  async getVaultStatus(walletIndex: number): Promise<VaultStatusResponse> {
+    return api.getVaultStatus(walletIndex);
   }
 
   /** Fetch ledger status for display */

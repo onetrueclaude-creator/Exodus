@@ -37,6 +37,13 @@ export type {
   EpochStatus,
   RewardsResponse,
   VestingResponse,
+  VaultRootResponse,
+  VaultAssignmentResponse,
+  VaultShardResponse,
+  VaultChallengeResponse,
+  VaultSubmitProofRequest,
+  VaultSubmitProofResponse,
+  VaultStatusResponse,
 } from "./testnet";
 export { CHAIN_GRID_MIN, CHAIN_GRID_MAX, CHAIN_GRID_SPAN } from "./testnet";
 
