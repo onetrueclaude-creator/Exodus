@@ -4,7 +4,12 @@ First run: creates a password and stores its hash in .chain_auth.
 Every subsequent run: prompts for the password before starting the server.
 
 Usage:
-    python3 start.py [--port 8080] [--reload]
+    python3 start.py [--host 127.0.0.1] [--port 8080] [--reload]
+
+The server binds to 127.0.0.1 (loopback only) by default so a fresh
+checkout is not reachable from the LAN. Local dev (game on :3000 ->
+chain on :8080, same machine) works unchanged. Pass --host 0.0.0.0 to
+expose it deliberately, and firewall the port if you do.
 """
 from __future__ import annotations
 
@@ -55,6 +60,14 @@ def _verify_password() -> bool:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Start the Agentic Chain testnet")
+    parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help=(
+            "Interface to bind. Defaults to 127.0.0.1 (loopback only). "
+            "Use 0.0.0.0 to expose on the LAN -- firewall the port if you do."
+        ),
+    )
     parser.add_argument("--port", type=int, default=8080)
     parser.add_argument("--reload", action="store_true", help="Enable uvicorn auto-reload")
     args = parser.parse_args()
@@ -84,7 +97,7 @@ def main() -> None:
     cmd = [
         sys.executable, "-m", "uvicorn",
         "agentic.testnet.api:app",
-        "--host", "0.0.0.0",
+        "--host", args.host,
         "--port", str(args.port),
     ]
     if args.reload:

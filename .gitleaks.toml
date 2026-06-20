@@ -1,0 +1,42 @@
+# gitleaks configuration — secret scanning for the Exodus monorepo (P0-10).
+#
+# Extends gitleaks' built-in ruleset so every default detector applies, then
+# layers a project-specific allowlist for known false positives (a published
+# PGP *public* key is not a secret, lockfiles/vendored deps are noise).
+#
+# Run locally:   gitleaks detect --config .gitleaks.toml --redact
+# Pre-commit:    installed via .pre-commit-config.yaml (gitleaks hook)
+# CI:            .github/workflows/security-scan.yml (non-blocking, report-only)
+
+# Inherit all of gitleaks' default rules.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Project-wide allowlist for known, non-secret matches"
+
+# Paths that never contain real secrets: vendored deps, lockfiles, build
+# output, binary auth artifact (gitignored anyway), and the test suites that
+# legitimately contain dummy keys/fixtures.
+paths = [
+  '''(^|/)node_modules/''',
+  '''(^|/)\.next/''',
+  '''(^|/)out/''',
+  '''(^|/)dist/''',
+  '''(^|/)build/''',
+  '''package-lock\.json$''',
+  '''(^|/)\.chain_auth$''',
+  '''(^|/)tests?/''',
+  '''(^|/)__tests__/''',
+  '''.*\.test\.(ts|tsx|js|jsx|py)$''',
+]
+
+# A PGP *public* key block published in SECURITY.md is meant to be shared —
+# it is not a credential. Allow that specific armored block.
+regexes = [
+  '''-----BEGIN PGP PUBLIC KEY BLOCK-----''',
+]
+
+# Commits known to contain only test fixtures / public material can be listed
+# here by SHA if a future scan flags them. (none yet)
+commits = []

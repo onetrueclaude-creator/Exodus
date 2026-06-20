@@ -1,0 +1,83 @@
+name: Security Scan
+
+# Advisory security scanners (P0-10 gitleaks, P0-19 Bandit + Semgrep).
+#
+# This is a SEPARATE workflow from ci.yml on purpose: every job here is
+# NON-BLOCKING (continue-on-error / report-only). It informs but must never
+# fail the branch-protection required checks ("Chain Tests (Python)",
+# "Game Build + Tests (Node)") that live in ci.yml. Pre-existing findings are
+# surfaced for triage, not used to block merges.
+#
+# All actions are pinned to commit SHAs (supply-chain hardening, P0-11).
+
+on:
+  pull_request:
+    branches: ['**']
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Least-privilege default. Scanners only read the checkout.
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    name: gitleaks (secret scan)
+    runs-on: ubuntu-latest
+    # Advisory only — a finding here must not block the PR.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0 # full history so gitleaks can scan past commits
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        env:
+          GITLEAKS_CONFIG: .gitleaks.toml
+          # gitleaks-action v2 requires GITHUB_TOKEN to read PR context. The
+          # auto-provided token is read-only here (top-level permissions:
+          # contents: read) and is enough — no GITLEAKS_LICENSE is needed for
+          # plain repo scanning (the org/PR-comment features need one). Advisory.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  bandit:
+    name: bandit (python SAST)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+      - name: Install bandit
+        run: pip install bandit
+      - name: Run bandit over chain/
+        # Report-only: never exit non-zero. --exit-zero makes findings advisory;
+        # we still print the full human report and skip vendored/test trees.
+        run: |
+          bandit -r chain/ \
+            --exit-zero \
+            --exclude chain/tests,chain/benchmarks \
+            --format screen
+
+  semgrep:
+    name: semgrep (multi-lang SAST)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    # Run the official Semgrep image directly (the returntocorp/semgrep-action
+    # is deprecated). Pinned by tag; the container is the scanner.
+    container:
+      image: semgrep/semgrep:1.97.0
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Run semgrep (report-only)
+        # --error would fail on findings; we omit it so the job stays advisory.
+        # Pre-existing findings are reported, not enforced.
+        run: |
+          semgrep scan \
+            --config p/python \
+            --config p/javascript \
+            --config p/secrets \
+            --metrics off \
+            --disable-version-check

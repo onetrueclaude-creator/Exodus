@@ -1,0 +1,15 @@
+# pre-commit hooks for the Exodus monorepo (P0-10).
+#
+# Install once:   pip install pre-commit && pre-commit install
+# Run on demand:  pre-commit run --all-files
+#
+# gitleaks scans staged changes for secrets before they ever land in a commit.
+# CI re-runs gitleaks (report-only) in .github/workflows/security-scan.yml as a
+# backstop; this hook is the first line so secrets never enter local history.
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+        name: gitleaks (secret scan)
+        args: ["--config", ".gitleaks.toml"]

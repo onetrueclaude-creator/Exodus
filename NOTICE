@@ -1,0 +1,25 @@
+ZK Agentic Network (Exodus)
+Copyright (c) 2026 ZK Agentic Network
+
+This product includes software developed by the ZK Agentic Network project
+(https://github.com/onetrueclaude-creator/Exodus).
+
+The source code is licensed under the MIT License; see the LICENSE file for
+the full terms.
+
+TRADEMARKS
+----------
+The MIT License applies to the code only. The names "zkagentic" and
+"ZK Agentic Network", the "AGNTC" token ticker, and the project logos are
+trademarks of the ZK Agentic Network project and are NOT licensed under MIT.
+See TRADEMARK.md for the trademark policy. Forks must not use these marks in a
+way that implies endorsement by or affiliation with the project.
+
+THIRD-PARTY COMPONENTS
+----------------------
+This project depends on third-party open-source software. Each such component
+is the property of its respective owners and is distributed under its own
+license. See the dependency manifests for details:
+  - apps/game/package.json        (Node / npm dependencies)
+  - web/marketing/package.json    (Node / npm dependencies)
+  - chain/requirements.txt        (Python dependencies)
