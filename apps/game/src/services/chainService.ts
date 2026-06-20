@@ -1,4 +1,8 @@
-import type { Agent, AgentTier, HaikuMessage, GridPosition, MessageResult, MessageInfo, ClaimNodeResult } from '@/types';
+import type {
+  Agent, AgentTier, HaikuMessage, GridPosition, MessageResult, MessageInfo, ClaimNodeResult,
+  VaultRootResponse, VaultAssignmentResponse, VaultChallengeResponse, VaultShardResponse,
+  VaultSubmitProofRequest, VaultSubmitProofResponse, VaultStatusResponse,
+} from '@/types';
 import { TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
 import { getNodeCpuPerTurn, getNodeTier } from '@/lib/nodeTier';
 import { generateMockAgents, generateMockHaiku } from './mockData';
@@ -17,6 +21,20 @@ export interface ChainService {
   setIntro(coord: { x: number; y: number }, message: string): Promise<void>;
   /** Claim a grid node on-chain (lightweight, no Record creation) */
   claimNode(chainX: number, chainY: number, stake?: number): Promise<ClaimNodeResult>;
+
+  // ── Proof-of-Vault (PoAW gate) ──────────────────────────────────────────
+  /** Vault Merkle-DAG root CID + sizing (atom/shard counts, replication). */
+  getVaultRoot(): Promise<VaultRootResponse>;
+  /** Shards this player's wallet is responsible for holding/proving. */
+  getVaultAssignment(walletIndex: number): Promise<VaultAssignmentResponse>;
+  /** Fresh per-block sampled-PDP challenge for a held shard. */
+  getVaultChallenge(walletIndex: number, shardId: number): Promise<VaultChallengeResponse>;
+  /** Canonical sub-units (hex) the client holds + proves over for a shard. */
+  getVaultShard(shardId: number, walletIndex: number): Promise<VaultShardResponse>;
+  /** Submit a possession proof through the Singularity gate. */
+  submitVaultProof(req: VaultSubmitProofRequest): Promise<VaultSubmitProofResponse>;
+  /** Securing history for a wallet (assigned shards, last pass, passes count). */
+  getVaultStatus(walletIndex: number): Promise<VaultStatusResponse>;
 }
 
 export class MockChainService implements ChainService {
@@ -118,5 +136,63 @@ export class MockChainService implements ChainService {
   async mine(): Promise<{ blockNumber: number; yields: Record<string, number> }> {
     this.blockNumber++;
     return { blockNumber: this.blockNumber, yields: {} };
+  }
+
+  // ── Proof-of-Vault (PoAW gate) — synthetic offline implementations ────────
+  // Internally consistent so the gate flow is demonstrable offline: the
+  // synthetic shard bytes + challenge produce a proof that self-verifies, and
+  // submit always "accepts" with the real CPU credit value.
+
+  private mockSubUnits(shardId: number, count = 8): string[] {
+    // Deterministic per shard; 32-byte hex sub-units in sorted (canonical) order.
+    const units: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const seed = `mock:${shardId}:${i}`;
+      let hex = '';
+      for (let b = 0; b < 32; b++) {
+        hex += (((seed.charCodeAt((i + b) % seed.length) + b * 31 + shardId) & 0xff))
+          .toString(16)
+          .padStart(2, '0');
+      }
+      units.push(hex);
+    }
+    return units.sort();
+  }
+
+  async getVaultRoot(): Promise<VaultRootResponse> {
+    return { root_cid: 'mock-root-cid', atom_count: 128, shard_count: 16, replication_factor: 3 };
+  }
+
+  async getVaultAssignment(walletIndex: number): Promise<VaultAssignmentResponse> {
+    return { wallet_index: walletIndex, owner: `mock-owner-${walletIndex}`, shards: [walletIndex % 16] };
+  }
+
+  async getVaultChallenge(_walletIndex: number, shardId: number): Promise<VaultChallengeResponse> {
+    const n = this.mockSubUnits(shardId).length;
+    return {
+      shard_id: shardId,
+      indices: Array.from({ length: Math.min(8, n) }, (_, i) => i),
+      issued_block: this.blockNumber,
+      expires_block: this.blockNumber + 1,
+      block_seed_hex: '00'.repeat(32),
+    };
+  }
+
+  async getVaultShard(shardId: number, _walletIndex: number): Promise<VaultShardResponse> {
+    const sub = this.mockSubUnits(shardId);
+    return { shard_id: shardId, sub_units: sub, count: sub.length };
+  }
+
+  async submitVaultProof(_req: VaultSubmitProofRequest): Promise<VaultSubmitProofResponse> {
+    return { accepted: true, cpu_credit: 50.0 };
+  }
+
+  async getVaultStatus(walletIndex: number): Promise<VaultStatusResponse> {
+    return {
+      wallet_index: walletIndex,
+      shards: [walletIndex % 16],
+      last_pass_block: this.blockNumber,
+      secured_passes: 0,
+    };
   }
 }

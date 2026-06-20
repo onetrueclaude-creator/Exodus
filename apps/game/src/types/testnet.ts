@@ -255,3 +255,66 @@ export interface VestingResponse {
   immediate_pct: number;
   vest_days: number;
 }
+
+// ── Proof-of-Vault (PoAW gate) — mirror chain VaultResponse models ──────────
+
+// GET /api/vault/root — vault Merkle-DAG root + sizing
+export interface VaultRootResponse {
+  root_cid: string;
+  atom_count: number;
+  shard_count: number;
+  replication_factor: number;
+}
+
+// GET /api/vault/assignment/{wallet_index} — shards this wallet is responsible for
+export interface VaultAssignmentResponse {
+  wallet_index: number;
+  owner: string;
+  shards: number[];
+}
+
+// GET /api/vault/shard/{shard_id}?wallet_index=N — canonical sub-units (hex) the client proves over
+export interface VaultShardResponse {
+  shard_id: number;
+  sub_units: string[];
+  count: number;
+}
+
+// POST /api/vault/challenge — fresh per-block sampled-PDP challenge
+export interface VaultChallengeResponse {
+  shard_id: number;
+  indices: number[];
+  issued_block: number;
+  expires_block: number;
+  block_seed_hex: string;
+}
+
+// POST /api/vault/submit-proof — request body
+export interface VaultSubmitProofRequest {
+  wallet_index: number;
+  shard_id: number;
+  issued_block: number;
+  expires_block: number;
+  indices: number[];
+  block_seed_hex: string;
+  /** Proof shape from vaultProof.makeProof: { root, leaves, paths }. */
+  proof: {
+    root: string;
+    leaves: Record<number, string>;
+    paths: Record<number, string[]>;
+  };
+}
+
+// POST /api/vault/submit-proof — response
+export interface VaultSubmitProofResponse {
+  accepted: boolean;
+  cpu_credit: number;
+}
+
+// GET /api/vault/status/{wallet_index} — securing history for a wallet
+export interface VaultStatusResponse {
+  wallet_index: number;
+  shards: number[];
+  last_pass_block: number | null;
+  secured_passes: number;
+}

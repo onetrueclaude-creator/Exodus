@@ -10,6 +10,9 @@ import type {
   IntroResult, MessageResult, MessageInfo,
   SecureResponse, SecuringStatusResponse, TransactResponse,
   WalletSettingsResponse, EpochStatus, RewardsResponse, VestingResponse,
+  VaultRootResponse, VaultAssignmentResponse, VaultShardResponse,
+  VaultChallengeResponse, VaultSubmitProofRequest, VaultSubmitProofResponse,
+  VaultStatusResponse,
 } from '@/types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_TESTNET_API ?? 'http://localhost:8080';
@@ -184,6 +187,41 @@ export function getEpoch(): Promise<EpochStatus> {
 /** GET /api/vesting/{wallet_index} — vesting schedule */
 export function getVesting(walletIndex: number): Promise<VestingResponse> {
   return get<VestingResponse>(`/api/vesting/${walletIndex}`);
+}
+
+// ── Proof-of-Vault (PoAW gate) endpoints ────────────────────────────────────
+
+/** GET /api/vault/root — vault Merkle-DAG root CID + sizing */
+export function getVaultRoot(): Promise<VaultRootResponse> {
+  return get<VaultRootResponse>('/api/vault/root');
+}
+
+/** GET /api/vault/assignment/{wallet_index} — shards this wallet is responsible for */
+export function getVaultAssignment(walletIndex: number): Promise<VaultAssignmentResponse> {
+  return get<VaultAssignmentResponse>(`/api/vault/assignment/${walletIndex}`);
+}
+
+/** GET /api/vault/shard/{shard_id}?wallet_index=N — canonical sub-units (hex) to prove over */
+export function getVaultShard(shardId: number, walletIndex: number): Promise<VaultShardResponse> {
+  return get<VaultShardResponse>(`/api/vault/shard/${shardId}?wallet_index=${walletIndex}`);
+}
+
+/** POST /api/vault/challenge — fresh per-block sampled-PDP challenge for a shard */
+export function getVaultChallenge(walletIndex: number, shardId: number): Promise<VaultChallengeResponse> {
+  return post<VaultChallengeResponse>('/api/vault/challenge', {
+    wallet_index: walletIndex,
+    shard_id: shardId,
+  });
+}
+
+/** POST /api/vault/submit-proof — submit a possession proof through the Singularity gate */
+export function submitVaultProof(req: VaultSubmitProofRequest): Promise<VaultSubmitProofResponse> {
+  return post<VaultSubmitProofResponse>('/api/vault/submit-proof', req);
+}
+
+/** GET /api/vault/status/{wallet_index} — securing history for a wallet */
+export function getVaultStatus(walletIndex: number): Promise<VaultStatusResponse> {
+  return get<VaultStatusResponse>(`/api/vault/status/${walletIndex}`);
 }
 
 /** Check if the testnet API is reachable */
