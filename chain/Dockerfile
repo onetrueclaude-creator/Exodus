@@ -22,4 +22,10 @@ RUN mkdir -p /app/data
 
 EXPOSE 8080
 
+# A container must bind 0.0.0.0 to be reachable across the container/network
+# boundary (127.0.0.1 here would only be reachable from inside the container).
+# This is deliberate for a deployed node -- the host/platform firewall and the
+# admin-token gate on mutating endpoints are the access controls, not the bind
+# address. Do NOT expose this port publicly without a firewall in front of it.
+# (The local dev launcher start.py defaults to 127.0.0.1 for the opposite reason.)
 CMD sh -c "uvicorn agentic.testnet.api:app --host 0.0.0.0 --port ${PORT:-8080}"

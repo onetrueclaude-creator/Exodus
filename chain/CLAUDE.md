@@ -12,13 +12,20 @@ uvicorn agentic.testnet.api:app --port 8080 --reload     # start API server
 
 **Protected mode (vault-locked):**
 ```bash
-python3 start.py [--port 8080] [--reload]
+python3 start.py [--host 127.0.0.1] [--port 8080] [--reload]
 # First run: prompts to set a password, stored in .chain_auth
 # Every run: asks for password before the server starts
 ```
 
 The password hash is stored in `.chain_auth` (binary, gitignored). Delete it to reset.
-Use `uvicorn` directly to skip the gate during development.
+`start.py` binds **`127.0.0.1` (loopback only) by default** — local dev (game on
+`:3000` → chain on `:8080`, same machine) works unchanged, and a fresh checkout is
+not reachable from the LAN. Pass `--host 0.0.0.0` only to expose it deliberately,
+and **firewall the port** if you do (an open `:8080` is the exposed-RPC drain shape).
+Use `uvicorn` directly to skip the password gate during development — when you do,
+`uvicorn` also defaults to `127.0.0.1`, so add `--host 0.0.0.0` (firewalled) only on
+purpose. The container image (`Dockerfile`) binds `0.0.0.0` by necessity; its access
+controls are the platform firewall + the admin-token gate.
 
 ## Architecture
 - `agentic/params.py` — **Source of truth** for all protocol parameters
