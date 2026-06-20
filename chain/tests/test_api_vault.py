@@ -106,3 +106,80 @@ def test_challenge_for_unowned_shard_404():
     r = client.post("/api/vault/challenge",
                     json={"wallet_index": 1, "shard_id": unowned})
     assert r.status_code == 404
+
+
+def test_shard_bytes_endpoint_serves_owner_sub_units():
+    client = TestClient(app)
+    assignment = client.get("/api/vault/assignment/1").json()
+    if not assignment["shards"]:
+        pytest.skip("wallet 1 holds no shard in this seeding")
+    shard_id = assignment["shards"][0]
+
+    r = client.get(f"/api/vault/shard/{shard_id}?wallet_index=1")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["shard_id"] == shard_id
+    assert isinstance(body["sub_units"], list)
+    assert body["count"] == len(body["sub_units"])
+    assert body["count"] > 0
+    # served entries are hex strings that decode to bytes
+    for u in body["sub_units"]:
+        assert isinstance(u, str)
+        bytes.fromhex(u)  # raises if not valid hex
+
+    # served bytes match what the registry holds for that shard
+    g = api_module._g()
+    units = g.vault_registry.shard_sub_units(shard_id)
+    assert body["sub_units"] == [u.hex() for u in units]
+
+
+def test_shard_bytes_endpoint_unowned_shard_404():
+    client = TestClient(app)
+    assignment = client.get("/api/vault/assignment/1").json()
+    owned = set(assignment["shards"])
+    unowned = next(s for s in range(16) if s not in owned)
+    r = client.get(f"/api/vault/shard/{unowned}?wallet_index=1")
+    assert r.status_code == 404
+
+
+def test_shard_bytes_endpoint_bad_wallet_404():
+    client = TestClient(app)
+    r = client.get("/api/vault/shard/0?wallet_index=99999")
+    assert r.status_code == 404
+
+
+def test_client_builds_valid_proof_from_served_shard_bytes():
+    """End-to-end 'player's machine proves' model: fetch a shard's sub_units
+    via the endpoint, decode them client-side, and build a Merkle proof from
+    ONLY those bytes that verify_proof accepts against the challenge."""
+    client = TestClient(app)
+    assignment = client.get("/api/vault/assignment/1").json()
+    if not assignment["shards"]:
+        pytest.skip("wallet 1 holds no shard in this seeding")
+    shard_id = assignment["shards"][0]
+
+    # 1. fetch the full sub-unit list from the new endpoint (what the browser sees)
+    shard_body = client.get(f"/api/vault/shard/{shard_id}?wallet_index=1").json()
+    sub_units = [bytes.fromhex(u) for u in shard_body["sub_units"]]
+
+    # 2. get a challenge (the indices to spot-check)
+    ch = client.post("/api/vault/challenge",
+                     json={"wallet_index": 1, "shard_id": shard_id}).json()
+    assert len(ch["indices"]) > 0
+
+    # 3. build the proof purely from the served bytes (the TS client does this)
+    from agentic.vault.pdp import make_proof, verify_proof
+    proof = make_proof(sub_units, ch["indices"])
+
+    # 4. that proof verifies against the challenge root — a client CAN prove
+    #    possession using only what this endpoint serves.
+    assert verify_proof(ch["indices"], proof["root"], proof) is True
+
+    # and the chain accepts it end-to-end
+    resp = client.post("/api/vault/submit-proof", json={
+        "wallet_index": 1, "shard_id": shard_id,
+        "issued_block": ch["issued_block"], "expires_block": ch["expires_block"],
+        "indices": ch["indices"], "block_seed_hex": ch["block_seed_hex"],
+        "proof": proof,
+    }).json()
+    assert resp["accepted"] is True
