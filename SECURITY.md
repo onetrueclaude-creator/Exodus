@@ -40,9 +40,11 @@ qiu/GOdQ9rLOxBjdIsw30mUoLo4f41gM
 
 Fingerprint: `81AD ECE4 D3C9 9311 3F7D EC9C 1579 453D 38EA 6D72`
 
-### Secondary Channel: GitHub Security Advisories
+### Secondary Channel: GitHub Private Vulnerability Reporting
 
-You can also report vulnerabilities through [GitHub Security Advisories](https://github.com/onetrueclaude-creator/Exodus/security/advisories). This provides a private channel for coordinated disclosure.
+GitHub **Private Vulnerability Reporting** is enabled on this repository. Open a private report at the [Security tab → "Report a vulnerability"](https://github.com/onetrueclaude-creator/Exodus/security/advisories/new). This gives us a private, GitHub-native channel for coordinated disclosure without exposing the issue publicly.
+
+A `security.txt` (RFC 9116) is published at `https://zkagentic.com/.well-known/security.txt` and `https://zkagenticnetwork.com/.well-known/security.txt`.
 
 ## What to Include
 
@@ -91,6 +93,23 @@ We follow coordinated disclosure. We ask that you:
 3. Do not access or modify other users' data
 
 We will credit reporters in our security advisories unless anonymity is requested.
+
+## Safe Harbor
+
+We support safe-harbor for security researchers acting in good faith, in the spirit of the [disclose.io](https://disclose.io) core terms. If you make a good-faith effort to comply with this policy during your research, we will:
+
+- Consider your research **authorized** under the Computer Fraud and Abuse Act (and analogous laws), and **not** pursue or support legal action against you for it;
+- Consider it exempt from our acceptable-use / DMCA terms to the extent it conflicts with this policy, and **not** bring a claim against you for circumventing technical controls used to demonstrate a vulnerability;
+- Work with you to understand and resolve the issue promptly, and recognize your contribution if you are the first to report a previously unknown issue we act on.
+
+To qualify for safe harbor, please:
+
+1. Report through one of the private channels above and give us reasonable time to remediate before any public disclosure;
+2. Make a good-faith effort to avoid privacy violations, data destruction, service degradation, and interruption to others — interact only with accounts you own or have explicit permission to test;
+3. Access only the minimum data needed to demonstrate the issue, and do not exfiltrate, store, or share other users' data;
+4. Stay within the scope below and the testnet environment — do not target third-party services, infrastructure, or social-engineering / physical attacks.
+
+If in doubt about whether an action is authorized, ask first at security@zkagentic.com. We will not consider good-faith, in-scope research to be a violation of this policy; if a third party brings legal action against you for activity conducted under this policy, we will make this authorization known.
 
 ## Contact
 
