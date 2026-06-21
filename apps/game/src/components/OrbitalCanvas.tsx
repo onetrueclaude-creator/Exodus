@@ -15,6 +15,7 @@ const CORE_PADDING = 56; // free space between the Singularity and rank-1
 const SING_CORE_TEX_R = 32; // black-hole texture core radius (sprite-scale unit)
 const DIM_ALPHA = 0.6; // non-focused nodes recede gently (stay clearly visible) — focus is shown by a selection ring + edge glow, not a harsh dim
 const ACTIVE_PULSE_WINDOW = 4; // blocks: a node pulses while its last securing/proof is this recent
+const MAX_SUBAGENT_DRAG_R = RADIAL_SCALE * 3.5; // px: cap how far a sub-agent can be dragged from its parent
 const ZOOM_MIN = 0.2;
 const ZOOM_MAX = 4;
 const ZOOM_STEP = 0.0015;
@@ -146,9 +147,9 @@ export default function OrbitalCanvas() {
       let dragStartY = 0;
       let dragBodyX = 0; // body world pos at drag start
       let dragBodyY = 0;
-      // Persisted drop positions for dragged subagents — survive rebuild() so a focus
-      // click (or any store update) doesn't snap a moved subagent back to its seat.
-      const draggedPos = new Map<string, { x: number; y: number }>();
+      // Persisted drop positions for dragged subagents live in the store
+      // (subagentDragPositions) so they survive rebuild() AND this canvas unmounting
+      // on a tab switch — a moved subagent never snaps back to its seat.
 
       const computeFocusSet = (): void => {
         if (!focusedId) {
@@ -264,7 +265,7 @@ export default function OrbitalCanvas() {
           };
           // Restore a persisted drag position so a rebuild() (focus click, chain sync)
           // keeps a moved subagent where the user dropped it instead of re-seating it.
-          const persisted = draggedPos.get(n.id);
+          const persisted = useGameStore.getState().subagentDragPositions[n.id];
           if (persisted) {
             b.x = persisted.x;
             b.y = persisted.y;
@@ -322,6 +323,10 @@ export default function OrbitalCanvas() {
             applyFocus();
             // Drive the store-backed NodeInspector toast (incl. the Singularity core).
             useGameStore.getState().setFocusedNode(focusedId);
+            // Tapping an OWNED node makes it the terminal's active agent, so the
+            // Network-view terminal targets it (opening the terminal then shows the
+            // focused sub-agent). switchAgent no-ops for non-owned nodes.
+            if (focusedId) useGameStore.getState().switchAgent(n.id);
           });
           return b;
         });
@@ -339,6 +344,19 @@ export default function OrbitalCanvas() {
           b.sprite.position.set(cx() + b.x, cy() + b.y);
           // Keep the self-marker ring glued to the player's own node.
           if (b.selfRing) b.selfRing.position.set(cx() + b.x, cy() + b.y);
+        }
+        // Consume a focus request (e.g. the "Home Node" button) by recentering the
+        // camera on the node. Previously only the unmounted legacy grid read this, so
+        // the button was dead in the orbital view.
+        const fr = useGameStore.getState().focusRequest;
+        if (fr) {
+          const target = byId.get(fr.nodeId);
+          if (target) {
+            camX = cx() - zoom * (cx() + target.x);
+            camY = cy() - zoom * (cy() + target.y);
+            applyCamera();
+          }
+          useGameStore.getState().clearFocusRequest();
         }
         edgeG.clear();
         for (const [pid, kid] of familyPairs) {
@@ -433,8 +451,21 @@ export default function OrbitalCanvas() {
           const body = byId.get(dragId);
           if (body) {
             // Screen delta → world delta (the world is scaled by zoom).
-            const wx = dragBodyX + ddx / zoom;
-            const wy = dragBodyY + ddy / zoom;
+            let wx = dragBodyX + ddx / zoom;
+            let wy = dragBodyY + ddy / zoom;
+            // Clamp a sub-agent within MAX_SUBAGENT_DRAG_R of its parent so it can't
+            // be dragged off into empty space.
+            const pid = parentByChild.get(dragId);
+            const parentBody = pid ? byId.get(pid) : undefined;
+            if (parentBody) {
+              const dx = wx - parentBody.x;
+              const dy = wy - parentBody.y;
+              const dist = Math.hypot(dx, dy);
+              if (dist > MAX_SUBAGENT_DRAG_R) {
+                wx = parentBody.x + (dx / dist) * MAX_SUBAGENT_DRAG_R;
+                wy = parentBody.y + (dy / dist) * MAX_SUBAGENT_DRAG_R;
+              }
+            }
             body.x = wx;
             body.y = wy;
             body.vx = 0;
@@ -458,7 +489,7 @@ export default function OrbitalCanvas() {
         const body = byId.get(dragId);
         if (body) {
           body.pinned = false; // hand the body back to the physics tether (anchored at the drop spot)
-          draggedPos.set(dragId, { x: body.x, y: body.y }); // persist the drop across rebuilds
+          useGameStore.getState().setSubagentDragPosition(dragId, { x: body.x, y: body.y }); // persist across rebuilds + tab switches
         }
         dragId = null;
         a.canvas.style.cursor = "";
