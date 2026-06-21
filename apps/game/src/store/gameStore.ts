@@ -112,6 +112,10 @@ interface GameState {
   /** Decaying interaction "link" edges (e.g. homenode → Singularity ops). Rendered
    *  in the orbital edge layer and faded out via orbitalEdges.edgeAlpha. */
   interactionEdges: Array<{ from: string; to: string; bornAt: number }>;
+  /** Recent player↔player AGNTC transfers, synced from GET /api/transactions.
+   *  `from`/`to` are owner pubkey hex; `block` is the chain block the tx landed
+   *  in (used to fade the on-screen transaction edge over a block window). */
+  transactionEdges: Array<{ from: string; to: string; block: number }>;
 
   // Actions
   addAgent: (agent: Agent) => void;
@@ -175,6 +179,8 @@ interface GameState {
   setFocusedNode: (nodeId: string | null) => void;
   /** Append a decaying interaction link edge (bornAt = current turn for fade math). */
   addInteractionEdge: (from: string, to: string) => void;
+  /** Replace the synced player↔player transaction-edge list (from /api/transactions). */
+  setTransactionEdges: (list: Array<{ from: string; to: string; block: number }>) => void;
   allocateResearchEnergy: (researchId: string, amount: number) => boolean;
   unlockSkill: (skillId: string) => void;
   setMaxDeployTier: (tier: AgentTier) => void;
@@ -243,6 +249,7 @@ const initialState = {
   subagentDragPositions: {} as Record<string, { x: number; y: number }>,
   focusedNodeId: null as string | null,
   interactionEdges: [] as Array<{ from: string; to: string; bornAt: number }>,
+  transactionEdges: [] as Array<{ from: string; to: string; block: number }>,
 };
 
 /** Voronoi: returns the nearest tier arm node's tier for a given cell coordinate. */
@@ -763,6 +770,8 @@ export const useGameStore = create<GameState>((set) => ({
         { from, to, bornAt: s.turn },
       ].slice(-50),
     })),
+
+  setTransactionEdges: (list) => set({ transactionEdges: list.slice(-50) }),
 
   allocateResearchEnergy: (researchId, amount) => {
     const s = useGameStore.getState();

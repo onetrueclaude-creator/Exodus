@@ -188,9 +188,31 @@ export function getSecuringStatus(walletIndex: number): Promise<SecuringStatusRe
   return get<SecuringStatusResponse>(`/api/secure/${walletIndex}`);
 }
 
-/** POST /api/transact — AGNTC wallet-to-wallet transfer */
-export function postTransact(senderWallet: number, recipientWallet: number, amount: number): Promise<TransactResponse> {
-  return post<TransactResponse>('/api/transact', { sender_wallet: senderWallet, recipient_wallet: recipientWallet, amount });
+/** POST /api/transact — AGNTC wallet-to-wallet transfer.
+ *
+ * The recipient may be given by explicit wallet index OR by owner-name
+ * (case-insensitive, resolved server-side). Exactly one should be supplied. */
+export function postTransact(
+  senderWallet: number,
+  opts: { recipientWallet?: number; recipientName?: string; amount: number },
+): Promise<TransactResponse> {
+  return post<TransactResponse>('/api/transact', {
+    sender_wallet: senderWallet,
+    recipient_wallet: opts.recipientWallet,
+    recipient_name: opts.recipientName,
+    amount: opts.amount,
+  });
+}
+
+/** GET /api/transactions — recent player↔player AGNTC transfers (for tx edges).
+ *
+ * `from`/`to` are owner pubkey hex; the renderer maps them to on-screen nodes. */
+export function getTransactions(): Promise<{
+  transactions: Array<{ from: string; to: string; from_name: string; to_name: string; amount: number; block: number }>;
+}> {
+  return get<{
+    transactions: Array<{ from: string; to: string; from_name: string; to_name: string; amount: number; block: number }>;
+  }>('/api/transactions');
 }
 
 /** GET /api/settings/{wallet_index} — per-wallet network parameters */

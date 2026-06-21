@@ -1242,6 +1242,20 @@ def post_vault_submit_proof(req: VaultSubmitProofRequest) -> VaultSubmitProofRes
     )
     block_slot = g.mining_engine.total_blocks_processed
     accepted = g.vault_registry.submit_proof(owner, challenge, proof, block_slot)
+    if accepted:
+        # Earn-by-securing (testnet earn-source): credit a small spendable AGNTC
+        # reward to the prover's wallet so players have liquid AGNTC to transact.
+        # Mainnet routes securing rewards from fees per whitepaper §5A; this is a
+        # testnet shortcut. Guarded so a mint error never breaks proof submission.
+        from agentic.params import SECURE_AGNTC_REWARD
+        try:
+            g.wallets[req.wallet_index].receive_mint(
+                g.ledger_state,
+                amount=round(SECURE_AGNTC_REWARD * 1_000_000),  # AGNTC → microAGNTC
+                slot=block_slot,
+            )
+        except Exception:
+            pass  # never break proof submission on a mint error
     return VaultSubmitProofResponse(
         accepted=accepted,
         cpu_credit=VAULT_PROOF_CPU_CREDIT if accepted else 0.0,
@@ -1967,7 +1981,8 @@ def birth_node(request: Request, req: BirthRequest) -> BirthResult:
 
 class TransactRequest(BaseModel):
     sender_wallet: int
-    recipient_wallet: int
+    recipient_wallet: Optional[int] = None  # explicit index; or resolve via recipient_name
+    recipient_name: Optional[str] = None    # case-insensitive owner-name lookup
     amount: float  # AGNTC (float, converted to microAGNTC internally)
 
 
@@ -1992,15 +2007,27 @@ def transact(request: Request, req: TransactRequest) -> TransactResponse:
     g = _g()
     if req.sender_wallet < 0 or req.sender_wallet >= len(g.wallets):
         raise HTTPException(status_code=404, detail="Sender wallet not found")
-    if req.recipient_wallet < 0 or req.recipient_wallet >= len(g.wallets):
+    # Resolve recipient by name when provided (case-insensitive), else by index.
+    recipient_index = req.recipient_wallet
+    if req.recipient_name is not None:
+        target = req.recipient_name.strip().lower()
+        recipient_index = next(
+            (i for i, w in enumerate(g.wallets) if w.name.lower() == target),
+            None,
+        )
+        if recipient_index is None:
+            raise HTTPException(status_code=404, detail="Recipient name not found")
+    if recipient_index is None:
+        raise HTTPException(status_code=400, detail="Recipient wallet or name required")
+    if recipient_index < 0 or recipient_index >= len(g.wallets):
         raise HTTPException(status_code=404, detail="Recipient wallet not found")
-    if req.sender_wallet == req.recipient_wallet:
+    if req.sender_wallet == recipient_index:
         raise HTTPException(status_code=400, detail="Cannot transfer to self")
     if req.amount <= 0:
         raise HTTPException(status_code=400, detail="Amount must be positive")
 
     sender = g.wallets[req.sender_wallet]
-    recipient = g.wallets[req.recipient_wallet]
+    recipient = g.wallets[recipient_index]
 
     micro_amount = round(req.amount * 1_000_000)
     if micro_amount <= 0:
@@ -2060,16 +2087,49 @@ def transact(request: Request, req: TransactRequest) -> TransactResponse:
     fee_amount = g.fee_engine.schedule.transfer_fee
     g.fee_engine.collect_and_distribute([fee_amount])
 
+    # Record the transfer for the on-screen transaction-edge renderer.
+    # Trim to the most recent 50 (oldest dropped).
+    g.recent_transactions.append({
+        "from": sender.public_key.hex(),
+        "to": recipient.public_key.hex(),
+        "from_name": sender.name,
+        "to_name": recipient.name,
+        "amount": req.amount,
+        "block": g.mining_engine.total_blocks_processed,
+    })
+    if len(g.recent_transactions) > 50:
+        del g.recent_transactions[:-50]
+
     return TransactResponse(
         success=True,
         sender_wallet=req.sender_wallet,
-        recipient_wallet=req.recipient_wallet,
+        recipient_wallet=recipient_index,
         amount=req.amount,
         fee=fee_amount / 1_000_000,
         records_created=result.records_created,
         nullifiers_published=result.nullifiers_published,
         message=f"Transferred {req.amount} AGNTC (fee: {fee_amount / 1_000_000:.6f})",
     )
+
+
+class TransactionsResponse(BaseModel):
+    # Each entry is a plain dict: {from, to, from_name, to_name, amount, block}.
+    # Modelled as List[dict] because "from" is a Python reserved word and the
+    # stored entries already carry the exact JSON keys the frontend expects.
+    transactions: List[dict]
+
+
+@app.get("/api/transactions", response_model=TransactionsResponse)
+def get_transactions() -> TransactionsResponse:
+    """Return recent player↔player AGNTC transfers, most-recent-first, capped at 30.
+
+    Each entry: {from, to, from_name, to_name, amount, block}. The from/to are
+    owner pubkey hex — the frontend maps them to on-screen nodes to draw a
+    decaying transaction edge.
+    """
+    g = _g()
+    recent = list(reversed(g.recent_transactions))[:30]
+    return TransactionsResponse(transactions=recent)
 
 
 # ---------------------------------------------------------------------------

@@ -19,7 +19,7 @@ import { useGameStore } from "@/store";
 import { MockChainService } from "@/services/chainService";
 import type { ChainService } from "@/services/chainService";
 import { TestnetChainService } from "@/services/testnetChainService";
-import { isTestnetOnline, getSettings } from "@/services/testnetApi";
+import { isTestnetOnline, getSettings, getTransactions } from "@/services/testnetApi";
 import { getWalletIndex } from "@/lib/walletIndex";
 import { useChainWebSocket } from "@/hooks/useChainWebSocket";
 import type { SubscriptionTier } from "@/types";
@@ -182,6 +182,16 @@ export default function GamePage() {
       });
     } catch {
       // Wallet sync failed — keep stale data
+    }
+
+    // Sync recent player↔player transactions → on-screen transaction edges.
+    try {
+      const { transactions } = await getTransactions();
+      store.setTransactionEdges(
+        transactions.map((tx) => ({ from: tx.from, to: tx.to, block: tx.block })),
+      );
+    } catch {
+      // Transaction sync failed — keep stale edges
     }
   }, []);
 
