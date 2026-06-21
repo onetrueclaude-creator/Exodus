@@ -15,12 +15,9 @@ import {
   type NodeTier,
 } from '@/lib/nodeTier';
 import { getDistance } from '@/lib/proximity';
-import { visualToChain } from '@/services/testnetChainService';
 import { postTransact, getStatus as fetchChainStats } from '@/services/testnetApi';
 import { getWalletIndex } from '@/lib/walletIndex';
 import { logAction } from '@/lib/actionLogger';
-import { CELL_SIZE } from '@/lib/lattice';
-import { computeDeployCandidates } from '@/lib/deploy';
 import { sciFormat } from '@/lib/format';
 
 /* ── Agent Action Definitions ─────────────────────────────── */
@@ -302,29 +299,10 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
   const energy = useGameStore((s) => s.energy);
   const minerals = useGameStore((s) => s.minerals);
   const allAgents = useGameStore((s) => s.agents);
-  const allBlocknodes = useGameStore((s) => s.blocknodes);
   const cpuRegenPerTurn = useGameStore((s) => s.cpuRegenPerTurn);
   const turn = useGameStore((s) => s.turn);
 
   const actions = AGENT_ACTIONS[agentNodeTier];
-
-  // Deploy targets: empire-blob adjacency via computeDeployCandidates — no
-  // tier/quadrant gate, sorted by Chebyshev distance from homenode.
-  // Clicking/hovering uses blocknode IDs so the focus useEffect's path A
-  // (cellToPixel) centers the camera on a *visible* cell.
-  const nearbyUnclaimed = useMemo(() => {
-    const agentCx = Math.round(agent.position.x / CELL_SIZE);
-    const agentCy = Math.round(agent.position.y / CELL_SIZE);
-    return computeDeployCandidates(allBlocknodes, agent.userId, { cx: agentCx, cy: agentCy })
-      .map(c => ({
-        id: c.id,
-        // x/y are kept only to register the claim on-chain — coordinates are no longer
-        // shown to the player (retired; nodes are orbital rank-seats). Density dropped too.
-        x: c.cx * CELL_SIZE,
-        y: c.cy * CELL_SIZE,
-      }))
-      .slice(0, 1); // only the nearest open seat is needed — auto-picked on confirm
-  }, [allBlocknodes, agent.userId, agent.position.x, agent.position.y]);
 
   const nearbyAgents = useMemo(() => {
     return Object.values(allAgents)
@@ -530,15 +508,12 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
         addMsg('system', 'This node must reach Cortex tier (Lv 4) before deploying sub-agents.');
         return;
       }
-      if (nearbyUnclaimed.length === 0) {
-        addMsg('system', 'No open seats available to deploy a sub-agent.');
-        return;
-      }
       addMsg('user', 'Deploy Agent');
       setPendingAction(null);
-      // Auto-stage the nearest open seat and ask for a single confirmation. The
-      // sub-agent spawns in orbit and is draggable — no target picker / greeting step.
-      setDeployTarget(nearbyUnclaimed[0]);
+      // Orbital deploy: spawn a child sub-agent of THIS node (no grid seat needed).
+      // Stage a non-null marker (the parent) and ask for one confirmation; the
+      // sub-agent spawns in orbit and is draggable.
+      setDeployTarget({ id: agent.id, x: agent.position.x, y: agent.position.y });
       setDeployStep('confirm');
       return;
     }
@@ -574,25 +549,19 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
     addMsg('agent', `Deploying sub-agent...\n${eCost}E + ${mCost}M`);
     await new Promise(r => setTimeout(r, 600 + Math.random() * 800));
 
-    // Register on-chain first
-    if (chainService && 'claimNode' in chainService) {
-      try {
-        const chainCoord = visualToChain(target.x, target.y);
-        await (chainService as { claimNode(x: number, y: number, stake?: number): Promise<unknown> }).claimNode(chainCoord.x, chainCoord.y, 200);
-      } catch (err) {
-        addMsg('system', `On-chain claim failed: ${err instanceof Error ? err.message : 'unknown error'}`);
-        setProcessing(false);
-        return;
-      }
-    }
-
-    const claimSuccess = useGameStore.getState().claimNode(target.id, selectedTier, agent.id);
-    if (claimSuccess) {
-      const response = ACTION_RESPONSES['deploy']?.[agentNodeTier] || 'Agent deployed.';
+    // Sub-agents are client-side children that orbit their parent node. The
+    // orbital model carries no parent relationship in chain claims (parentId is a
+    // client concept), and promoting a sub-agent to its own on-chain claim is the
+    // AGNTC-gated /api/birth mechanism — so a spawn is local until the player can
+    // fund a birth. (Removed the legacy visualToChain + /api/claim call, which fed
+    // a phyllotaxis seat position into coordinate-grid claiming and 400'd.)
+    const newId = useGameStore.getState().createAgent(selectedTier, agent.position, undefined, agent.id);
+    if (newId) {
+      const response = ACTION_RESPONSES['deploy']?.[agentNodeTier] || 'Sub-agent deployed.';
       addMsg('agent', response);
-      if (onDeploy) onDeploy(target.id);
+      if (onDeploy) onDeploy(newId);
     } else {
-      addMsg('system', 'Deploy failed \u2014 node unavailable.');
+      addMsg('system', 'Deploy failed \u2014 insufficient CPU.');
     }
     setDeployTarget(null);
     setProcessing(false);
@@ -732,7 +701,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
               <div className="flex items-center gap-2 py-1.5">
                 <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
                 <span
-                  className="text-[12px] text-text-muted/60 tracking-[0.15em] uppercase shrink-0"
+                  className="min-w-0 break-words text-center text-[12px] text-text-muted/60 tracking-[0.15em] uppercase"
                   style={{ fontFamily: "'Fira Code', monospace" }}
                 >
                   {msg.content}

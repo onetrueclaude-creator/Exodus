@@ -64,8 +64,9 @@ export function getGridRegion(
 }
 
 /** GET /api/agents — frontend-ready agent list (user agents + unclaimed slots) */
-export function getAgents(userCount: number = 3): Promise<AgentInfo[]> {
-  return get<AgentInfo[]>(`/api/agents?user_count=${userCount}`);
+export function getAgents(userCount: number = 3, selfWallet?: number): Promise<AgentInfo[]> {
+  const self = selfWallet !== undefined && selfWallet >= 0 ? `&self_wallet=${selfWallet}` : '';
+  return get<AgentInfo[]>(`/api/agents?user_count=${userCount}${self}`);
 }
 
 /** POST /api/mine — process one mining block (rate-limited to 60s) */

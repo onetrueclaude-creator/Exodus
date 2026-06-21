@@ -217,6 +217,7 @@ class AgentInfo(BaseModel):
     band: int = 0          # radial band = band_of(rank); 0 for the core
     activity: float = 0.0  # rolling activity score (proxy: staked CPU, until live EMA)
     is_singularity: bool = False  # the origin protocol node (gateway + accumulator)
+    is_self: bool = False  # the requesting wallet's own node (renderer "YOU" marker)
 
 
 class ResetResult(BaseModel):
@@ -1652,7 +1653,10 @@ def claim_node(request: Request, req: ClaimNodeRequest) -> ClaimNodeResult:
 
 
 @app.get("/api/agents", response_model=List[AgentInfo])
-def get_agents(user_count: int = Query(default=3, ge=1, le=50)) -> List[AgentInfo]:
+def get_agents(
+    user_count: int = Query(default=3, ge=1, le=50),
+    self_wallet: int = Query(default=-1),
+) -> List[AgentInfo]:
     """Return claims mapped to frontend Agent format.
 
     First `user_count` claims become user-owned Sonnet agents.
@@ -1667,6 +1671,12 @@ def get_agents(user_count: int = Query(default=3, ge=1, le=50)) -> List[AgentInf
     """
     g = _g()
     claims = g.claim_registry.all_active_claims()
+
+    # The requesting wallet's own node — marked is_self so the renderer can draw
+    # the "YOU" marker on the player's real on-chain claim (never the Singularity).
+    self_owner_hex: Optional[str] = None
+    if 0 <= self_wallet < len(g.wallets):
+        self_owner_hex = g.wallets[self_wallet].public_key.hex()
 
     # Pass 1: stable ids + activity proxy + locate the Singularity (origin node).
     ids: List[str] = []
@@ -1718,6 +1728,11 @@ def get_agents(user_count: int = Query(default=3, ge=1, le=50)) -> List[AgentInf
             band=band_of(rank),
             activity=round(scores[aid], 4),
             is_singularity=is_singularity,
+            is_self=(
+                self_owner_hex is not None
+                and c.owner.hex() == self_owner_hex
+                and not is_singularity
+            ),
         ))
     return agents
 
