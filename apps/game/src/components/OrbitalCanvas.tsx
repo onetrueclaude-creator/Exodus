@@ -2,7 +2,7 @@
 import { useEffect, useRef } from "react";
 import { Application, Container, Graphics, Sprite, Circle, type Texture } from "pixi.js";
 import { useGameStore } from "@/store/gameStore";
-import { buildScene } from "@/lib/orbitalScene";
+import { buildScene, carryBodyState } from "@/lib/orbitalScene";
 import { assignRanks } from "@/lib/rankMapping";
 import { bandOf } from "@/lib/orbitalGeometry";
 import { step, DEFAULT_PHYSICS, type PhysicsBody } from "@/lib/orbitalPhysics";
@@ -208,6 +208,9 @@ export default function OrbitalCanvas() {
         }
 
         nodeLayer.removeChildren();
+        // Snapshot the outgoing bodies so each surviving node can carry its live
+        // physics state across this rebuild (see carryBodyState below).
+        const prevBodyById = new Map(bodies.map((pb) => [pb.id, pb] as const));
         bodies = scene.nodes.map((n) => {
           const isSing = n.kind === "singularity";
           // Singularity = the black-hole texture (untinted, larger so the corona
@@ -263,6 +266,17 @@ export default function OrbitalCanvas() {
             selfRing,
             lastActiveBlock: n.lastActiveBlock,
           };
+          // Carry this node's live position+velocity across the rebuild. The store
+          // replaces `agents` on every chain sync, which re-fires rebuild(); without
+          // this, a node that had drifted under the tether would snap back to its
+          // exact seat and re-settle every sync/action — read as the view "zooming
+          // in a bit" on every interaction. The anchor stays at the new seat, so a
+          // genuine re-rank still eases over smoothly via the tether.
+          const carried = carryBodyState(n.x, n.y, prevBodyById.get(n.id));
+          b.x = carried.x;
+          b.y = carried.y;
+          b.vx = carried.vx;
+          b.vy = carried.vy;
           // Restore a persisted drag position so a rebuild() (focus click, chain sync)
           // keeps a moved subagent where the user dropped it instead of re-seating it.
           const persisted = useGameStore.getState().subagentDragPositions[n.id];

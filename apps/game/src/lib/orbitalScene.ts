@@ -19,6 +19,37 @@ const SINGULARITY_R = 13;
  */
 export const SUBAGENT_ORBIT_FRACTION = 1.1;
 
+/** Live physics state carried across a rebuild — a subset of the render body. */
+export interface CarriedBodyState {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+}
+
+/**
+ * Initial physics state for a node when (re)building the scene.
+ *
+ * The store replaces the `agents` object on every chain sync, which re-fires the
+ * renderer's rebuild(). If each rebuild re-seated every node at its phyllotaxis
+ * seat with zero velocity, a node that had drifted under the physics tether would
+ * SNAP back and re-settle on every sync/action — read by the eye as the view
+ * "zooming in a bit" whenever you interact. Carrying the previous body's live
+ * position+velocity forward makes a rebuild visually inert; a genuine re-rank
+ * still animates smoothly because the anchor (set separately to the new seat)
+ * eases the body across via the tether. New nodes (no prev) start at rest on
+ * their seat.
+ */
+export function carryBodyState(
+  seatX: number,
+  seatY: number,
+  prev?: CarriedBodyState,
+): CarriedBodyState {
+  return prev
+    ? { x: prev.x, y: prev.y, vx: prev.vx, vy: prev.vy }
+    : { x: seatX, y: seatY, vx: 0, vy: 0 };
+}
+
 export function buildScene(seats: readonly SeatInput[], opts: SceneOpts): SceneModel {
   const c = opts.radialScale;
   const orbit = (opts.subagentOrbitFraction ?? SUBAGENT_ORBIT_FRACTION) * c;
