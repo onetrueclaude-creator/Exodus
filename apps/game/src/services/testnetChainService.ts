@@ -149,13 +149,14 @@ export class TestnetChainService implements ChainService {
   async getAgents(): Promise<Agent[]> {
     // 1. Fetch on-chain claims as agents — these carry the phyllotaxis seat
     //    (rank / activity) and the Singularity flag the orbital renderer needs.
-    const infos = await api.getAgents(50);
+    const infos = await api.getAgents(50, getWalletIndex());
     const ownerFirstSeen = new Set<string>();
     const ownedAgents: Agent[] = infos.map((info, i) => {
       const agent = claimToAgent(info, i); // AgentInfo is a structural superset of ClaimInfo
       agent.activity = info.activity;
       agent.rank = info.rank;
       agent.isSingularity = info.is_singularity;
+      agent.isSelf = info.is_self ?? false;
       if (!ownerFirstSeen.has(info.owner)) {
         ownerFirstSeen.add(info.owner);
         agent.isPrimary = true;

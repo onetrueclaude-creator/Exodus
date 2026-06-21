@@ -210,18 +210,39 @@ export default function GamePage() {
       const feed = await service.getHaikuFeed();
       feed.forEach(addHaiku);
 
-      // In dev mode, always treat the local user as new so dev_tier selection applies.
-      // Mock agents represent other users in the network, not the current player.
       const isDev = process.env.NODE_ENV === "development";
-      const firstOwned = isDev ? null : agentList.find((a) => a.userId !== "");
+      // The player's own node is their real on-chain claim, which the chain flags
+      // is_self for getWalletIndex(). When present (dev OR prod) it IS the homenode
+      // — no synthetic node is created. Falls back to the legacy first-owned
+      // heuristic only in prod when the chain reported no self node.
+      const selfAgent = agentList.find((a) => a.isSelf && !a.isSingularity);
+      const firstOwned = selfAgent ?? (isDev ? null : agentList.find((a) => a.userId !== ""));
       if (firstOwned) {
         setCurrentUser(firstOwned.userId, firstOwned.id);
-        // Auto-open terminal for the primary agent
+        // Dev: anchor the player's resource pool + Founder identity on their real
+        // chain node (no synthetic homenode, no demo placeholders).
+        if (isDev) {
+          const devSubRaw = typeof window !== "undefined" ? localStorage.getItem("dev_subscription") : null;
+          const devSub = (devSubRaw as SubscriptionTier | null) ?? "PROFESSIONAL";
+          const plan = SUBSCRIPTION_PLANS.find((p) => p.tier === devSub) ?? SUBSCRIPTION_PLANS[0];
+          useGameStore.setState({
+            energy: plan.startEnergy,
+            agntcBalance: plan.startAgntc + 1, // +1 genesis airdrop
+            minerals: plan.startMinerals,
+            empireColor: DEV_TIER_COLOR["founder"],
+            cpuRegenPerTurn: plan.cpuRegen,
+            currentUserTier: "founder",
+          });
+          setCurrentUserTier("founder");
+          revealTier("community");
+          revealTier("professional");
+          revealTier("founder");
+        }
         const primary = agentList.find((a) => a.isPrimary && a.userId === firstOwned.userId);
         const homenode = primary ?? firstOwned;
-        setActiveDockPanel("terminal");
-        // Center camera on homenode
+        if (!isDev) setActiveDockPanel("terminal");
         useGameStore.getState().setCamera(homenode.position, 2);
+        useGameStore.getState().requestFocus(homenode.id);
       } else {
         // New user — read dev-selected player Tier + subscription (dev mode).
         // INSECURE dev-only: tier must become server-authoritative (sub-project B);
@@ -308,11 +329,13 @@ export default function GamePage() {
         addAgent(homenodeAgent);
         setCurrentUser(newUserId, homeCellId);
 
-        // dev/demo seed — replace with real chain claims later.
-        // Inject a handful of neighbour player nodes (store-only, NOT a chain change)
-        // so the orbit is populated and the player's own node is visibly marked
-        // against real neighbours. Skipped in production (only dev hits this branch).
-        if (isDev) {
+        // dev/demo seed is OPT-IN (?demo=1). By default the orbit shows ONLY
+        // real participants — the local homenode + chain-backed players — so no
+        // placeholder nodes without an active player connection are drawn.
+        const showDemoNeighbors =
+          typeof window !== "undefined" &&
+          new URLSearchParams(window.location.search).get("demo") === "1";
+        if (isDev && showDemoNeighbors) {
           seedDemoNeighbors();
         }
 

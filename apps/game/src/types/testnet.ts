@@ -63,6 +63,7 @@ export interface AgentInfo {
   band: number; // radial band = band_of(rank)
   activity: number; // rolling activity score
   is_singularity: boolean; // the origin protocol node
+  is_self?: boolean; // the requesting wallet's own node (renderer "YOU" marker)
 }
 
 // GET /api/grid/region?x_min=&x_max=&y_min=&y_max=

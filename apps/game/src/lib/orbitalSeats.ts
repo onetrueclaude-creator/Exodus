@@ -12,6 +12,16 @@ export function tierByHash(id: string): OrbitalTier {
   return PLAYER_TIERS[h % PLAYER_TIERS.length];
 }
 
+/** Cosmetic colour for OTHER players (not self). Founder/amber is reserved for
+ *  the local player's own node, so a non-self chain player must never render
+ *  amber — pick only from the non-founder palette. */
+const NONSELF_TIERS: OrbitalTier[] = ["community", "professional"];
+export function tierByHashNonSelf(id: string): OrbitalTier {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return NONSELF_TIERS[h % NONSELF_TIERS.length];
+}
+
 /** The store-agent fields the seat builder reads. `Agent` satisfies this structurally. */
 export interface SeatAgent {
   id: string;
@@ -47,7 +57,16 @@ export function seatsFromAgents(agents: readonly SeatAgent[]): SeatInput[] {
       // placeholder "community" here is structural (SeatInput.tier is required);
       // downstream consumers key off `parentId` and ignore a subagent's tier,
       // rendering the neutral SUBAGENT_TINT marker instead.
-      tier: isSubagent ? "community" : (a.tier ?? tierByHash(a.id)),
+      // Founder/amber is the UNIQUE marker for the local player's own node.
+      // Self → founder. Other players → their real tier (if known and not
+      // founder) else a deterministic non-founder colour. Subagents are tier-less.
+      tier: isSubagent
+        ? "community"
+        : a.isSelf
+          ? "founder"
+          : a.tier && a.tier !== "founder"
+            ? a.tier
+            : tierByHashNonSelf(a.id),
       parentId: a.parentAgentId,
       isSelf: a.isSelf,
       activity: a.activity ?? (a.stakedCpu ?? 0) + (a.securingCpu ?? 0),
