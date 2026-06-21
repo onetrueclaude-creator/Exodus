@@ -218,6 +218,7 @@ class AgentInfo(BaseModel):
     activity: float = 0.0  # rolling activity score (proxy: staked CPU, until live EMA)
     is_singularity: bool = False  # the origin protocol node (gateway + accumulator)
     is_self: bool = False  # the requesting wallet's own node (renderer "YOU" marker)
+    last_active_block: int = 0  # latest securing/vault-proof block (renderer activity pulse)
 
 
 class ResetResult(BaseModel):
@@ -1678,6 +1679,13 @@ def get_agents(
     if 0 <= self_wallet < len(g.wallets):
         self_owner_hex = g.wallets[self_wallet].public_key.hex()
 
+    # Latest securing-position block per owner — combined (with the last vault-proof
+    # block) into last_active_block so the renderer can pulse recently-active nodes.
+    sec_last: Dict[bytes, int] = {}
+    for _p in g.securing_registry.positions:
+        if _p.start_block > sec_last.get(_p.owner, 0):
+            sec_last[_p.owner] = _p.start_block
+
     # Pass 1: stable ids + activity proxy + locate the Singularity (origin node).
     ids: List[str] = []
     staked_cpus: List[int] = []
@@ -1732,6 +1740,10 @@ def get_agents(
                 self_owner_hex is not None
                 and c.owner.hex() == self_owner_hex
                 and not is_singularity
+            ),
+            last_active_block=max(
+                g.vault_registry.last_pass_block(c.owner.hex()) or 0,
+                sec_last.get(c.owner, 0),
             ),
         ))
     return agents

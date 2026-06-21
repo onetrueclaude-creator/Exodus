@@ -159,7 +159,9 @@ describe("inspectorModelFor", () => {
     const m = inspectorModelFor("x", agents);
     if (m && m.kind === "player") {
       expect(typeof m.tint).toBe("number"); // defined → tintToCss won't crash
-      expect(m.tier).toBe("community"); // invalid → safe fallback
+      // The seat builder now assigns every non-self player one consistent colour,
+      // so a stale agent.tier is ignored entirely — never undefined, never a crash.
+      expect(m.tier).toBe("professional");
     }
   });
 });

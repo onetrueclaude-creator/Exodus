@@ -1,7 +1,8 @@
 import type { Tier } from "./grid";
 
-/** Orbital seat identity: a player Tier, or the Singularity protocol core. */
-export type OrbitalTier = Tier | "singularity";
+/** Orbital seat identity: a player Tier, the Singularity protocol core, or an
+ *  empty (unclaimed) seat awaiting a player. */
+export type OrbitalTier = Tier | "singularity" | "unclaimed";
 
 /** Normative tier colors (whitepaper §4.2), as PixiJS tint numbers. */
 export const TIER_TINT: Record<OrbitalTier, number> = {
@@ -9,6 +10,7 @@ export const TIER_TINT: Record<OrbitalTier, number> = {
   professional: 0x3b82f6,
   founder: 0xf59e0b,
   singularity: 0x140532, // dark violet core
+  unclaimed: 0x475569, // slate-600 — empty seat, no player has entered yet
 };
 
 /**
@@ -31,6 +33,7 @@ export interface SeatInput {
   isSelf?: boolean; // true for the current player's own node (homenode marker)
   parentId?: string; // present → subagent (orbits parent, tier-less)
   activity: number; // ranking proxy
+  lastActiveBlock?: number; // latest securing/proof block (drives the activity pulse)
 }
 
 export interface SceneNode {
@@ -39,9 +42,10 @@ export interface SceneNode {
   y: number;
   radius: number; // draw radius (px, world space)
   tint: number;
-  kind: "player" | "subagent" | "singularity";
+  kind: "player" | "subagent" | "singularity" | "unclaimed";
   isSelf?: boolean; // true for the current player's own node (homenode marker)
   tier?: OrbitalTier; // carried through for self-marker styling (e.g. founder crown). Omitted for subagents (tier-less).
+  lastActiveBlock?: number; // latest securing/proof block (drives the activity pulse)
 }
 
 export interface SceneEdge {

@@ -3,24 +3,9 @@ import type { SeatInput, OrbitalTier } from "@/types/orbital";
 /** Synthetic id for the Singularity core node (rendered separately from players). */
 export const SINGULARITY_ID = "__singularity__";
 
-/** Deterministic per-id cosmetic colour across the player palette (varied/alive).
- *  Phase-2 placeholder until the chain serves a real tier per node. */
-const PLAYER_TIERS: OrbitalTier[] = ["community", "professional", "founder"];
-export function tierByHash(id: string): OrbitalTier {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return PLAYER_TIERS[h % PLAYER_TIERS.length];
-}
-
-/** Cosmetic colour for OTHER players (not self). Founder/amber is reserved for
- *  the local player's own node, so a non-self chain player must never render
- *  amber — pick only from the non-founder palette. */
-const NONSELF_TIERS: OrbitalTier[] = ["community", "professional"];
-export function tierByHashNonSelf(id: string): OrbitalTier {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return NONSELF_TIERS[h % NONSELF_TIERS.length];
-}
+/** A fixed ring of empty, claimable "open seats" is shown so newcomers can see
+ *  where to enter the lattice. Capped — claiming one frees a slot for the next. */
+export const OPEN_SEAT_COUNT = 8;
 
 /** The store-agent fields the seat builder reads. `Agent` satisfies this structurally. */
 export interface SeatAgent {
@@ -30,47 +15,51 @@ export interface SeatAgent {
   activity?: number; // real chain activity (rank signal)
   isSingularity?: boolean; // the chain origin claim — rendered as the core, not a player
   isSelf?: boolean; // the current player's own node (drives the "YOU" marker)
-  tier?: OrbitalTier; // real player Tier when known (overrides the per-id hash colour)
+  tier?: OrbitalTier; // real player Tier when known
   stakedCpu?: number; // fallback proxy when chain activity is absent (mock/offline)
   securingCpu?: number;
+  lastActiveBlock?: number; // latest securing/proof block (drives the activity pulse)
 }
 
 /**
- * Map store agents → orbital seats. Per the phyllotaxis spec the graph seats only
- * **claimed players + their subagents** around a central Singularity; the retired
- * coordinate-grid's unclaimed nodes are NOT seated. The Singularity core is
- * synthesized separately, so the chain's origin claim (is_singularity) is excluded
- * from the player ring. Activity is the chain's real score, falling back to the
- * staked+securing CPU proxy when the chain hasn't supplied one (mock/offline).
+ * Map store agents → orbital seats. Claimed players + their subagents seat around
+ * the Singularity core; up to {@link OPEN_SEAT_COUNT} unclaimed nodes render as
+ * grey, claimable "open seats" so a newcomer can see where to enter. The chain
+ * origin claim (is_singularity) is excluded — the core is synthesized separately.
+ *
+ * Colour rules:
+ *  - the local player's own node is the UNIQUE Founder/amber marker (isSelf);
+ *  - every other claimed player gets ONE consistent player colour — no random
+ *    per-id tiers, and never Founder (real per-player tiers arrive with the
+ *    DB→chain wiring);
+ *  - empty seats are grey ("unclaimed"), tier-less until a player acquires them.
  */
 export function seatsFromAgents(agents: readonly SeatAgent[]): SeatInput[] {
   const seats: SeatInput[] = [];
+  const open: SeatAgent[] = [];
   for (const a of agents) {
+    if (a.isSingularity) continue; // the origin claim is the core, synthesized below
     const isSubagent = !!a.parentAgentId;
-    const isClaimedPlayer = (a.userId ?? "") !== "" && !a.isSingularity;
-    if (!isSubagent && !isClaimedPlayer) continue; // drop unclaimed slots + the origin
+    const isClaimedPlayer = (a.userId ?? "") !== "";
+    if (!isSubagent && !isClaimedPlayer) {
+      open.push(a); // empty seat — collected and capped below
+      continue;
+    }
     seats.push({
       id: a.id,
-      // Subagents are TIER-LESS: they belong to their parent player and must not
-      // carry (or be coloured by) a player Tier. We deliberately do NOT assign a
-      // per-id `tierByHash` tier to a child — only top-level players get one. The
-      // placeholder "community" here is structural (SeatInput.tier is required);
-      // downstream consumers key off `parentId` and ignore a subagent's tier,
-      // rendering the neutral SUBAGENT_TINT marker instead.
-      // Founder/amber is the UNIQUE marker for the local player's own node.
-      // Self → founder. Other players → their real tier (if known and not
-      // founder) else a deterministic non-founder colour. Subagents are tier-less.
-      tier: isSubagent
-        ? "community"
-        : a.isSelf
-          ? "founder"
-          : a.tier && a.tier !== "founder"
-            ? a.tier
-            : tierByHashNonSelf(a.id),
+      // Founder/amber is reserved for the local node; subagents are tier-less
+      // (placeholder, rendered with SUBAGENT_TINT); every other player is one
+      // consistent colour — deterministic, never Founder.
+      tier: isSubagent ? "community" : a.isSelf ? "founder" : "professional",
       parentId: a.parentAgentId,
       isSelf: a.isSelf,
       activity: a.activity ?? (a.stakedCpu ?? 0) + (a.securingCpu ?? 0),
+      lastActiveBlock: a.lastActiveBlock,
     });
+  }
+  // A fixed ring of grey, claimable open seats — empty nodes with no player yet.
+  for (const a of open.slice(0, OPEN_SEAT_COUNT)) {
+    seats.push({ id: a.id, tier: "unclaimed", activity: 0 });
   }
   seats.push({ id: SINGULARITY_ID, tier: "singularity", isSingularity: true, activity: 0 });
   return seats;
