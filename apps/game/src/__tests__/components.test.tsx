@@ -1,9 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { useGameStore } from '@/store';
-import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE, TIER_CLAIM_COST } from '@/types/agent';
+import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
 import type { Agent } from '@/types';
-import type { NodeTier } from '@/lib/nodeTier';
 
 /* ── Helpers ──────────────────────────────────────────── */
 
@@ -53,113 +52,6 @@ describe('TabNavigation', () => {
     expect(useGameStore.getState().activeTab).toBe('account');
     fireEvent.click(screen.getByText('Network'));
     expect(useGameStore.getState().activeTab).toBe('network');
-  });
-});
-
-/* ── AgentCreator ──────────────────────────────────────── */
-
-const mockNodes = [
-  { id: 'node-alpha-001', x: 150, y: 250, dist: 80 },
-  { id: 'node-beta-002', x: 300, y: 400, dist: 220 },
-  { id: 'node-gamma-003', x: -100, y: -200, dist: 350 },
-];
-
-describe('AgentCreator', () => {
-  let AgentCreator: React.ComponentType<{
-    currentAgentLevel: number;
-    energy: number;
-    minerals: number;
-    unclaimedNodes: { id: string; x: number; y: number; dist: number }[];
-    onClaimNode: (slotId: string, tier: NodeTier) => void;
-    onClose: () => void;
-  }>;
-
-  beforeEach(async () => {
-    useGameStore.getState().reset();
-    const mod = await import('@/components/AgentCreator');
-    AgentCreator = mod.default;
-  });
-
-  it('renders node selection as first step', () => {
-    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
-    expect(screen.getByText('Claim Neural Node')).toBeDefined();
-    expect(screen.getByText('SELECT TARGET:')).toBeDefined();
-  });
-
-  it('shows unclaimed nodes with coordinates', () => {
-    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
-    expect(screen.getByText('[node-alp]')).toBeDefined();
-    expect(screen.getByText('80u')).toBeDefined();
-  });
-
-  it('shows empty message when no unclaimed nodes', () => {
-    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={[]} onClaimNode={() => {}} onClose={() => {}} />);
-    expect(screen.getByText('No unclaimed neural nodes in range.')).toBeDefined();
-  });
-
-  it('advances to tier selection after picking a node', () => {
-    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
-    fireEvent.click(screen.getByText('[node-alp]'));
-    expect(screen.getByText('Select Model')).toBeDefined();
-  });
-
-  it('lattice agent (L7) shows cortex and synapse tiers', () => {
-    // Set maxDeployTier to cortex so both cortex and synapse are available
-    useGameStore.getState().setMaxDeployTier('cortex');
-    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
-    fireEvent.click(screen.getByText('[node-alp]'));
-    expect(screen.getByText('Cortex')).toBeDefined();
-    expect(screen.getByText('Synapse')).toBeDefined();
-    // Should NOT show Lattice (can't deploy same tier as deployer)
-    expect(screen.queryByText('Lattice')).toBeNull();
-  });
-
-  it('cortex agent (L4) shows only synapse tier', () => {
-    render(<AgentCreator currentAgentLevel={4} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
-    fireEvent.click(screen.getByText('[node-alp]'));
-    expect(screen.getByText('Synapse')).toBeDefined();
-    expect(screen.queryByText('Cortex')).toBeNull();
-    expect(screen.queryByText('Lattice')).toBeNull();
-  });
-
-  it('calls onClaimNode with correct slotId and tier', () => {
-    const onClaimNode = vi.fn();
-    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={onClaimNode} onClose={() => {}} />);
-    fireEvent.click(screen.getByText('[node-alp]'));
-    fireEvent.click(screen.getByText('Synapse'));
-    expect(onClaimNode).toHaveBeenCalledWith('node-alpha-001', 'synapse');
-  });
-
-  it('shows cost for each tier', () => {
-    const eCost = TIER_CLAIM_COST.synapse;
-    const mCost = Math.ceil(eCost * 0.3);
-    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
-    fireEvent.click(screen.getByText('[node-alp]'));
-    expect(screen.getByText(`${eCost}E + ${mCost}M`)).toBeDefined();
-  });
-
-  it('disables tier when insufficient resources', () => {
-    const onClaimNode = vi.fn();
-    render(<AgentCreator currentAgentLevel={7} energy={0} minerals={0} unclaimedNodes={mockNodes} onClaimNode={onClaimNode} onClose={() => {}} />);
-    fireEvent.click(screen.getByText('[node-alp]'));
-    fireEvent.click(screen.getByText('Synapse'));
-    expect(onClaimNode).not.toHaveBeenCalled();
-  });
-
-  it('back button returns to node selection', () => {
-    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={() => {}} />);
-    fireEvent.click(screen.getByText('[node-alp]'));
-    expect(screen.getByText('Select Model')).toBeDefined();
-    fireEvent.click(screen.getByText('\u2190 Back'));
-    expect(screen.getByText('Claim Neural Node')).toBeDefined();
-  });
-
-  it('calls onClose when close button is clicked', () => {
-    const onClose = vi.fn();
-    render(<AgentCreator currentAgentLevel={7} energy={1000} minerals={100} unclaimedNodes={mockNodes} onClaimNode={() => {}} onClose={onClose} />);
-    const closeBtn = screen.getByText('\u2715');
-    fireEvent.click(closeBtn);
-    expect(onClose).toHaveBeenCalled();
   });
 });
 

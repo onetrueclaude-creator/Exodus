@@ -167,7 +167,7 @@ export default function ResourceBar() {
       <div className="flex items-center gap-1">
         <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
         <span className="text-xs font-mono text-blue-300 tabular-nums">{sciFormat(minerals)}</span>
-        <span className="text-[9px] font-mono text-text-muted/40">Data</span>
+        <span className="text-[9px] font-mono text-text-muted/40">Frags</span>
       </div>
 
       {/* Spacer */}

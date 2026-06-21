@@ -14,6 +14,7 @@ export default function AccountView() {
   const agents = useGameStore((s) => s.agents);
   const planets = useGameStore((s) => s.planets);
   const energy = useGameStore((s) => s.energy);
+  const minerals = useGameStore((s) => s.minerals);
   const agntcBalance = useGameStore((s) => s.agntcBalance);
   const securedChains = useGameStore((s) => s.securedChains);
   const chainMode = useGameStore((s) => s.chainMode);
@@ -112,7 +113,7 @@ export default function AccountView() {
                     </div>
                     {isActive ? (
                       <span className="text-[9px] text-accent-cyan font-mono tracking-wider px-2 py-0.5 rounded border border-accent-cyan/30 bg-accent-cyan/5">
-                        ACTIVE
+                        SELECTED
                       </span>
                     ) : (
                       <span className="text-[9px] text-text-muted/40 font-mono tracking-wider">
@@ -136,7 +137,7 @@ export default function AccountView() {
             <StatCard label="CPU Energy" value={energy.toFixed(0)} valueClass="text-yellow-300" dotColor="bg-yellow-400" />
             <StatCard label="Secured Chains" value={String(securedChains)} valueClass="text-emerald-300" dotColor="bg-emerald-400" />
             <StatCard label="AGNTC Balance" value={sciFormat(agntcBalance)} valueClass="text-accent-cyan" dotColor="bg-accent-cyan" />
-            <StatCard label="Data Frags" value={String(agentPlanets.length)} valueClass="text-blue-300" dotColor="bg-blue-400" />
+            <StatCard label="Frags" value={minerals.toFixed(0)} valueClass="text-blue-300" dotColor="bg-blue-400" />
           </div>
         </div>
 

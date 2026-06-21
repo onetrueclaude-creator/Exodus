@@ -412,7 +412,6 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
         ...(agent.rank ? [`Seat: rank #${agent.rank}`] : []),
         `Mining: ${currentMining}/t${extraMining > 0 ? ` (+${extraMining} boost)` : ''}`,
         `CPU: ${cpuUsed}/t (base ${baseCpu})`,
-        `Perimeter: ${agent.borderPressure}/20`,
         `Staked: ${stakedCpu}/t${stakedCpu > 0 ? ' \u2714' : ''}`,
         `Energy: ${energy.toFixed(0)} | Frags: ${minerals.toFixed(0)}`,
         agent.isPrimary ? `Role: Homenode \u2605` : `Role: Sub-agent`,
@@ -851,7 +850,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
               Deploy a new sub-agent from this node?
             </div>
             <div className="text-[10px] text-text-muted/70" style={{ fontFamily: "'Fira Code', monospace" }}>
-              Cost: <span className="text-yellow-400">{TIER_CLAIM_COST['synapse']} CPU</span> + <span className="text-green-400">{Math.ceil(TIER_CLAIM_COST['synapse'] * 0.3)} Frags</span> (L1 Synapse)
+              Cost: <span className="text-yellow-400">{TIER_CLAIM_COST['synapse']} CPU</span> + <span className="text-blue-300">{Math.ceil(TIER_CLAIM_COST['synapse'] * 0.3)} Frags</span> (L1 Synapse)
             </div>
             <div className="flex justify-end gap-2">
               <button onClick={() => { setDeployStep(null); setDeployTarget(null); }} className="px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
