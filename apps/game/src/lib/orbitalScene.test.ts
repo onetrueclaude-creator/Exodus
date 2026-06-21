@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildScene, SUBAGENT_ORBIT_FRACTION } from "./orbitalScene";
+import { buildScene, carryBodyState, SUBAGENT_ORBIT_FRACTION } from "./orbitalScene";
 import { SUBAGENT_TINT, TIER_TINT } from "../types/orbital";
 import type { SeatInput } from "../types/orbital";
 
@@ -69,5 +69,18 @@ describe("buildScene", () => {
     // the singularity core is never the player's self node
     const core = s.nodes.find((n) => n.id === "core")!;
     expect(core.isSelf).toBeFalsy();
+  });
+});
+
+describe("carryBodyState", () => {
+  it("carries a drifted node's live position+velocity forward (no snap to seat)", () => {
+    // A node that has drifted under the physics tether; its seat is elsewhere.
+    const prev = { x: 12.3, y: -4.5, vx: 0.2, vy: -0.1 };
+    // Must ignore the seat (100,200) and keep the live drifted state, so a rebuild
+    // on every chain sync doesn't snap it back and re-trigger the "zoom" settle.
+    expect(carryBodyState(100, 200, prev)).toEqual(prev);
+  });
+  it("starts a new node (no prev) at rest on its seat", () => {
+    expect(carryBodyState(100, 200, undefined)).toEqual({ x: 100, y: 200, vx: 0, vy: 0 });
   });
 });
