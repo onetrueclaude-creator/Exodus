@@ -17,6 +17,8 @@ import {
 import { getDistance } from '@/lib/proximity';
 import { postTransact, getStatus as fetchChainStats } from '@/services/testnetApi';
 import { getWalletIndex } from '@/lib/walletIndex';
+import { runSecure } from '@/lib/vaultGate';
+import { SINGULARITY_ID } from '@/lib/orbitalSeats';
 import { logAction } from '@/lib/actionLogger';
 import { sciFormat } from '@/lib/format';
 
@@ -29,7 +31,7 @@ interface AgentAction {
   cpuCost: number;
   estTime: string;
   description: string;
-  category: 'blockchain' | 'expansion' | 'intel' | 'social';
+  category: 'blockchain' | 'expansion' | 'intel' | 'social' | 'node-ops';
   /** If set, this action opens a sub-menu of choices instead of executing directly */
   subChoices?: { id: string; label: string; description: string }[];
 }
@@ -37,39 +39,43 @@ interface AgentAction {
 const AGENT_ACTIONS: Record<NodeTier, AgentAction[]> = {
   nexus: [
     { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 0, estTime: '~5min', description: 'Claim a node with a new sub-agent', category: 'expansion' },
-    { id: 'configure-node', label: 'Configure Node', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining and Securing CPU for this node', category: 'blockchain' },
-    { id: 'develop-node', label: 'Develop Node', icon: '\u25B2', cpuCost: 0, estTime: 'varies', description: 'Level up this node (upfront CPU cost)', category: 'blockchain' },
+    { id: 'secure', label: 'Secure', icon: '\u26D3', cpuCost: 0, estTime: '~5s', description: 'Prove possession and secure the chain through the Singularity gate', category: 'blockchain' },
     { id: 'transact', label: 'Transact', icon: '\u21C4', cpuCost: 0, estTime: '~30s', description: 'Transfer AGNTC to another wallet', category: 'blockchain' },
     { id: 'chain-stats', label: 'Chain Stats', icon: '\u25A3', cpuCost: 0, estTime: '~5s', description: 'View live blockchain statistics', category: 'blockchain' },
+    { id: 'configure-node', label: 'Configure Node', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining and Securing CPU for this node', category: 'node-ops' },
+    { id: 'develop-node', label: 'Develop Node', icon: '\u25B2', cpuCost: 0, estTime: 'varies', description: 'Level up this node (upfront CPU cost)', category: 'node-ops' },
     { id: 'report-status', label: 'Status Report', icon: '\u2588', cpuCost: 0, estTime: '~5s', description: 'Agent reports current state', category: 'intel' },
     { id: 'deep-scan', label: 'Deep Scan', icon: '\u25CE', cpuCost: 6, estTime: '~3min', description: 'Reveal agents in wide radius', category: 'intel' },
     { id: 'diplomatic-msg', label: 'Broadcast', icon: '\u25CE', cpuCost: 3, estTime: '~1min', description: 'Broadcast signal to nearby agents', category: 'social' },
   ],
   lattice: [
     { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 0, estTime: '~5min', description: 'Claim a node with a new sub-agent', category: 'expansion' },
-    { id: 'configure-node', label: 'Configure Node', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining and Securing CPU for this node', category: 'blockchain' },
-    { id: 'develop-node', label: 'Develop Node', icon: '\u25B2', cpuCost: 0, estTime: 'varies', description: 'Level up this node (upfront CPU cost)', category: 'blockchain' },
+    { id: 'secure', label: 'Secure', icon: '\u26D3', cpuCost: 0, estTime: '~5s', description: 'Prove possession and secure the chain through the Singularity gate', category: 'blockchain' },
     { id: 'transact', label: 'Transact', icon: '\u21C4', cpuCost: 0, estTime: '~30s', description: 'Transfer AGNTC to another wallet', category: 'blockchain' },
     { id: 'chain-stats', label: 'Chain Stats', icon: '\u25A3', cpuCost: 0, estTime: '~5s', description: 'View live blockchain statistics', category: 'blockchain' },
+    { id: 'configure-node', label: 'Configure Node', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining and Securing CPU for this node', category: 'node-ops' },
+    { id: 'develop-node', label: 'Develop Node', icon: '\u25B2', cpuCost: 0, estTime: 'varies', description: 'Level up this node (upfront CPU cost)', category: 'node-ops' },
     { id: 'report-status', label: 'Status Report', icon: '\u2588', cpuCost: 0, estTime: '~5s', description: 'Agent reports current state', category: 'intel' },
     { id: 'deep-scan', label: 'Deep Scan', icon: '\u25CE', cpuCost: 6, estTime: '~3min', description: 'Reveal agents in wide radius', category: 'intel' },
     { id: 'diplomatic-msg', label: 'Broadcast', icon: '\u25CE', cpuCost: 3, estTime: '~1min', description: 'Broadcast signal to nearby agents', category: 'social' },
   ],
   cortex: [
     { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 0, estTime: '~3min', description: 'Claim a node with a sub-agent', category: 'expansion' },
-    { id: 'configure-node', label: 'Configure Node', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining and Securing CPU for this node', category: 'blockchain' },
-    { id: 'develop-node', label: 'Develop Node', icon: '\u25B2', cpuCost: 0, estTime: 'varies', description: 'Level up this node (upfront CPU cost)', category: 'blockchain' },
+    { id: 'secure', label: 'Secure', icon: '\u26D3', cpuCost: 0, estTime: '~5s', description: 'Prove possession and secure the chain through the Singularity gate', category: 'blockchain' },
     { id: 'transact', label: 'Transact', icon: '\u21C4', cpuCost: 0, estTime: '~30s', description: 'Transfer AGNTC to another wallet', category: 'blockchain' },
     { id: 'chain-stats', label: 'Chain Stats', icon: '\u25A3', cpuCost: 0, estTime: '~5s', description: 'View live blockchain statistics', category: 'blockchain' },
+    { id: 'configure-node', label: 'Configure Node', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining and Securing CPU for this node', category: 'node-ops' },
+    { id: 'develop-node', label: 'Develop Node', icon: '\u25B2', cpuCost: 0, estTime: 'varies', description: 'Level up this node (upfront CPU cost)', category: 'node-ops' },
     { id: 'report-status', label: 'Status Report', icon: '\u2588', cpuCost: 0, estTime: '~5s', description: 'Agent reports current state', category: 'intel' },
     { id: 'scan-local', label: 'Scan Vicinity', icon: '\u25CE', cpuCost: 2, estTime: '~1min', description: 'Reveal nearby agents', category: 'intel' },
     { id: 'send-message', label: 'Send NCP', icon: '\u25A3', cpuCost: 1, estTime: '~30s', description: 'Transmit a neural communication packet', category: 'social' },
   ],
   synapse: [
     { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 0, estTime: '~5s', description: 'Claim an adjacent unclaimed node (L1 Synapse)', category: 'expansion' },
-    { id: 'configure-node', label: 'Configure Node', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining and Securing CPU for this node', category: 'blockchain' },
-    { id: 'develop-node', label: 'Develop Node', icon: '\u25B2', cpuCost: 0, estTime: 'varies', description: 'Level up this node (upfront CPU cost)', category: 'blockchain' },
+    { id: 'secure', label: 'Secure', icon: '\u26D3', cpuCost: 0, estTime: '~5s', description: 'Prove possession and secure the chain through the Singularity gate', category: 'blockchain' },
     { id: 'chain-stats', label: 'Chain Stats', icon: '\u25A3', cpuCost: 0, estTime: '~5s', description: 'View live blockchain statistics', category: 'blockchain' },
+    { id: 'configure-node', label: 'Configure Node', icon: '\u26A1', cpuCost: 0, estTime: '~5s', description: 'Set Mining and Securing CPU for this node', category: 'node-ops' },
+    { id: 'develop-node', label: 'Develop Node', icon: '\u25B2', cpuCost: 0, estTime: 'varies', description: 'Level up this node (upfront CPU cost)', category: 'node-ops' },
     { id: 'report-status', label: 'Status Report', icon: '\u2588', cpuCost: 0, estTime: '~5s', description: 'Agent reports current state', category: 'intel' },
     { id: 'ping', label: 'Ping', icon: '\u25CE', cpuCost: 1, estTime: '~20s', description: 'Quick scan of surroundings', category: 'intel' },
     { id: 'send-message', label: 'Send NCP', icon: '\u25A3', cpuCost: 0, estTime: '~15s', description: 'Transmit a neural communication packet', category: 'social' },
@@ -206,6 +212,7 @@ const CATEGORY_DESIGN: Record<string, {
 }> = {
   expansion: { color: 'text-orange-400', bg: 'bg-orange-400/8', border: 'border-orange-400/15', icon: '\u2604', label: 'DEPLOY' },
   blockchain: { color: 'text-emerald-400', bg: 'bg-emerald-400/8', border: 'border-emerald-400/15', icon: '\u26D3', label: 'BLOCKCHAIN PROTOCOLS' },
+  'node-ops': { color: 'text-violet-400', bg: 'bg-violet-400/8', border: 'border-violet-400/15', icon: '\u2699', label: 'NODE OPERATIONS' },
   intel: { color: 'text-accent-cyan', bg: 'bg-accent-cyan/8', border: 'border-accent-cyan/15', icon: '\u25CE', label: 'INTEL' },
   social: { color: 'text-accent-purple', bg: 'bg-accent-purple/8', border: 'border-accent-purple/15', icon: '\u25C7', label: 'SOCIAL' },
 };
@@ -329,11 +336,13 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
     const grouped: Record<string, AgentAction[]> = {};
     for (const action of actions) {
       if (action.id === 'deploy' && !canDeploy) continue;
+      // Securing is a homenode-only privilege — sub-agents can't prove possession.
+      if (action.id === 'secure' && !agent.isPrimary) continue;
       if (!grouped[action.category]) grouped[action.category] = [];
       grouped[action.category].push(action);
     }
     return grouped;
-  }, [actions, canDeploy]);
+  }, [actions, canDeploy, agent.isPrimary]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -389,6 +398,36 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
 
     if (action.id === 'develop-node') {
       setMenuLevel('develop-node');
+      return;
+    }
+
+    if (action.id === 'secure') {
+      addMsg('user', 'Secure');
+      if (!chainService) {
+        addMsg('system', 'Securing requires a live chain connection.');
+        return;
+      }
+      setProcessing(true);
+      logAction('chain-call', 'POAW secure', 'proving shard possession');
+      try {
+        const res = await runSecure(chainService, getWalletIndex());
+        if (res.ok) {
+          logAction('chain-ok', 'Proof accepted', `shard=${res.shardId} credit=${res.cpuCredit}`);
+          addMsg('agent', `Secured — possession proof accepted (+${res.cpuCredit} CPU)`);
+          // Mirror NodeInspector: draw the decaying edge to the Singularity on a real
+          // accepted proof, anchored on the player's own (isSelf) node.
+          const selfId = Object.values(useGameStore.getState().agents).find(a => a.isSelf)?.id;
+          if (selfId) useGameStore.getState().addInteractionEdge(selfId, SINGULARITY_ID);
+        } else {
+          logAction('chain-err', 'Secure rejected', res.reason);
+          addMsg('system', `Secure failed: ${res.reason}`);
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Secure failed';
+        logAction('chain-err', 'Secure failed', msg);
+        addMsg('system', `Secure failed: ${msg}`);
+      }
+      setProcessing(false);
       return;
     }
 
@@ -649,10 +688,13 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
 
             <div>
               <div
-                className={`text-[13px] font-semibold ${tier.accent} tracking-[0.12em]`}
+                className={`text-[13px] font-semibold ${tier.accent} tracking-[0.12em] flex items-baseline gap-1.5`}
                 style={{ fontFamily: "'Outfit', 'Space Grotesk', sans-serif" }}
               >
                 {tier.label}
+                <span className="text-[10px] font-normal text-text-muted tracking-normal">
+                  {'·'} Lv {agent.level}
+                </span>
               </div>
               <div
                 className="text-[10px] text-text-muted tracking-wide"
