@@ -14,6 +14,7 @@ const RADIAL_SCALE = 46; // px per √k — wider spacing so subnodes have room
 const CORE_PADDING = 56; // free space between the Singularity and rank-1
 const SING_CORE_TEX_R = 32; // black-hole texture core radius (sprite-scale unit)
 const DIM_ALPHA = 0.6; // non-focused nodes recede gently (stay clearly visible) — focus is shown by a selection ring + edge glow, not a harsh dim
+const ACTIVE_PULSE_WINDOW = 4; // blocks: a node pulses while its last securing/proof is this recent
 const ZOOM_MIN = 0.2;
 const ZOOM_MAX = 4;
 const ZOOM_STEP = 0.0015;
@@ -30,6 +31,7 @@ type BodyVM = PhysicsBody & {
   baseScale: number;
   coreR: number; // visual core radius (world px) for the focus ring — excludes the Singularity corona
   selfRing?: Graphics; // subtle ring drawn around the player's own node
+  lastActiveBlock?: number; // latest securing/proof block — recent ⇒ activity pulse
 };
 type NodeMeta = { rank: number; band: number; tier: string; kind: string; isSelf?: boolean };
 type PointerLike = { global: { x: number; y: number }; target?: unknown };
@@ -123,6 +125,7 @@ export default function OrbitalCanvas() {
       bh.destroy();
 
       let bodies: BodyVM[] = [];
+      let pulsePhase = 0; // ms accumulator driving the activity-pulse animation
       let byId = new Map<string, BodyVM>();
       let familyPairs: Array<[string, string]> = [];
       let metaById = new Map<string, NodeMeta>();
@@ -192,7 +195,7 @@ export default function OrbitalCanvas() {
             rank: r,
             band: bandOf(r),
             tier: s.tier,
-            kind: s.isSingularity ? "singularity" : s.parentId ? "subagent" : "player",
+            kind: s.isSingularity ? "singularity" : s.parentId ? "subagent" : s.tier === "unclaimed" ? "unclaimed" : "player",
             isSelf: s.isSelf,
           });
           if (s.parentId) {
@@ -212,6 +215,8 @@ export default function OrbitalCanvas() {
           const dot = new Sprite(isSing ? singTex : tex);
           dot.anchor.set(0.5);
           dot.tint = isSing ? 0xffffff : n.tint;
+          // Empty (unclaimed) seats read as dim — no player behind them yet.
+          if (n.kind === "unclaimed") dot.alpha = 0.5;
           dot.scale.set(baseScale);
           // Hit areas (local/pre-scale coords; on-screen radius = r × baseScale):
           //  - Singularity → clip to its visible disc so its faint corona doesn't swallow
@@ -255,6 +260,7 @@ export default function OrbitalCanvas() {
             baseScale,
             coreR,
             selfRing,
+            lastActiveBlock: n.lastActiveBlock,
           };
           // Restore a persisted drag position so a rebuild() (focus click, chain sync)
           // keeps a moved subagent where the user dropped it instead of re-seating it.
@@ -275,9 +281,11 @@ export default function OrbitalCanvas() {
             tip.textContent =
               m?.kind === "singularity"
                 ? "Singularity · gateway + accumulator"
-                : m?.kind === "subagent"
-                  ? "Sub-agent" // coordinate-free: ids are cell-keyed in mock mode
-                  : `${label} · rank ${m?.rank} · band ${m?.band} · ${m?.tier}`;
+                : m?.kind === "unclaimed"
+                  ? "Open seat · unclaimed"
+                  : m?.kind === "subagent"
+                    ? "Sub-agent" // coordinate-free: ids are cell-keyed in mock mode
+                    : `${label} · rank ${m?.rank} · band ${m?.band} · ${m?.tier}`;
             tip.style.left = `${e.global.x}px`;
             tip.style.top = `${e.global.y}px`;
             tip.style.display = "block";
@@ -325,6 +333,7 @@ export default function OrbitalCanvas() {
       };
 
       const tick = () => {
+        pulsePhase += a.ticker.deltaMS;
         step(bodies, [], a.ticker.deltaMS / 1000, { ...DEFAULT_PHYSICS, anchorK: 0.8 });
         for (const b of bodies) {
           b.sprite.position.set(cx() + b.x, cy() + b.y);
@@ -368,6 +377,17 @@ export default function OrbitalCanvas() {
               .circle(cx() + f.x, cy() + f.y, f.coreR + 6)
               .stroke({ width: 2, color: 0x93c5fd, alpha: 0.9 });
           }
+        }
+        // Activity pulse: a node whose last securing/proof block is recent emits an
+        // expanding teal ring, so a remote player's on-chain work is visible live.
+        const curBlock = useGameStore.getState().testnetBlocks;
+        for (const b of bodies) {
+          const lab = b.lastActiveBlock ?? 0;
+          if (lab <= 0 || curBlock - lab > ACTIVE_PULSE_WINDOW) continue;
+          const t = (Math.sin(pulsePhase / 600 + b.x * 0.05) + 1) / 2; // 0..1 breathing
+          edgeG
+            .circle(cx() + b.x, cy() + b.y, b.coreR + 5 + t * 7)
+            .stroke({ width: 2, color: 0x5eead4, alpha: 0.15 + (1 - t) * 0.4 });
         }
       };
 

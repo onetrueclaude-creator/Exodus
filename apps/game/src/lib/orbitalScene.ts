@@ -38,15 +38,19 @@ export function buildScene(seats: readonly SeatInput[], opts: SceneOpts): SceneM
     const k = ranks.get(s.id) ?? 0;
     const p = phylloPos(k, c, opts.corePadding ?? 0);
     posById.set(s.id, p);
+    const isUnclaimed = s.tier === "unclaimed";
+    const playerR = Math.max(4, PLAYER_R - (bandOf(k) - 1) * 0.6);
     nodes.push({
       id: s.id,
       x: p.x,
       y: p.y,
       tint: TIER_TINT[s.tier],
-      kind: s.isSingularity ? "singularity" : "player",
-      radius: s.isSingularity ? SINGULARITY_R : Math.max(4, PLAYER_R - (bandOf(k) - 1) * 0.6),
+      kind: s.isSingularity ? "singularity" : isUnclaimed ? "unclaimed" : "player",
+      // Empty seats render a touch smaller so claimed players read as primary.
+      radius: s.isSingularity ? SINGULARITY_R : isUnclaimed ? playerR * 0.8 : playerR,
       isSelf: s.isSelf,
       tier: s.tier,
+      lastActiveBlock: s.lastActiveBlock,
     });
   }
 

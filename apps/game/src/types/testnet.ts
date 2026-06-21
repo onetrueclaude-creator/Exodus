@@ -64,6 +64,7 @@ export interface AgentInfo {
   activity: number; // rolling activity score
   is_singularity: boolean; // the origin protocol node
   is_self?: boolean; // the requesting wallet's own node (renderer "YOU" marker)
+  last_active_block?: number; // latest securing/vault-proof block (renderer activity pulse)
 }
 
 // GET /api/grid/region?x_min=&x_max=&y_min=&y_max=

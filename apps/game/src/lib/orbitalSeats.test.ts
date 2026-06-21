@@ -1,17 +1,18 @@
 import { describe, it, expect } from "vitest";
-import { seatsFromAgents, SINGULARITY_ID } from "./orbitalSeats";
+import { seatsFromAgents, SINGULARITY_ID, OPEN_SEAT_COUNT } from "./orbitalSeats";
 
 describe("seatsFromAgents", () => {
-  it("seats claimed players, excludes unclaimed coordinate slots", () => {
+  it("seats claimed players and renders unclaimed slots as grey open seats", () => {
     const seats = seatsFromAgents([
       { id: "p1", userId: "ownerA", activity: 10 },
-      { id: "slot1", userId: "", activity: 0 }, // unclaimed → not seated
+      { id: "slot1", userId: "", activity: 0 }, // unclaimed → grey open seat
       { id: "p2", userId: "ownerB", activity: 5 },
     ]);
     const ids = seats.map((s) => s.id);
     expect(ids).toContain("p1");
     expect(ids).toContain("p2");
-    expect(ids).not.toContain("slot1");
+    expect(ids).toContain("slot1");
+    expect(seats.find((s) => s.id === "slot1")!.tier).toBe("unclaimed");
   });
 
   it("appends exactly one Singularity core and excludes the chain origin from players", () => {
@@ -35,6 +36,13 @@ describe("seatsFromAgents", () => {
     expect(byId["proxy"]).toBe(7);
   });
 
+  it("carries the chain last_active_block onto a claimed seat (for the pulse)", () => {
+    const seats = seatsFromAgents([
+      { id: "p1", userId: "o", activity: 10, lastActiveBlock: 207 },
+    ]);
+    expect(seats.find((s) => s.id === "p1")!.lastActiveBlock).toBe(207);
+  });
+
   it("seats subagents (parentAgentId present) with a parent link", () => {
     const seats = seatsFromAgents([
       { id: "p1", userId: "o", activity: 10 },
@@ -44,49 +52,46 @@ describe("seatsFromAgents", () => {
     expect(sub?.parentId).toBe("p1");
   });
 
-  it("does NOT assign a per-id (hashed) player tier to a subagent", () => {
-    // Two subagents whose ids would hash to DIFFERENT player tiers if tierByHash
-    // were applied. Tier-less subagents must instead share the fixed placeholder,
-    // so neither carries a varied/hashed player Tier.
-    const seats = seatsFromAgents([
-      { id: "parent", userId: "o", activity: 10 },
-      { id: "sub-aaaa", userId: "o", parentAgentId: "parent", activity: 0 },
-      { id: "sub-zzzz", userId: "o", parentAgentId: "parent", activity: 0 },
-    ]);
-    const a = seats.find((s) => s.id === "sub-aaaa")!;
-    const z = seats.find((s) => s.id === "sub-zzzz")!;
-    // Both subagents resolve to the same (placeholder) tier — proof no per-id hash
-    // was applied (tierByHash would very likely diverge for these two ids).
-    expect(a.tier).toBe(z.tier);
-  });
-
   it("ignores an explicit tier on a subagent (subagents are tier-less)", () => {
     const seats = seatsFromAgents([
       { id: "parent", userId: "o", activity: 10 },
-      // even if the chain/store hands a tier to a child, the seat must drop it
       { id: "sub1", userId: "o", parentAgentId: "parent", activity: 0, tier: "founder" },
     ]);
-    const sub = seats.find((s) => s.id === "sub1")!;
-    expect(sub.tier).not.toBe("founder");
+    expect(seats.find((s) => s.id === "sub1")!.tier).not.toBe("founder");
   });
 
-  it("seats only the core when there are no claimed players", () => {
+  it("seats the core plus grey open seats when there are no claimed players", () => {
     const seats = seatsFromAgents([{ id: "slot1", userId: "" }, { id: "slot2", userId: "" }]);
-    expect(seats).toHaveLength(1);
-    expect(seats[0].id).toBe(SINGULARITY_ID);
+    // 2 grey open seats + the Singularity core
+    expect(seats).toHaveLength(3);
+    expect(seats.filter((s) => s.tier === "unclaimed")).toHaveLength(2);
+    expect(seats.some((s) => s.id === SINGULARITY_ID)).toBe(true);
   });
 
-  it("carries isSelf and an explicit tier onto the seat (homenode marker)", () => {
+  it("caps grey open seats at OPEN_SEAT_COUNT", () => {
+    const many = Array.from({ length: 20 }, (_, i) => ({ id: `slot${i}`, userId: "" }));
+    const seats = seatsFromAgents(many);
+    expect(seats.filter((s) => s.tier === "unclaimed")).toHaveLength(OPEN_SEAT_COUNT);
+  });
+
+  it("makes the local node the unique Founder; other players get one consistent colour", () => {
     const seats = seatsFromAgents([
       { id: "me", userId: "owner", activity: 10, isSelf: true, tier: "founder" },
-      { id: "other", userId: "owner2", activity: 5 }, // no explicit tier → hashed colour
+      { id: "other", userId: "owner2", activity: 5 },
     ]);
     const me = seats.find((s) => s.id === "me")!;
     expect(me.isSelf).toBe(true);
     expect(me.tier).toBe("founder");
     const other = seats.find((s) => s.id === "other")!;
     expect(other.isSelf).toBeFalsy();
-    // hashed fallback still yields a valid player tier
-    expect(["community", "professional", "founder"]).toContain(other.tier);
+    expect(other.tier).toBe("professional"); // consistent, non-random
+    expect(other.tier).not.toBe("founder");
+  });
+
+  it("never assigns Founder to a non-self player (only the local node is Founder)", () => {
+    const seats = seatsFromAgents([
+      { id: "imposter", userId: "o", activity: 5, tier: "founder" }, // claims founder
+    ]);
+    expect(seats.find((s) => s.id === "imposter")!.tier).not.toBe("founder");
   });
 });

@@ -44,6 +44,7 @@ export interface Agent {
   isSingularity?: boolean; // true for the origin protocol node (the core)
   isSelf?: boolean; // true for the current player's own homenode (drives the "YOU" marker)
   tier?: Tier; // player Tier identity of this node's owner (community/professional/founder)
+  lastActiveBlock?: number; // latest securing/proof block (drives the orbital activity pulse)
 }
 
 // === Tier-keyed cost tables, re-keyed by NodeTier ===
