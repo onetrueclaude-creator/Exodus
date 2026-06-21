@@ -433,11 +433,11 @@ export default function GamePage() {
               // visible on the lattice and switchable via the Account View list.
               setActiveDockPanel("terminal");
             }}
-            onFocusNode={(nodeId) => {
-              const node = agents[nodeId];
-              if (node) {
-                useGameStore.getState().requestFocus(nodeId);
-              }
+            onFocusNode={() => {
+              // No-op: focusing a node from an action must NOT move the camera.
+              // A requestFocus here recentered the view on every action (read as an
+              // unwanted zoom/jump). Camera recenter is the Home-button's job;
+              // node selection happens by tapping the node on the lattice.
             }}
           />
 
@@ -447,10 +447,10 @@ export default function GamePage() {
             <button
               onClick={() => {
                 const store = useGameStore.getState();
-                const owned = Object.values(store.blocknodes).find(
-                  (n) => n.ownerId === store.currentUserId
-                );
-                if (owned) store.requestFocus(owned.id);
+                // The player's node is their on-chain claim (isSelf), not a
+                // blocknode — recenter the camera on it.
+                const self = Object.values(store.agents).find((a) => a.isSelf);
+                if (self) store.requestFocus(self.id);
               }}
               className="text-[10px] font-semibold text-accent-cyan hover:text-text-primary transition-all"
             >
