@@ -103,7 +103,8 @@ export function inspectorModelFor(
       tint: SUBAGENT_TINT,
       rank,
       band: bandOf(rank),
-      owner: shortId(agent.userId || "unknown"),
+      // Prefer the human owner-name (chain owner_name) when present.
+      owner: agent.username || shortId(agent.userId || "unknown"),
       parent: parentAgent?.isPrimary ? "Homenode" : shortId(agent.parentAgentId as string),
       activity,
     };
@@ -120,7 +121,8 @@ export function inspectorModelFor(
 
   return {
     kind: "player",
-    title: isSelf ? "Your Homenode" : shortId(focusedNodeId),
+    // Prefer the human owner-name (chain owner_name) for a non-self node's title.
+    title: isSelf ? "Your Homenode" : agent.username || shortId(focusedNodeId),
     isSelf,
     tier,
     tierLabel: TIER_LABELS[tier],
@@ -128,7 +130,8 @@ export function inspectorModelFor(
     tint: TIER_TINT[tier],
     rank,
     band: bandOf(rank),
-    owner: shortId(agent.userId || "unknown"),
+    // Prefer the human owner-name (chain owner_name) when present.
+    owner: agent.username || shortId(agent.userId || "unknown"),
     activity,
   };
 }

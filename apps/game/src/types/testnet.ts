@@ -51,6 +51,7 @@ export interface ClaimInfo {
 export interface AgentInfo {
   id: string;
   owner: string;
+  owner_name?: string; // human owner-name for the wallet that owns this node
   x: number;
   y: number;
   tier: string;
