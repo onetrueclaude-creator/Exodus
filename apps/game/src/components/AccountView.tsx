@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useGameStore } from '@/store';
-import { getRewards, getStaking, getSecuringStatus, getVesting, getSettings } from '@/services/testnetApi';
+import { getRewards, getStaking, getSecuringStatus, getVesting, getSettings, setOwnerName, getOwnerName } from '@/services/testnetApi';
 import { getWalletIndex } from '@/lib/walletIndex';
 import type { RewardsResponse, SecuringStatusResponse, VestingResponse, WalletSettingsResponse } from '@/types';
 import { getNodeTier, TIER_DISPLAY_NAME } from '@/lib/nodeTier';
@@ -42,6 +42,50 @@ export default function AccountView() {
   const [settings, setSettings] = useState<WalletSettingsResponse | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Owner name — the player's unique, human-readable handle on chain.
+  const selfAgent = Object.values(agents).find((a) => a.isSelf);
+  const [ownerName, setOwnerNameState] = useState('');
+  const [nameInput, setNameInput] = useState('');
+  const [nameStatus, setNameStatus] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
+  const [savingName, setSavingName] = useState(false);
+
+  // Seed the field from the self agent's username (owner name from the chain),
+  // falling back to GET /api/name for the player's wallet. Only seeds while the
+  // user hasn't started typing (empty input), so an in-progress edit is preserved.
+  useEffect(() => {
+    if (selfAgent?.username) {
+      setOwnerNameState(selfAgent.username);
+      setNameInput((prev) => (prev === '' ? selfAgent.username ?? '' : prev));
+      return;
+    }
+    if (chainMode !== 'testnet') return;
+    getOwnerName(getWalletIndex())
+      .then((r) => {
+        setOwnerNameState(r.name);
+        setNameInput((prev) => (prev === '' ? r.name : prev));
+      })
+      .catch(() => {});
+  }, [selfAgent?.username, chainMode]);
+
+  const saveOwnerName = async () => {
+    const name = nameInput.trim();
+    if (!name || name === ownerName) return;
+    setSavingName(true);
+    setNameStatus(null);
+    try {
+      const res = await setOwnerName(getWalletIndex(), name);
+      setOwnerNameState(res.name);
+      setNameInput(res.name);
+      setNameStatus({ tone: 'ok', text: 'Saved' });
+    } catch (e) {
+      // Surface "Name taken" specifically (chain returns 409 for duplicates).
+      const msg = e instanceof Error ? e.message : '';
+      setNameStatus({ tone: 'err', text: msg.includes('409') ? 'Name taken' : 'Could not save name' });
+    } finally {
+      setSavingName(false);
+    }
+  };
+
   // Fetch chain data on mount and when chainMode is testnet
   useEffect(() => {
     if (chainMode !== 'testnet') return;
@@ -67,6 +111,44 @@ export default function AccountView() {
   return (
     <div className="flex-1 overflow-y-auto p-6">
       <div className="max-w-4xl mx-auto space-y-6">
+        {/* Owner Name \u2014 the player's unique, human-readable handle on chain */}
+        <div className="glass-card p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-accent-cyan text-sm">{'\u25c9'}</span>
+            <h2 className="text-lg font-heading font-bold text-text-primary tracking-wide">Owner Name</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={nameInput}
+              maxLength={24}
+              onChange={(e) => {
+                setNameInput(e.target.value);
+                if (nameStatus) setNameStatus(null);
+              }}
+              placeholder="Choose a name"
+              aria-label="Owner name"
+              className="flex-1 bg-white/[0.03] border border-card-border rounded-lg px-3 py-2 text-sm font-mono text-text-primary placeholder:text-text-muted/40 focus:outline-none focus:border-accent-cyan/50"
+            />
+            <button
+              type="button"
+              onClick={saveOwnerName}
+              disabled={savingName || !nameInput.trim() || nameInput.trim() === ownerName}
+              className="px-4 py-2 rounded-lg text-sm font-semibold border border-accent-cyan/40 text-accent-cyan hover:bg-accent-cyan/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {savingName ? 'Saving\u2026' : 'Save'}
+            </button>
+          </div>
+          {nameStatus && (
+            <p className={`text-[11px] font-mono mt-2 ${nameStatus.tone === 'err' ? 'text-rose-400' : 'text-emerald-400'}`}>
+              {nameStatus.text}
+            </p>
+          )}
+          <p className="text-[10px] text-text-muted/50 mt-2">
+            1{'\u2013'}24 characters: letters, digits, {'\u2019'}_{'\u2019'} or {'\u2019'}-{'\u2019'}. Must be unique across the network.
+          </p>
+        </div>
+
         {/* Owned agents \u2014 one entry per agent, click to switch terminal context */}
         <div className="glass-card p-6">
           <div className="flex items-center gap-2 mb-5">

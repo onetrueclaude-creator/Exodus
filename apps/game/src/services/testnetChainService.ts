@@ -158,6 +158,7 @@ export class TestnetChainService implements ChainService {
       agent.isSingularity = info.is_singularity;
       agent.isSelf = info.is_self ?? false;
       agent.lastActiveBlock = info.last_active_block ?? 0;
+      if (info.owner_name) agent.username = info.owner_name;
       if (!ownerFirstSeen.has(info.owner)) {
         ownerFirstSeen.add(info.owner);
         agent.isPrimary = true;

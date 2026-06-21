@@ -202,6 +202,7 @@ class MineResult(BaseModel):
 class AgentInfo(BaseModel):
     id: str
     owner: str
+    owner_name: str = ""  # human owner-name for the wallet that owns this node
     x: int
     y: int
     tier: str  # 'sonnet' for user agents, 'haiku' for unclaimed slots
@@ -1673,6 +1674,10 @@ def get_agents(
     g = _g()
     claims = g.claim_registry.all_active_claims()
 
+    # Map every wallet's pubkey hex → its human owner-name so each node can
+    # surface the owner's chosen name (random default, player-changeable).
+    owner_name_by_hex = {w.public_key.hex(): w.name for w in g.wallets}
+
     # The requesting wallet's own node — marked is_self so the renderer can draw
     # the "YOU" marker on the player's real on-chain claim (never the Singularity).
     self_owner_hex: Optional[str] = None
@@ -1722,6 +1727,7 @@ def get_agents(
         agents.append(AgentInfo(
             id=aid,
             owner=c.owner.hex(),
+            owner_name=owner_name_by_hex.get(c.owner.hex(), ""),
             x=x,
             y=y,
             tier="sonnet" if is_user else "haiku",
@@ -1747,6 +1753,68 @@ def get_agents(
             ),
         ))
     return agents
+
+
+# ---------------------------------------------------------------------------
+# Owner-name endpoints — every wallet has a unique, human owner-name.
+# (Names only; transactions are a later PR.)
+# ---------------------------------------------------------------------------
+
+import re as _re
+
+_NAME_RE = _re.compile(r"^[A-Za-z0-9_-]+$")
+
+
+class SetNameRequest(BaseModel):
+    wallet_index: int
+    name: str
+
+
+class SetNameResponse(BaseModel):
+    wallet_index: int
+    name: str
+    success: bool
+
+
+class GetNameResponse(BaseModel):
+    wallet_index: int
+    name: str
+
+
+@app.post("/api/name", response_model=SetNameResponse)
+@limiter.limit("5/10seconds")
+def set_owner_name(request: Request, req: SetNameRequest) -> SetNameResponse:
+    """Set a wallet's human owner-name.
+
+    Validation: wallet in range, name 1–24 chars of [A-Za-z0-9_-], and unique
+    case-insensitively across all wallets (except the wallet itself).
+    """
+    g = _g()
+    if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    name = req.name.strip()
+    if not (1 <= len(name) <= 24) or not _NAME_RE.match(name):
+        raise HTTPException(
+            status_code=400,
+            detail="Name must be 1-24 chars of letters, digits, '_' or '-'",
+        )
+    lowered = name.lower()
+    for i, w in enumerate(g.wallets):
+        if i == req.wallet_index:
+            continue
+        if w.name.lower() == lowered:
+            raise HTTPException(status_code=409, detail="Name taken")
+    g.wallets[req.wallet_index].name = name
+    return SetNameResponse(wallet_index=req.wallet_index, name=name, success=True)
+
+
+@app.get("/api/name/{wallet_index}", response_model=GetNameResponse)
+def get_owner_name(wallet_index: int) -> GetNameResponse:
+    """Return a wallet's current owner-name."""
+    g = _g()
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    return GetNameResponse(wallet_index=wallet_index, name=g.wallets[wallet_index].name)
 
 
 @app.get("/api/nodes", response_model=List[NodeInfo])

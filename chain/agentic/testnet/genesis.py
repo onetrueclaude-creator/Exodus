@@ -135,9 +135,13 @@ def create_genesis(
         state = LedgerState()
 
         # -- Wallets (no minting — GENESIS_BALANCE = 0) -----------------------
+        # Each wallet gets a short, random-looking BUT DETERMINISTIC default
+        # owner-name derived from its (deterministic) pubkey, so genesis stays
+        # reproducible across runs. Wallet 0 is the Singularity/origin.
         wallets: list[Wallet] = []
         for i in range(max(num_wallets, len(genesis_coords))):
             w = Wallet(name=f"genesis-{i}", seed=seed * 1000 + i)
+            w.name = "singularity" if i == 0 else w.public_key.hex()[:6]
             wallets.append(w)
             if GENESIS_BALANCE > 0:
                 w.receive_mint(state, amount=GENESIS_BALANCE, slot=0)

@@ -69,6 +69,24 @@ export function getAgents(userCount: number = 3, selfWallet?: number): Promise<A
   return get<AgentInfo[]>(`/api/agents?user_count=${userCount}${self}`);
 }
 
+/** POST /api/name — set a wallet's human owner-name (unique, validated) */
+export function setOwnerName(
+  walletIndex: number,
+  name: string,
+): Promise<{ wallet_index: number; name: string; success: boolean }> {
+  return post<{ wallet_index: number; name: string; success: boolean }>(
+    '/api/name',
+    { wallet_index: walletIndex, name },
+  );
+}
+
+/** GET /api/name/{wallet_index} — a wallet's current owner-name */
+export function getOwnerName(
+  walletIndex: number,
+): Promise<{ wallet_index: number; name: string }> {
+  return get<{ wallet_index: number; name: string }>(`/api/name/${walletIndex}`);
+}
+
 /** POST /api/mine — process one mining block (rate-limited to 60s) */
 export function mineBlock(): Promise<MineResult> {
   return post<MineResult>('/api/mine');
