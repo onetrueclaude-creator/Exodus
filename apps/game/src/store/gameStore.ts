@@ -103,6 +103,9 @@ interface GameState {
   empireColor: number;
   activeDockPanel: DockPanelId | null;
   focusRequest: { nodeId: string; ts: number } | null;
+  /** Persisted sub-agent drag drop-positions keyed by agent id — survives
+   *  OrbitalCanvas unmount (tab switches) so dragged sub-agents don't snap back. */
+  subagentDragPositions: Record<string, { x: number; y: number }>;
   /** Currently inspected orbital node (drives the NodeInspector toast). Synthetic
    *  ids (e.g. the Singularity core) are allowed — this is decoupled from `agents`. */
   focusedNodeId: string | null;
@@ -167,6 +170,7 @@ interface GameState {
   switchAgent: (agentId: string) => void;
   requestFocus: (nodeId: string) => void;
   clearFocusRequest: () => void;
+  setSubagentDragPosition: (id: string, pos: { x: number; y: number }) => void;
   /** Set (or clear with null) the inspected orbital node for the NodeInspector. */
   setFocusedNode: (nodeId: string | null) => void;
   /** Append a decaying interaction link edge (bornAt = current turn for fade math). */
@@ -236,6 +240,7 @@ const initialState = {
   empireColor: 0xffffff, // default: Community tier white
   activeDockPanel: null as DockPanelId | null,
   focusRequest: null as { nodeId: string; ts: number } | null,
+  subagentDragPositions: {} as Record<string, { x: number; y: number }>,
   focusedNodeId: null as string | null,
   interactionEdges: [] as Array<{ from: string; to: string; bornAt: number }>,
 };
@@ -743,6 +748,9 @@ export const useGameStore = create<GameState>((set) => ({
   requestFocus: (nodeId) => set({ focusRequest: { nodeId, ts: Date.now() } }),
 
   clearFocusRequest: () => set({ focusRequest: null }),
+
+  setSubagentDragPosition: (id, pos) =>
+    set((s) => ({ subagentDragPositions: { ...s.subagentDragPositions, [id]: pos } })),
 
   setFocusedNode: (nodeId) => set({ focusedNodeId: nodeId }),
 
