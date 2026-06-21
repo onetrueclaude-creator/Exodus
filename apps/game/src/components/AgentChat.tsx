@@ -1206,15 +1206,13 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                 <div className="px-3 py-2 space-y-2">
                   <div>
                     <label className="text-[9px] text-text-muted/50 block mb-1" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      Recipient wallet index
+                      Recipient owner-name
                     </label>
                     <input
-                      type="number"
-                      min="0"
-                      max="49"
+                      type="text"
                       value={transactRecipient}
                       onChange={(e) => setTransactRecipient(e.target.value)}
-                      placeholder="0-49"
+                      placeholder="owner name"
                       className="w-full px-2 py-1.5 rounded-md bg-white/[0.03] border border-card-border text-[11px] text-text-primary font-mono focus:border-accent-cyan/40 focus:outline-none"
                     />
                   </div>
@@ -1239,11 +1237,11 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                   </button>
                   <button
                     onClick={async () => {
-                      const recipient = parseInt(transactRecipient);
+                      const recipientName = transactRecipient.trim();
                       const amount = parseFloat(transactAmount);
-                      logAction('click', 'Execute Transfer', `to=${recipient} amount=${amount}`);
-                      if (isNaN(recipient) || recipient < 0 || recipient > 49) {
-                        addMsg('system', 'Invalid recipient wallet index (0-49).');
+                      logAction('click', 'Execute Transfer', `to=${recipientName} amount=${amount}`);
+                      if (!recipientName) {
+                        addMsg('system', 'Enter a recipient owner-name.');
                         return;
                       }
                       if (isNaN(amount) || amount <= 0) {
@@ -1254,14 +1252,14 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                       setProcessing(true);
                       try {
                         const senderWallet = getWalletIndex();
-                        logAction('chain-call', 'POST /api/transact', `from=${senderWallet} to=${recipient} amount=${amount}`);
-                        const result = await postTransact(senderWallet, recipient, amount);
+                        logAction('chain-call', 'POST /api/transact', `from=${senderWallet} to=${recipientName} amount=${amount}`);
+                        const result = await postTransact(senderWallet, { recipientName, amount });
                         logAction('chain-ok', 'Transfer confirmed', `amount=${result.amount} fee=${result.fee}`);
                         const store = useGameStore.getState();
                         store.flashDelta('agntc', -(amount + result.fee));
                         const lines = [
                           `Transfer confirmed.`,
-                          `Sent: ${result.amount} AGNTC \u2192 wallet #${result.recipient_wallet}`,
+                          `Sent: ${result.amount} AGNTC \u2192 ${recipientName} (wallet #${result.recipient_wallet})`,
                           `Fee: ${result.fee.toFixed(6)} AGNTC (50% burned)`,
                           `Records: ${result.records_created} | Nullifiers: ${result.nullifiers_published}`,
                         ];
@@ -1269,7 +1267,12 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                       } catch (err: unknown) {
                         const msg = err instanceof Error ? err.message : 'Transfer failed';
                         logAction('chain-err', 'Transfer failed', msg);
-                        addMsg('agent', `Transfer failed: ${msg}`);
+                        // A 400 "zero balance" means the wallet has no spendable AGNTC yet.
+                        if (/zero balance|unspent|insufficient balance/i.test(msg)) {
+                          addMsg('system', 'No spendable AGNTC yet \u2014 Secure (possession proof) to earn some first.');
+                        } else {
+                          addMsg('agent', `Transfer failed: ${msg}`);
+                        }
                       }
                       setTransactRecipient('');
                       setTransactAmount('');

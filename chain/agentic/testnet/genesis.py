@@ -78,6 +78,9 @@ class GenesisState:
     # Agent-to-agent message history: (x, y) -> list[dict]
     message_history: dict = field(default_factory=dict)
     _message_counter: int = field(default=0, repr=False)
+    # Recent player↔player AGNTC transfers (capped to last 50) for the
+    # on-screen transaction-edge renderer. Most-recent appended last.
+    recent_transactions: list = field(default_factory=list)
 
     def __post_init__(self):
         if self.viewing_keys is None:

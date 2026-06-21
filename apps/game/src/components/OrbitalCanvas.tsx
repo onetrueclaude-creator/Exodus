@@ -386,6 +386,33 @@ export default function OrbitalCanvas() {
               .stroke({ width: 1.6, color: 0xc084fc, alpha });
           }
         }
+        // Player↔player AGNTC transaction edges (amber/gold). from/to are owner
+        // pubkey hex — map them through the store agents (userId == owner hex) to
+        // the on-screen bodies, then fade over a short block window.
+        const txEdges = useGameStore.getState().transactionEdges;
+        if (txEdges.length) {
+          const txBlock = useGameStore.getState().testnetBlocks;
+          const TX_EDGE_FADE_BLOCKS = 6;
+          // owner pubkey hex → on-screen node id (from the current store agents)
+          const hexToNodeId = new Map<string, string>();
+          for (const a of Object.values(useGameStore.getState().agents)) {
+            if (a.userId) hexToNodeId.set(a.userId, a.id);
+          }
+          for (const e of txEdges) {
+            const fromId = hexToNodeId.get(e.from);
+            const toId = hexToNodeId.get(e.to);
+            if (!fromId || !toId) continue;
+            const from = byId.get(fromId);
+            const to = byId.get(toId);
+            if (!from || !to) continue;
+            const alpha = edgeAlpha(txBlock - e.block, 0.9, TX_EDGE_FADE_BLOCKS);
+            if (alpha <= 0) continue;
+            edgeG
+              .moveTo(cx() + from.x, cy() + from.y)
+              .lineTo(cx() + to.x, cy() + to.y)
+              .stroke({ width: 1.8, color: 0xf59e0b, alpha });
+          }
+        }
         // Soft selection ring on the focused node — the primary focus signal
         // (replaces the old harsh dim-everything; non-focused nodes now only recede gently).
         if (focusedId) {

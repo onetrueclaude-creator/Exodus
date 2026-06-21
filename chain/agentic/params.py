@@ -200,3 +200,4 @@ VAULT_PROOF_SAMPLE_SIZE = 8        # sub-units spot-checked per sampled-PDP chal
 VAULT_MIN_STAKE_CAPACITY = 100.0   # dual-stake committed-capacity floor to be assigned a shard
 VAULT_PROOF_CPU_CREDIT = 50.0      # CPU-equivalent credited to activity/reward per passing proof
 VAULT_SLASH_RATE = 0.10            # fraction of committed capacity slashed on missed/failed proof
+SECURE_AGNTC_REWARD = 1.0  # AGNTC minted to the prover's wallet on an accepted possession proof (testnet earn-source; mainnet routes from fees per whitepaper)
