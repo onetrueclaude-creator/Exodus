@@ -331,6 +331,19 @@ class RewardsResponse(BaseModel):
     secured_chains: int
 
 
+class BalanceResponse(BaseModel):
+    wallet_index: int
+    # Real spendable balance = sum of this wallet's unspent ledger record values.
+    # Ledger records store value in microAGNTC: every app-facing mint path scales
+    # by 1e6 before storage — the mining block-reward mint
+    # (mining.mint_block_rewards: round(amount * 1_000_000)) and the secure reward
+    # mint (post_vault_submit_proof: round(SECURE_AGNTC_REWARD * 1_000_000)). So
+    # get_balance() returns a microAGNTC sum, exposed raw here. Divide by 1e6 for
+    # a human AGNTC figure. Per the earn-by-securing model (GENESIS_BALANCE = 0),
+    # this starts at 0 for a fresh wallet and grows as it mines / secures.
+    spendable_micro_agntc: int
+
+
 class VestingResponse(BaseModel):
     faction: str
     total_allocation: int
@@ -903,6 +916,22 @@ def get_rewards(wallet_index: int) -> RewardsResponse:
         storage_units=totals.get("storage_units", 0.0),
         secured_chains=secured,
     )
+
+
+@app.get("/api/balance/{wallet_index}", response_model=BalanceResponse)
+def get_balance(wallet_index: int) -> BalanceResponse:
+    """Return the wallet's real spendable AGNTC balance, in microAGNTC.
+
+    This is the live ledger truth — sum of the wallet's unspent record values
+    (wallet.get_balance) — not a static plan figure. The unit is microAGNTC; see
+    BalanceResponse for the unit rationale. Divide by 1e6 on the client to show
+    AGNTC.
+    """
+    g = _g()
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    micro = g.wallets[wallet_index].get_balance(g.ledger_state)
+    return BalanceResponse(wallet_index=wallet_index, spendable_micro_agntc=micro)
 
 
 @app.get("/api/vesting/{wallet_index}", response_model=VestingResponse)

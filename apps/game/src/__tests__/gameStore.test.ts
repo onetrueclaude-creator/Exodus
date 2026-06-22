@@ -107,6 +107,20 @@ describe("gameStore — lattice/blocknode state", () => {
     expect(s.agntcBalance).toBeGreaterThan(0);
   });
 
+  it("setSyncedAgntcBalance overwrites agntcBalance absolutely from chain truth", () => {
+    // Seed a stale/optimistic local value, then sync the chain's spendable
+    // balance (already converted micro → AGNTC by the caller). The chain figure
+    // wins, regardless of the prior local value.
+    useGameStore.setState({ agntcBalance: 101 });
+    useGameStore.getState().setSyncedAgntcBalance(2.5);
+    expect(useGameStore.getState().agntcBalance).toBe(2.5);
+
+    // A fresh wallet's chain balance is 0 (earn-by-securing, no pre-mine) — the
+    // HUD must reflect 0, not the static plan value.
+    useGameStore.getState().setSyncedAgntcBalance(0);
+    expect(useGameStore.getState().agntcBalance).toBe(0);
+  });
+
   it("secureBlocknode does NOT spawn new nodes", () => {
     useGameStore.getState().initLattice(1);
     useGameStore.getState().setCurrentUserTier("community");

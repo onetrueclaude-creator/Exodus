@@ -36,6 +36,7 @@ export type {
   WalletSettingsResponse,
   EpochStatus,
   RewardsResponse,
+  BalanceResponse,
   VestingResponse,
   VaultRootResponse,
   VaultAssignmentResponse,

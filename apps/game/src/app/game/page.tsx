@@ -17,7 +17,7 @@ import { useGameStore } from "@/store";
 import { MockChainService } from "@/services/chainService";
 import type { ChainService } from "@/services/chainService";
 import { TestnetChainService } from "@/services/testnetChainService";
-import { isTestnetOnline, getSettings, getTransactions } from "@/services/testnetApi";
+import { isTestnetOnline, getSettings, getTransactions, getWalletBalance } from "@/services/testnetApi";
 import { getWalletIndex } from "@/lib/walletIndex";
 import { useChainWebSocket } from "@/hooks/useChainWebSocket";
 import type { SubscriptionTier } from "@/types";
@@ -168,8 +168,10 @@ export default function GamePage() {
     }
 
     // Sync wallet state (secured chains, mined chains, rates, effective stake)
+    // and the real spendable AGNTC balance from the chain ledger.
     try {
-      const settings = await getSettings(getWalletIndex());  // ?wallet=N / env, default 1 (dev Founder)
+      const walletIndex = getWalletIndex();  // ?wallet=N / env, default 1 (dev Founder)
+      const settings = await getSettings(walletIndex);
       store.setWalletState({
         securedChains: settings.total_secured_chains,
         minedChains: settings.total_mined_chains,
@@ -177,6 +179,11 @@ export default function GamePage() {
         miningRate: settings.mining_rate,
         effectiveStake: settings.effective_stake,
       });
+      // Spendable AGNTC = live ledger balance. The endpoint returns microAGNTC
+      // (1e6 = 1 AGNTC); convert to the AGNTC display unit and set it absolutely,
+      // overwriting the static plan value / optimistic local deltas with chain truth.
+      const balance = await getWalletBalance(walletIndex);
+      store.setSyncedAgntcBalance(balance.spendable_micro_agntc / 1_000_000);
     } catch {
       // Wallet sync failed — keep stale data
     }
