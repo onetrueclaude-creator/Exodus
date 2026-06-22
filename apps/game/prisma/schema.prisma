@@ -20,7 +20,20 @@ model User {
   sessions      Session[]
 
   // Auth: Phantom wallet connection
-  phantomWalletHash    String?   @unique  // SHA-256(phantom_wallet_address)
+  phantomWalletHash    String?   @unique  // SHA-256(phantom_wallet_address) — retired in B1 Task 5
+
+  // Identity & role (sub-project B)
+  role                 UserRole  @default(PLAYER)
+
+  // On-chain identity (NULL = Hollow-DB). Solana ed25519 pubkey, base58.
+  phantomWalletPubkey  String?   @unique
+  walletBindingNonce   String?
+  walletBindingExpires DateTime?
+  walletBoundAt        DateTime?
+
+  // Billing-readiness (nullable now; Stripe webhook writes these later)
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
 
   // Blockchain: assigned AGNTC coin coordinate (one per user, unique on-chain)
   blockchainTokenX     Int?              // assigned grid coordinate X
@@ -88,4 +101,10 @@ enum SubscriptionTier {
   COMMUNITY      // Free — 1,000 CPU Energy, 1 Moore ring
   PROFESSIONAL   // $50/mo — 5,000 CPU Energy, 2 Moore rings
   MAX            // Dormant — 20,000 CPU Energy (hidden from UI)
+}
+
+enum UserRole {
+  PLAYER   // default
+  FOUNDER  // closed dev/admin role — granted only via FOUNDER_EMAILS allowlist
+  ADMIN    // reserved for ops
 }
