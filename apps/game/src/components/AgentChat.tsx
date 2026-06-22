@@ -289,8 +289,8 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
       id: 'prompt-0',
       role: 'agent',
       content: agent.isPrimary
-        ? `${tier.personality} node online.\nAwaiting directives.`
-        : `${tier.personality} sub-node linked.\nReady for instructions.`,
+        ? `${tier.personality} online.\nAwaiting directives.`
+        : `${tier.personality} linked.\nReady for instructions.`,
       timestamp: Date.now(),
     },
   ]);

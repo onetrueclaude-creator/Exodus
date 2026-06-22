@@ -337,10 +337,20 @@ export default function OrbitalCanvas() {
             applyFocus();
             // Drive the store-backed NodeInspector toast (incl. the Singularity core).
             useGameStore.getState().setFocusedNode(focusedId);
-            // Tapping an OWNED node makes it the terminal's active agent, so the
-            // Network-view terminal targets it (opening the terminal then shows the
-            // focused sub-agent). switchAgent no-ops for non-owned nodes.
-            if (focusedId) useGameStore.getState().switchAgent(n.id);
+            // Tapping an OWNED node makes it the terminal's active agent.
+            // switchAgent no-ops for non-owned nodes.
+            if (focusedId) {
+              useGameStore.getState().switchAgent(n.id);
+              // Focusing/refocusing any claimed player node opens the terminal
+              // (own -> command console; other player -> intel console). The
+              // Singularity + unclaimed slots keep only their inspector toast.
+              // Use setState (not the toggling setActiveDockPanel) so refocusing
+              // while the terminal is open keeps it open and just re-targets it.
+              const kind = metaById.get(n.id)?.kind;
+              if (kind === "player" || kind === "subagent") {
+                useGameStore.setState({ activeDockPanel: "terminal" });
+              }
+            }
           });
           return b;
         });

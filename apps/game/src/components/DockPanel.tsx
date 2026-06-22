@@ -5,6 +5,7 @@ import { useGameStore } from '@/store';
 import type { DockPanelId } from '@/store/gameStore';
 import NetworkChatRoom from '@/components/NetworkChatRoom';
 import AgentChat from '@/components/AgentChat';
+import OtherNodeTerminal from '@/components/OtherNodeTerminal';
 import TimechainStats from '@/components/TimechainStats';
 import type { Agent } from '@/types';
 import type { ChainService } from '@/services/chainService';
@@ -32,6 +33,9 @@ export default function DockPanel({
 }: DockPanelProps) {
   const activeDockPanel = useGameStore((s) => s.activeDockPanel);
   const setActiveDockPanel = useGameStore((s) => s.setActiveDockPanel);
+  const focusedNodeId = useGameStore((s) => s.focusedNodeId);
+  const agents = useGameStore((s) => s.agents);
+  const currentUserId = useGameStore((s) => s.currentUserId);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -45,7 +49,22 @@ export default function DockPanel({
     switch (activeDockPanel) {
       case 'chat':
         return <NetworkChatRoom onSend={onHaikuSubmit} />;
-      case 'terminal':
+      case 'terminal': {
+        // Route by the focused node: another player's node → intel console;
+        // own node (or no focus) → command console.
+        const focused = focusedNodeId ? agents[focusedNodeId] : null;
+        const isOther = !!focused && !focused.isSelf && !focused.isSingularity
+          && !!focused.userId && focused.userId !== currentUserId;
+        if (isOther) {
+          return (
+            <OtherNodeTerminal
+              agent={focused}
+              myAgent={currentAgent}
+              chainService={chainService}
+              onClose={() => setActiveDockPanel(null)}
+            />
+          );
+        }
         return currentAgent ? (
           <AgentChat
             agent={currentAgent}
@@ -60,12 +79,13 @@ export default function DockPanel({
             No agent selected. Claim a node first.
           </div>
         );
+      }
       case 'stats':
         return <TimechainStats />;
       default:
         return null;
     }
-  }, [activeDockPanel, onHaikuSubmit, currentAgent, chainService, onAgentDeploy, onFocusNode, setActiveDockPanel]);
+  }, [activeDockPanel, onHaikuSubmit, currentAgent, chainService, onAgentDeploy, onFocusNode, setActiveDockPanel, focusedNodeId, agents, currentUserId]);
 
   return (
     <>
