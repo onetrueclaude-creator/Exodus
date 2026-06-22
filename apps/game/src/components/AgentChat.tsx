@@ -18,6 +18,7 @@ import { getDistance } from '@/lib/proximity';
 import { postTransact, getStatus as fetchChainStats } from '@/services/testnetApi';
 import { getWalletIndex } from '@/lib/walletIndex';
 import { runSecure } from '@/lib/vaultGate';
+import { useTerminalStore, type ChatMessage } from '@/store/terminalStore';
 import { SINGULARITY_ID } from '@/lib/orbitalSeats';
 import { logAction } from '@/lib/actionLogger';
 import { sciFormat } from '@/lib/format';
@@ -83,13 +84,10 @@ const AGENT_ACTIONS: Record<NodeTier, AgentAction[]> = {
 };
 
 /* ── Chat Message Types ───────────────────────────────────── */
+// ChatMessage + per-node persistent history now live in the terminal store
+// (@/store/terminalStore) so each node has its OWN chat that survives reloads.
 
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'agent' | 'system';
-  content: string;
-  timestamp: number;
-}
+const EMPTY_MESSAGES: ChatMessage[] = [];
 
 /* ── Agent Response Templates ─────────────────────────────── */
 
@@ -278,22 +276,27 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
   // mock mode — never surface them). Role is the identity the player cares about.
   const nodeLabel = agent.isPrimary ? 'Homenode' : (agent.username || 'Sub-node');
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 'init',
-      role: 'system',
-      content: `Neural link established \u2014 ${tier.label}-class agent`,
-      timestamp: Date.now(),
-    },
-    {
-      id: 'prompt-0',
-      role: 'agent',
-      content: agent.isPrimary
-        ? `${tier.personality} online.\nAwaiting directives.`
-        : `${tier.personality} linked.\nReady for instructions.`,
-      timestamp: Date.now(),
-    },
-  ]);
+  // Per-node, persistent message history (keyed by node id; survives refresh /
+  // logout / crash). Each node's terminal has its OWN chat \u2014 not a shared feed.
+  const messages = useTerminalStore((s) => s.messagesByNode[agent.id]) ?? EMPTY_MESSAGES;
+  useEffect(() => {
+    useTerminalStore.getState().seedNode(agent.id, [
+      {
+        id: 'init',
+        role: 'system',
+        content: `Neural link established \u2014 ${tier.label}-class agent`,
+        timestamp: Date.now(),
+      },
+      {
+        id: 'prompt-0',
+        role: 'agent',
+        content: agent.isPrimary
+          ? `${tier.personality} online.\nAwaiting directives.`
+          : `${tier.personality} linked.\nReady for instructions.`,
+        timestamp: Date.now(),
+      },
+    ]);
+  }, [agent.id, tier.label, tier.personality, agent.isPrimary]);
   const [processing, setProcessing] = useState(false);
   const [pendingAction, setPendingAction] = useState<AgentAction | null>(null);
   // Deploy is now a single confirmation step — no target picker, no greeting field.
@@ -376,13 +379,13 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
   }, [initialDeployTarget]);
 
   const addMsg = useCallback((role: ChatMessage['role'], content: string) => {
-    setMessages(prev => [...prev, {
+    useTerminalStore.getState().addMessage(agent.id, {
       id: `${role}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       role,
       content,
       timestamp: Date.now(),
-    }]);
-  }, []);
+    });
+  }, [agent.id]);
 
   const performAction = useCallback((_actionId: string, _choiceId?: string) => {
     // All actions now use direct API calls or custom menu flows

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { useGameStore } from '@/store';
+import { useTerminalStore } from '@/store/terminalStore';
 import { TIER_CPU_COST, TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
 import type { Agent } from '@/types';
 
@@ -36,6 +37,7 @@ describe('TabNavigation', () => {
 
   beforeEach(async () => {
     useGameStore.getState().reset();
+    useTerminalStore.setState({ messagesByNode: {} });
     const mod = await import('@/components/TabNavigation');
     TabNavigation = mod.default;
   });
@@ -131,6 +133,7 @@ describe('NetworkChatRoom', () => {
 
   beforeEach(async () => {
     useGameStore.getState().reset();
+    useTerminalStore.setState({ messagesByNode: {} });
     const mod = await import('@/components/NetworkChatRoom');
     NetworkChatRoom = mod.default;
   });
@@ -235,6 +238,7 @@ describe('AgentChat — Configure Node + Develop Node', () => {
     // jsdom does not implement scrollIntoView — stub it to avoid TypeError
     window.HTMLElement.prototype.scrollIntoView = vi.fn();
     useGameStore.getState().reset();
+    useTerminalStore.setState({ messagesByNode: {} });
     const mod = await import('@/components/AgentChat');
     AgentChat = mod.default;
   });
@@ -407,6 +411,7 @@ describe('AgentChat — L2 gate + cost flow', () => {
   beforeEach(async () => {
     window.HTMLElement.prototype.scrollIntoView = vi.fn();
     useGameStore.getState().reset();
+    useTerminalStore.setState({ messagesByNode: {} });
     useGameStore.setState({
       currentUserId: 'u-1',
       currentUserTier: 'community',
@@ -475,6 +480,7 @@ describe('ResourceBar', () => {
 
   beforeEach(async () => {
     useGameStore.getState().reset();
+    useTerminalStore.setState({ messagesByNode: {} });
     useGameStore.getState().setCurrentUser('u1', 'a1');
     useGameStore.getState().addAgent(makeAgent());
     const mod = await import('@/components/ResourceBar');
