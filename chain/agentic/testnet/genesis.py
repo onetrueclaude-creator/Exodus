@@ -81,6 +81,11 @@ class GenesisState:
     # Recent player↔player AGNTC transfers (capped to last 50) for the
     # on-screen transaction-edge renderer. Most-recent appended last.
     recent_transactions: list = field(default_factory=list)
+    # B3 signature gate: per-account replay nonce + ed25519 signing pubkey.
+    # Keyed by the ownership pubkey (wallet.public_key bytes). signing-keys are
+    # populated by B4 (Phantom binding); empty in B3 (prod writes need a bound key).
+    account_nonces: dict = field(default_factory=dict)
+    account_signing_keys: dict = field(default_factory=dict)
 
     def __post_init__(self):
         if self.viewing_keys is None:
