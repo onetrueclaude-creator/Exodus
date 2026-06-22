@@ -116,3 +116,27 @@ def decrypt_record(key: bytes, ciphertext: bytes) -> bytes:
         return cipher.decrypt(nonce, ct, None)
     except Exception as e:
         raise ValueError(f"Decryption failed: {e}") from e
+
+
+def sign_ed25519(secret_key: bytes, message: bytes) -> bytes:
+    """Ed25519 signature over ``message`` using a 32-byte seed secret key.
+
+    Used by tests and (future B4) any chain-held signing path. Real players sign
+    in their browser/Phantom; the chain only ever VERIFIES for them (B3).
+    """
+    import nacl.signing
+    return bytes(nacl.signing.SigningKey(secret_key).sign(message).signature)
+
+
+def verify_ed25519(public_key: bytes, message: bytes, signature: bytes) -> bool:
+    """Verify an ed25519 ``signature`` over ``message`` for ``public_key``.
+
+    Returns False on any failure (bad signature, malformed key/sig) — never raises.
+    """
+    import nacl.signing
+    from nacl.exceptions import BadSignatureError
+    try:
+        nacl.signing.VerifyKey(public_key).verify(message, signature)
+        return True
+    except (BadSignatureError, ValueError, TypeError):
+        return False

@@ -77,6 +77,11 @@ def mark_failed(txn_id: str, reason: str) -> None:
 # ---------------------------------------------------------------------------
 # Transaction handlers (one per action_type)
 # ---------------------------------------------------------------------------
+# B3: handlers call verify_write (dev-bypassed under ALLOW_DEV_CUSTODIAL_SIGN).
+# OPERATOR FOLLOW-UP: the Supabase `pending_transactions` table needs `signature
+# TEXT` + `nonce INT` columns for prod signed writes (schema is not version-
+# controlled in this repo). payload.get(...) reads them defensively, so this code
+# works whether or not the columns exist yet.
 
 def _handle_assign_subgrid(g: GenesisState, payload: dict) -> None:
     """Reassign subgrid cells for a wallet."""
@@ -86,6 +91,13 @@ def _handle_assign_subgrid(g: GenesisState, payload: dict) -> None:
 
     wallet = g.wallets[wallet_index]
     owner = wallet.public_key
+    from agentic.testnet.signing import verify_write, SignatureError
+    try:
+        verify_write(g, owner, "subgrid_assign",
+                     {k: payload.get(k, 0) for k in ("secure", "develop", "research", "storage")},
+                     payload.get("signature"), payload.get("nonce"))
+    except SignatureError as e:
+        raise ValueError(f"signature: {e}")
     alloc = g.subgrid_allocators.get(owner)
     if alloc is None:
         raise ValueError(f"No subgrid allocator for wallet {wallet_index}")
@@ -146,6 +158,15 @@ def _handle_claim(g: GenesisState, payload: dict) -> None:
     wallet = g.wallets[wallet_index]
     stake = max(1, payload.get("stake", 200))
     slot = g.mining_engine.total_blocks_processed
+
+    from agentic.testnet.signing import verify_write, SignatureError
+    try:
+        verify_write(g, wallet.public_key, "claim",
+                     {"wallet_index": wallet_index, "x": payload.get("x"), "y": payload.get("y"),
+                      "stake": payload.get("stake", 200)},
+                     payload.get("signature"), payload.get("nonce"))
+    except SignatureError as e:
+        raise ValueError(f"signature: {e}")
 
     g.claim_registry.register(owner=wallet.public_key, coordinate=coord, stake=stake, slot=slot)
 
