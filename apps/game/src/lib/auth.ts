@@ -13,20 +13,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email ?? token.email;
       }
       return token;
     },
-    session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const u = user as any;
-        (session as any).user.username = u.username;
-        (session as any).user.subscription = u.subscription;
-        (session as any).user.phantomWalletHash = u.phantomWalletHash;
-        (session as any).user.blockchainToken = u.blockchainTokenX != null
-          ? { x: u.blockchainTokenX, y: u.blockchainTokenY }
-          : null;
+    session({ session, token }) {
+      // JWT strategy (no adapter): identity lives on the token, not `user`.
+      // Tier/role are NOT put on the session — they are server-authoritative via
+      // GET /api/me (DB + Founder allowlist). See identity-tier-security spec.
+      if (session.user && token.id) {
+        session.user.id = token.id as string;
+        session.user.email = (token.email as string) ?? session.user.email;
       }
       return session;
     },

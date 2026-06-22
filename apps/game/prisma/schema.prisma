@@ -19,9 +19,6 @@ model User {
   accounts      Account[]
   sessions      Session[]
 
-  // Auth: Phantom wallet connection
-  phantomWalletHash    String?   @unique  // SHA-256(phantom_wallet_address) — retired in B1 Task 5
-
   // Identity & role (sub-project B)
   role                 UserRole  @default(PLAYER)
 
