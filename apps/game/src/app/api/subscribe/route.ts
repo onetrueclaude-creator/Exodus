@@ -5,7 +5,7 @@ import { SUBSCRIPTION_PLANS } from '@/types/subscription';
 import type { SubscriptionTier } from '@/types/subscription';
 import { CHAIN_GRID_MIN, CHAIN_GRID_MAX } from '@/types/testnet';
 
-const TESTNET_API = process.env.NEXT_PUBLIC_TESTNET_API ?? 'http://localhost:8080';
+const TESTNET_API = process.env.TESTNET_API ?? 'http://localhost:8080';
 
 /**
  * POST /api/subscribe

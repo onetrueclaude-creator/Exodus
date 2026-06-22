@@ -34,7 +34,10 @@ function coerce(raw: string | null | undefined): number | null {
  * default is consulted.
  */
 export function getWalletIndex(): number {
-  if (typeof window !== "undefined") {
+  // Dev-only: honor ?wallet=N only under the dev identity flag (prod ignores it).
+  // The gateway also overrides wallet identity server-side (B2), so this is
+  // defense-in-depth — a prod client cannot pick its wallet via the query param.
+  if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_DEV_IDENTITY === "1") {
     try {
       const fromQuery = coerce(new URLSearchParams(window.location.search).get("wallet"));
       if (fromQuery !== null) return fromQuery;
