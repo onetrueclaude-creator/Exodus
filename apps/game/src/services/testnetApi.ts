@@ -9,7 +9,7 @@ import type {
   GridRegion, MineResult, BirthResult, ClaimNodeResult, NodeInfo,
   IntroResult, MessageResult, MessageInfo,
   SecureResponse, SecuringStatusResponse, TransactResponse,
-  WalletSettingsResponse, EpochStatus, RewardsResponse, VestingResponse,
+  WalletSettingsResponse, EpochStatus, RewardsResponse, BalanceResponse, VestingResponse,
   VaultRootResponse, VaultAssignmentResponse, VaultShardResponse,
   VaultChallengeResponse, VaultSubmitProofRequest, VaultSubmitProofResponse,
   VaultStatusResponse,
@@ -157,6 +157,14 @@ export function getNodes(count: number = 1000, seed: number = 42): Promise<NodeI
 /** GET /api/rewards/{wallet_index} — cumulative rewards for a wallet */
 export function getRewards(walletIndex: number): Promise<RewardsResponse> {
   return get<RewardsResponse>(`/api/rewards/${walletIndex}`);
+}
+
+/** GET /api/balance/{wallet_index} — real spendable AGNTC balance.
+ *
+ * Returns `spendable_micro_agntc` (microAGNTC, the live ledger sum of unspent
+ * record values). Divide by 1e6 for the AGNTC display unit. */
+export function getWalletBalance(walletIndex: number): Promise<BalanceResponse> {
+  return get<BalanceResponse>(`/api/balance/${walletIndex}`);
 }
 
 /** GET /api/staking/{wallet_index} — staking positions and effective stake */

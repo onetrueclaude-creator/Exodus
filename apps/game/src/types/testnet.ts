@@ -248,6 +248,16 @@ export interface RewardsResponse {
   secured_chains: number;
 }
 
+// GET /api/balance/{wallet_index} — real spendable AGNTC balance.
+// `spendable_micro_agntc` is the wallet's live ledger balance (sum of unspent
+// record values) in microAGNTC. Divide by 1e6 for a human AGNTC figure. Starts
+// at 0 for a fresh wallet (earn-by-securing: no pre-mine) and grows as the wallet
+// mines / secures.
+export interface BalanceResponse {
+  wallet_index: number;
+  spendable_micro_agntc: number;
+}
+
 // GET /api/vesting/{wallet_index} — vesting schedule
 export interface VestingResponse {
   faction: string;

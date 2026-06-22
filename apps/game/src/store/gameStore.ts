@@ -155,6 +155,10 @@ interface GameState {
     miningRate: number;
     effectiveStake: number;
   }) => void;
+  /** Set the spendable AGNTC balance ABSOLUTELY from chain truth (in AGNTC, not
+   *  micro). Overwrites the optimistic local value on each sync — local mutations
+   *  are relative deltas that the next chain sync reconciles. */
+  setSyncedAgntcBalance: (agntc: number) => void;
   setNodeMiningSecuring: (agentId: string, mining: number, securing: number) => boolean;
   beginNodeLevelUp: (agentId: string) => boolean;
   cancelNodeLevelUp: (agentId: string) => void;
@@ -676,6 +680,8 @@ export const useGameStore = create<GameState>((set) => ({
           : {}),
       };
     }),
+
+  setSyncedAgntcBalance: (agntc) => set({ agntcBalance: agntc }),
 
   setNodeMiningSecuring: (agentId, mining, securing) => {
     const validPresets: ReadonlyArray<number> = MINING_PRESETS;

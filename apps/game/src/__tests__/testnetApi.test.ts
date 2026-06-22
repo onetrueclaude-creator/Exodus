@@ -5,7 +5,7 @@ const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
 
 // Import after mocking
-import { birthNode, setIntro, sendMessage, getMessages } from '@/services/testnetApi';
+import { birthNode, setIntro, sendMessage, getMessages, getWalletBalance } from '@/services/testnetApi';
 
 describe('testnetApi', () => {
   beforeEach(() => {
@@ -124,6 +124,33 @@ describe('testnetApi', () => {
       expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/api/messages/10/20');
       expect(result).toHaveLength(1);
       expect(result[0].text).toBe('hello');
+    });
+  });
+
+  describe('getWalletBalance', () => {
+    it('GETs the per-wallet balance endpoint and returns microAGNTC raw', async () => {
+      // 1.5 AGNTC == 1_500_000 microAGNTC (the endpoint returns micro; the caller
+      // divides by 1e6 for display).
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ wallet_index: 1, spendable_micro_agntc: 1_500_000 }),
+      });
+
+      const result = await getWalletBalance(1);
+
+      expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/api/balance/1');
+      expect(result.spendable_micro_agntc).toBe(1_500_000);
+      expect(result.wallet_index).toBe(1);
+    });
+
+    it('throws on non-ok response', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+      });
+
+      await expect(getWalletBalance(9999)).rejects.toThrow('Testnet API /api/balance/9999');
     });
   });
 });
