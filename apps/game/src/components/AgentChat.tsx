@@ -674,7 +674,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
       <div className={`relative px-4 py-3 bg-gradient-to-r ${tier.headerGradient}`}>
         <div className="relative z-10 flex items-center justify-between">
           {/* Left: Neural pulse + Model identity */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             {/* Neural pulse indicator — alive connection */}
             <div className="relative w-8 h-8 flex items-center justify-center">
               <div className={`absolute inset-0 rounded-lg ${tier.bg} opacity-[0.06]`} />
@@ -692,7 +692,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
               />
             </div>
 
-            <div>
+            <div className="min-w-0">
               <div
                 className={`text-[13px] font-semibold ${tier.accent} tracking-[0.12em] flex items-baseline gap-1.5`}
                 style={{ fontFamily: "'Outfit', 'Space Grotesk', sans-serif" }}
@@ -703,7 +703,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                 </span>
               </div>
               <div
-                className="text-[12px] text-text-muted tracking-wide"
+                className="text-[12px] text-text-muted tracking-wide truncate"
                 style={{ fontFamily: "'Fira Code', monospace" }}
               >
                 {nodeLabel}
@@ -713,7 +713,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
           </div>
 
           {/* Right: Stats + Close */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <div className="text-right">
               <div className="text-[12px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
                 <span className="text-yellow-400">{getNodeCpuPerTurn(agent.level)}</span>
@@ -766,7 +766,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                       cmd
                     </span>
                   </div>
-                  <span className="whitespace-pre-wrap text-text-primary text-[13px] leading-relaxed" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <span className="whitespace-pre-wrap break-words text-text-primary text-[13px] leading-relaxed" style={{ fontFamily: "'Fira Code', monospace" }}>
                     {msg.content}
                   </span>
                 </div>
@@ -789,7 +789,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                       {tier.label}
                     </span>
                   </div>
-                  <span className="whitespace-pre-wrap text-text-secondary text-[13px] leading-[1.6]" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <span className="whitespace-pre-wrap break-words text-text-secondary text-[13px] leading-[1.6]" style={{ fontFamily: "'Fira Code', monospace" }}>
                     {msg.content}
                   </span>
                 </div>
