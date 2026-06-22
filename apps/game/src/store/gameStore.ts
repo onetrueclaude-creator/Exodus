@@ -21,11 +21,6 @@ export const MINE_GRID_CPU_COST = 10;
 /** AGNTC cost to claim a mined grid cell */
 export const CLAIM_GRID_AGNTC_COST = 1;
 
-interface Camera {
-  position: GridPosition;
-  zoom: number;
-}
-
 export type GameTab = "network" | "account" | "researches" | "skills";
 export type DockPanelId = "chat" | "terminal" | "deploy" | "stats" | "timeRewind" | "nodes";
 
@@ -39,9 +34,6 @@ interface GameState {
   // Current user
   currentUserId: string | null;
   currentAgentId: string | null;
-
-  // Camera
-  camera: Camera;
 
   // Resources
   energy: number;
@@ -139,7 +131,6 @@ interface GameState {
   addPlanet: (planet: Planet) => void;
   togglePlanetZK: (planetId: string) => void;
   setCurrentUser: (userId: string, agentId: string) => void;
-  setCamera: (position: GridPosition, zoom: number) => void;
   updateDiplomacy: (state: DiplomaticState) => void;
   setActiveTab: (tab: GameTab) => void;
   updateResources: (energy: number, minerals: number, agntc: number) => void;
@@ -208,7 +199,6 @@ const initialState = {
   planets: {} as Record<string, Planet>,
   currentUserId: null as string | null,
   currentAgentId: null as string | null,
-  camera: { position: { x: 0, y: 0 }, zoom: 1 } as Camera,
   energy: 1000,
   minerals: 50,
   agntcBalance: 50,
@@ -388,8 +378,8 @@ export const useGameStore = create<GameState>((set) => ({
                 [slotId]: {
                   ...existingBlocknode,
                   ownerId: state.currentUserId || "unknown",
-                  // Tag the cell with the claimant's tier so the BlockNodePanel,
-                  // GridBackground tint, and CellTooltip all show the correct identity.
+                  // Tag the cell with the claimant's tier so the BlockNodePanel
+                  // shows the correct identity.
                   // Falls back to existing tag (null for unclaimed) if tier unset.
                   tier: state.currentUserTier ?? existingBlocknode.tier,
                 },
@@ -538,7 +528,6 @@ export const useGameStore = create<GameState>((set) => ({
 
   setCurrentUser: (userId, agentId) => set({ currentUserId: userId, currentAgentId: agentId }),
 
-  setCamera: (position, zoom) => set({ camera: { position, zoom } }),
 
   updateDiplomacy: (state) => {
     const key = [state.agentA, state.agentB].sort().join("-");

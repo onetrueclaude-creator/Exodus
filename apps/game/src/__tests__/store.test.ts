@@ -391,11 +391,6 @@ describe("gameStore", () => {
     expect(useGameStore.getState().currentAgentId).toBe("a1");
   });
 
-  it("updates camera position", () => {
-    useGameStore.getState().setCamera({ x: 500, y: 300 }, 1.5);
-    expect(useGameStore.getState().camera).toEqual({ position: { x: 500, y: 300 }, zoom: 1.5 });
-  });
-
   it("switches active tab", () => {
     useGameStore.getState().setActiveTab("account");
     expect(useGameStore.getState().activeTab).toBe("account");

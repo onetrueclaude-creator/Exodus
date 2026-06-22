@@ -1,24 +1,15 @@
 import type { Tier, BlockNode } from "@/types";
 
-export const CELL_SIZE = 64;
 export const DENSITY_DECAY = 0.15;
 export const TIERS: Tier[] = ["community", "professional", "founder"];
-
-export function getCellDensity(cx: number, cy: number): number {
-  const dist = Math.sqrt(cx * cx + cy * cy);
-  return 1.0 / (1 + dist * DENSITY_DECAY);
-}
-
-/** Convert cell to pixel. Y is negated so positive cy renders upward (math convention). */
-export function cellToPixel(cx: number, cy: number): { px: number; py: number } {
-  return { px: cx * CELL_SIZE, py: -(cy * CELL_SIZE) || 0 };
-}
 
 export function cellId(cx: number, cy: number): string {
   return `cell-${cx}-${cy}`;
 }
 
 function createCell(cx: number, cy: number, ringIndex: number): BlockNode {
+  const dist = Math.sqrt(cx * cx + cy * cy);
+  const density = 1.0 / (1 + dist * DENSITY_DECAY);
   return {
     id: cellId(cx, cy),
     blockIndex: ringIndex,
@@ -26,7 +17,7 @@ function createCell(cx: number, cy: number, ringIndex: number): BlockNode {
     cx,
     cy,
     tier: null,
-    secureStrength: getCellDensity(cx, cy) * 100,
+    secureStrength: density * 100,
     ownerId: null,
     stakedCpu: 0,
     cumulativeSecures: 0,

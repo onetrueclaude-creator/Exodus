@@ -1,11 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
-  CELL_SIZE,
-  cellToPixel,
   getCellsForRing,
   buildAllCells,
-  buildCellsForRing,
-  getCellDensity,
   TIERS,
   createCellInternal,
   setCellOwner,
@@ -20,25 +16,6 @@ describe("buildAllCells", () => {
     expect(cells["cell-1--1"]).toBeDefined();
     expect(cells["cell-1-1"]).toBeDefined();
     expect(cells["cell--1-1"]).toBeDefined();
-  });
-});
-
-describe("getCellDensity", () => {
-  it("cells near origin have higher density", () => { expect(getCellDensity(-1, 1)).toBeGreaterThan(getCellDensity(-5, 5)); });
-  it("density is between 0 and 1", () => {
-    expect(getCellDensity(1, 1)).toBeGreaterThan(0);
-    expect(getCellDensity(1, 1)).toBeLessThanOrEqual(1);
-  });
-});
-
-describe("cellToPixel", () => {
-  it("(0,0) maps to pixel (0,0)", () => { expect(cellToPixel(0, 0)).toEqual({ px: 0, py: 0 }); });
-  it("(1,0) maps to (CELL_SIZE, 0)", () => { expect(cellToPixel(1, 0)).toEqual({ px: CELL_SIZE, py: 0 }); });
-  it("(-1,1) maps to (-CELL_SIZE, -CELL_SIZE) — Y negated for screen", () => {
-    expect(cellToPixel(-1, 1)).toEqual({ px: -CELL_SIZE, py: -CELL_SIZE });
-  });
-  it("(1,-1) maps to (CELL_SIZE, CELL_SIZE) — negative Y renders downward", () => {
-    expect(cellToPixel(1, -1)).toEqual({ px: CELL_SIZE, py: CELL_SIZE });
   });
 });
 
