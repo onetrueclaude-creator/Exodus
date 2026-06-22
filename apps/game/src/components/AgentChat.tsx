@@ -146,6 +146,7 @@ const ACTION_RESPONSES: Record<string, Record<NodeTier, string>> = {
 
 /* ── Tier Design Tokens ───────────────────────────────────── */
 
+// accent must match NODE_TIER_ACCENT (nodeTier.ts)
 const TIER_DESIGN: Record<NodeTier, {
   accent: string;
   accentDim: string;
@@ -158,13 +159,13 @@ const TIER_DESIGN: Record<NodeTier, {
   personality: string;
 }> = {
   nexus: {
-    accent: 'text-accent-purple',
-    accentDim: 'text-accent-purple/60',
-    bg: 'bg-accent-purple',
-    glow: 'shadow-[0_0_20px_rgba(139,92,246,0.12)]',
-    glowColor: 'rgba(139,92,246,0.12)',
-    borderColor: 'border-accent-purple/25',
-    headerGradient: 'from-accent-purple/[0.08] via-transparent to-transparent',
+    accent: 'text-pink-400',
+    accentDim: 'text-pink-400/60',
+    bg: 'bg-pink-400',
+    glow: 'shadow-[0_0_20px_rgba(244,114,182,0.12)]',
+    glowColor: 'rgba(244,114,182,0.12)',
+    borderColor: 'border-pink-400/25',
+    headerGradient: 'from-pink-400/[0.08] via-transparent to-transparent',
     label: 'NEXUS',
     personality: 'Core Orchestrator',
   },

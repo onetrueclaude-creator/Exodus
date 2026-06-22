@@ -30,13 +30,6 @@ export const TIER_LABELS: Record<Tier, string> = {
   founder: "Founder",
 };
 
-/** Canonical Tier colors as hex strings (whitepaper §4.2). Founder = amber. */
-export const TIER_COLORS: Record<Tier, string> = {
-  community: "#0D9488", // teal
-  professional: "#3B82F6", // blue
-  founder: "#F59E0B", // amber
-};
-
 /** Crown shown next to the Founder tier in UI. Empty for other tiers. */
 export const TIER_CROWN: Record<Tier, string> = {
   community: "",
