@@ -11,12 +11,12 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { username: true, subscription: true, phantomWalletHash: true },
+    select: { username: true, subscription: true, phantomWalletPubkey: true },
   });
 
   return NextResponse.json({
     username: user?.username ?? null,
     subscription: user?.subscription ?? null,
-    hasPhantomWallet: !!user?.phantomWalletHash,
+    hasPhantomWallet: !!user?.phantomWalletPubkey,
   });
 }

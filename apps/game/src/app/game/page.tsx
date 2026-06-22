@@ -26,12 +26,6 @@ import { SUBSCRIPTION_PLANS } from "@/types/subscription";
 import { createCellInternal } from "@/lib/lattice";
 import { getNextSpawnCell } from "@/lib/spawn";
 
-/** Map subscription tier to default player Tier identity. */
-const SUBSCRIPTION_TIER_MAP: Record<SubscriptionTier, Tier> = {
-  COMMUNITY: "community",
-  PROFESSIONAL: "professional",
-};
-
 /** Block time on chain — refresh grid every 60 seconds to sync with ledger */
 const CHAIN_SYNC_INTERVAL_MS = 60_000;
 
@@ -217,6 +211,25 @@ export default function GamePage() {
       feed.forEach(addHaiku);
 
       const isDev = process.env.NODE_ENV === "development";
+
+      // Server-authoritative identity (B1): tier + role come from the DB + Founder
+      // allowlist via /api/me. localStorage is only a dev fallback, gated behind
+      // NEXT_PUBLIC_DEV_IDENTITY — so there is no spoofable default in prod.
+      const devIdentityEnabled = process.env.NEXT_PUBLIC_DEV_IDENTITY === "1";
+      let serverIdentity: import("@/lib/identity").ServerIdentity | null = null;
+      try {
+        const meRes = await fetch("/api/me");
+        if (meRes.ok) serverIdentity = await meRes.json();
+      } catch {
+        // unauthenticated or offline — fall through to the dev resolution
+      }
+      const { resolveClientIdentity } = await import("@/lib/identity");
+      const identity = resolveClientIdentity(serverIdentity, {
+        devIdentityEnabled,
+        devTier: typeof window !== "undefined" ? localStorage.getItem("dev_tier") : null,
+        devSubscription: typeof window !== "undefined" ? localStorage.getItem("dev_subscription") : null,
+      });
+
       // The player's own node is their real on-chain claim, which the chain flags
       // is_self for getWalletIndex(). When present (dev OR prod) it IS the homenode
       // — no synthetic node is created. Falls back to the legacy first-owned
@@ -227,51 +240,41 @@ export default function GamePage() {
         setCurrentUser(firstOwned.userId, firstOwned.id);
         // Dev: anchor the player's resource pool + Founder identity on their real
         // chain node (no synthetic homenode, no demo placeholders).
-        if (isDev) {
-          const devSubRaw = typeof window !== "undefined" ? localStorage.getItem("dev_subscription") : null;
-          const devSub = (devSubRaw as SubscriptionTier | null) ?? "PROFESSIONAL";
-          const plan = SUBSCRIPTION_PLANS.find((p) => p.tier === devSub) ?? SUBSCRIPTION_PLANS[0];
-          useGameStore.setState({
-            energy: plan.startEnergy,
-            agntcBalance: plan.startAgntc + 1, // +1 genesis airdrop
-            minerals: plan.startMinerals,
-            cpuRegenPerTurn: plan.cpuRegen,
-            currentUserTier: "founder",
-          });
-          setCurrentUserTier("founder");
-          revealTier("community");
-          revealTier("professional");
-          revealTier("founder");
+        // Tier/role are server-authoritative (identity). Resources: anchor on the
+        // subscription plan only in the dev fallback; in prod they come from chain sync.
+        if (identity) {
+          setCurrentUserTier(identity.tier);
+          revealTier(identity.tier);
+          if (identity.source === "dev") {
+            const plan = SUBSCRIPTION_PLANS.find((p) => p.tier === identity.subscription) ?? SUBSCRIPTION_PLANS[0];
+            useGameStore.setState({
+              energy: plan.startEnergy,
+              agntcBalance: plan.startAgntc + 1, // +1 genesis airdrop
+              minerals: plan.startMinerals,
+              cpuRegenPerTurn: plan.cpuRegen,
+              currentUserTier: identity.tier,
+            });
+            revealTier("community");
+            revealTier("professional");
+            revealTier("founder");
+          }
         }
         const primary = agentList.find((a) => a.isPrimary && a.userId === firstOwned.userId);
         const homenode = primary ?? firstOwned;
         if (!isDev) setActiveDockPanel("terminal");
         useGameStore.getState().requestFocus(homenode.id);
       } else {
-        // New user — read dev-selected player Tier + subscription (dev mode).
-        // INSECURE dev-only: tier must become server-authoritative (sub-project B);
-        // localStorage is client-spoofable.
-        const devTierRaw = typeof window !== "undefined" ? localStorage.getItem("dev_tier") : null;
-        const devSubRaw = typeof window !== "undefined" ? localStorage.getItem("dev_subscription") : null;
-        // Subscription tier is a separate concept (resources/CPU plan), still
-        // selectable in dev via the dev_subscription key. Defaults to Professional
-        // so the dev has ample CPU for the founder homenode.
-        const devSub = (devSubRaw as SubscriptionTier | null) ?? "PROFESSIONAL";
-        const plan = SUBSCRIPTION_PLANS.find((p) => p.tier === devSub) ?? SUBSCRIPTION_PLANS[0];
-        // Player Tier identity. Resolution order:
-        //   1. explicit dev_tier (player chose a tier)
-        //   2. dev_subscription → tier mapping, but ONLY when dev_subscription was set
-        //      explicitly (otherwise this would mask the Founder default below)
-        //   3. Founder — the dev default, so the crown/marker path runs out of the box
-        // Validate dev_tier: this key was repurposed (it previously held a
-        // SubscriptionTier), so a stale uppercase value must NOT slip through as an
-        // invalid Tier (which would yield an undefined tint and crash the inspector).
-        const devTier =
-          devTierRaw === "community" || devTierRaw === "professional" || devTierRaw === "founder"
-            ? devTierRaw
-            : null;
-        const newUserTier: Tier =
-          devTier ?? (devSubRaw ? SUBSCRIPTION_TIER_MAP[devSub] ?? "founder" : "founder");
+        // New user. Tier + subscription are server-authoritative via `identity`
+        // (DB + Founder allowlist); the dev localStorage fallback applies only
+        // behind NEXT_PUBLIC_DEV_IDENTITY. With no identity at all, floor to
+        // Community — a safe least-privilege default (never Founder/Professional).
+        const resolved = identity ?? {
+          tier: "community" as Tier,
+          subscription: "COMMUNITY" as SubscriptionTier,
+          source: "server" as const,
+        };
+        const plan = SUBSCRIPTION_PLANS.find((p) => p.tier === resolved.subscription) ?? SUBSCRIPTION_PLANS[0];
+        const newUserTier: Tier = resolved.tier;
 
         const newUserId = `user-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
         useGameStore.setState({
