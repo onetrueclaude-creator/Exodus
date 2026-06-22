@@ -78,6 +78,7 @@ from agentic.params import (
     SECURE_REWARD_IMMEDIATE,
 )
 from agentic.testnet.genesis import GenesisState, create_genesis
+from agentic.testnet.signing import verify_write, SignatureError
 from agentic.testnet.node_session import (
     verify_hash,
     register_session,
@@ -229,7 +230,14 @@ class ResetResult(BaseModel):
     message: str
 
 
-class BirthRequest(BaseModel):
+class SignedRequest(BaseModel):
+    """Base for state-mutating requests: optional ed25519 signature + nonce (B3).
+    Enforced in prod by verify_write; dev-bypassed under ALLOW_DEV_CUSTODIAL_SIGN."""
+    signature: Optional[str] = None
+    nonce: Optional[int] = None
+
+
+class BirthRequest(SignedRequest):
     wallet_index: int
 
 
@@ -241,7 +249,7 @@ class BirthResult(BaseModel):
     new_claim_count: int
 
 
-class ClaimNodeRequest(BaseModel):
+class ClaimNodeRequest(SignedRequest):
     wallet_index: int
     x: Optional[int] = None
     y: Optional[int] = None
@@ -257,7 +265,7 @@ class ClaimNodeResult(BaseModel):
     message: str
 
 
-class IntroRequest(BaseModel):
+class IntroRequest(SignedRequest):
     wallet_index: int
     agent_coordinate: dict  # {x: int, y: int}
     message: str
@@ -268,7 +276,7 @@ class IntroResult(BaseModel):
     message: str
 
 
-class MessageRequest(BaseModel):
+class MessageRequest(SignedRequest):
     sender_wallet: int
     sender_coord: dict  # {x: int, y: int}
     target_coord: dict  # {x: int, y: int}
@@ -315,7 +323,7 @@ class SubgridAllocationInfo(BaseModel):
     free_cells: int = 64
 
 
-class SubgridAssignRequest(BaseModel):
+class SubgridAssignRequest(SignedRequest):
     secure: int = 0
     develop: int = 0
     research: int = 0
@@ -934,6 +942,15 @@ def get_balance(wallet_index: int) -> BalanceResponse:
     return BalanceResponse(wallet_index=wallet_index, spendable_micro_agntc=micro)
 
 
+@app.get("/api/nonce/{wallet_index}")
+def get_nonce(wallet_index: int):
+    g = _g()
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    owner = g.wallets[wallet_index].public_key
+    return {"wallet_index": wallet_index, "nonce": g.account_nonces.get(owner, 0)}
+
+
 @app.get("/api/vesting/{wallet_index}", response_model=VestingResponse)
 def get_vesting(wallet_index: int) -> VestingResponse:
     """Return vesting info for a wallet based on its faction."""
@@ -1030,7 +1047,7 @@ def get_staking(wallet_index: int) -> StakingResponse:
 # ---------------------------------------------------------------------------
 
 
-class SecureRequest(BaseModel):
+class SecureRequest(SignedRequest):
     wallet_index: int
     duration_blocks: int  # how many block cycles to secure
 
@@ -1081,6 +1098,10 @@ def create_secure(req: SecureRequest):
         raise HTTPException(status_code=400, detail="Duration must be 1-1000 blocks")
 
     wallet = g.wallets[req.wallet_index]
+    try:
+        verify_write(g, wallet.public_key, "secure", req.model_dump(exclude={"signature", "nonce"}), req.signature, req.nonce)
+    except SignatureError as e:
+        raise HTTPException(status_code=401, detail=f"signature: {e}")
     # Find the wallet's homenode coordinates
     claims = g.claim_registry.get_claims_for_owner(wallet.public_key)
     if not claims:
@@ -1185,7 +1206,7 @@ class VaultShardResponse(BaseModel):
     count: int
 
 
-class VaultChallengeRequest(BaseModel):
+class VaultChallengeRequest(SignedRequest):
     wallet_index: int
     shard_id: int
 
@@ -1198,7 +1219,7 @@ class VaultChallengeResponse(BaseModel):
     block_seed_hex: str
 
 
-class VaultSubmitProofRequest(BaseModel):
+class VaultSubmitProofRequest(SignedRequest):
     wallet_index: int
     shard_id: int
     issued_block: int
@@ -1267,6 +1288,10 @@ def post_vault_challenge(req: VaultChallengeRequest) -> VaultChallengeResponse:
     g = _g()
     if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
         raise HTTPException(status_code=404, detail="Wallet not found")
+    try:
+        verify_write(g, g.wallets[req.wallet_index].public_key, "vault_challenge", req.model_dump(exclude={"signature", "nonce"}), req.signature, req.nonce)
+    except SignatureError as e:
+        raise HTTPException(status_code=401, detail=f"signature: {e}")
     owner = g.wallets[req.wallet_index].public_key.hex()
     block_slot = g.mining_engine.total_blocks_processed
     ch = g.vault_registry.issue_challenge(owner, req.shard_id, block_slot)
@@ -1286,6 +1311,10 @@ def post_vault_submit_proof(req: VaultSubmitProofRequest) -> VaultSubmitProofRes
     g = _g()
     if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
         raise HTTPException(status_code=404, detail="Wallet not found")
+    try:
+        verify_write(g, g.wallets[req.wallet_index].public_key, "vault_submit_proof", req.model_dump(exclude={"signature", "nonce"}), req.signature, req.nonce)
+    except SignatureError as e:
+        raise HTTPException(status_code=401, detail=f"signature: {e}")
     owner = g.wallets[req.wallet_index].public_key.hex()
     # JSON object keys arrive as strings; normalise proof leaves/paths to int keys.
     proof = {
@@ -1425,6 +1454,10 @@ def assign_subgrid(request: Request, wallet_index: int, req: SubgridAssignReques
     if wallet_index < 0 or wallet_index >= len(g.wallets):
         raise HTTPException(status_code=404, detail="Wallet not found")
     wallet = g.wallets[wallet_index]
+    try:
+        verify_write(g, wallet.public_key, "subgrid_assign", req.model_dump(exclude={"signature", "nonce"}), req.signature, req.nonce)
+    except SignatureError as e:
+        raise HTTPException(status_code=401, detail=f"signature: {e}")
     owner = wallet.public_key
     alloc = g.subgrid_allocators.get(owner)
     if alloc is None:
@@ -1457,7 +1490,7 @@ class NodeSubgridDiff(BaseModel):
     new_type: Literal["secure", "develop", "research", "storage"] | None
 
 
-class CommitSubgridRequest(BaseModel):
+class CommitSubgridRequest(SignedRequest):
     wallet_index: int
     diffs: list[NodeSubgridDiff]
 
@@ -1483,6 +1516,10 @@ def commit_subgrid(request: Request, node_id: str, req: CommitSubgridRequest) ->
     wallet = g.wallets[req.wallet_index]
     if wallet.public_key != ns.owner:
         raise HTTPException(status_code=403, detail="Not the owner")
+    try:
+        verify_write(g, wallet.public_key, "commit_subgrid", req.model_dump(exclude={"signature", "nonce"}), req.signature, req.nonce)
+    except SignatureError as e:
+        raise HTTPException(status_code=401, detail=f"signature: {e}")
 
     parsed: list[tuple[int, CellType | None]] = []
     for d in req.diffs:
@@ -1629,6 +1666,10 @@ def claim_node(request: Request, req: ClaimNodeRequest) -> ClaimNodeResult:
         raise HTTPException(status_code=400, detail=f"Invalid wallet index: {req.wallet_index}")
 
     wallet = g.wallets[req.wallet_index]
+    try:
+        verify_write(g, wallet.public_key, "claim", req.model_dump(exclude={"signature", "nonce"}), req.signature, req.nonce)
+    except SignatureError as e:
+        raise HTTPException(status_code=401, detail=f"signature: {e}")
 
     # Determine coordinate — snap to nearest grid square centre
     if req.x is not None and req.y is not None:
@@ -1844,7 +1885,7 @@ import re as _re
 _NAME_RE = _re.compile(r"^[A-Za-z0-9_-]+$")
 
 
-class SetNameRequest(BaseModel):
+class SetNameRequest(SignedRequest):
     wallet_index: int
     name: str
 
@@ -1871,6 +1912,10 @@ def set_owner_name(request: Request, req: SetNameRequest) -> SetNameResponse:
     g = _g()
     if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
         raise HTTPException(status_code=404, detail="Wallet not found")
+    try:
+        verify_write(g, g.wallets[req.wallet_index].public_key, "set_name", req.model_dump(exclude={"signature", "nonce"}), req.signature, req.nonce)
+    except SignatureError as e:
+        raise HTTPException(status_code=401, detail=f"signature: {e}")
     name = req.name.strip()
     if not (1 <= len(name) <= 24) or not _NAME_RE.match(name):
         raise HTTPException(
@@ -1962,6 +2007,10 @@ def birth_node(request: Request, req: BirthRequest) -> BirthResult:
         raise HTTPException(status_code=400, detail=f"Invalid wallet index: {req.wallet_index}")
 
     wallet = g.wallets[req.wallet_index]
+    try:
+        verify_write(g, wallet.public_key, "birth", req.model_dump(exclude={"signature", "nonce"}), req.signature, req.nonce)
+    except SignatureError as e:
+        raise HTTPException(status_code=401, detail=f"signature: {e}")
 
     # Find wallet's home star (first claim owned by this wallet)
     claims = g.claim_registry.get_claims(wallet.public_key)
@@ -2044,7 +2093,7 @@ def birth_node(request: Request, req: BirthRequest) -> BirthResult:
 # ---------------------------------------------------------------------------
 
 
-class TransactRequest(BaseModel):
+class TransactRequest(SignedRequest):
     sender_wallet: int
     recipient_wallet: Optional[int] = None  # explicit index; or resolve via recipient_name
     recipient_name: Optional[str] = None    # case-insensitive owner-name lookup
@@ -2072,6 +2121,10 @@ def transact(request: Request, req: TransactRequest) -> TransactResponse:
     g = _g()
     if req.sender_wallet < 0 or req.sender_wallet >= len(g.wallets):
         raise HTTPException(status_code=404, detail="Sender wallet not found")
+    try:
+        verify_write(g, g.wallets[req.sender_wallet].public_key, "transact", req.model_dump(exclude={"signature", "nonce"}), req.signature, req.nonce)
+    except SignatureError as e:
+        raise HTTPException(status_code=401, detail=f"signature: {e}")
     # Resolve recipient by name when provided (case-insensitive), else by index.
     recipient_index = req.recipient_wallet
     if req.recipient_name is not None:
@@ -2212,7 +2265,7 @@ class WalletSettingsResponse(BaseModel):
     effective_stake: float
 
 
-class SubgridAssignRequest(BaseModel):
+class SubgridAssignRequest(SignedRequest):
     secure: int = 0
     develop: int = 0
     research: int = 0
@@ -2324,6 +2377,10 @@ def set_intro(request: Request, req: IntroRequest) -> IntroResult:
     g = _g()
     if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
         raise HTTPException(status_code=400, detail=f"Invalid wallet index: {req.wallet_index}")
+    try:
+        verify_write(g, g.wallets[req.wallet_index].public_key, "intro", req.model_dump(exclude={"signature", "nonce"}), req.signature, req.nonce)
+    except SignatureError as e:
+        raise HTTPException(status_code=401, detail=f"signature: {e}")
 
     x = req.agent_coordinate.get("x")
     y = req.agent_coordinate.get("y")
@@ -2358,6 +2415,10 @@ def send_message(request: Request, req: MessageRequest) -> MessageResult:
     g = _g()
     if req.sender_wallet < 0 or req.sender_wallet >= len(g.wallets):
         raise HTTPException(status_code=400, detail=f"Invalid wallet index: {req.sender_wallet}")
+    try:
+        verify_write(g, g.wallets[req.sender_wallet].public_key, "message", req.model_dump(exclude={"signature", "nonce"}), req.signature, req.nonce)
+    except SignatureError as e:
+        raise HTTPException(status_code=401, detail=f"signature: {e}")
 
     sx = req.sender_coord.get("x")
     sy = req.sender_coord.get("y")

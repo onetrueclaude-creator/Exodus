@@ -97,3 +97,32 @@ def test_verify_write_rejects_unbound_account(monkeypatch):
     monkeypatch.delenv("ALLOW_DEV_CUSTODIAL_SIGN", raising=False)
     with pytest.raises(SignatureError):
         verify_write(_G(), b"nobody", "secure", {}, "00" * 64, 0)
+
+
+# --- endpoint-level enforcement (bypass OFF) ---
+
+def test_secure_endpoint_enforces_signature(monkeypatch):
+    from fastapi.testclient import TestClient
+    import nacl.signing
+    from agentic.testnet import api as api_module
+    from agentic.testnet.signing import canonical_message
+    from agentic.ledger.crypto import sign_ed25519
+
+    client = TestClient(api_module.app)
+    client.post("/api/reset", headers={"X-Admin-Token": "test-admin-token"})
+    g = api_module._g()
+    sk = nacl.signing.SigningKey.generate()
+    owner = g.wallets[1].public_key
+    g.account_signing_keys[owner] = bytes(sk.verify_key)
+    monkeypatch.delenv("ALLOW_DEV_CUSTODIAL_SIGN", raising=False)
+
+    # Unsigned write → 401
+    r = client.post("/api/secure", json={"wallet_index": 1, "duration_blocks": 5})
+    assert r.status_code == 401
+
+    # Correctly-signed write with the expected nonce → auth passes (NOT 401)
+    params = {"wallet_index": 1, "duration_blocks": 5}
+    msg = canonical_message("secure", params, owner.hex(), 0)
+    sig = sign_ed25519(bytes(sk), msg).hex()
+    r2 = client.post("/api/secure", json={**params, "signature": sig, "nonce": 0})
+    assert r2.status_code != 401

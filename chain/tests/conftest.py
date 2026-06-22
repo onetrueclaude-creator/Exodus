@@ -1,4 +1,7 @@
 """Global test fixtures for the Agentic Chain test suite."""
+import os
+os.environ.setdefault("ALLOW_DEV_CUSTODIAL_SIGN", "1")
+
 import pytest
 
 # A shared admin token for all tests that call admin-gated endpoints.
