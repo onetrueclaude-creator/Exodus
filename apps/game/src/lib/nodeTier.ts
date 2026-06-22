@@ -14,6 +14,16 @@ export const TIER_DISPLAY_NAME: Record<NodeTier, string> = {
   nexus: "Nexus",
 };
 
+/** Canonical per-node-tier text-accent class. Single source of truth so the
+ *  terminal, network chat, and skills panel colour each tier identically.
+ *  Nexus is pink (apex tier, distinct from Lattice purple). */
+export const NODE_TIER_ACCENT: Record<NodeTier, string> = {
+  synapse: "text-yellow-400",
+  cortex: "text-accent-cyan",
+  lattice: "text-accent-purple",
+  nexus: "text-pink-400",
+};
+
 /** Map an integer level to its tier band. Synapse 1-3, Cortex 4-6, Lattice 7-9, Nexus 10+. */
 export function getNodeTier(level: number): NodeTier {
   if (level <= 3) return "synapse";

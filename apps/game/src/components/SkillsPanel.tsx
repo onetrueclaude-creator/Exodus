@@ -7,7 +7,7 @@ import {
   type SkillCategory,
 } from '@/lib/skills';
 import { useGameStore } from '@/store/gameStore';
-import { type NodeTier, TIER_DISPLAY_NAME } from '@/lib/nodeTier';
+import { type NodeTier, TIER_DISPLAY_NAME, NODE_TIER_ACCENT } from '@/lib/nodeTier';
 
 const CATEGORY_COLORS: Record<SkillCategory, string> = {
   mining: 'text-yellow-400',
@@ -31,10 +31,10 @@ const CATEGORY_BG: Record<SkillCategory, string> = {
 };
 
 const TIER_LABELS: Record<NodeTier, { label: string; color: string }> = {
-  synapse: { label: TIER_DISPLAY_NAME.synapse, color: 'text-amber-400' },
-  cortex:  { label: TIER_DISPLAY_NAME.cortex,  color: 'text-cyan-400' },
-  lattice: { label: TIER_DISPLAY_NAME.lattice, color: 'text-purple-400' },
-  nexus:   { label: TIER_DISPLAY_NAME.nexus,   color: 'text-pink-400' },
+  synapse: { label: TIER_DISPLAY_NAME.synapse, color: NODE_TIER_ACCENT.synapse },
+  cortex:  { label: TIER_DISPLAY_NAME.cortex,  color: NODE_TIER_ACCENT.cortex },
+  lattice: { label: TIER_DISPLAY_NAME.lattice, color: NODE_TIER_ACCENT.lattice },
+  nexus:   { label: TIER_DISPLAY_NAME.nexus,   color: NODE_TIER_ACCENT.nexus },
 };
 
 export default function SkillsPanel() {

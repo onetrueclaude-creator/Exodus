@@ -22,7 +22,6 @@ import { getWalletIndex } from "@/lib/walletIndex";
 import { useChainWebSocket } from "@/hooks/useChainWebSocket";
 import type { SubscriptionTier } from "@/types";
 import type { Tier } from "@/types";
-import { TIER_TINT } from "@/types";
 import { SUBSCRIPTION_PLANS } from "@/types/subscription";
 import { createCellInternal } from "@/lib/lattice";
 import { getNextSpawnCell } from "@/lib/spawn";
@@ -31,13 +30,6 @@ import { getNextSpawnCell } from "@/lib/spawn";
 const SUBSCRIPTION_TIER_MAP: Record<SubscriptionTier, Tier> = {
   COMMUNITY: "community",
   PROFESSIONAL: "professional",
-};
-
-/** Empire border tint per player Tier (PixiJS color number). */
-const DEV_TIER_COLOR: Record<Tier, number> = {
-  community: TIER_TINT.community,
-  professional: TIER_TINT.professional,
-  founder: TIER_TINT.founder, // amber
 };
 
 /** Block time on chain — refresh grid every 60 seconds to sync with ledger */
@@ -243,7 +235,6 @@ export default function GamePage() {
             energy: plan.startEnergy,
             agntcBalance: plan.startAgntc + 1, // +1 genesis airdrop
             minerals: plan.startMinerals,
-            empireColor: DEV_TIER_COLOR["founder"],
             cpuRegenPerTurn: plan.cpuRegen,
             currentUserTier: "founder",
           });
@@ -288,7 +279,6 @@ export default function GamePage() {
           energy: plan.startEnergy,
           agntcBalance: plan.startAgntc + 1, // +1 genesis airdrop
           minerals: plan.startMinerals,
-          empireColor: DEV_TIER_COLOR[newUserTier],
           cpuRegenPerTurn: plan.cpuRegen,
         });
         // Open-grid spawn: set tier first, then claim the next available origin-out cell.

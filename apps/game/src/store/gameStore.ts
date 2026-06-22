@@ -92,7 +92,6 @@ interface GameState {
 
   // UI
   activeTab: GameTab;
-  empireColor: number;
   activeDockPanel: DockPanelId | null;
   focusRequest: { nodeId: string; ts: number } | null;
   /** Persisted sub-agent drag drop-positions keyed by agent id — survives
@@ -164,7 +163,6 @@ interface GameState {
   cancelNodeLevelUp: (agentId: string) => void;
   setCpuRegen: (regen: number) => void;
   setInitializing: (v: boolean) => void;
-  setEmpireColor: (color: number) => void;
   setActiveDockPanel: (panel: DockPanelId | null) => void;
   switchAgent: (agentId: string) => void;
   requestFocus: (nodeId: string) => void;
@@ -237,7 +235,6 @@ const initialState = {
   unlockedSkills: [] as string[],
   maxDeployTier: "synapse" as AgentTier, // default: Community tier (synapse only)
   activeTab: "network" as GameTab,
-  empireColor: 0xffffff, // default: Community tier white
   activeDockPanel: null as DockPanelId | null,
   focusRequest: null as { nodeId: string; ts: number } | null,
   subagentDragPositions: {} as Record<string, { x: number; y: number }>,
@@ -732,8 +729,6 @@ export const useGameStore = create<GameState>((set) => ({
   setCpuRegen: (regen) => set({ cpuRegenPerTurn: regen }),
 
   setInitializing: (v) => set({ isInitializing: v }),
-
-  setEmpireColor: (color) => set({ empireColor: color }),
 
   setActiveDockPanel: (panel) =>
     set((s) => ({

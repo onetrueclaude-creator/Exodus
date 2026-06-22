@@ -167,32 +167,6 @@ describe("gameStore — devRevealAll (dev mode fog bypass)", () => {
   });
 });
 
-describe("gameStore — empireColor (subscription tier color)", () => {
-  beforeEach(() => {
-    useGameStore.getState().reset();
-  });
-
-  it("defaults to Community white 0xffffff", () => {
-    expect(useGameStore.getState().empireColor).toBe(0xffffff);
-  });
-
-  it("setEmpireColor updates to amber (founders)", () => {
-    useGameStore.getState().setEmpireColor(0xf59e0b);
-    expect(useGameStore.getState().empireColor).toBe(0xf59e0b);
-  });
-
-  it("setEmpireColor updates to professional cyan", () => {
-    useGameStore.getState().setEmpireColor(0x06b6d4);
-    expect(useGameStore.getState().empireColor).toBe(0x06b6d4);
-  });
-
-  it("reset() restores empireColor to default Community white", () => {
-    useGameStore.getState().setEmpireColor(0xf59e0b);
-    useGameStore.getState().reset();
-    expect(useGameStore.getState().empireColor).toBe(0xffffff);
-  });
-});
-
 // Genesis cells land at quadrant corners adjacent to origin:
 // NW=(-1,-1), NE=(1,-1), SE=(1,1), SW=(-1,1)
 // Cell (0,-2) is adjacent to community arm (-1,-1) at Chebyshev distance 1 — community Voronoi territory.
