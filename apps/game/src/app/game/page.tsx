@@ -19,7 +19,7 @@ import type { ChainService } from "@/services/chainService";
 import { TestnetChainService } from "@/services/testnetChainService";
 import { isTestnetOnline, getSettings, getTransactions, getWalletBalance } from "@/services/testnetApi";
 import { getWalletIndex } from "@/lib/walletIndex";
-import { useChainWebSocket } from "@/hooks/useChainWebSocket";
+import { useChainEvents } from "@/hooks/useChainEvents";
 import type { SubscriptionTier } from "@/types";
 import type { Tier } from "@/types";
 import { SUBSCRIPTION_PLANS } from "@/types/subscription";
@@ -101,8 +101,8 @@ export default function GamePage() {
   const revealTier = useGameStore((s) => s.revealTier);
   const chainMode = useGameStore((s) => s.chainMode);
 
-  // Connect WebSocket when in testnet mode
-  useChainWebSocket(chainMode === "testnet");
+  // Subscribe to the gateway SSE block feed when in testnet mode (B2)
+  useChainEvents(chainMode === "testnet");
 
   const setActiveDockPanel = useGameStore((s) => s.setActiveDockPanel);
 
