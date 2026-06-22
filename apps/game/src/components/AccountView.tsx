@@ -216,10 +216,10 @@ export default function AccountView() {
             <h2 className="text-lg font-heading font-bold text-text-primary tracking-wide">Resources</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard label="CPU Energy" value={energy.toFixed(0)} valueClass="text-yellow-300" dotColor="bg-yellow-400" />
-            <StatCard label="Secured Chains" value={String(securedChains)} valueClass="text-emerald-300" dotColor="bg-emerald-400" />
-            <StatCard label="AGNTC Balance" value={sciFormat(agntcBalance)} valueClass="text-accent-cyan" dotColor="bg-accent-cyan" />
-            <StatCard label="Frags" value={minerals.toFixed(0)} valueClass="text-blue-300" dotColor="bg-blue-400" />
+            <StatCard label="CPU Energy" value={energy.toFixed(0)} valueClass="text-yellow-300" dotColor="bg-yellow-400" sublabel="compute pool" />
+            <StatCard label="Secured Chains" value={String(securedChains)} valueClass="text-emerald-300" dotColor="bg-emerald-400" sublabel="agentic-work proofs" />
+            <StatCard label="AGNTC Balance" value={sciFormat(agntcBalance)} valueClass="text-accent-cyan" dotColor="bg-accent-cyan" sublabel="spendable on-chain" />
+            <StatCard label="Frags" value={minerals.toFixed(0)} valueClass="text-blue-300" dotColor="bg-blue-400" sublabel="mining output" />
           </div>
         </div>
 
@@ -266,7 +266,7 @@ export default function AccountView() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-              <StatCard label="Total Secured" value={String(securing.total_secured_chains)} valueClass="text-emerald-300" />
+              <StatCard label="Position Blocks" value={String(securing.total_secured_chains)} valueClass="text-emerald-300" sublabel="CPU-committed securing" />
               <StatCard label="CPU Committed" value={securing.total_cpu_committed.toFixed(2)} valueClass="text-yellow-400" />
               <StatCard label="Rewards Earned" value={`${securing.total_rewards_earned.toFixed(6)} AGNTC`} valueClass="text-accent-cyan" />
             </div>
@@ -421,7 +421,7 @@ function StatCard({ label, value, valueClass = 'text-text-primary', dotColor, su
         {dotColor && <div className={`w-1.5 h-1.5 rounded-full ${dotColor} shrink-0`} />}
         <p className={`text-sm font-mono ${valueClass}`}>{value}</p>
       </div>
-      {sublabel && <p className="text-[8px] text-text-muted/40 mt-0.5">{sublabel}</p>}
+      {sublabel && <p className="text-[11px] text-text-muted/50 mt-0.5">{sublabel}</p>}
     </div>
   );
 }
