@@ -107,14 +107,14 @@ export default function ResourceBar() {
           }`}
         />
         <span
-          className={`text-[10px] font-bold tracking-wider ${
+          className={`text-[12px] font-bold tracking-wider ${
             chainMode === "testnet" ? "text-yellow-400" : "text-text-muted"
           }`}
         >
           {chainMode === "testnet" ? "TESTNET" : "OFFLINE"}
         </span>
         {chainMode === "testnet" && testnetBlocks > 0 && (
-          <span className="text-[9px] font-mono text-yellow-400/60">B#{testnetBlocks}</span>
+          <span className="text-[11px] font-mono text-yellow-400/60">B#{testnetBlocks}</span>
         )}
       </div>
 
@@ -125,7 +125,7 @@ export default function ResourceBar() {
           {TIER_CROWN[tier] ? `${TIER_CROWN[tier]} ` : ""}{TIER_LABELS[tier]} Tier
         </span>
         {ownedBlocknodes.length > 0 && (
-          <span className="text-[10px] font-mono text-text-muted/60">
+          <span className="text-[12px] font-mono text-text-muted/60">
             {ownedBlocknodes.length} node{ownedBlocknodes.length !== 1 ? "s" : ""}
           </span>
         )}
@@ -139,14 +139,14 @@ export default function ResourceBar() {
       <div className="flex items-center gap-1">
         <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
         <span className="text-xs font-mono text-yellow-300 tabular-nums">{sciFormat(energy)}</span>
-        <span className="text-[9px] font-mono text-text-muted/40">CPU</span>
+        <span className="text-[11px] font-mono text-text-muted/40">CPU</span>
         <span
-          className={`text-[9px] font-mono ${netColor} tabular-nums`}
+          className={`text-[11px] font-mono ${netColor} tabular-nums`}
           title={netTooltip}
         >
           {netSign}{Math.abs(netCpuPerTurn)}/t
         </span>
-        <sup className="text-[9px] leading-none">
+        <sup className="text-[11px] leading-none">
           <DeltaFlash resourceKey="energy" />
         </sup>
       </div>
@@ -157,8 +157,8 @@ export default function ResourceBar() {
         <span className="text-xs font-mono text-accent-cyan tabular-nums">
           {sciFormat(agntcBalance)}
         </span>
-        <span className="text-[9px] font-mono text-text-muted/40">AGNTC</span>
-        <sup className="text-[9px] leading-none">
+        <span className="text-[11px] font-mono text-text-muted/40">AGNTC</span>
+        <sup className="text-[11px] leading-none">
           <DeltaFlash resourceKey="agntc" />
         </sup>
       </div>
@@ -167,7 +167,7 @@ export default function ResourceBar() {
       <div className="flex items-center gap-1">
         <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
         <span className="text-xs font-mono text-blue-300 tabular-nums">{sciFormat(minerals)}</span>
-        <span className="text-[9px] font-mono text-text-muted/40">Frags</span>
+        <span className="text-[11px] font-mono text-text-muted/40">Frags</span>
       </div>
 
       {/* Spacer */}
@@ -178,14 +178,14 @@ export default function ResourceBar() {
         {publicKey ? (
           <>
             <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-            <span className="text-[10px] font-mono text-purple-400/80">
+            <span className="text-[12px] font-mono text-purple-400/80">
               {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
             </span>
           </>
         ) : (
           <>
             <div className="w-1.5 h-1.5 rounded-full bg-text-muted/40" />
-            <span className="text-[10px] font-mono text-text-muted/40">No wallet</span>
+            <span className="text-[12px] font-mono text-text-muted/40">No wallet</span>
           </>
         )}
       </div>

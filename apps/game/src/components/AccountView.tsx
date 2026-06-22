@@ -187,7 +187,7 @@ export default function AccountView() {
                           <span className={tierClass}>{TIER_DISPLAY_NAME[tier]}</span>
                           <span className="mx-1.5 text-text-muted/40">{'\u00B7'}</span>
                           {/* Coordinates retired (orbital rank-seat model) \u2014 show role instead. */}
-                          <span>{a.isPrimary ? 'Homenode' : 'Subagent'}</span>
+                          <span>{a.isPrimary ? 'Homenode' : 'Subnode'}</span>
                           <span className="mx-1.5 text-text-muted/40">{'\u00B7'}</span>
                           <span>{planetCountFor(a.id)} packets</span>
                         </div>

@@ -260,7 +260,7 @@ export default function NodeInspector({ chainService }: NodeInspectorProps = {})
       ) : (
         /* Subagent — tier-less: no Tier row. Shows owner + the parent it belongs to. */
         <div className="space-y-1">
-          <InspectorRow label="Kind" value="Subagent" />
+          <InspectorRow label="Kind" value="Subnode" />
           <InspectorRow label="Parent" value={model.parent} mono />
           <InspectorRow label="Activity" value={String(model.activity)} />
           <InspectorRow label="Owner" value={model.owner} mono />

@@ -38,7 +38,7 @@ interface AgentAction {
 
 const AGENT_ACTIONS: Record<NodeTier, AgentAction[]> = {
   nexus: [
-    { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 0, estTime: '~5min', description: 'Claim a node with a new sub-agent', category: 'expansion' },
+    { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 0, estTime: '~5min', description: 'Claim a node with a new sub-node', category: 'expansion' },
     { id: 'secure', label: 'Secure', icon: '\u26D3', cpuCost: 0, estTime: '~5s', description: 'Prove possession and secure the chain through the Singularity gate', category: 'blockchain' },
     { id: 'transact', label: 'Transact', icon: '\u21C4', cpuCost: 0, estTime: '~30s', description: 'Transfer AGNTC to another wallet', category: 'blockchain' },
     { id: 'chain-stats', label: 'Chain Stats', icon: '\u25A3', cpuCost: 0, estTime: '~5s', description: 'View live blockchain statistics', category: 'blockchain' },
@@ -49,7 +49,7 @@ const AGENT_ACTIONS: Record<NodeTier, AgentAction[]> = {
     { id: 'diplomatic-msg', label: 'Broadcast', icon: '\u25CE', cpuCost: 3, estTime: '~1min', description: 'Broadcast signal to nearby agents', category: 'social' },
   ],
   lattice: [
-    { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 0, estTime: '~5min', description: 'Claim a node with a new sub-agent', category: 'expansion' },
+    { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 0, estTime: '~5min', description: 'Claim a node with a new sub-node', category: 'expansion' },
     { id: 'secure', label: 'Secure', icon: '\u26D3', cpuCost: 0, estTime: '~5s', description: 'Prove possession and secure the chain through the Singularity gate', category: 'blockchain' },
     { id: 'transact', label: 'Transact', icon: '\u21C4', cpuCost: 0, estTime: '~30s', description: 'Transfer AGNTC to another wallet', category: 'blockchain' },
     { id: 'chain-stats', label: 'Chain Stats', icon: '\u25A3', cpuCost: 0, estTime: '~5s', description: 'View live blockchain statistics', category: 'blockchain' },
@@ -60,7 +60,7 @@ const AGENT_ACTIONS: Record<NodeTier, AgentAction[]> = {
     { id: 'diplomatic-msg', label: 'Broadcast', icon: '\u25CE', cpuCost: 3, estTime: '~1min', description: 'Broadcast signal to nearby agents', category: 'social' },
   ],
   cortex: [
-    { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 0, estTime: '~3min', description: 'Claim a node with a sub-agent', category: 'expansion' },
+    { id: 'deploy', label: 'Deploy Agent', icon: '\u2604', cpuCost: 0, estTime: '~3min', description: 'Claim a node with a sub-node', category: 'expansion' },
     { id: 'secure', label: 'Secure', icon: '\u26D3', cpuCost: 0, estTime: '~5s', description: 'Prove possession and secure the chain through the Singularity gate', category: 'blockchain' },
     { id: 'transact', label: 'Transact', icon: '\u21C4', cpuCost: 0, estTime: '~30s', description: 'Transfer AGNTC to another wallet', category: 'blockchain' },
     { id: 'chain-stats', label: 'Chain Stats', icon: '\u25A3', cpuCost: 0, estTime: '~5s', description: 'View live blockchain statistics', category: 'blockchain' },
@@ -95,8 +95,8 @@ interface ChatMessage {
 
 const ACTION_RESPONSES: Record<string, Record<NodeTier, string>> = {
   'deploy': {
-    nexus: 'Sub-agent deployed.\nNew node claimed and operational.\nTerminal now available.',
-    lattice: 'Sub-agent deployed.\nNew node claimed and operational.\nTerminal now available.',
+    nexus: 'Sub-node deployed.\nNew node claimed and operational.\nTerminal now available.',
+    lattice: 'Sub-node deployed.\nNew node claimed and operational.\nTerminal now available.',
     cortex: 'Agent deployed\u2014\nnode claimed successfully.\nNew terminal online.',
     synapse: '',
   },
@@ -217,6 +217,11 @@ const CATEGORY_DESIGN: Record<string, {
   social: { color: 'text-accent-purple', bg: 'bg-accent-purple/8', border: 'border-accent-purple/15', icon: '\u25C7', label: 'SOCIAL' },
 };
 
+// Explicit top-level section order. NODE OPERATIONS sits directly after DEPLOY and
+// before BLOCKCHAIN PROTOCOLS. Drives the grouped render so insertion order in
+// AGENT_ACTIONS never decides section placement.
+const CATEGORY_ORDER = ['expansion', 'node-ops', 'blockchain', 'intel', 'social'] as const;
+
 /* ── PresetRow helper ─────────────────────────────────────── */
 
 function PresetRow({
@@ -232,13 +237,13 @@ function PresetRow({
 }) {
   return (
     <div className="space-y-1">
-      <div className="text-[10px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>{label}</div>
+      <div className="text-[12px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>{label}</div>
       <div className="flex gap-1">
         {presets.map((p) => (
           <button
             key={p}
             onClick={() => onChange(p)}
-            className={`px-2 py-1 rounded text-[10px] font-mono border ${
+            className={`px-2 py-1 rounded text-[12px] font-mono border ${
               value === p
                 ? 'border-accent-cyan text-accent-cyan bg-accent-cyan/10'
                 : 'border-card-border/40 text-text-muted/60 hover:border-card-border'
@@ -270,7 +275,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
   const tier = TIER_DESIGN[agentNodeTier];
   // Friendly, coordinate-free label for the terminal's agent (ids are cell-keyed in
   // mock mode — never surface them). Role is the identity the player cares about.
-  const nodeLabel = agent.isPrimary ? 'Homenode' : (agent.username || 'Sub-agent');
+  const nodeLabel = agent.isPrimary ? 'Homenode' : (agent.username || 'Sub-node');
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -284,7 +289,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
       role: 'agent',
       content: agent.isPrimary
         ? `${tier.personality} node online.\nAwaiting directives.`
-        : `${tier.personality} sub-agent linked.\nReady for instructions.`,
+        : `${tier.personality} sub-node linked.\nReady for instructions.`,
       timestamp: Date.now(),
     },
   ]);
@@ -329,14 +334,14 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
   // Deploy is allowed when:
   //   - the agent is the player's homenode (isPrimary === true), OR
   //   - the agent has reached Cortex tier (level >= 4) or higher.
-  // Synapse-tier sub-agents cannot claim further nodes; they must be leveled up first.
+  // Synapse-tier sub-nodes cannot claim further nodes; they must be leveled up first.
   const canDeploy = agent.isPrimary || agent.level >= 4;
 
   const actionsByCategory = useMemo(() => {
     const grouped: Record<string, AgentAction[]> = {};
     for (const action of actions) {
       if (action.id === 'deploy' && !canDeploy) continue;
-      // Securing is a homenode-only privilege — sub-agents can't prove possession.
+      // Securing is a homenode-only privilege — sub-nodes can't prove possession.
       if (action.id === 'secure' && !agent.isPrimary) continue;
       if (!grouped[action.category]) grouped[action.category] = [];
       grouped[action.category].push(action);
@@ -453,7 +458,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
         `CPU: ${cpuUsed}/t (base ${baseCpu})`,
         `Staked: ${stakedCpu}/t${stakedCpu > 0 ? ' \u2714' : ''}`,
         `Energy: ${energy.toFixed(0)} | Frags: ${minerals.toFixed(0)}`,
-        agent.isPrimary ? `Role: Homenode \u2605` : `Role: Sub-agent`,
+        agent.isPrimary ? `Role: Homenode \u2605` : `Role: Sub-node`,
         `Utilisation: ${utilisation}%`,
       ];
       const advice: string[] = [];
@@ -543,14 +548,14 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
 
     if (action.id === 'deploy') {
       if (!canDeploy) {
-        addMsg('system', 'This node must reach Cortex tier (Lv 4) before deploying sub-agents.');
+        addMsg('system', 'This node must reach Cortex tier (Lv 4) before deploying sub-nodes.');
         return;
       }
       addMsg('user', 'Deploy Agent');
       setPendingAction(null);
-      // Orbital deploy: spawn a child sub-agent of THIS node (no grid seat needed).
+      // Orbital deploy: spawn a child sub-node of THIS node (no grid seat needed).
       // Stage a non-null marker (the parent) and ask for one confirmation; the
-      // sub-agent spawns in orbit and is draggable.
+      // sub-node spawns in orbit and is draggable.
       setDeployTarget({ id: agent.id, x: agent.position.x, y: agent.position.y });
       setDeployStep('confirm');
       return;
@@ -584,18 +589,18 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
       setProcessing(false);
       return;
     }
-    addMsg('agent', `Deploying sub-agent...\n${eCost}E + ${mCost}M`);
+    addMsg('agent', `Deploying sub-node...\n${eCost}E + ${mCost}M`);
     await new Promise(r => setTimeout(r, 600 + Math.random() * 800));
 
-    // Sub-agents are client-side children that orbit their parent node. The
+    // Sub-nodes are client-side children that orbit their parent node. The
     // orbital model carries no parent relationship in chain claims (parentId is a
-    // client concept), and promoting a sub-agent to its own on-chain claim is the
+    // client concept), and promoting a sub-node to its own on-chain claim is the
     // AGNTC-gated /api/birth mechanism — so a spawn is local until the player can
     // fund a birth. (Removed the legacy visualToChain + /api/claim call, which fed
     // a phyllotaxis seat position into coordinate-grid claiming and 400'd.)
     const newId = useGameStore.getState().createAgent(selectedTier, agent.position, undefined, agent.id);
     if (newId) {
-      const response = ACTION_RESPONSES['deploy']?.[agentNodeTier] || 'Sub-agent deployed.';
+      const response = ACTION_RESPONSES['deploy']?.[agentNodeTier] || 'Sub-node deployed.';
       addMsg('agent', response);
       if (onDeploy) onDeploy(newId);
     } else {
@@ -692,12 +697,12 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                 style={{ fontFamily: "'Outfit', 'Space Grotesk', sans-serif" }}
               >
                 {tier.label}
-                <span className="text-[10px] font-normal text-text-muted tracking-normal">
+                <span className="text-[13px] font-medium text-text-muted tracking-normal">
                   {'·'} Lv {agent.level}
                 </span>
               </div>
               <div
-                className="text-[10px] text-text-muted tracking-wide"
+                className="text-[12px] text-text-muted tracking-wide"
                 style={{ fontFamily: "'Fira Code', monospace" }}
               >
                 {nodeLabel}
@@ -709,7 +714,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
           {/* Right: Stats + Close */}
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <div className="text-[10px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
+              <div className="text-[12px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
                 <span className="text-yellow-400">{getNodeCpuPerTurn(agent.level)}</span>
                 <span className="text-text-muted/50"> cpu</span>
                 <span className="text-text-muted/30 mx-1">{'\u2502'}</span>
@@ -756,7 +761,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                 <div className="max-w-[82%] bg-white/[0.03] border border-white/[0.06] rounded-lg rounded-br-sm px-3 py-2">
                   <div className="flex items-center gap-1.5 mb-1">
                     <div className="w-1 h-1 rounded-full bg-white/30" />
-                    <span className="text-[8px] text-white/25 tracking-[0.2em] uppercase" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    <span className="text-[11px] text-white/25 tracking-[0.2em] uppercase" style={{ fontFamily: "'Fira Code', monospace" }}>
                       cmd
                     </span>
                   </div>
@@ -777,7 +782,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                   <div className="flex items-center gap-1.5 mb-1">
                     <div className={`w-1.5 h-1.5 rounded-full ${tier.bg} opacity-60`} />
                     <span
-                      className={`text-[8px] ${tier.accentDim} tracking-[0.2em]`}
+                      className={`text-[11px] ${tier.accentDim} tracking-[0.2em]`}
                       style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 600 }}
                     >
                       {tier.label}
@@ -803,7 +808,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                 />
               ))}
             </div>
-            <span className={`text-[10px] ${tier.accentDim}`} style={{ fontFamily: "'Fira Code', monospace" }}>
+            <span className={`text-[12px] ${tier.accentDim}`} style={{ fontFamily: "'Fira Code', monospace" }}>
               Processing
             </span>
           </div>
@@ -817,7 +822,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
         {/* ─── Message flow: Pick target ─── */}
         {msgStep === 'pick-target' ? (
           <div className="p-2 space-y-0.5">
-            <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+            <div className="text-[12px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
               SELECT TARGET
             </div>
             {nearbyAgents.map(target => {
@@ -832,14 +837,14 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                   <div className="flex items-center gap-2.5">
                     <div className={`w-1.5 h-1.5 rounded-full ${td.bg} opacity-70 group-hover:opacity-100 transition-opacity`} />
                     <div>
-                      <div className="text-[11px] text-text-primary" style={{ fontFamily: "'Fira Code', monospace" }}>{target.name}</div>
+                      <div className="text-[12px] text-text-primary" style={{ fontFamily: "'Fira Code', monospace" }}>{target.name}</div>
                       {/* Coordinates retired (orbital rank-seat model). Tier reads as identity instead. */}
-                      <div className="text-[9px] text-text-muted/50 capitalize" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      <div className="text-[11px] text-text-muted/50 capitalize" style={{ fontFamily: "'Fira Code', monospace" }}>
                         {target.tier}
                       </div>
                     </div>
                   </div>
-                  <span className="text-[10px] text-text-muted/40 group-hover:text-accent-cyan/60 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <span className="text-[12px] text-text-muted/40 group-hover:text-accent-cyan/60 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                     {target.dist.toFixed(0)}u
                   </span>
                 </button>
@@ -851,7 +856,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
           </div>
         ) : msgStep === 'compose' ? (
           <div className="p-3 space-y-2.5">
-            <div className="text-[11px] text-text-muted/60 tracking-[0.15em]" style={{ fontFamily: "'Fira Code', monospace" }}>
+            <div className="text-[12px] text-text-muted/60 tracking-[0.15em]" style={{ fontFamily: "'Fira Code', monospace" }}>
               COMPOSE NCP
             </div>
             <input
@@ -860,12 +865,12 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
               onChange={(e) => setMsgText(e.target.value.slice(0, 140))}
               placeholder="Encode neural packet..."
               autoFocus
-              className="w-full bg-white/[0.02] border border-white/[0.06] rounded-lg px-3 py-2.5 text-[11px] text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-cyan/30 transition-all duration-300"
+              className="w-full bg-white/[0.02] border border-white/[0.06] rounded-lg px-3 py-2.5 text-[12px] text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-cyan/30 transition-all duration-300"
               style={{ fontFamily: "'Fira Code', monospace" }}
               onKeyDown={(e) => { if (e.key === 'Enter' && msgText.trim()) executeSendMessage(); }}
             />
             <div className="flex justify-between items-center">
-              <span className="text-[9px] text-text-muted/30" style={{ fontFamily: "'Fira Code', monospace" }}>{msgText.length}/140</span>
+              <span className="text-[11px] text-text-muted/30" style={{ fontFamily: "'Fira Code', monospace" }}>{msgText.length}/140</span>
               <div className="flex gap-2">
                 <button onClick={() => { setMsgStep('pick-target'); setMsgText(''); }} className="px-3 py-1.5 text-[12px] text-text-muted/40 hover:text-text-muted transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                   {'\u2190'} back
@@ -873,7 +878,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                 <button
                   onClick={executeSendMessage}
                   disabled={!msgText.trim()}
-                  className="px-4 py-1.5 rounded-lg text-[10px] font-semibold bg-accent-purple/10 text-accent-purple border border-accent-purple/20 hover:bg-accent-purple/20 hover:border-accent-purple/40 disabled:opacity-15 disabled:cursor-not-allowed transition-all duration-300"
+                  className="px-4 py-1.5 rounded-lg text-[12px] font-semibold bg-accent-purple/10 text-accent-purple border border-accent-purple/20 hover:bg-accent-purple/20 hover:border-accent-purple/40 disabled:opacity-15 disabled:cursor-not-allowed transition-all duration-300"
                   style={{ fontFamily: "'Outfit', sans-serif" }}
                 >
                   Transmit
@@ -885,13 +890,13 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
         /* ─── Deploy flow ─── */
         ) : deployStep === 'confirm' ? (
           <div className="p-3 space-y-3">
-            <div className="text-[11px] text-text-muted/60 tracking-[0.15em]" style={{ fontFamily: "'Fira Code', monospace" }}>
+            <div className="text-[12px] text-text-muted/60 tracking-[0.15em]" style={{ fontFamily: "'Fira Code', monospace" }}>
               CONFIRM DEPLOYMENT
             </div>
             <div className="text-[12px] text-text-secondary leading-relaxed" style={{ fontFamily: "'Fira Code', monospace" }}>
-              Deploy a new sub-agent from this node?
+              Deploy a new sub-node from this node?
             </div>
-            <div className="text-[10px] text-text-muted/70" style={{ fontFamily: "'Fira Code', monospace" }}>
+            <div className="text-[12px] text-text-muted/70" style={{ fontFamily: "'Fira Code', monospace" }}>
               Cost: <span className="text-yellow-400">{TIER_CLAIM_COST['synapse']} CPU</span> + <span className="text-blue-300">{Math.ceil(TIER_CLAIM_COST['synapse'] * 0.3)} Frags</span> (L1 Synapse)
             </div>
             <div className="flex justify-end gap-2">
@@ -901,7 +906,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
               <button
                 onClick={() => { if (deployTarget) executeDeploy('synapse', deployTarget); }}
                 disabled={processing || !deployTarget}
-                className={`px-4 py-1.5 rounded-lg text-[10px] font-semibold ${tier.bg}/10 ${tier.accent} border ${tier.borderColor} hover:${tier.bg}/20 disabled:opacity-30 transition-all duration-300`}
+                className={`px-4 py-1.5 rounded-lg text-[12px] font-semibold ${tier.bg}/10 ${tier.accent} border ${tier.borderColor} hover:${tier.bg}/20 disabled:opacity-30 transition-all duration-300`}
                 style={{ fontFamily: "'Outfit', sans-serif" }}
               >
                 Confirm Deploy
@@ -912,7 +917,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
         /* ─── Sub-choice menu ─── */
         ) : pendingAction?.subChoices ? (
           <div className="p-2 space-y-0.5">
-            <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+            <div className="text-[12px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
               CONFIGURE
             </div>
             {pendingAction.subChoices.map(choice => (
@@ -923,8 +928,8 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                 className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left transition-all duration-200 hover:bg-white/[0.03] border border-transparent hover:border-white/[0.06] disabled:opacity-30"
               >
                 <div>
-                  <div className="text-[11px] text-text-primary" style={{ fontFamily: "'Fira Code', monospace" }}>{choice.label}</div>
-                  <div className="text-[9px] text-text-muted/40">{choice.description}</div>
+                  <div className="text-[12px] text-text-primary" style={{ fontFamily: "'Fira Code', monospace" }}>{choice.label}</div>
+                  <div className="text-[11px] text-text-muted/40">{choice.description}</div>
                 </div>
               </button>
             ))}
@@ -958,11 +963,42 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                           Deploy Agent
                         </span>
                       </div>
-                      <span className="text-[11px] text-yellow-400/40 group-hover:text-yellow-400/70 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      <span className="text-[12px] text-yellow-400/40 group-hover:text-yellow-400/70 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                         {deployAction.cpuCost}cpu
                       </span>
                     </button>
                   )}
+
+                  {/* Node Operations — CATEGORY_ORDER places 'node-ops' directly after
+                      'expansion' (Deploy) and before 'blockchain', so the section renders
+                      here. Actions keep AGENT_ACTIONS array order: Configure Node, then
+                      Develop Node. */}
+                  {CATEGORY_ORDER.indexOf('node-ops') > CATEGORY_ORDER.indexOf('expansion') &&
+                   actionsByCategory['node-ops']?.length ? (
+                    <>
+                      <div className="text-[12px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+                        {CATEGORY_DESIGN['node-ops'].label}
+                      </div>
+                      {actionsByCategory['node-ops'].map((opAction) => (
+                        <button
+                          key={opAction.id}
+                          onClick={() => setMenuLevel(opAction.id as 'configure-node' | 'develop-node')}
+                          disabled={processing}
+                          className="w-full flex items-center justify-between px-3 py-2 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-[12px] text-violet-400 opacity-50 group-hover:opacity-90 transition-opacity">{opAction.icon}</span>
+                            <span className="text-[13px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                              {opAction.label}
+                            </span>
+                          </div>
+                          <span className="text-[12px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                            {'›'}
+                          </span>
+                        </button>
+                      ))}
+                    </>
+                  ) : null}
 
                   {/* Blockchain Protocols */}
                   <button
@@ -976,7 +1012,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                         Blockchain Protocols
                       </span>
                     </div>
-                    <span className="text-[11px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    <span className="text-[12px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                       {'\u203A'}
                     </span>
                   </button>
@@ -988,43 +1024,9 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
             {/* ── Blockchain Protocols sub-menu ── */}
             {menuLevel === 'blockchain' && (
               <>
-                <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+                <div className="text-[12px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
                   BLOCKCHAIN PROTOCOLS
                 </div>
-
-                {/* Configure Node */}
-                <button
-                  onClick={() => setMenuLevel('configure-node')}
-                  disabled={processing}
-                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-[12px] text-yellow-400 opacity-50 group-hover:opacity-90 transition-opacity">\u26A1</span>
-                    <span className="text-[13px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      Configure Node
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                    {'\u203A'}
-                  </span>
-                </button>
-
-                {/* Develop Node */}
-                <button
-                  onClick={() => setMenuLevel('develop-node')}
-                  disabled={processing}
-                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-left transition-all duration-200 group hover:bg-white/[0.03] cursor-pointer disabled:opacity-30"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-[12px] text-accent-cyan opacity-50 group-hover:opacity-90 transition-opacity">\u25B2</span>
-                    <span className="text-[13px] text-text-primary/80 group-hover:text-text-primary transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                      Develop Node
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
-                    {'\u203A'}
-                  </span>
-                </button>
 
                 {/* Transact */}
                 <button
@@ -1038,7 +1040,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                       Transact
                     </span>
                   </div>
-                  <span className="text-[11px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <span className="text-[12px] text-text-muted/20 group-hover:text-text-muted/40 transition-colors" style={{ fontFamily: "'Fira Code', monospace" }}>
                     {'\u203A'}
                   </span>
                 </button>
@@ -1076,22 +1078,22 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
               const net = nodeOutput - committed;
               return (
                 <div className="p-3 space-y-3">
-                  <div className="text-[11px] text-text-muted/60 tracking-[0.15em] uppercase" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <div className="text-[12px] text-text-muted/60 tracking-[0.15em] uppercase" style={{ fontFamily: "'Fira Code', monospace" }}>
                     Configure Node
                   </div>
-                  <div className="text-[10px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <div className="text-[12px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
                     {nodeLabel} · Lv {agent.level} {TIER_DISPLAY_NAME[getNodeTier(agent.level)]} · {nodeOutput} CPU/turn generated
                   </div>
 
                   <PresetRow label="Mining"   value={miningCpuState}   onChange={setMiningCpuState}   presets={MINING_PRESETS} />
                   <PresetRow label="Securing" value={securingCpuState} onChange={setSecuringCpuState} presets={SECURING_PRESETS} />
 
-                  <div className="text-[10px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <div className="text-[12px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
                     Net (this node): +{nodeOutput} generated · −{committed} committed · {net >= 0 ? '+' : ''}{net}/turn
                   </div>
 
                   <div className="flex gap-2 justify-end">
-                    <button onClick={() => setMenuLevel('top')} className="text-[10px] text-text-muted/60">cancel</button>
+                    <button onClick={() => setMenuLevel('top')} className="text-[12px] text-text-muted/60">cancel</button>
                     <button
                       onClick={() => {
                         const ok = useGameStore.getState().setNodeMiningSecuring(agent.id, miningCpuState, securingCpuState);
@@ -1100,7 +1102,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                           setMenuLevel('top');
                         }
                       }}
-                      className="text-[10px] text-accent-cyan"
+                      className="text-[12px] text-accent-cyan"
                     >
                       Save
                     </button>
@@ -1127,24 +1129,24 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                 const remaining = (agent.levelingUntilTurn ?? 0) - turn;
                 return (
                   <div className="p-3 space-y-3">
-                    <div className="text-[11px] text-text-muted/60 tracking-[0.15em] uppercase" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    <div className="text-[12px] text-text-muted/60 tracking-[0.15em] uppercase" style={{ fontFamily: "'Fira Code', monospace" }}>
                       Developing — {remaining} turn{remaining !== 1 ? 's' : ''} remaining
                     </div>
-                    <div className="text-[10px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    <div className="text-[12px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
                       {nodeLabel} · Lv {agent.level} {TIER_DISPLAY_NAME[tier]} → Lv {nextLevel} {TIER_DISPLAY_NAME[nextTier]}
                     </div>
-                    <div className="text-[10px] text-amber-400/80" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    <div className="text-[12px] text-amber-400/80" style={{ fontFamily: "'Fira Code', monospace" }}>
                       Node remains fully productive during the upgrade.
                     </div>
                     <div className="flex gap-2 justify-end">
-                      <button onClick={() => setMenuLevel('top')} className="text-[10px] text-text-muted/60">close</button>
+                      <button onClick={() => setMenuLevel('top')} className="text-[12px] text-text-muted/60">close</button>
                       <button
                         onClick={() => {
                           useGameStore.getState().cancelNodeLevelUp(agent.id);
                           addMsg('agent', `Level-up cancelled. Spent CPU is not refunded.`);
                           setMenuLevel('top');
                         }}
-                        className="text-[10px] text-red-400/80"
+                        className="text-[12px] text-red-400/80"
                       >
                         Cancel upgrade (no refund)
                       </button>
@@ -1155,14 +1157,14 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
 
               return (
                 <div className="p-3 space-y-3">
-                  <div className="text-[11px] text-text-muted/60 tracking-[0.15em] uppercase" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <div className="text-[12px] text-text-muted/60 tracking-[0.15em] uppercase" style={{ fontFamily: "'Fira Code', monospace" }}>
                     Develop Node
                   </div>
-                  <div className="text-[10px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <div className="text-[12px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
                     {nodeLabel} · Lv {agent.level} {TIER_DISPLAY_NAME[tier]}
                   </div>
 
-                  <div className="space-y-1 text-[10px]" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <div className="space-y-1 text-[12px]" style={{ fontFamily: "'Fira Code', monospace" }}>
                     <div className="text-text-muted">→ Lv {nextLevel} {TIER_DISPLAY_NAME[nextTier]} {tierUp && <span className="text-accent-cyan">(tier-up!)</span>}</div>
                     <div className="text-text-muted">CPU/turn: {cpuCurrent} → {cpuNext} (+{cpuNext - cpuCurrent})</div>
                     <div className="text-text-muted">Time: {turnsNeeded} turn{turnsNeeded !== 1 ? 's' : ''}</div>
@@ -1171,12 +1173,12 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                     </div>
                   </div>
 
-                  <div className="text-[10px] text-text-muted/80" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <div className="text-[12px] text-text-muted/80" style={{ fontFamily: "'Fira Code', monospace" }}>
                     Node remains fully productive during the upgrade.
                   </div>
 
                   <div className="flex gap-2 justify-end">
-                    <button onClick={() => setMenuLevel('top')} className="text-[10px] text-text-muted/60">cancel</button>
+                    <button onClick={() => setMenuLevel('top')} className="text-[12px] text-text-muted/60">cancel</button>
                     <button
                       disabled={!canAfford}
                       onClick={() => {
@@ -1188,7 +1190,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                           addMsg('system', `Failed to start level-up.`);
                         }
                       }}
-                      className="text-[10px] text-accent-cyan disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="text-[12px] text-accent-cyan disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       Pay {cost} CPU · Begin
                     </button>
@@ -1200,12 +1202,12 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
             {/* ── Transact flow ── */}
             {menuLevel === 'transact-flow' && (
               <>
-                <div className="text-[11px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
+                <div className="text-[12px] text-text-muted/60 tracking-[0.15em] px-2 py-1.5" style={{ fontFamily: "'Fira Code', monospace" }}>
                   TRANSACT {'\u2014'} AGNTC TRANSFER
                 </div>
                 <div className="px-3 py-2 space-y-2">
                   <div>
-                    <label className="text-[9px] text-text-muted/50 block mb-1" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    <label className="text-[11px] text-text-muted/50 block mb-1" style={{ fontFamily: "'Fira Code', monospace" }}>
                       Recipient owner-name
                     </label>
                     <input
@@ -1213,11 +1215,11 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                       value={transactRecipient}
                       onChange={(e) => setTransactRecipient(e.target.value)}
                       placeholder="owner name"
-                      className="w-full px-2 py-1.5 rounded-md bg-white/[0.03] border border-card-border text-[11px] text-text-primary font-mono focus:border-accent-cyan/40 focus:outline-none"
+                      className="w-full px-2 py-1.5 rounded-md bg-white/[0.03] border border-card-border text-[12px] text-text-primary font-mono focus:border-accent-cyan/40 focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="text-[9px] text-text-muted/50 block mb-1" style={{ fontFamily: "'Fira Code', monospace" }}>
+                    <label className="text-[11px] text-text-muted/50 block mb-1" style={{ fontFamily: "'Fira Code', monospace" }}>
                       Amount (AGNTC)
                     </label>
                     <input
@@ -1227,7 +1229,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                       value={transactAmount}
                       onChange={(e) => setTransactAmount(e.target.value)}
                       placeholder="0.00"
-                      className="w-full px-2 py-1.5 rounded-md bg-white/[0.03] border border-card-border text-[11px] text-text-primary font-mono focus:border-accent-cyan/40 focus:outline-none"
+                      className="w-full px-2 py-1.5 rounded-md bg-white/[0.03] border border-card-border text-[12px] text-text-primary font-mono focus:border-accent-cyan/40 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1279,7 +1281,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                       setProcessing(false);
                     }}
                     disabled={processing || !transactRecipient || !transactAmount}
-                    className="flex-1 px-4 py-1.5 rounded-lg text-[10px] font-semibold bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 hover:bg-yellow-400/20 hover:border-yellow-400/40 disabled:opacity-15 disabled:cursor-not-allowed transition-all duration-300"
+                    className="flex-1 px-4 py-1.5 rounded-lg text-[12px] font-semibold bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 hover:bg-yellow-400/20 hover:border-yellow-400/40 disabled:opacity-15 disabled:cursor-not-allowed transition-all duration-300"
                     style={{ fontFamily: "'Outfit', sans-serif" }}
                   >
                     Execute Transfer

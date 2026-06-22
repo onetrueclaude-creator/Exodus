@@ -81,7 +81,7 @@ export const SKILL_TREES: Record<SkillCategory, SkillItem[]> = {
     },
     {
       id: 'exp-2', category: 'expansion',
-      name: 'Rapid Deployment', description: 'Deploy sub-agents with reduced cooldown',
+      name: 'Rapid Deployment', description: 'Deploy sub-nodes with reduced cooldown',
       tierRequired: 'cortex', prerequisiteResearchIds: ['inf-1'],
       effect: '-50% deploy cooldown',
     },

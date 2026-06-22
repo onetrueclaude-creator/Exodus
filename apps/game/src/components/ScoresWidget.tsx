@@ -13,7 +13,7 @@ export default function ScoresWidget() {
 
   return (
     <div className="absolute top-10 right-2 z-[25] w-[160px] bg-background-light/90 border border-card-border rounded-lg p-3">
-      <div className="text-[10px] font-bold tracking-wider text-text-muted mb-2">
+      <div className="text-[12px] font-bold tracking-wider text-text-muted mb-2">
         SCORES
       </div>
       <div className="space-y-1.5">
@@ -55,12 +55,12 @@ function ScoreRow({
 }) {
   return (
     <div className="flex justify-between items-center gap-2">
-      <span className="text-[10px] flex items-center gap-1 text-text-muted/60">
+      <span className="text-[12px] flex items-center gap-1 text-text-muted/60">
         <span className={iconClass}>{icon}</span>
         {label}
       </span>
       <span className="flex items-center gap-1.5">
-        <span className={`text-[11px] font-mono ${valueClass} tabular-nums`}>
+        <span className={`text-[12px] font-mono ${valueClass} tabular-nums`}>
           {value.toLocaleString()}
         </span>
         <DeltaFlash resourceKey={deltaKey} />

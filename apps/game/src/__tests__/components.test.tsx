@@ -252,8 +252,7 @@ describe('AgentChat — Configure Node + Develop Node', () => {
         initialDeployTarget={undefined}
       />
     );
-    // Navigate: Blockchain Protocols → Configure Node
-    fireEvent.click(screen.getByText('Blockchain Protocols'));
+    // Navigate: Node Operations is a top-level section now — Configure Node directly
     fireEvent.click(screen.getByText('Configure Node'));
     // Preset pills: Mining and Securing sections with value buttons
     expect(screen.getByText(/Mining/i)).toBeInTheDocument();
@@ -273,7 +272,6 @@ describe('AgentChat — Configure Node + Develop Node', () => {
         initialDeployTarget={undefined}
       />
     );
-    fireEvent.click(screen.getByText('Blockchain Protocols'));
     fireEvent.click(screen.getByText('Develop Node'));
     // Line 1323: "Lv {agent.level} {TIER_DISPLAY_NAME[nodeTierCurrent]}" — level 3 = Synapse
     expect(screen.getByText(/Lv 3 Synapse/)).toBeInTheDocument();
@@ -294,7 +292,6 @@ describe('AgentChat — Configure Node + Develop Node', () => {
         initialDeployTarget={undefined}
       />
     );
-    fireEvent.click(screen.getByText('Blockchain Protocols'));
     fireEvent.click(screen.getByText('Develop Node'));
     // Button text: "Pay 360 CPU · Begin" (getLevelUpCost(2) = 360)
     fireEvent.click(screen.getByRole('button', { name: /Pay 360 CPU/i }));
@@ -315,7 +312,6 @@ describe('AgentChat — Configure Node + Develop Node', () => {
         initialDeployTarget={undefined}
       />
     );
-    fireEvent.click(screen.getByText('Blockchain Protocols'));
     fireEvent.click(screen.getByText('Develop Node'));
     // When leveling, the header shows "Developing — X turns remaining"
     expect(screen.getByText(/Developing/i)).toBeInTheDocument();
@@ -453,7 +449,6 @@ describe('AgentChat — L2 gate + cost flow', () => {
     render(
       <AgentChat agent={agent} chainService={null} onClose={() => {}} onDeploy={() => {}} onFocusNode={() => {}} initialDeployTarget={undefined} />
     );
-    fireEvent.click(screen.getByText('Blockchain Protocols'));
     fireEvent.click(screen.getByText('Develop Node'));
     const begin = screen.getByRole('button', { name: /Pay 648 CPU/i });
     expect(begin).toBeDisabled();
@@ -465,7 +460,6 @@ describe('AgentChat — L2 gate + cost flow', () => {
     render(
       <AgentChat agent={agent} chainService={null} onClose={() => {}} onDeploy={() => {}} onFocusNode={() => {}} initialDeployTarget={undefined} />
     );
-    fireEvent.click(screen.getByText('Blockchain Protocols'));
     fireEvent.click(screen.getByText('Develop Node'));
     fireEvent.click(screen.getByRole('button', { name: /Pay 360 CPU/i }));
     const s = useGameStore.getState();
