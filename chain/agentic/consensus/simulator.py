@@ -50,9 +50,10 @@ class ConsensusSimulator:
         total_token = sum(v.token_stake for v in online)
         total_cpu = sum(v.cpu_vpu for v in online)
 
-        # Compute leader schedule (weighted by effective stake)
+        # Compute leader schedule — P1-1 firewall: TOKEN STAKE ONLY (CPU never
+        # weights finality; it earns via effective_stake).
         weights = np.array([
-            v.effective_stake(total_token, total_cpu) for v in online
+            v.finality_weight(total_token) for v in online
         ])
         if weights.sum() > 0:
             weights = weights / weights.sum()

@@ -27,6 +27,21 @@ class Validator:
         norm_cpu = self.cpu_vpu / total_cpu
         return ALPHA * norm_token + BETA * norm_cpu
 
+    def finality_weight(self, total_token: float) -> float:
+        """P1-1 firewall: the consensus FINALITY weight — committee (verifier)
+        and leader selection — is AGNTC **token stake only**.
+
+        Sybil-weak CPU / PoV-derived work MUST NOT influence finality (otherwise
+        cheaply corrupting Proof-of-Vault becomes a cheap path to consensus
+        influence). CPU still earns — via ``effective_stake`` for economic reward
+        weighting and for liveness/admission — just never for finality. Until
+        CPU-stake is PoRep-hardened (mainnet), this is token-only by design.
+        Online-gated.
+        """
+        if not self.online or total_token <= 0:
+            return 0.0
+        return self.token_stake / total_token
+
     def proof_generation_time_s(self, base_time_s: float = 15.0) -> float:
         """Simulated proof generation time based on CPU capacity.
 
