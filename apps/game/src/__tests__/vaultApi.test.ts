@@ -22,7 +22,7 @@ describe('vault API client', () => {
 
     const r = await getVaultRoot();
 
-    expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/api/vault/root');
+    expect(mockFetch).toHaveBeenCalledWith('/api/chain/api/vault/root');
     expect(r).toEqual(body);
   });
 
@@ -32,7 +32,7 @@ describe('vault API client', () => {
 
     const r = await getVaultAssignment(2);
 
-    expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/api/vault/assignment/2');
+    expect(mockFetch).toHaveBeenCalledWith('/api/chain/api/vault/assignment/2');
     expect(r.shards).toEqual([3, 7]);
   });
 
@@ -42,7 +42,7 @@ describe('vault API client', () => {
 
     const r = await getVaultShard(5, 1);
 
-    expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/api/vault/shard/5?wallet_index=1');
+    expect(mockFetch).toHaveBeenCalledWith('/api/chain/api/vault/shard/5?wallet_index=1');
     expect(r.sub_units).toEqual(['aa', 'bb']);
   });
 
@@ -55,7 +55,7 @@ describe('vault API client', () => {
 
     const r = await getVaultChallenge(3, 4);
 
-    expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/api/vault/challenge', {
+    expect(mockFetch).toHaveBeenCalledWith('/api/chain/api/vault/challenge', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ wallet_index: 3, shard_id: 4 }),
@@ -76,7 +76,7 @@ describe('vault API client', () => {
 
     const r = await submitVaultProof(req);
 
-    expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/api/vault/submit-proof', {
+    expect(mockFetch).toHaveBeenCalledWith('/api/chain/api/vault/submit-proof', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req),
@@ -90,7 +90,7 @@ describe('vault API client', () => {
 
     const r = await getVaultStatus(0);
 
-    expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/api/vault/status/0');
+    expect(mockFetch).toHaveBeenCalledWith('/api/chain/api/vault/status/0');
     expect(r.secured_passes).toBe(4);
   });
 

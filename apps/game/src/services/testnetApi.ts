@@ -15,7 +15,9 @@ import type {
   VaultStatusResponse,
 } from '@/types';
 
-const BASE_URL = process.env.NEXT_PUBLIC_TESTNET_API ?? 'http://localhost:8080';
+// Same-origin gateway (B2): the browser never holds the chain URL. The
+// /api/chain/[...path] proxy authenticates and injects the server-resolved wallet.
+const BASE_URL = '/api/chain';
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`);

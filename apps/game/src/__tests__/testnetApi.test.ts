@@ -29,7 +29,7 @@ describe('testnetApi', () => {
       const result = await birthNode(3);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/birth',
+        '/api/chain/api/birth',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -60,7 +60,7 @@ describe('testnetApi', () => {
       const result = await setIntro(0, { x: 10, y: -5 }, 'Hello grid');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/intro',
+        '/api/chain/api/intro',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -92,7 +92,7 @@ describe('testnetApi', () => {
       const result = await sendMessage(0, { x: 10, y: 20 }, { x: 30, y: 40 }, 'Greetings agent');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/message',
+        '/api/chain/api/message',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -121,7 +121,7 @@ describe('testnetApi', () => {
 
       const result = await getMessages(10, 20);
 
-      expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/api/messages/10/20');
+      expect(mockFetch).toHaveBeenCalledWith('/api/chain/api/messages/10/20');
       expect(result).toHaveLength(1);
       expect(result[0].text).toBe('hello');
     });
@@ -138,7 +138,7 @@ describe('testnetApi', () => {
 
       const result = await getWalletBalance(1);
 
-      expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/api/balance/1');
+      expect(mockFetch).toHaveBeenCalledWith('/api/chain/api/balance/1');
       expect(result.spendable_micro_agntc).toBe(1_500_000);
       expect(result.wallet_index).toBe(1);
     });
