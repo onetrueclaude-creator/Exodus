@@ -246,7 +246,7 @@ export default function AccountView() {
                 label="Effective Stake"
                 value={settings ? sciFormat(settings.effective_stake) : '\u2014'}
                 valueClass="text-accent-cyan"
-                sublabel="S = 0.40\u00D7token + 0.60\u00D7CPU"
+                sublabel="S = 0.40×token + 0.60×CPU"
               />
               <StatCard
                 label="Mining Rate"
