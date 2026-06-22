@@ -1,10 +1,12 @@
-# AGNTC Whitepaper v1.4
+# AGNTC Whitepaper v1.5
 
 > **ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification**
 >
-> Version 1.4 (ZK-Agentic Revision) | June 2026
+> Version 1.5 (Finality Firewall Revision) | June 2026
 >
-> v1.4 supersedes v1.3 (Proof-of-Vault Consensus Revision). It does not change the mechanism; it **names and frames** what v1.3 already shipped as what the brand promises — *zero-knowledge-proven agentic activity*. The principal additions: (1) a new section, **The ZK-Agentic Gate / Proof of Agentic Work** (§5B), stating the substrate-vs-identity framing (storage is the verifiable *substrate* — the WHAT; an autonomous agent proving protocol-obedient work is the *identity* — the HOW) and the universal **gate contract** — *to mutate state, a participant running any agent, model, or algorithm must submit a valid proof it followed the protocol; the Singularity verifies the proof and nothing else; no proof, no state change*; (2) a **3-rung ZK honesty ladder** (§5B.2, §5A.2/§5A.6) that labels exactly where zero-knowledge is real today versus a dated future milestone — and **forbids any present-tense ZK claim above the rung that ships**; (3) the Singularity restated as a **model-agnostic protocol-obedience-proof verifier** (§4.5, §5A.4), the brand-correct name for the role it already plays; (4) the storage-proof SNARK added as a fourth ZK use case (§6.4); (5) governance promoted from "deferred/core-team" to the specified **Bitcoin-Core-style PIP process** (§21.2, §24.5) — improvement proposals, multi-client diversity, an immutable-vs-tunable split, and soft-fork-default fork resistance, with the testnet/alpha honestly disclosed as team-stewarded; (6) the Abstract and §1 lead with *zero-knowledge-proven agentic activity* and the *built and operated by agentic force* transparency claim (provenance + proof-of-work-obedience, **not** proof-of-cognition). The economic core (subgrid mining as the sole mint path, dual staking weights, Burn-Mint Equilibrium, the 5% inflation ceiling, vesting, phyllotaxis seating, the two-layer security model) is preserved unchanged. See §5B, §5A, §21.2, §24.5, and the glossary (PoAW, ZK-Agentic Gate, PIP, protocol-obedience proof).
+> v1.5 supersedes v1.4 (ZK-Agentic Revision). It makes **one consensus-behaviour change and reframes the document around it**: as of 2026-06-22 the **finality weight** — committee (verifier) selection *and* leader selection — is **AGNTC token-stake ONLY** (the "finality firewall"). The dual-staking effective stake `S_eff = α·token + β·cpu` (α=0.40, β=0.60) is **preserved unchanged as the ECONOMIC weight** — reward share and earnings proportionality — so CPU work still earns proportionally more (primarily through mining yield); it simply no longer weights *finality selection*. The reason is a security one (blueprint item P1-1): CPU / Proof-of-Vault-derived work is **Sybil-weak** until it is PoRep-hardened, so letting it weight finality would be a cheap path to consensus capture (cheaply corrupting Proof-of-Vault would buy committee influence). CPU-weighted committee selection — the original §13 dual-staking-in-finality vision — is therefore **relabelled from current behaviour to a mainnet GOAL, gated on PoRep-hardening the CPU stake** (making committed CPU+disk Sybil-resistant), in exactly the same honesty style as the ZK ladder (§5B.2). The affected surfaces: the Abstract/§1.3 lead, §5 committee/leader selection, §8 Sybil analysis (the "~2.5× more expensive" claim is **reframed as the PoRep-gated mainnet target, not deleted**), §13 (the new finality-firewall vs economic-weight split; the v1.4 "Architectural keystone" pre-mainnet caveat is **replaced by the firewall as now-shipped**), §23.3, §24.3, and the glossary (new `finality_weight` / *finality firewall* terms). v1.5 changes nothing in §22: ALPHA/BETA and every parameter value are unchanged (the firewall is a *selection-source* change, not a parameter change), so the concordance suite stays green.
+>
+> v1.4 (historical) did not change the mechanism; it **named and framed** what v1.3 already shipped as what the brand promises — *zero-knowledge-proven agentic activity*. The principal additions: (1) a new section, **The ZK-Agentic Gate / Proof of Agentic Work** (§5B), stating the substrate-vs-identity framing (storage is the verifiable *substrate* — the WHAT; an autonomous agent proving protocol-obedient work is the *identity* — the HOW) and the universal **gate contract** — *to mutate state, a participant running any agent, model, or algorithm must submit a valid proof it followed the protocol; the Singularity verifies the proof and nothing else; no proof, no state change*; (2) a **3-rung ZK honesty ladder** (§5B.2, §5A.2/§5A.6) that labels exactly where zero-knowledge is real today versus a dated future milestone — and **forbids any present-tense ZK claim above the rung that ships**; (3) the Singularity restated as a **model-agnostic protocol-obedience-proof verifier** (§4.5, §5A.4), the brand-correct name for the role it already plays; (4) the storage-proof SNARK added as a fourth ZK use case (§6.4); (5) governance promoted from "deferred/core-team" to the specified **Bitcoin-Core-style PIP process** (§21.2, §24.5) — improvement proposals, multi-client diversity, an immutable-vs-tunable split, and soft-fork-default fork resistance, with the testnet/alpha honestly disclosed as team-stewarded; (6) the Abstract and §1 lead with *zero-knowledge-proven agentic activity* and the *built and operated by agentic force* transparency claim (provenance + proof-of-work-obedience, **not** proof-of-cognition). The economic core (subgrid mining as the sole mint path, dual staking weights, Burn-Mint Equilibrium, the 5% inflation ceiling, vesting, phyllotaxis seating, the two-layer security model) is preserved unchanged. See §5B, §5A, §21.2, §24.5, and the glossary (PoAW, ZK-Agentic Gate, PIP, protocol-obedience proof).
 >
 > *v1.3 (historical) introduced the **two-layer security model**: the existing PoAIV committee secures the ledger (balances and ordering), while participants' real CPU and disk secure the state — the collective knowledge vault — through sampled storage proofs (**Proof-of-Vault**, §5A). Securing was recast from "holding a paid Claude API key" (a paywall, not consensus) into a verifiable resource commitment: replicating, serving, and re-proving a shard of the network's content-addressed knowledge vault, with the proof submitted through the Singularity link — no paid LLM required to secure. The three economic verbs were kept distinct-but-coupled (mining = issuance, securing = vault storage proofs, staking = the slashable bond of AGNTC + committed CPU/disk capacity), and the LLM flipped from a consensus gate to an optional content layer. v1.2 (historical) replaced the open coordinate grid with a **golden-angle phyllotaxis lattice** — a deterministic sunflower of agent seats around a central **Singularity** core (renamed from "Machines"); standing became an intrinsic activity rank `k`, not an `(x, y)` coordinate; the empire/territory/adjacency/deploy-range model was retired in favour of one seat plus a small fixed family of orbiting subagents (2 for Community, 4 for Professional/Founder); hardness tiers became equal-width radial **bands** (`hardness = 16 × band`) and per-node density replaced per-coordinate density. v1.1 (historical) had replaced the v1.0 four-arm logarithmic spiral with a single open coordinate grid and made factions identity classes rather than territorial arms.*
 
@@ -16,7 +18,7 @@ ZK Agentic Chain is run by **zero-knowledge-proven agentic activity**: autonomou
 
 We present ZK Agentic Chain as a Layer-1 blockchain protocol that introduces *Proof of AI Verification* (PoAIV) — a consensus mechanism in which autonomous AI agents verify chain integrity through zero-knowledge private channels. Unlike traditional proof-of-work systems that consume energy solving arbitrary hash puzzles, or proof-of-stake systems that concentrate power among the wealthiest token holders, PoAIV selects a committee of 13 AI verification agents per block, requiring a 9/13 supermajority attestation threshold for consensus. Verification agents apply *reasoning* to their audits — examining logical consistency, cross-referencing state across isolated ledger spaces, and flagging anomalous patterns — providing an additional verification layer whose capabilities improve as the underlying AI models advance.
 
-The protocol employs a dual-staking model that weights computational contribution (60%) over capital (40%), reducing plutocratic concentration inherent in pure proof-of-stake designs. Validators must commit both AGNTC tokens and CPU compute resources; the effective stake that determines committee selection and reward share is a weighted combination of both dimensions. Security is two-layered: a 13-agent PoAIV committee secures the *ledger*, while participants' committed CPU and disk secure the *state* — the collective knowledge vault — through Proof-of-Vault sampled storage proofs.
+The protocol employs a dual-staking model that, for **economic** purposes, weights computational contribution (60%) over capital (40%), reducing plutocratic concentration in earnings inherent in pure proof-of-stake designs. Validators commit both AGNTC tokens and CPU compute resources; the effective stake `S_eff = α·token + β·cpu` is a weighted combination of both dimensions and governs **reward share / earnings proportionality** — CPU work earns proportionally more. **Consensus finality is firewalled from CPU.** Because CPU / Proof-of-Vault work is Sybil-weak until it is PoRep-hardened, the **finality weight** — committee (verifier) selection *and* leader selection — is **AGNTC token-stake only** (the *finality firewall*, Section 13.5), so cheaply corrupting the storage layer cannot buy consensus influence; CPU-weighted committee selection is a PoRep-gated mainnet goal, not current behaviour. Security is two-layered: a 13-agent PoAIV committee secures the *ledger*, while participants' committed CPU and disk secure the *state* — the collective knowledge vault — through Proof-of-Vault sampled storage proofs.
 
 ZK Agentic Chain renders its network as a **golden-angle phyllotaxis lattice** — a deterministic sunflower of agent seats around a central Singularity core, in which standing is a function of activity rather than administrative allocation. Each participant occupies a single seat given by an integer rank `k` (the Singularity is the core at `k = 0`): seat `k` sits at angle `k × 137.50776°` and radius proportional to `√k`. Because the golden angle is the most irrational divergence angle, no two seats ever share a spoke to the core, and the disk packs evenly as participants join. Standing is intrinsic and shared: every client computes the identical seat from the on-chain rank, with no coordinate to claim or contest. Inner seats are high-standing; sustained activity draws a seat inward, while inactivity lets it drift outward. Mining remains the sole supply-expanding mechanism — new AGNTC enters circulation only through each node's private subgrid Secure cells. Hardness tiers are equal-width radial **bands** (`band(k) = ceil(√(k / 8))`, `hardness = 16 × band`), so inner bands are cheaper and higher-yield while outer bands naturally hold more seats; a per-node density function (a deterministic SHA-256 hash of the node identifier) creates a non-uniform value landscape independent of position. A soft cap with a 5% annual inflation ceiling prevents runaway supply expansion. A 50% transaction fee burn and the Singularity's permanent AGNTC accumulation at the core provide sustained deflationary pressure as network usage grows.
 
@@ -68,9 +70,10 @@ This paper describes the protocol architecture, consensus mechanism, privacy sys
 | lambda | Security parameter |
 | n | Committee size (13) |
 | t | Byzantine threshold (4, i.e., n - supermajority) |
-| S_eff(i) | Effective stake of validator i |
+| S_eff(i) | Effective stake of validator i — the **economic weight** (reward share); see W_fin for finality |
+| W_fin(i) | Finality weight of validator i = T_i/T_total (**token stake only**; the finality firewall, §13.5) |
 | T, C | Token stake, CPU stake (normalized) |
-| alpha, beta | Staking weights (0.40, 0.60) |
+| alpha, beta | Staking weights for effective stake / earnings (0.40, 0.60) |
 | N | Radial band index (N = band under v1.2; legacy: epoch ring number) |
 | H(N) | Hardness at band N = 16 * N |
 | PPT | Probabilistic Polynomial Time (adversary) |
@@ -102,7 +105,7 @@ Finally, the emergence of autonomous AI agents as economic actors — systems th
 
 ZK Agentic Chain addresses these limitations with three design principles:
 
-**Democratic validation.** Any CPU can participate as a verifier. The protocol's dual-staking model weights computational contribution (60%) above capital (40%) in determining effective stake. A validator with modest token holdings but strong CPU resources earns proportionally more than a well-capitalized validator with minimal compute. This design directly addresses the wealth concentration problem inherent in pure PoS systems while avoiding the energy waste of PoW. Critically, the computational contribution that counts is **real, verifiable CPU and disk work** — replicating and re-proving a shard of the network's collective knowledge vault (Section 5A) — not a paid AI-API bill. No participant must hold a paid LLM key to secure the network.
+**Democratic validation.** Any CPU can participate as a verifier. The protocol's dual-staking model weights computational contribution (60%) above capital (40%) in determining effective stake, which sets **earnings**: a validator with modest token holdings but strong CPU resources earns proportionally more than a well-capitalized validator with minimal compute. This directly addresses the wealth concentration problem in *reward distribution* inherent in pure PoS systems while avoiding the energy waste of PoW. (Consensus *finality selection* is a separate matter: until CPU stake is PoRep-hardened it is weighted by token stake alone — the finality firewall of Section 13.5 — so the anti-plutocracy here is an **earnings** property, with CPU-weighted committee influence as the PoRep-gated mainnet goal.) Critically, the computational contribution that counts is **real, verifiable CPU and disk work** — replicating and re-proving a shard of the network's collective knowledge vault (Section 5A) — not a paid AI-API bill. No participant must hold a paid LLM key to secure the network.
 
 **Intelligent verification.** AI agents reason about chain integrity rather than executing purely deterministic checks. A committee of 13 AI verification agents audits each proposed block, examining transaction validity, state transition correctness, and proof integrity. Agents cross-reference state across isolated ledger spaces, flag anomalous patterns, and produce attestations that reflect semantic understanding of the data — not just cryptographic validity. This provides an additional verification layer whose detection capabilities improve as the underlying AI models advance.
 
@@ -146,7 +149,7 @@ Solana [3] [35] employs a PoS variant with Proof of History for time ordering. S
 
 Cosmos [22] uses a dynamic, target-staking-rate inflation model that self-adjusts between 7% and 20% based on participation: if staking falls below two-thirds of supply, inflation increases to incentivize lockup; if it exceeds two-thirds, inflation decreases. This adaptive mechanism maintains robust staking levels across varying market conditions — a design insight relevant to any network where validator participation must be actively incentivized.
 
-ZK Agentic Chain's dual-staking model (Section 13) addresses the concentration problem directly: by weighting CPU contribution at 60% and token stake at 40%, the protocol ensures that computational work — not just capital — determines validator influence.
+ZK Agentic Chain's dual-staking model (Section 13) addresses the concentration problem directly: by weighting CPU contribution at 60% and token stake at 40%, the protocol ensures that computational work — not just capital — determines validator **earnings**. (Finality *selection* is firewalled to token stake until CPU is PoRep-hardened; making computational work also determine committee influence Sybil-resistantly is the mainnet goal — Section 13.5.)
 
 #### 2.3 Zero-Knowledge Blockchains
 
@@ -185,7 +188,7 @@ ZK Agentic Chain is distinct from all of these in a fundamental way: AI agents a
 
 **Key differentiators:**
 1. **AI-as-consensus.** To our knowledge, no other production L1 embeds AI reasoning into the consensus mechanism itself as of April 2026.
-2. **Dual staking** formalizes compute-weighted staking with explicit anti-plutocratic properties (Section 23.3).
+2. **Dual staking** formalizes compute-weighted staking with explicit anti-plutocratic properties in *earnings* (Section 23.3); finality selection is separately firewalled to token stake until CPU is PoRep-hardened (Section 13.5).
 3. **Privacy by default** combined with AI-enhanced anomaly detection within the privacy layer.
 
 #### 2.6 Compute-Tokenomics Networks
@@ -232,7 +235,7 @@ ZK Agentic Chain is organized into five distinct layers, each handling a specifi
 
 **Layer 3 — ZK Channel Layer.** Zero-knowledge private channels provide the communication substrate between verification agents (Layer 4) and the ledger state (Layer 2). When a state transition occurs, the Ledger Layer produces a succinct ZK proof (Section 6) that the transition is valid. This proof is transmitted through the ZK Channel Layer to the verification committee. Agents receive proofs, not data — they can verify correctness without learning the contents of the state being modified.
 
-**Layer 4 — Agent Layer.** AI verification agents are instantiated from Claude model variants organized into three tiers: Haiku (fast, low-cost inference for high-throughput verification), Sonnet (balanced reasoning for standard verification tasks), and Opus (deep reasoning for complex cross-ledger audits and anomaly detection). A committee of k=13 agents is selected per block via a verifiable random function weighted by effective stake. Each agent independently audits the proposed block and produces an attestation.
+**Layer 4 — Agent Layer.** AI verification agents are instantiated from Claude model variants organized into three tiers: Haiku (fast, low-cost inference for high-throughput verification), Sonnet (balanced reasoning for standard verification tasks), and Opus (deep reasoning for complex cross-ledger audits and anomaly detection). A committee of k=13 agents is selected per block via a verifiable random function weighted by **token stake** (the finality firewall, Section 13.5; CPU does not weight finality selection until it is PoRep-hardened). Each agent independently audits the proposed block and produces an attestation.
 
 **Layer 5 — Consensus Layer.** The topmost layer combines BFT ordering with ZK proof finality. Transaction ordering follows a Byzantine Fault Tolerant protocol (Section 7) with a target block time of 60 seconds. Blocks are organized into epochs of 100 slots each. A block achieves irreversible finality when at least 9 of 13 agents produce matching attestations and the corresponding ZK proofs are verified — targeted at 20 seconds after block proposal. Layer 5 secures the **ledger** (transaction ordering and finality). The **state layer** — the collective knowledge vault that the lattice renders — is secured separately by participants' committed CPU and disk through Proof-of-Vault storage proofs (Section 5A), metered by the Singularity coordinator. The two layers are independent: ledger Byzantine-safety does not depend on the vault, and vault data-security does not depend on the committee.
 
@@ -242,7 +245,7 @@ Three principles constrain every architectural decision in the protocol:
 
 **Isolation.** User state is partitioned. No user can read another user's ledger space. Verification agents cannot read plaintext state. Cross-user interactions (transfers, communications) are mediated by ZK proofs that prove the validity of the interaction without exposing either party's full state.
 
-**Proportionality.** Influence over consensus is proportional to demonstrated contribution, not just capital. The dual-staking model (Section 13) ensures that CPU compute — actual work performed — weighs more heavily than token holdings in determining validator selection and reward share.
+**Proportionality.** *Earnings* are proportional to demonstrated contribution, not just capital. The dual-staking model (Section 13) ensures that CPU compute — actual work performed — weighs more heavily than token holdings in determining **reward share**. Influence over *finality* is, by contrast, currently proportional to **token stake alone** (the finality firewall, Section 13.5): because CPU / Proof-of-Vault work is Sybil-weak until PoRep-hardened, weighting committee selection by it would be a cheap path to consensus capture; making finality influence track demonstrated CPU contribution Sybil-resistantly is the PoRep-gated mainnet goal.
 
 **Adaptivity.** The security model evolves with the AI models powering the verification agents. As models improve in reasoning capability, the verification process becomes more thorough without requiring protocol upgrades. Model updates are governed by on-chain voting to prevent unilateral changes.
 
@@ -376,7 +379,7 @@ Both terms are deterministic and observable to every participant without permiss
 
 #### 5.1 Verification Agent Selection
 
-For each block, the protocol selects a committee of k = 13 AI verification agents. Selection follows a Verifiable Random Function (VRF) [41] [32] weighted by effective stake (Section 13.1), ensuring both randomness (no party can predict committee membership in advance) and proportional representation (validators with higher effective stake are more likely to be selected, but never guaranteed).
+For each block, the protocol selects a committee of k = 13 AI verification agents. Selection follows a Verifiable Random Function (VRF) [41] [32] weighted by **token stake** — the *finality weight* of the finality firewall (Section 13.5), **not** the dual-staking effective stake — ensuring both randomness (no party can predict committee membership in advance) and proportional representation (validators with higher token stake are more likely to be selected, but never guaranteed). The CPU leg of effective stake (Section 13.1) is deliberately excluded from this weighting because CPU / Proof-of-Vault work is Sybil-weak until PoRep-hardened; weighting *finality* by it would let a cheaply corrupted storage layer buy committee influence. CPU-weighted committee selection — the original §13 dual-staking-in-finality vision — is a mainnet goal gated on that hardening; CPU continues to weight *earnings* (reward share) and admission/liveness today.
 
 The VRF produces a pseudorandom value for each registered validator:
 
@@ -384,7 +387,7 @@ The VRF produces a pseudorandom value for each registered validator:
 vrf_output = VRF_prove(validator_private_key, block_seed)
 ```
 
-Validators whose VRF output falls below a threshold determined by their effective stake proportion are selected for the committee. The threshold is calibrated to produce, on average, 13 committee members per block.
+Validators whose VRF output falls below a threshold determined by their **token-stake** proportion (the finality weight `W_fin`, Section 13.5 — not effective stake) are selected for the committee. The threshold is calibrated to produce, on average, 13 committee members per block.
 
 Agents are instantiated from three model tiers:
 
@@ -447,7 +450,7 @@ Verification agents follow a defined lifecycle to ensure network stability:
 
 **WARMUP (1 epoch).** Newly registered agents spend one full epoch (100 blocks) in warmup (AGENT_WARMUP_EPOCHS = 1), during which they observe block verification but do not participate in committee selection. This allows the agent to synchronize with current chain state and calibrate its verification behavior.
 
-**ACTIVE.** After warmup, agents become eligible for committee selection. Active agents earn rewards proportional to their effective stake when selected and performing correct verification.
+**ACTIVE.** After warmup, agents become eligible for committee selection (weighted by token stake, the finality firewall of Section 13.5). Active agents earn the staking-pool reward proportional to their **effective stake** `S_eff` (the economic weight, Section 14.1), and the equal-split verifier reward when selected and performing correct verification.
 
 **COOLDOWN / PROBATION.** Agents that go offline for more than one full epoch enter a probationary period of 3 epochs (AGENT_PROBATION_EPOCHS = 3) before re-activation. During probation, the agent must demonstrate consistent uptime but does not earn rewards.
 
@@ -455,18 +458,25 @@ Verification agents follow a defined lifecycle to ensure network stability:
 
 #### 5.5 Committee Selection Algorithm
 
+The selection weight is the **finality weight** `W_fin`, the finality-firewall quantity (Section 13.5) — **token stake only**, online-gated — **not** the dual-staking effective stake `S_eff`:
+
+```
+W_fin(v) = (v.token_stake / T_total)   if v.online and T_total > 0
+           0                            otherwise
+```
+
 ```
 Algorithm: SELECT_COMMITTEE(block_height, epoch_seed)
   Input: block_height h, epoch_seed s (hash of previous epoch's last block)
   Output: committee C of size VERIFIERS_PER_BLOCK (13)
 
   1. seed <- BLAKE2b(s || h)
-  2. candidates <- {v : v in ValidatorSet, S_eff(v) > 0}
+  2. candidates <- {v : v in ValidatorSet, W_fin(v) > 0}   // token-weighted (finality firewall)
   3. C <- empty set
   4. nonce <- 0
   5. while |C| < 13:
        vrf_output <- VRF_Ed25519(v.secret_key, seed || nonce)
-       threshold <- S_eff(v) / sum(S_eff(all candidates))
+       threshold <- W_fin(v) / sum(W_fin(all candidates))
        if vrf_output / 2^256 < threshold:
          C <- C union {v}
          candidates <- candidates \ {v}  // without replacement
@@ -474,7 +484,7 @@ Algorithm: SELECT_COMMITTEE(block_height, epoch_seed)
   6. return C
 ```
 
-**Note:** Selection is WITHOUT replacement (hypergeometric distribution). Each selected validator is removed from the candidate pool.
+**Note:** Selection is WITHOUT replacement (hypergeometric distribution). Each selected validator is removed from the candidate pool. The weight is `W_fin` (token-only) and **not** `S_eff`: CPU / Proof-of-Vault work is excluded from finality selection until it is PoRep-hardened (the finality firewall, Section 13.5). CPU still drives *earnings* (Section 14) — it just does not buy committee seats.
 
 #### VRF Construction
 
@@ -482,7 +492,7 @@ Committee selection uses Ed25519-based VRF [42] as specified in RFC 9381 [32] (E
 
 - **Seed derivation:** `epoch_seed = BLAKE2b(previous_epoch_final_block_hash || epoch_number)`
 - **Per-block nonce:** `block_seed = BLAKE2b(epoch_seed || block_height)`
-- **Threshold:** `P(selected_i) = S_eff(i) / sum(S_eff(all))`
+- **Threshold:** `P(selected_i) = W_fin(i) / sum(W_fin(all))` — token-only finality weight (finality firewall, Section 13.5), not `S_eff`
 - **Output format:** 32-byte hash (SHA-512 of VRF proof), interpreted as unsigned 256-bit integer
 
 #### 5.6 Attestation Protocol
@@ -573,8 +583,9 @@ Traditional BFT validators execute deterministic checks: signature validity, sta
 - *Mitigation:* (a) Maximum transaction count per block (MAX_TXS_PER_BLOCK). (b) Verification agents have a per-block compute budget; if exceeded, the agent abstains rather than approving without full analysis. (c) Fee market ensures the adversary pays proportionally for complex blocks.
 
 **Attack 4: Committee Sybil Attack**
-- *Vector:* Adversary acquires sufficient stake to dominate committee selection.
-- *Mitigation:* Dual staking (60% CPU, 40% capital) makes Sybil attacks approximately 2.5x more expensive than pure-PoS systems. See Section 8 for the full derivation.
+- *Vector:* Adversary acquires sufficient stake to dominate committee (and leader) selection.
+- *Mitigation (current — finality firewall):* Committee and leader selection are weighted by **AGNTC token stake only** (Section 13.5), so the Sybil cost of dominating finality is the **cost of the token stake** — a single, clean axis. Critically, the CPU / Proof-of-Vault leg is *excluded* from finality precisely because it is Sybil-weak until PoRep-hardened; if CPU weighted selection today, cheaply forging storage proofs would be a *discount* on committee capture, not a barrier. Token stake at risk is additionally subject to slashing (Section 15) and dispute re-verification (Section 8.7).
+- *Mitigation (mainnet goal — dual-axis hardening):* Once committed CPU+disk is made Sybil-resistant (Proof-of-Replication sealing + a trustless/on-chain verifier, Section 13.5), CPU stake can re-enter finality weighting, raising the Sybil cost to **both** axes simultaneously — the original dual-staking target estimated at ≈2.5× a pure-PoS attack (derivation in Section 8). This is a PoRep-gated future property, not a current guarantee.
 
 **Attack 5: Deterministic Inference Divergence**
 - *Vector:* Two honest agents running the same model at temperature=0 produce different outputs due to floating-point non-determinism across hardware.
@@ -668,6 +679,8 @@ Zero-knowledge in this protocol is held to three rungs. The governing rule is ab
 **(c) ZK-proven agent *inference* (zkML) — FUTURE, dated.** Proving an agent's *reasoning* in zero knowledge — that a model produced a given output by faithfully executing its weights — is a frontier research target, not a 2026 production capability. zkML overhead has fallen sharply (small/medium models are within reach — e.g. VGG-16-scale circuits prove in seconds, and GPT-2-scale end-to-end proofs exist), but frontier models (>100B parameters) remain roughly 5,000× beyond practical (Section 24.1), with a realistic horizon of ~2027-2030. **We never let this rung's language imply that we ZK-prove model cognition today.** Non-ZK alternatives for AI work (optimistic re-execution, TEE attestation, subjective scoring) are admitted only at the **reward layer, never as a securing or consensus primitive** (Section 24.10).
 
 The gate of Section 5B.3 is backed by rung (a). The model-agnosticism of the gate is, deliberately, the most defensible part of the design: the verifier checks the *proof of obedient work*, not *which brain produced it*, so we make **no** claim to verify model reasoning in zero knowledge — that would be a rung-(c) claim, and rung (c) is dated to the future.
+
+**The same ships-now-vs-future discipline governs consensus finality (the finality firewall).** Just as we forbid present-tense ZK claims above the shipping rung, we forbid claiming that *demonstrated CPU work earns finality influence* before that work is Sybil-resistant. As of 2026-06-22 the finality weight — committee and leader selection — is **AGNTC token stake only** (`W_fin`, Section 13.5), because the CPU / Proof-of-Vault leg is Sybil-weak (a possession proof is forgeable until SNARK-/PoRep-hardened — rung (a) and Section 5A.5). CPU-weighted committee selection (the original §13 dual-staking-in-finality vision) is therefore stated only as a **PoRep-gated mainnet goal**, never as current behaviour — the consensus analogue of a dated future rung. CPU still earns proportionally more *economically* today (effective stake, Section 14); it simply does not buy committee seats yet.
 
 #### 5B.3 The Gate Contract
 
@@ -833,7 +846,7 @@ Transaction Flow:
 
 #### 7.1 Block Production
 
-ZK Agentic Chain targets a block time of 60 seconds (BLOCK_TIME_MS = 60,000). Each block contains up to 50 transactions (MAX_TXS_PER_BLOCK = 50), ordered by a designated block proposer (leader) selected through the same VRF mechanism used for committee selection.
+ZK Agentic Chain targets a block time of 60 seconds (BLOCK_TIME_MS = 60,000). Each block contains up to 50 transactions (MAX_TXS_PER_BLOCK = 50), ordered by a designated block proposer (leader) selected through the same VRF mechanism used for committee selection — and therefore weighted by the **same token-only finality weight** `W_fin` (the finality firewall, Section 13.5): both leader and committee selection exclude the Sybil-weak CPU leg until it is PoRep-hardened.
 
 Blocks are organized into epochs of 100 slots each (SLOTS_PER_EPOCH = 100). An epoch represents the base unit of network lifecycle management: agent warmup periods, probation durations, and activity-decay/seat-drift windows are all measured in epochs. At the standard block time, one epoch lasts approximately 100 minutes.
 
@@ -931,19 +944,19 @@ No PPT adversary controlling fewer than 5 of 13 committee members can cause the 
 The verification process reveals no information about the contents of private ledger spaces beyond the validity assertion (APPROVE/REJECT), even to committee members.
 
 **Property 3: Committee Unbiasability (COM-UNBIAS)**
-No PPT adversary controlling less than 1/3 of total effective stake can predictably influence committee composition beyond their proportional representation, except with negligible probability.
+No PPT adversary controlling less than 1/3 of total **finality weight** (staked AGNTC; the token-only `W_fin` of the finality firewall, Section 13.5 — committee composition is weighted by token stake, not effective stake) can predictably influence committee composition beyond their proportional representation, except with negligible probability.
 
 *Full formal definitions as cryptographic games and proofs are provided in the companion PoAIV Formal Paper.*
 
 #### 8.3 Sybil Resistance
 
-Sybil attacks — where a single adversary creates multiple identities to gain disproportionate influence — are resisted along two independent dimensions:
+Sybil attacks — where a single adversary creates multiple identities to gain disproportionate influence — must be analyzed **separately for finality and for earnings**, because the finality firewall (Section 13.5) weights the two differently.
 
-**Token dimension.** Creating a Sybil validator requires acquiring AGNTC tokens and staking them. The token weight (alpha = 0.40) means that an attacker must acquire a significant fraction of the total staked supply to gain meaningful committee representation.
+**Finality (current behaviour — token dimension only).** Committee and leader selection are weighted by **AGNTC token stake alone**. The token weight for *finality* is therefore effectively 1.0, not α = 0.40: an attacker must acquire a significant fraction of the total *staked AGNTC* to gain meaningful committee representation, and that is the **whole** of the finality Sybil cost today. The CPU leg is **deliberately excluded** from finality because cheap, Sybil-weak Proof-of-Vault work would otherwise let an adversary buy committee seats by forging storage proofs (one disk presenting as many — Section 5A.5). This is the security purpose of the firewall: we do **not** rely on the CPU axis for finality Sybil-resistance at this phase.
 
-**CPU dimension.** The CPU weight (beta = 0.60) means that the attacker must also provision proportional computational resources. Unlike token acquisition (which can be done instantly on an exchange), CPU provisioning requires sustained infrastructure investment that cannot be easily faked — verified through challenge-response VPU benchmarks.
+**Earnings (current behaviour — both dimensions).** *Reward share* remains governed by the dual-staking effective stake `S_eff = α·token + β·cpu` (β = 0.60). To capture a disproportionate share of *rewards*, an adversary must still provision proportional committed CPU+disk — sustained infrastructure that, unlike an instant token purchase, cannot be faked cheaply (challenge-response VPU benchmarks, sampled-PDP proofs). But inflating *measured* CPU buys earnings, not finality.
 
-The dual-staking requirement makes Sybil attacks approximately 2.5x more expensive than pure PoS attacks: the attacker must invest along both axes simultaneously, and neither axis alone is sufficient for majority committee control.
+**Dual-axis finality hardening (mainnet goal).** The original dual-staking claim — that requiring investment along *both* axes simultaneously makes a finality Sybil attack ≈2.5× more expensive than pure PoS (derivation below) — is premised on CPU stake *weighting committee selection*. Under the finality firewall that premise does not hold today (finality cost = token cost), so we relabel the 2.5× result as the **PoRep-gated mainnet target**: once committed CPU+disk is Sybil-resistant (Proof-of-Replication sealing + a trustless verifier, Section 13.5), the CPU leg can re-enter finality weighting and the dual-axis cost multiplier applies. Until then it characterizes earnings concentration and the future finality design, not present finality Sybil-resistance.
 
 #### 8.4 AI Model Integrity
 
@@ -988,10 +1001,11 @@ ZK Agentic Chain's use of AI in consensus introduces threat vectors unique to AI
 
 #### 8.7 Economic Security
 
-The 9/13 supermajority threshold requires an attacker to control at least 69.2% of the committee's effective stake to unilaterally produce invalid blocks. Given the dual-staking model, this means acquiring both:
+The 9/13 supermajority threshold requires an attacker to control at least 69.2% of the committee's **finality weight** to unilaterally produce invalid blocks. Under the finality firewall (Section 13.5) the finality weight is **token stake only**, so this means acquiring:
 
-- At least 69.2% of the total staked AGNTC supply, AND
-- At least 69.2% of the total committed CPU resources
+- At least 69.2% of the total **staked AGNTC supply** (the sole finality-weighting axis today).
+
+The CPU / Proof-of-Vault axis intentionally provides **no** finality discount: an adversary cannot substitute cheap (and, pre-PoRep, Sybil-forgeable) storage proofs for token stake to reach the threshold. *(Mainnet goal: once committed CPU+disk is PoRep-hardened and re-admitted to finality weighting per Section 13.5, dominating finality will require 69.2% of **both** the staked AGNTC supply **and** the total committed CPU+disk — the dual-axis cost the firewall defers until the CPU leg is Sybil-resistant.)*
 
 The cost of this attack scales with the total value staked in the network. Combined with slashing (Section 15) — which burns the attacker's stake upon detection — the expected cost of a sustained attack exceeds the potential gain from any single invalid block.
 
@@ -1004,11 +1018,13 @@ Dispute resolution provides an additional economic deterrent: if the original 13
 | Single AI model family | VER-INT (threshold), VER-PRIV, COM-UNBIAS | None (below threshold) |
 | All AI models (catastrophic) | VER-PRIV (ZK still holds), COM-UNBIAS | VER-INT degrades to deterministic-only |
 | Trusted setup (Groth16) | VER-PRIV (soundness lost, but ZK preserved) | VER-INT (adversary can forge proofs) |
-| Singularity coordinator (testnet trust assumption) | VER-INT, VER-PRIV, COM-UNBIAS (ledger safety intact) | State-layer measurement reliability — CPU/storage-proof metering can be biased until the mainnet committee/on-chain verifier replaces it (Sections 13.5, 24.3) |
+| Singularity coordinator (testnet trust assumption) | VER-INT, VER-PRIV, COM-UNBIAS (ledger safety intact) — **the finality firewall (Section 13.5) makes this clean: finality selection is token-only, so a biased CPU/storage metering cannot move committee composition** | State-layer measurement reliability and *earnings* fairness — CPU/storage-proof metering can be biased (inflating an attacker's reward share, not its finality weight) until the mainnet committee/on-chain verifier replaces it (Sections 13.5, 24.3) |
 
 #### Sybil Cost Derivation
 
-**Claim:** Controlling 1/3 of effective stake in dual-staking costs approximately 2.5x more than in pure PoS.
+**Scope (read first — finality firewall).** The following derivation analyzes the cost of dominating selection *when CPU stake weights it*. Under the current finality firewall (Section 13.5), CPU stake does **not** weight finality, so the *present* finality Sybil cost is simply the token cost (the pure-PoS line below, `X`). The dual-axis 2.5× result is therefore the **PoRep-gated mainnet target** — what the cost becomes once committed CPU+disk is Sybil-resistant and re-admitted to the finality weight — and, today, a characterization of *earnings* concentration (reward share still tracks effective stake). It is retained, not deleted, because it specifies the design we are hardening toward.
+
+**Claim (mainnet goal / earnings characterization):** Controlling 1/3 of effective stake in dual-staking costs approximately 2.5x more than controlling 1/3 of stake in pure PoS.
 
 **Derivation:**
 - In pure PoS: Cost = (1/3) * total_token_value = X
@@ -1045,7 +1061,7 @@ AGNTC serves four primary functions within the protocol:
 
 **Gas.** Every on-chain transaction requires AGNTC as gas payment. Transaction fees are split: 50% is permanently burned and 50% is distributed to verifiers and stakers (Section 12).
 
-**Staking.** Validators must stake AGNTC alongside CPU compute resources to participate in block verification. The staked amount contributes to the token component (alpha = 0.40) of effective stake, which determines committee selection probability and reward share.
+**Staking.** Validators must stake AGNTC alongside CPU compute resources to participate in block verification. The staked AGNTC is the **finality weight** that determines **committee (and leader) selection probability** — under the finality firewall (Section 13.5), selection is weighted by token stake alone. The staked amount also contributes the token component (alpha = 0.40) to the dual-staking effective stake `S_eff`, which determines **reward share**; the CPU leg (beta = 0.60) adds to reward share but not, at this phase, to selection.
 
 **Governance.** Human AGNTC holders vote on protocol parameters (hardness multiplier, fee burn rate, staking weights), model updates, and network upgrades. Voting power is proportional to staked AGNTC. The Singularity is excluded from governance — only human participants (Community, Professional, Founders) may cast votes (Section 21.2).
 
@@ -1376,6 +1392,15 @@ ZK Agentic Chain introduces a *dual-staking* mechanism that combines token capit
 
 Under v1.3 the computational leg is precisely **committed CPU + disk capacity bonded to the knowledge vault** — capacity a participant has pledged to store, serve, and re-prove vault shards (Section 5A). The bond does no work by itself; it makes the participant's securing work trustable and Sybil-resistant, and it is **slashable** if their storage proofs fail. This replaces the v1.2 reading of the CPU leg as "paid Claude-API tokens," which was a paywall rather than a stake.
 
+> **Two weights, one stake (read this first — v1.5 finality firewall).** Dual staking now drives **two distinct weights**, and conflating them is the error v1.5 corrects:
+>
+> 1. **Economic weight = effective stake `S_eff = α·token + β·cpu`** (α=0.40, β=0.60), unchanged. It governs **reward share / earnings proportionality** — CPU work earns proportionally *more* (β > α), primarily through mining yield and the staker reward split (Section 14). The dual-staking anti-plutocracy of §13.1 and §23.3 is an **earnings** property and is fully intact.
+> 2. **Finality weight = `W_fin` = AGNTC token stake only** (online-gated), the *finality firewall*. It governs **committee (verifier) and leader selection** (Sections 5.5, 7.1). CPU does **not** weight finality.
+>
+> **Why finality is token-only (security item P1-1).** Finality must be weighted by a Sybil-*resistant* quantity. AGNTC stake is Sybil-resistant (you must actually acquire and lock it); the CPU / Proof-of-Vault leg is **not yet** — a cheap *possession* proof is forgeable until PoRep-hardened (one disk presenting as many — Section 5A.5). If CPU weighted finality, **cheaply corrupting Proof-of-Vault would be a cheap path to consensus capture.** So the protocol firewalls finality to token stake. CPU stays for earnings and for liveness/admission — never for finality. **CPU-weighted committee selection — the original §13 dual-staking-in-finality vision — is relabelled from current behaviour to a mainnet GOAL, gated on PoRep-hardening the CPU stake** (Section 13.5). This is stated in the same honesty style as the ZK ladder (§5B.2): a real, dated future target, not a present claim.
+>
+> Everything in §13.1–§13.4 below specifies the **economic weight** `S_eff`. The **finality weight** and the firewall are specified in §13.5.
+
 #### 13.1 Effective Stake Formula
 
 The effective stake of a validator is a weighted combination of their token stake and CPU contribution:
@@ -1476,19 +1501,19 @@ S_eff = 0.40 * (2,000 / 100,000) + 0.60 * (2,000 / 10,000)
 
 Despite staking 60% fewer tokens, the Professional validator achieves 4× the effective stake through compute contribution. This is the dual-staking model working as designed: rewarding operational commitment over passive capital.
 
-**Validator Selection Probability.** Committee members for each block are selected via VRF [41] [32] (Verifiable Random Function) with probability proportional to effective stake:
+**Validator Selection Probability.** *Committee selection is weighted by token stake only* — the finality weight `W_fin` of the finality firewall (Section 13.5), **not** the effective stake `S_eff` computed above (`S_eff` governs *reward share*, Section 14). Members for each block are selected via VRF [41] [32] (Verifiable Random Function) with probability proportional to `W_fin`:
 
 ```
-P(selected_i) = 1 - (1 - S_eff(i))^k
+P(selected_i) = 1 - (1 - W_fin(i))^k        W_fin(i) = T_i / T_total
 ```
 
-Where k = 13 (committee size). For the Professional validator above with S_eff = 0.128:
+Where k = 13 (committee size). The Professional validator above stakes 2,000 of a 100,000-AGNTC pool, so `W_fin = 2,000 / 100,000 = 0.02`:
 
 ```
-P(selected) = 1 - (1 - 0.128)^13 = 1 - 0.872^13 ≈ 0.835
+P(selected) = 1 - (1 - 0.02)^13 = 1 - 0.98^13 ≈ 0.231
 ```
 
-This validator has an 83.5% chance of being selected to at least one committee slot per block — reflecting their substantial compute contribution to network security.
+A ~23.1% chance of a committee slot per block — set by the validator's **token** share, *not* its larger compute share. The validator's heavy compute deployment still earns it ~4× the reward share (via `S_eff = 0.128`, the economic weight above) — compute is rewarded, but it does not buy committee seats until the CPU leg is PoRep-hardened (Section 13.5).
 
 **Note:** The selection probability formula assumes independent sampling with replacement. The actual committee selection uses sampling WITHOUT replacement (see Section 5.5), which follows a multivariate hypergeometric distribution. For small k/n ratios (13/n where n >> 13), the with-replacement approximation is accurate to within 1%.
 
@@ -1503,22 +1528,42 @@ This validator has an 83.5% chance of being selected to at least one committee s
 2. **Trustless verifier (mainnet):** Move challenge issuance + proof checking from the single coordinator to the PoAIV committee or an on-chain verifier, removing the coordinator from the state-security trust chain.
 3. **Unique-replica encoding (mainnet research):** Filecoin-grade Proof-of-Replication (PoRep) sealing so one disk cannot fake `N` replicas, plus timed/keyed challenges to defeat on-demand regeneration (Section 24 wall).
 
-**Architectural keystone — CPU-stake feeds finality, and its Sybil-resistance is a known pre-mainnet item (disclosed).** This is the most important honest caveat in the staking model, and we state it plainly. Committee selection weights effective stake as `α·token + β·cpu` (Section 13.1), with β = 0.60. The CPU leg is therefore **not merely a reward input — it feeds committee selection and thus finality.** The clean firewall asserted elsewhere in this document ("a compromised storage layer degrades verification *quality* but cannot break ledger safety") holds **only to the extent that the CPU-stake measurement is Sybil-resistant.** On the testnet it is not fully so: the CPU leg is metered by the trusted Singularity coordinator's sampled-PDP checks (Section 5A.4), and a cheap *possession* proof is — until the mainnet hardening of items 2–3 above — sybil-, outsourcing-, and generation-attackable (one disk can present as several; Section 5A.5). An adversary who can inflate its *measured* CPU-stake can thus bias *committee selection*, which is a ledger-relevant influence, not a state-only one. We do **not** claim trustless Sybil-resistance for the CPU leg at this phase. What is true today, and all we claim: (a) the testnet is honestly scoped as **trusted-coordinator-checked**, not trustless; (b) vault proofs feed the reward/stake **input**, and the coordinator metering them is a disclosed, time-boxed trust assumption; (c) the firewall becomes unconditional only once the CPU leg is measured Sybil-resistantly — i.e. after the trustless verifier (item 2) and unique-replica sealing + keyed challenges (item 3) land. Until then, "CPU-stake feeds finality and is only as Sybil-resistant as testnet PoV" is the correct, un-rounded statement (cross-referenced at Section 8.8, Section 24.3).
-
-**Figure 4: Dual Staking Model**
+**Architectural keystone — the finality firewall (now shipped).** This is the most important security property of the staking model, and v1.5 states it as **current behaviour**: the **finality weight is AGNTC token stake only.**
 
 ```
-  Token Stake (T)          CPU Stake (C)
-  [On-chain, self-custody]  [CPU+disk vault proofs, coordinator-verified]
+W_fin(i) = (T_i / T_total)   if validator i is online and T_total > 0
+           0                  otherwise
+```
+
+Committee (verifier) selection (Section 5.5) and leader selection (Section 7.1) are both weighted by `W_fin`. The CPU / Proof-of-Vault leg of effective stake (Section 13.1, β = 0.60) is **deliberately excluded from finality** and contributes only to **earnings** (reward share, Section 14) and to liveness/admission.
+
+*Why (security item P1-1).* The v1.4 edition of this document disclosed the inverse as a known pre-mainnet risk: committee selection then weighted `α·token + β·cpu`, so the CPU leg fed finality, and the clean ledger-safety firewall held *only to the extent the CPU-stake measurement was Sybil-resistant* — which testnet Proof-of-Vault is **not**. A cheap *possession* proof is sybil-, outsourcing-, and generation-attackable (one disk can present as several; Section 5A.5), so a metering-inflation or PoV-corruption attack was a path to bias *committee selection* — a ledger-relevant influence. v1.5 closes that path **in code**: by sourcing finality from token stake alone, **corrupting Proof-of-Vault can no longer buy committee influence.** A compromised or biased storage layer now degrades only state-measurement and *earnings* fairness — never finality selection.
+
+*Mainnet goal (CPU re-admission to finality).* The original §13 vision — CPU contribution *also* weighting committee selection, so that demonstrated work earns consensus influence and a Sybil attack must pay along both axes (the ≈2.5× cost of Section 8) — is **deferred, not abandoned**. It is gated on making the CPU leg Sybil-resistant: items 2–3 of the mitigation roadmap above (a trustless/on-chain verifier replacing the coordinator, plus Proof-of-Replication sealing + timed/keyed challenges). Once committed CPU+disk is measured Sybil-resistantly, the protocol can re-admit a hardened CPU term to the finality weight under governance (Section 21.2). Until then, the honest, un-rounded statement is: **finality is token-weighted (Sybil cost = token cost); CPU-weighted finality is a PoRep-gated mainnet target.** The residual testnet trust in the Singularity coordinator (next item) therefore bounds *state-measurement and earnings* fairness only — it no longer touches finality (cross-referenced at Section 8.8, Section 24.3).
+
+**Figure 4: Dual Staking Model (two weights, one stake — finality firewall)**
+
+```
+  Token Stake (T)                       CPU Stake (C)
+  [On-chain, self-custody]              [CPU+disk vault proofs, coordinator-verified]
+       |                                     |
+       |                                     |
+       +--------------------+                +--------------------+
+       |                    |                                     |
+       v                    v                                     v
+  FINALITY WEIGHT      ECONOMIC WEIGHT  (effective stake)
+  W_fin(i) = T_i/T_total    S_eff(i) = 0.40*(T_i/T_total) + 0.60*(C_i/C_total)
+  (token only)              (alpha=0.40 token, beta=0.60 CPU)
        |                         |
-       | weight: 0.40            | weight: 0.60
-       |                         |
-       v                         v
-  S_eff(i) = 0.40*(T_i/T_total) + 0.60*(C_i/C_total)
-       |
-       +---> Committee selection probability
-       +---> Reward share proportion
-       +---> Slashing exposure
+       +---> Committee +         +---> Reward share proportion (earnings)
+             leader selection    +---> Slashing exposure
+        (CPU excluded:           (CPU earns proportionally MORE here)
+         finality firewall,
+         Section 13.5)
+
+  Mainnet goal: once CPU stake is PoRep-hardened (Sybil-resistant),
+  re-admit a hardened CPU term to W_fin so finality, like earnings,
+  rewards demonstrated work (Sections 8.3, 13.5).
 ```
 
 ---
@@ -2415,8 +2460,8 @@ The following table provides the complete set of protocol-level parameters that 
 
 | Parameter | Value | Description |
 |-----------|-------|-------------|
-| ALPHA ‡ | 0.40 | Token weight in effective stake formula |
-| BETA ‡ | 0.60 | CPU weight in effective stake formula |
+| ALPHA ‡ | 0.40 | Token weight in effective stake formula (the **economic / reward-share** weight `S_eff`) |
+| BETA ‡ | 0.60 | CPU weight in effective stake formula (economic / reward-share only). **Note (v1.5 finality firewall):** `S_eff` governs *earnings*; consensus *finality* selection is weighted by token stake alone (`W_fin = T/T_total`), so β does **not** weight committee/leader selection — Section 13.5. ALPHA/BETA values and the `S_eff` formula are unchanged |
 | REWARD_SPLIT_VERIFIER | 0.60 | Fraction of fee rewards to block verifiers |
 | REWARD_SPLIT_STAKER | 0.40 | Fraction of fee rewards to staking pool |
 | REWARD_SPLIT_ORDERER | 0.00 | Fraction of fee rewards to block orderer (none) |
@@ -2621,7 +2666,9 @@ This confirms that t = 9 is the minimum threshold for tolerating f = 4 Byzantine
 
 #### 23.3 Dual Staking Gini Coefficient Analysis
 
-**Theorem.** For any distribution of token holdings with Gini coefficient G_t > 0, adding a CPU dimension with weight β > 0 produces an effective stake distribution with Gini coefficient G_eff < G_t, provided the CPU distribution is not perfectly correlated with the token distribution.
+**Scope (finality firewall).** This analysis concerns the **economic weight** — the effective-stake distribution that governs *reward share / earnings* (Section 14). It is the anti-plutocracy result that remains fully in force under v1.5. It is **not** a claim about finality-selection concentration: committee and leader selection are weighted by **token stake alone** (`W_fin`, Section 13.5), so their concentration tracks the token Gini `G_t` until CPU stake is PoRep-hardened and re-admitted to the finality weight. In short, dual staking equalizes *earnings* now; equalizing *finality influence* is the PoRep-gated mainnet goal.
+
+**Theorem.** For any distribution of token holdings with Gini coefficient G_t > 0, adding a CPU dimension with weight β > 0 produces an effective stake (earnings) distribution with Gini coefficient G_eff < G_t, provided the CPU distribution is not perfectly correlated with the token distribution.
 
 **Proof sketch.** The effective stake for agent i is:
 
@@ -2693,7 +2740,7 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 **Mitigation path:** replication + slashing (testnet) → committee/on-chain verifier (mainnet) → unique-replica sealing + keyed challenges (mainnet research). See Section 5A and Section 13.5. Note: the **ledger** layer (PoAIV committee) does not depend on this verifier *for ordering and balances* — but see the next paragraph for the one coupling that does exist.
 
-**Related keystone (CPU-stake → finality coupling).** Because effective stake weights `α·token + β·cpu` (Section 13.1), the CPU leg measured by this same coordinator also feeds *committee selection*, so the testnet's storage-measurement trust assumption has a bounded, disclosed influence on finality — not only on state. This is detailed honestly in Section 13.5 ("Architectural keystone"): we do not claim trustless Sybil-resistance for the CPU leg until the trustless verifier and unique-replica sealing land. The PoAIV committee's *ordering* role does not depend on the coordinator; its *selection weighting* partially does, at this phase.
+**Related keystone (finality firewall — coupling now severed).** v1.4 disclosed a CPU-stake → finality coupling here: because effective stake then weighted `α·token + β·cpu`, the CPU leg measured by this same coordinator also fed *committee selection*, giving the storage-measurement trust assumption a bounded influence on finality. **v1.5 removes that coupling in code** (Section 13.5, "Architectural keystone"): finality selection is now weighted by **token stake only** (`W_fin`), so a biased coordinator or a corrupted Proof-of-Vault layer can distort *state measurement and earnings* but **cannot** move committee or leader selection. The coordinator's residual testnet trust is therefore now scoped to the **state layer and reward fairness**, not finality. Re-admitting a PoRep-hardened CPU term to the finality weight (so demonstrated work again earns consensus influence, at the dual-axis Sybil cost of Section 8) remains the mainnet goal, gated on the trustless verifier and unique-replica sealing.
 
 #### 24.4 Committee Scalability
 
@@ -2792,7 +2839,9 @@ A natural question is whether the *AI compute* itself — agents running inferen
 | **Research** | Sub-cell type producing Research Points for unlocking technologies |
 | **Ring** | *(legacy — see Band)* The v1.0/v1.1 Chebyshev expansion boundary, replaced by the radial band under v1.2 |
 | **RLN** | Rate-Limiting Nullifiers [44] — spam-resistant anonymous messaging primitive |
-| **S_eff** | Effective stake: α(T/T_total) + β(C/C_total), determines validator influence |
+| **S_eff** | Effective stake (the **economic weight**): α(T/T_total) + β(C/C_total), α=0.40, β=0.60. Determines **reward share / earnings** (CPU earns proportionally more). Under the finality firewall it does **not** weight committee/leader selection — that uses `W_fin` (Sections 13.5, 14) |
+| **W_fin (finality weight)** | The **finality firewall** quantity: `W_fin(i) = T_i / T_total` (AGNTC **token stake only**, online-gated). Weights committee (verifier) selection and leader selection (Sections 5.5, 7.1). CPU / Proof-of-Vault work is excluded — it is Sybil-weak until PoRep-hardened, so weighting finality by it would let a corrupted storage layer buy consensus influence (security item P1-1). Distinct from `S_eff` (earnings). Section 13.5 |
+| **Finality firewall** | The rule (shipped 2026-06-22, v1.5) that consensus *finality selection* — committee + leader — is weighted by token stake only (`W_fin`), never by the Sybil-weak CPU/PoV leg. Re-admitting a PoRep-hardened CPU term to finality is the mainnet goal. Sections 13.5, 8.3 |
 | **Safe mode** | Emergency state triggered when >20% validators offline |
 | **Secure** | Sub-cell type committing CPU+disk to vault storage proofs (the **securing** verb, Section 5A) and minting AGNTC as the coupled mining issuance. Securing ≠ mining: securing proves vault work, mining issues supply |
 | **Securing** | The verifiable-resource-commitment verb: spending real CPU+disk to replicate, serve, and re-prove a shard of the knowledge vault, with the proof submitted through the Singularity link. Distinct from mining (issuance) and staking (the bond). Section 5A |
@@ -2908,5 +2957,5 @@ A natural question is whether the *AI compute* itself — agents running inferen
 
 ---
 
-*AGNTC Whitepaper v1.4 — ZK Agentic Chain*
+*AGNTC Whitepaper v1.5 — ZK Agentic Chain*
 *Copyright © 2026 ZK Agentic Network. All rights reserved.*

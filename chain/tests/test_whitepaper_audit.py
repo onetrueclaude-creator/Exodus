@@ -447,7 +447,15 @@ class TestWhitepaperSolanaMainnet:
 # ===========================================================================
 
 class TestMathEffectiveStake:
-    """Verify S_eff = alpha*T + beta*C (Section 13 + Section 23.3)."""
+    """Verify S_eff = alpha*T + beta*C (Section 13 + Section 23.3).
+
+    Whitepaper v1.5 (finality firewall): effective_stake is the ECONOMIC weight
+    (reward share / earnings) and is UNCHANGED — alpha=0.40, beta=0.60, and the
+    S_eff formula all stay exactly as asserted here. The firewall changed only
+    the *finality* weight (committee + leader selection), which is now token-only
+    (Validator.finality_weight); that selection-source change is covered by
+    tests/test_consensus_firewall.py, not by these formula/concordance tests.
+    """
 
     def test_equal_stake(self):
         """Equal token and CPU → S_eff = 1.0."""
