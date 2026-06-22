@@ -28,10 +28,11 @@ class TestSelectVerifiers:
         ids2 = {v.id for v in sel2}
         assert ids1 != ids2  # Very unlikely to be identical
 
-    def test_weighted_by_effective_stake(self):
-        """Validators with higher effective stake should be selected more often."""
+    def test_weighted_by_token_stake(self):
+        """Validators with higher TOKEN stake are selected more often
+        (P1-1: finality weight is token-only; CPU does not factor in)."""
         validators = [
-            Validator(id=0, token_stake=10000.0, cpu_vpu=200.0),  # whale
+            Validator(id=0, token_stake=10000.0, cpu_vpu=200.0),  # token whale
             *[Validator(id=i, token_stake=100.0, cpu_vpu=10.0) for i in range(1, 50)],
         ]
         selections = 0

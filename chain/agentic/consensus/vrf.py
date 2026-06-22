@@ -14,7 +14,7 @@ def select_verifiers(
     total_cpu: float | None = None,
     exclude_ids: set[int] | None = None,
 ) -> list[Validator]:
-    """Select n verifiers weighted by effective stake using VRF-style selection.
+    """Select n verifiers weighted by TOKEN STAKE (P1-1 finality firewall) using VRF-style selection.
 
     Uses a deterministic hash-based selection (simulating VRF output).
     ``exclude_ids`` removes validators from the candidate pool (e.g. the
@@ -29,12 +29,12 @@ def select_verifiers(
 
     if total_token is None:
         total_token = sum(v.token_stake for v in online)
-    if total_cpu is None:
-        total_cpu = sum(v.cpu_vpu for v in online)
 
-    # Calculate weights from effective stake
+    # P1-1 firewall: finality (committee selection) weights by TOKEN STAKE ONLY.
+    # CPU never buys finality influence (it earns via effective_stake, not here);
+    # `total_cpu` is accepted for back-compat but intentionally unused.
     weights = np.array([
-        v.effective_stake(total_token, total_cpu) for v in online
+        v.finality_weight(total_token) for v in online
     ])
     if weights.sum() == 0:
         weights = np.ones(len(online))
