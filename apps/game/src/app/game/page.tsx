@@ -438,8 +438,8 @@ export default function GamePage() {
             currentAgent={currentAgentId ? (agents[currentAgentId] ?? null) : null}
             chainService={chainRef.current}
             onAgentDeploy={() => {
-              // Don't auto-switch to the new sub-agent — the homenode is the player's
-              // command center and the deploy was issued from it. Sub-agent is now
+              // Don't auto-switch to the new sub-node — the homenode is the player's
+              // command center and the deploy was issued from it. Sub-node is now
               // visible on the lattice and switchable via the Account View list.
               setActiveDockPanel("terminal");
             }}

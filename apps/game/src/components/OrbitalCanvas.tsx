@@ -299,7 +299,7 @@ export default function OrbitalCanvas() {
                 : m?.kind === "unclaimed"
                   ? "Open seat · unclaimed"
                   : m?.kind === "subagent"
-                    ? "Sub-agent" // coordinate-free: ids are cell-keyed in mock mode
+                    ? "Sub-node" // coordinate-free: ids are cell-keyed in mock mode
                     : `${label} · rank ${m?.rank} · band ${m?.band} · ${m?.tier}`;
             tip.style.left = `${e.global.x}px`;
             tip.style.top = `${e.global.y}px`;

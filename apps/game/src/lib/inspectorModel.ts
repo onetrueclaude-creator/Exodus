@@ -33,7 +33,7 @@ export type InspectorModel =
   | {
       // Subagents are TIER-LESS: they belong to their parent player and carry no
       // Tier of their own, so the model omits tier/tierLabel/crown entirely. The
-      // inspector renders "Subagent" + owner/parent, never a Tier row.
+      // inspector renders "Subnode" + owner/parent, never a Tier row.
       kind: "subagent";
       title: string; // short id
       isSelf: boolean;
@@ -98,7 +98,7 @@ export function inspectorModelFor(
       kind: "subagent",
       // Coordinate-free identity: node ids are cell-keyed in mock mode, so show the
       // role (not the raw id). The parent reads as "Homenode" when it's the player's own.
-      title: "Sub-agent",
+      title: "Sub-node",
       isSelf,
       tint: SUBAGENT_TINT,
       rank,

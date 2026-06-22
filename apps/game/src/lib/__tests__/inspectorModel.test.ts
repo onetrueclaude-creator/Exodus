@@ -81,7 +81,7 @@ describe("inspectorModelFor", () => {
     const m = inspectorModelFor("sub-1234567890", agents);
     expect(m?.kind).toBe("subagent");
     if (m && m.kind === "subagent") {
-      expect(m.title).toBe("Sub-agent"); // role, never the cell-keyed id
+      expect(m.title).toBe("Sub-node"); // role, never the cell-keyed id
       expect(m.isSelf).toBe(false);
     }
   });

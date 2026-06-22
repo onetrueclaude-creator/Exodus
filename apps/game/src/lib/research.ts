@@ -26,9 +26,9 @@ export const RESEARCH_TREES: Record<ResearchCategory, ResearchItem[]> = {
     },
     {
       id: 'inf-2', category: 'infrastructure', tier: 2,
-      name: 'Efficient Agents', description: 'Reduce cost to spawn sub-agents',
+      name: 'Efficient Agents', description: 'Reduce cost to spawn sub-nodes',
       energyCost: 100, prerequisiteIds: ['inf-1'],
-      effect: '-25% AGNTC for sub-agent spawning',
+      effect: '-25% AGNTC for sub-node spawning',
     },
   ],
   social: [
