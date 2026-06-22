@@ -50,7 +50,7 @@ export function legacyTierToLevel(tier: LegacyTier): number {
   return 1;
 }
 
-/** Visual grid extent (matches LatticeGrid GRID_EXTENT / 2) */
+/** Half-width of the visual coordinate space used for chain↔visual mapping. */
 const VISUAL_HALF = 4000;
 const VISUAL_SPAN = VISUAL_HALF * 2; // 8000
 

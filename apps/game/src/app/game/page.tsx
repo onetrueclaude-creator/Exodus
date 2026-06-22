@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import LatticeGrid from "@/components/LatticeGrid";
 import ResourceBar from "@/components/ResourceBar";
 import TabNavigation from "@/components/TabNavigation";
 import AccountView from "@/components/AccountView";
 import ResearchPanel from "@/components/ResearchPanel";
 import SkillsPanel from "@/components/SkillsPanel";
 import DockPanel from "@/components/DockPanel";
-import CellTooltip from "@/components/CellTooltip";
 import ScoresWidget from "@/components/ScoresWidget";
 import NodeInspector from "@/components/NodeInspector";
 import { startDebugListener } from "@/lib/debugListener";
@@ -26,9 +24,8 @@ import type { SubscriptionTier } from "@/types";
 import type { Tier } from "@/types";
 import { TIER_TINT } from "@/types";
 import { SUBSCRIPTION_PLANS } from "@/types/subscription";
-import { createCellInternal, getCellDensity, CELL_SIZE } from "@/lib/lattice";
+import { createCellInternal } from "@/lib/lattice";
 import { getNextSpawnCell } from "@/lib/spawn";
-import { visualToChain } from "@/services/testnetChainService";
 
 /** Map subscription tier to default player Tier identity. */
 const SUBSCRIPTION_TIER_MAP: Record<SubscriptionTier, Tier> = {
@@ -67,7 +64,9 @@ function seedDemoNeighbors(): void {
     addAgent({
       id,
       userId: `demo-user-${i}`, // distinct from the player → seated as a neighbour
-      position: { x: (i + 1) * CELL_SIZE * 2, y: ((i % 2 === 0 ? 1 : -1) * (i + 1)) * CELL_SIZE * 2 },
+      // Position is a placeholder — the orbital renderer re-seats every agent by
+      // rank (seatsFromAgents), so the seeded coordinate is never read.
+      position: { x: 0, y: 0 },
       level: 1,
       miningCpu: 0,
       securingCpu: 0,
@@ -93,13 +92,12 @@ function seedDemoNeighbors(): void {
 
 export default function GamePage() {
   const addAgent = useGameStore((s) => s.addAgent);
-  // Phyllotaxis orbital renderer is the DEFAULT view; ?grid=1 (or ?orbital=0)
-  // falls back to the legacy lattice grid. Resolved after mount so the tri-state
-  // (null until known) avoids a hydration mismatch / LatticeGrid mount race.
-  const [orbital, setOrbital] = useState<boolean | null>(null);
+  // The phyllotaxis orbital renderer is the only view. `mounted` gates the
+  // client-only canvas (OrbitalCanvas is ssr:false) so the first paint matches
+  // the server's null render and avoids a hydration mismatch.
+  const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    const p = new URLSearchParams(window.location.search);
-    setOrbital(p.get("grid") !== "1" && p.get("orbital") !== "0");
+    setMounted(true);
   }, []);
   const addHaiku = useGameStore((s) => s.addHaiku);
   const setCurrentUser = useGameStore((s) => s.setCurrentUser);
@@ -121,7 +119,6 @@ export default function GamePage() {
   useChainWebSocket(chainMode === "testnet");
 
   const setActiveDockPanel = useGameStore((s) => s.setActiveDockPanel);
-  const [tooltip, setTooltip] = useState<{ cx: number; cy: number; screenX: number; screenY: number } | null>(null);
 
   const chainRef = useRef<ChainService | null>(null);
 
@@ -251,7 +248,6 @@ export default function GamePage() {
         const primary = agentList.find((a) => a.isPrimary && a.userId === firstOwned.userId);
         const homenode = primary ?? firstOwned;
         if (!isDev) setActiveDockPanel("terminal");
-        useGameStore.getState().setCamera(homenode.position, 2);
         useGameStore.getState().requestFocus(homenode.id);
       } else {
         // New user — read dev-selected player Tier + subscription (dev mode).
@@ -308,14 +304,15 @@ export default function GamePage() {
         if (!claimed) {
           throw new Error(`Failed to claim spawn cell ${homeCellId}`);
         }
-        const claimedCell = useGameStore.getState().blocknodes[homeCellId];
 
         // Create a homenode agent so the terminal works immediately.
         // isSelf + tier drive the "Your Homenode" marker in the orbital renderer.
+        // Position is a placeholder — the orbital renderer re-seats every agent by
+        // rank (seatsFromAgents), so the seeded coordinate is never read.
         const homenodeAgent: import("@/types").Agent = {
           id: homeCellId,
           userId: newUserId,
-          position: { x: claimedCell.cx * CELL_SIZE, y: -claimedCell.cy * CELL_SIZE },
+          position: { x: 0, y: 0 },
           level: 1,
           miningCpu: 0,
           securingCpu: 0,
@@ -330,7 +327,7 @@ export default function GamePage() {
           miningRate: 1,
           energyLimit: 50,
           stakedCpu: 0,
-          density: getCellDensity(claimedCell.cx, claimedCell.cy),
+          density: 1.0,
           storageSlots: 1,
           isSelf: true,
           tier: newUserTier,
@@ -349,10 +346,6 @@ export default function GamePage() {
           seedDemoNeighbors();
         }
 
-        useGameStore.getState().setCamera(
-          { x: claimedCell.cx * CELL_SIZE, y: -claimedCell.cy * CELL_SIZE },
-          2
-        );
         useGameStore.getState().requestFocus(homeCellId);
         // In production this auto-opens the agent terminal for first-time onboarding.
         // In dev mode every reload re-triggers "new user" and would slam the panel open,
@@ -425,16 +418,11 @@ export default function GamePage() {
       <div className="flex-1 relative overflow-hidden">
         {/* Network tab — always mounted, hidden when inactive to preserve PixiJS canvas */}
         <div className={`absolute inset-0 ${activeTab !== "network" ? "hidden" : ""}`}>
-          {orbital === null ? null : orbital ? (
-            <OrbitalCanvas />
-          ) : (
-            <LatticeGrid onSelectAgent={() => {}} onDeselect={() => {}} />
-          )}
+          {mounted && <OrbitalCanvas />}
 
           {/* Node inspector toast — top-right, store-driven (focusedNodeId).
-              Orbital view only; the legacy grid uses CellTooltip instead.
               The Singularity gate (Secure/Read/Stats) needs the chain service. */}
-          {orbital && <NodeInspector chainService={chainRef.current} />}
+          <NodeInspector chainService={chainRef.current} />
 
           {/* Dock Panel — left edge */}
           <DockPanel
@@ -444,14 +432,14 @@ export default function GamePage() {
             onAgentDeploy={() => {
               // Don't auto-switch to the new sub-node — the homenode is the player's
               // command center and the deploy was issued from it. Sub-node is now
-              // visible on the lattice and switchable via the Account View list.
+              // visible in the orbit and switchable via the Account View list.
               setActiveDockPanel("terminal");
             }}
             onFocusNode={() => {
               // No-op: focusing a node from an action must NOT move the camera.
               // A requestFocus here recentered the view on every action (read as an
               // unwanted zoom/jump). Camera recenter is the Home-button's job;
-              // node selection happens by tapping the node on the lattice.
+              // node selection happens by tapping the node in the orbit.
             }}
           />
 
@@ -471,28 +459,6 @@ export default function GamePage() {
               ⌂ Home Node
             </button>
           </div>
-
-          {/* Cell tooltip */}
-          {tooltip && (() => {
-            const density = getCellDensity(tooltip.cx, tooltip.cy);
-            const cellKey = `cell-${tooltip.cx}-${tooltip.cy}`;
-            const node = useGameStore.getState().blocknodes[cellKey];
-            // tier comes from the cell itself (open-grid: no spatial tier zones)
-            const tier = node?.tier ?? null;
-            if (!tier) return null;
-            return (
-              <CellTooltip
-                cx={tooltip.cx}
-                cy={tooltip.cy}
-                tier={tier}
-                density={density}
-                owner={node?.ownerId ?? null}
-                screenX={tooltip.screenX}
-                screenY={tooltip.screenY}
-                onClose={() => setTooltip(null)}
-              />
-            );
-          })()}
         </div>
 
         {/* Account View tab */}
