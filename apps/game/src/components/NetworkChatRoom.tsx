@@ -56,7 +56,7 @@ export default function NetworkChatRoom({ onSend }: NetworkChatRoomProps) {
   }
 
   return (
-    <div className="glass-card w-72 flex flex-col animate-slide-up" style={{ maxHeight: '320px' }}>
+    <div className="glass-card w-full h-full flex flex-col animate-slide-up">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-card-border bg-background/40">
         <div className="flex items-center gap-1.5">
@@ -75,11 +75,10 @@ export default function NetworkChatRoom({ onSend }: NetworkChatRoomProps) {
       {/* Messages */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-3 py-2 space-y-2"
-        style={{ minHeight: '120px', maxHeight: '200px' }}
+        className="flex-1 min-h-0 overflow-y-auto px-3 py-2.5 space-y-2.5"
       >
         {messages.length === 0 ? (
-          <div className="text-[10px] text-text-muted text-center py-6 italic">
+          <div className="text-[12px] text-text-muted text-center py-6 italic">
             No messages yet. Be the first to transmit.
           </div>
         ) : (
@@ -90,13 +89,13 @@ export default function NetworkChatRoom({ onSend }: NetworkChatRoomProps) {
             const isOwn = msg.senderAgentId === currentAgentId;
 
             return (
-              <div key={msg.id} className="text-[10px] leading-relaxed animate-fade-in">
-                <div className="flex items-center gap-1">
-                  <span className={`font-semibold ${isOwn ? 'text-yellow-400' : tierClass}`}>
+              <div key={msg.id} className="text-[12px] leading-relaxed animate-fade-in">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className={`font-semibold break-all ${isOwn ? 'text-yellow-400' : tierClass}`}>
                     {senderName}
                   </span>
                   <span className="text-text-muted/40">{'\u00B7'}</span>
-                  <span className="text-text-muted/50 text-[9px] font-mono">
+                  <span className="text-text-muted/50 text-[10px] font-mono">
                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
@@ -118,12 +117,12 @@ export default function NetworkChatRoom({ onSend }: NetworkChatRoomProps) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Encode neural packet..."
-          className="flex-1 bg-background/60 border border-card-border rounded-md px-2.5 py-1.5 text-[11px] text-text-primary placeholder:text-text-muted/30 focus:outline-none focus:border-accent-cyan/50 focus:shadow-[0_0_8px_rgba(0,212,255,0.06)] transition-all duration-200"
+          className="flex-1 min-w-0 bg-background/60 border border-card-border rounded-md px-2.5 py-1.5 text-[12px] text-text-primary placeholder:text-text-muted/30 focus:outline-none focus:border-accent-cyan/50 focus:shadow-[0_0_8px_rgba(0,212,255,0.06)] transition-all duration-200"
         />
         <button
           onClick={handleSend}
           disabled={!input.trim()}
-          className="px-2.5 py-1.5 rounded-md text-[10px] font-semibold bg-accent-cyan/15 text-accent-cyan border border-accent-cyan/20 hover:bg-accent-cyan/25 hover:border-accent-cyan/40 disabled:opacity-20 disabled:cursor-not-allowed transition-all duration-200"
+          className="shrink-0 px-3 py-1.5 rounded-md text-[11px] font-semibold bg-accent-cyan/15 text-accent-cyan border border-accent-cyan/20 hover:bg-accent-cyan/25 hover:border-accent-cyan/40 disabled:opacity-20 disabled:cursor-not-allowed transition-all duration-200"
         >
           Send
         </button>

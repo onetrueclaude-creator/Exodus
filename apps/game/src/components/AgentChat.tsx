@@ -18,6 +18,7 @@ import { getDistance } from '@/lib/proximity';
 import { postTransact, getStatus as fetchChainStats } from '@/services/testnetApi';
 import { getWalletIndex } from '@/lib/walletIndex';
 import { runSecure } from '@/lib/vaultGate';
+import { useTerminalStore, type ChatMessage } from '@/store/terminalStore';
 import { SINGULARITY_ID } from '@/lib/orbitalSeats';
 import { logAction } from '@/lib/actionLogger';
 import { sciFormat } from '@/lib/format';
@@ -83,13 +84,10 @@ const AGENT_ACTIONS: Record<NodeTier, AgentAction[]> = {
 };
 
 /* ── Chat Message Types ───────────────────────────────────── */
+// ChatMessage + per-node persistent history now live in the terminal store
+// (@/store/terminalStore) so each node has its OWN chat that survives reloads.
 
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'agent' | 'system';
-  content: string;
-  timestamp: number;
-}
+const EMPTY_MESSAGES: ChatMessage[] = [];
 
 /* ── Agent Response Templates ─────────────────────────────── */
 
@@ -278,22 +276,27 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
   // mock mode — never surface them). Role is the identity the player cares about.
   const nodeLabel = agent.isPrimary ? 'Homenode' : (agent.username || 'Sub-node');
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 'init',
-      role: 'system',
-      content: `Neural link established \u2014 ${tier.label}-class agent`,
-      timestamp: Date.now(),
-    },
-    {
-      id: 'prompt-0',
-      role: 'agent',
-      content: agent.isPrimary
-        ? `${tier.personality} node online.\nAwaiting directives.`
-        : `${tier.personality} sub-node linked.\nReady for instructions.`,
-      timestamp: Date.now(),
-    },
-  ]);
+  // Per-node, persistent message history (keyed by node id; survives refresh /
+  // logout / crash). Each node's terminal has its OWN chat \u2014 not a shared feed.
+  const messages = useTerminalStore((s) => s.messagesByNode[agent.id]) ?? EMPTY_MESSAGES;
+  useEffect(() => {
+    useTerminalStore.getState().seedNode(agent.id, [
+      {
+        id: 'init',
+        role: 'system',
+        content: `Neural link established \u2014 ${tier.label}-class agent`,
+        timestamp: Date.now(),
+      },
+      {
+        id: 'prompt-0',
+        role: 'agent',
+        content: agent.isPrimary
+          ? `${tier.personality} online.\nAwaiting directives.`
+          : `${tier.personality} linked.\nReady for instructions.`,
+        timestamp: Date.now(),
+      },
+    ]);
+  }, [agent.id, tier.label, tier.personality, agent.isPrimary]);
   const [processing, setProcessing] = useState(false);
   const [pendingAction, setPendingAction] = useState<AgentAction | null>(null);
   // Deploy is now a single confirmation step — no target picker, no greeting field.
@@ -376,13 +379,13 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
   }, [initialDeployTarget]);
 
   const addMsg = useCallback((role: ChatMessage['role'], content: string) => {
-    setMessages(prev => [...prev, {
+    useTerminalStore.getState().addMessage(agent.id, {
       id: `${role}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       role,
       content,
       timestamp: Date.now(),
-    }]);
-  }, []);
+    });
+  }, [agent.id]);
 
   const performAction = useCallback((_actionId: string, _choiceId?: string) => {
     // All actions now use direct API calls or custom menu flows
@@ -672,9 +675,9 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
     >
       {/* ── Header: Neural Link Identity ── */}
       <div className={`relative px-4 py-3 bg-gradient-to-r ${tier.headerGradient}`}>
-        <div className="relative z-10 flex items-center justify-between">
-          {/* Left: Neural pulse + Model identity */}
-          <div className="flex items-center gap-3">
+        <div className="relative z-10 space-y-1.5">
+          {/* Identity (row 1, full width) */}
+          <div className="flex items-center gap-3 min-w-0">
             {/* Neural pulse indicator — alive connection */}
             <div className="relative w-8 h-8 flex items-center justify-center">
               <div className={`absolute inset-0 rounded-lg ${tier.bg} opacity-[0.06]`} />
@@ -692,9 +695,9 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
               />
             </div>
 
-            <div>
+            <div className="min-w-0">
               <div
-                className={`text-[13px] font-semibold ${tier.accent} tracking-[0.12em] flex items-baseline gap-1.5`}
+                className={`text-[13px] font-semibold ${tier.accent} tracking-[0.12em] flex items-baseline gap-1.5 whitespace-nowrap`}
                 style={{ fontFamily: "'Outfit', 'Space Grotesk', sans-serif" }}
               >
                 {tier.label}
@@ -703,7 +706,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                 </span>
               </div>
               <div
-                className="text-[12px] text-text-muted tracking-wide"
+                className="text-[12px] text-text-muted tracking-wide truncate"
                 style={{ fontFamily: "'Fira Code', monospace" }}
               >
                 {nodeLabel}
@@ -712,15 +715,15 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
             </div>
           </div>
 
-          {/* Right: Stats + Close */}
-          <div className="flex items-center gap-3">
+          {/* Stats + Close (row 2) */}
+          <div className="flex items-center justify-between gap-3">
             <div className="text-right">
               <div className="text-[12px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
                 <span className="text-yellow-400">{getNodeCpuPerTurn(agent.level)}</span>
-                <span className="text-text-muted/50"> cpu</span>
+                <span className="text-text-muted/50" title="Node CPU output per turn"> CPU/turn</span>
                 <span className="text-text-muted/30 mx-1">{'\u2502'}</span>
                 <span className="text-green-400">{agent.miningRate}</span>
-                <span className="text-text-muted/50"> mine</span>
+                <span className="text-text-muted/50" title="Node mining rate per turn (NOT AGNTC per block)"> mine/turn</span>
               </div>
             </div>
             <button
@@ -766,7 +769,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                       cmd
                     </span>
                   </div>
-                  <span className="whitespace-pre-wrap text-text-primary text-[13px] leading-relaxed" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <span className="whitespace-pre-wrap break-words text-text-primary text-[13px] leading-relaxed" style={{ fontFamily: "'Fira Code', monospace" }}>
                     {msg.content}
                   </span>
                 </div>
@@ -789,7 +792,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                       {tier.label}
                     </span>
                   </div>
-                  <span className="whitespace-pre-wrap text-text-secondary text-[13px] leading-[1.6]" style={{ fontFamily: "'Fira Code', monospace" }}>
+                  <span className="whitespace-pre-wrap break-words text-text-secondary text-[13px] leading-[1.6]" style={{ fontFamily: "'Fira Code', monospace" }}>
                     {msg.content}
                   </span>
                 </div>
