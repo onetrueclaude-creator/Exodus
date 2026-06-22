@@ -13,8 +13,11 @@ export default function ScoresWidget() {
 
   return (
     <div className="absolute top-10 right-2 z-[25] w-[160px] bg-background-light/90 border border-card-border rounded-lg p-3">
-      <div className="text-[12px] font-bold tracking-wider text-text-muted mb-2">
+      <div className="text-[12px] font-bold tracking-wider text-text-muted">
         SCORES
+      </div>
+      <div className="text-[12px] text-text-muted/50 mb-2 leading-tight">
+        (your node)
       </div>
       <div className="space-y-1.5">
         <ScoreRow
@@ -24,6 +27,7 @@ export default function ScoresWidget() {
           value={securedChains}
           valueClass="text-emerald-400"
           deltaKey="securedChains"
+          title="Blocks you've secured by proving agentic work (Secure)."
         />
         <ScoreRow
           icon="⛏"
@@ -32,6 +36,7 @@ export default function ScoresWidget() {
           value={minedChains}
           valueClass="text-orange-400"
           deltaKey="minedChains"
+          title="Blocks your node earned mining yield."
         />
       </div>
     </div>
@@ -45,6 +50,7 @@ function ScoreRow({
   value,
   valueClass,
   deltaKey,
+  title,
 }: {
   icon: string;
   iconClass: string;
@@ -52,9 +58,10 @@ function ScoreRow({
   value: number;
   valueClass: string;
   deltaKey: string;
+  title?: string;
 }) {
   return (
-    <div className="flex justify-between items-center gap-2">
+    <div className="flex justify-between items-center gap-2" title={title}>
       <span className="text-[12px] flex items-center gap-1 text-text-muted/60">
         <span className={iconClass}>{icon}</span>
         {label}

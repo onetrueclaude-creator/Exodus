@@ -53,6 +53,11 @@ class SecuringRegistry:
 
     def __init__(self) -> None:
         self._positions: list[SecuringPosition] = []
+        # Per-wallet count of accepted Proof-of-Agentic-Work possession proofs.
+        # These credit the player's "Secured" score on top of position-based
+        # secured blocks — the terminal "Secure" action submits a PoAW proof
+        # (POST /api/vault/submit-proof) rather than opening a securing position.
+        self._proof_secured: dict[int, int] = {}
 
     def create_position(
         self,
@@ -168,9 +173,25 @@ class SecuringRegistry:
         """All positions for a wallet (active + completed)."""
         return [p for p in self._positions if p.wallet_index == wallet_index]
 
+    def credit_proof_secured(self, wallet_index: int) -> None:
+        """Credit one accepted Proof-of-Agentic-Work possession proof.
+
+        Called when a wallet's vault possession proof is accepted (the terminal
+        "Secure" action). Increments the wallet's proof-secured counter, which
+        ``get_secured_chains`` adds on top of position-based secured blocks.
+        """
+        self._proof_secured[wallet_index] = self._proof_secured.get(wallet_index, 0) + 1
+
     def get_secured_chains(self, wallet_index: int) -> int:
-        """Total blocks secured across all positions for a wallet."""
-        return sum(p.secured_blocks for p in self._positions if p.wallet_index == wallet_index)
+        """Total blocks secured for a wallet.
+
+        Sum of position-based secured blocks PLUS accepted PoAW possession
+        proofs (the terminal "Secure" action credits the latter).
+        """
+        position_secured = sum(
+            p.secured_blocks for p in self._positions if p.wallet_index == wallet_index
+        )
+        return position_secured + self._proof_secured.get(wallet_index, 0)
 
     @property
     def positions(self) -> list[SecuringPosition]:

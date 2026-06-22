@@ -24,7 +24,7 @@ describe('TestnetChainService', () => {
 
       const agent = await service.registerAgent('user-123', 'cortex');
 
-      expect(api.birthNode).toHaveBeenCalledWith(0);
+      expect(api.birthNode).toHaveBeenCalledWith(1); // default wallet index (dev Founder; 0 is the Singularity)
       expect(agent.level).toBe(4); // cortex tier starts at L4
       expect(agent.userId).toBe('user-123');
       expect(agent.position.x).toBeDefined();
@@ -58,7 +58,7 @@ describe('TestnetChainService', () => {
       );
 
       expect(api.sendMessage).toHaveBeenCalledWith(
-        0,
+        1, // default wallet index (dev Founder; 0 is the Singularity)
         expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }),
         expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }),
         'test message',
@@ -94,7 +94,7 @@ describe('TestnetChainService', () => {
       await service.setIntro({ x: 500, y: 500 }, 'Welcome!');
 
       expect(api.setIntro).toHaveBeenCalledWith(
-        0,
+        1, // default wallet index (dev Founder; 0 is the Singularity)
         expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }),
         'Welcome!',
       );
