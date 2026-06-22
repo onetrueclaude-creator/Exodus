@@ -672,8 +672,8 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
     >
       {/* ── Header: Neural Link Identity ── */}
       <div className={`relative px-4 py-3 bg-gradient-to-r ${tier.headerGradient}`}>
-        <div className="relative z-10 flex items-center justify-between">
-          {/* Left: Neural pulse + Model identity */}
+        <div className="relative z-10 space-y-1.5">
+          {/* Identity (row 1, full width) */}
           <div className="flex items-center gap-3 min-w-0">
             {/* Neural pulse indicator — alive connection */}
             <div className="relative w-8 h-8 flex items-center justify-center">
@@ -694,7 +694,7 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
 
             <div className="min-w-0">
               <div
-                className={`text-[13px] font-semibold ${tier.accent} tracking-[0.12em] flex items-baseline gap-1.5`}
+                className={`text-[13px] font-semibold ${tier.accent} tracking-[0.12em] flex items-baseline gap-1.5 whitespace-nowrap`}
                 style={{ fontFamily: "'Outfit', 'Space Grotesk', sans-serif" }}
               >
                 {tier.label}
@@ -712,15 +712,15 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
             </div>
           </div>
 
-          {/* Right: Stats + Close */}
-          <div className="flex items-center gap-3 shrink-0">
+          {/* Stats + Close (row 2) */}
+          <div className="flex items-center justify-between gap-3">
             <div className="text-right">
               <div className="text-[12px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
                 <span className="text-yellow-400">{getNodeCpuPerTurn(agent.level)}</span>
-                <span className="text-text-muted/50"> cpu</span>
+                <span className="text-text-muted/50" title="Node CPU output per turn"> CPU/turn</span>
                 <span className="text-text-muted/30 mx-1">{'\u2502'}</span>
                 <span className="text-green-400">{agent.miningRate}</span>
-                <span className="text-text-muted/50"> mine</span>
+                <span className="text-text-muted/50" title="Node mining rate per turn (NOT AGNTC per block)"> mine/turn</span>
               </div>
             </div>
             <button

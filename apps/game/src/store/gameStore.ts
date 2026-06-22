@@ -118,7 +118,7 @@ interface GameState {
   ) => string | null;
   claimNode: (slotId: string, tier: AgentTier, parentAgentId?: string) => boolean;
   tick: () => void; // advance one turn — apply net resource production
-  startTurnTimer: () => void; // start auto-ticking every 10 seconds
+  startTurnTimer: () => void; // start auto-ticking every 60 seconds (1 block-time)
   stopTurnTimer: () => void;
   moveAgent: (agentId: string, position: GridPosition) => void;
   setBorderPressure: (agentId: string, pressure: number) => void;
@@ -623,7 +623,7 @@ export const useGameStore = create<GameState>((set) => ({
     if (state.turnInterval) return; // already running
     const id = window.setInterval(() => {
       useGameStore.getState().tick();
-    }, 10_000) as unknown as number;
+    }, 60_000) as unknown as number;
     set({ turnInterval: id });
   },
 
