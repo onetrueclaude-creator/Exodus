@@ -179,8 +179,9 @@ export class TestnetChainService implements ChainService {
   }
 
   async registerAgent(userId: string, tier: AgentTier): Promise<Agent> {
-    // Wallet index resolves from ?wallet=N / env, defaulting to 0 (first wallet).
-    // A full user→wallet mapping is a later milestone.
+    // Wallet index resolves from ?wallet=N / env, defaulting to 1 (the dev
+    // Founder; wallet 0 is the Singularity). A full user→wallet mapping is a
+    // later milestone.
     const result = await api.birthNode(getWalletIndex());
     const position = chainToVisual(result.coordinate.x, result.coordinate.y);
 
@@ -249,7 +250,7 @@ export class TestnetChainService implements ChainService {
   }
 
   async claimNode(chainX: number, chainY: number, stake: number = 200): Promise<ClaimNodeResult> {
-    // Wallet index resolves from ?wallet=N / env (default 0) so two browsers can
+    // Wallet index resolves from ?wallet=N / env (default 1) so two browsers can
     // drive distinct nodes during a playtest.
     return api.claimNode(getWalletIndex(), chainX, chainY, stake);
   }

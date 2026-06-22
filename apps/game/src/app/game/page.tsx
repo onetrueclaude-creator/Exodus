@@ -172,7 +172,7 @@ export default function GamePage() {
 
     // Sync wallet state (secured chains, mined chains, rates, effective stake)
     try {
-      const settings = await getSettings(getWalletIndex());  // ?wallet=N / env, default 0
+      const settings = await getSettings(getWalletIndex());  // ?wallet=N / env, default 1 (dev Founder)
       store.setWalletState({
         securedChains: settings.total_secured_chains,
         minedChains: settings.total_mined_chains,
@@ -372,6 +372,10 @@ export default function GamePage() {
       }
 
       setInitializing(false);
+      // Eager first sync so wallet/scores/edges populate immediately instead of
+      // waiting a full CHAIN_SYNC_INTERVAL_MS — the Scores board read 0 for ~60s
+      // after load because syncFromChain only ran on the interval.
+      syncFromChain();
     }
     init();
 

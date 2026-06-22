@@ -12,7 +12,7 @@ from agentic.economics.fees import FeeEngine
 from agentic.economics.securing import SecuringRegistry
 from agentic.economics.staking import StakeRegistry
 from agentic.lattice.claims import ClaimRegistry
-from agentic.lattice.coordinate import GridCoordinate, resource_density, storage_slots
+from agentic.lattice.coordinate import GridCoordinate, GLOBAL_BOUNDS, resource_density, storage_slots
 from agentic.lattice.mining import MiningEngine
 from agentic.ledger.crypto import hash_tag
 from agentic.ledger.record import Record
@@ -89,6 +89,79 @@ class GenesisState:
             self.vault_dag = _build_genesis_vault()
         if self.vault_registry is None:
             self.vault_registry = VaultRegistry(self.vault_dag)
+
+
+# Coordinate for the dev Founder seat (ring-1 E cardinal). Genesis seats only the
+# Singularity, so this position is free; ring 1 is open at genesis (current_ring=1).
+DEV_FOUNDER_COORD: tuple[int, int] = (10, 0)
+# Token stake for the dev Founder claim. Must be > 0 so the claim earns mining
+# yield every block (MiningEngine returns {} when total stake <= 0).
+DEV_FOUNDER_STAKE: int = 100
+
+
+def ensure_dev_founder_claim(g: "GenesisState", wallet_index: int = 1) -> bool:
+    """Idempotently seat a real, STAKED Founder claim for the dev wallet.
+
+    Runs at app STARTUP (not inside ``create_genesis`` — genesis must stay
+    player-empty so "only the Singularity at genesis" tests keep passing). Lets
+    the upper-right Scores widget show real on-chain stats for the dev player:
+    the staked claim earns mining yield every block, so ``Mined`` grows.
+
+    Idempotent:
+      - If ``wallet_index`` already holds a claim (fresh seed earlier this run,
+        OR restored from persisted ``user_claims`` on restart), this is a no-op
+        and returns False.
+      - Otherwise it registers a staked claim at ``DEV_FOUNDER_COORD`` and wires
+        the matching validator + verification agent + subgrid + viewing key,
+        mirroring the ``POST /api/claim`` path so the seat mines + persists.
+
+    The claim is genesis-granted — no AGNTC is charged (GENESIS_BALANCE is 0).
+
+    Returns True if a claim was created, False if it already existed (no-op).
+    """
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        return False
+    wallet = g.wallets[wallet_index]
+
+    # Idempotency: already seated (this run or restored from the DB) → no-op.
+    if g.claim_registry.get_claims(wallet.public_key):
+        return False
+
+    x, y = DEV_FOUNDER_COORD
+    coord = GridCoordinate(x=x, y=y)
+    # Defensive: never collide with an existing claim at this coordinate.
+    if g.claim_registry.get_claim_at(coord) is not None:
+        return False
+
+    GLOBAL_BOUNDS.expand_to_contain(x, y)
+    slot = g.mining_engine.total_blocks_processed
+    g.claim_registry.register(
+        owner=wallet.public_key, coordinate=coord, stake=DEV_FOUNDER_STAKE, slot=slot,
+    )
+
+    # Validator + verification agent (mirrors /api/claim so it joins PoAIV).
+    vid = len(g.validators)
+    rng_vpu = random.Random(vid + 7)
+    v = Validator(
+        id=vid, token_stake=float(DEV_FOUNDER_STAKE),
+        cpu_vpu=float(rng_vpu.randint(20, 120)), online=True,
+    )
+    g.validators.append(v)
+    g.agents.append(VerificationAgent(
+        agent_id=f"verifier-{vid:03d}", validator_id=vid,
+        vpu_capacity=v.cpu_vpu, registered_epoch=0, state=AgentState.ACTIVE,
+    ))
+
+    # Node subgrid + per-owner allocator + viewing key (mirrors /api/claim).
+    node_id = node_id_from_coord(x, y)
+    if node_id not in g.node_subgrids:
+        g.node_subgrids[node_id] = NodeSubgrid.new(
+            node_id=node_id, owner=wallet.public_key, created_at_block=slot,
+        )
+    if wallet.public_key not in g.subgrid_allocators:
+        g.subgrid_allocators[wallet.public_key] = SubgridAllocator(owner=wallet.public_key)
+    g.viewing_keys[wallet.public_key] = wallet.viewing_key
+    return True
 
 
 def _deterministic_urandom(rng: random.Random):
@@ -175,7 +248,6 @@ def create_genesis(
         state.insert_record(star_record)
 
     # Expand global bounds to cover genesis coordinates
-    from agentic.lattice.coordinate import GLOBAL_BOUNDS
     for x, y in genesis_coords:
         GLOBAL_BOUNDS.expand_to_contain(x, y)
 

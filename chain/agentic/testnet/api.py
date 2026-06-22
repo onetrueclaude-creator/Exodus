@@ -460,6 +460,14 @@ _DB_PATH: _Path = _Path(
     _os.environ.get("DB_PATH", str(_Path(__file__).resolve().parent.parent.parent / "testnet_state.db"))
 )
 
+# Seat a real, STAKED Founder claim for the dev wallet (index 1) at startup so the
+# Scores widget shows live on-chain stats for the dev player. ON by default (this
+# IS the testnet); set SEED_DEV_FOUNDER=0 to disable. Idempotent + persisted —
+# safe on a fresh OR restored testnet_state.db (no reset needed).
+_SEED_DEV_FOUNDER: bool = _os.environ.get("SEED_DEV_FOUNDER", "1") != "0"
+# Dev Founder wallet index (0 is the Singularity; 1 is a normal genesis player).
+_DEV_FOUNDER_WALLET_INDEX: int = 1
+
 
 @app.on_event("startup")
 def _init_genesis() -> None:
@@ -475,6 +483,27 @@ def _init_genesis() -> None:
     restored_lbt = load_state(_genesis, _DB_PATH)
     if restored_lbt > 0.0:
         _last_block_time = restored_lbt
+
+    # Seat the dev Founder claim AFTER restore so its idempotency check sees any
+    # claim already persisted from a prior run (no duplicate seat on restart).
+    # Genesis stays player-empty; this startup-only seat gives the dev player a
+    # real staked on-chain node so the Scores widget reflects mining/securing.
+    if _SEED_DEV_FOUNDER:
+        try:
+            from agentic.testnet.genesis import ensure_dev_founder_claim
+            ensure_dev_founder_claim(_genesis, wallet_index=_DEV_FOUNDER_WALLET_INDEX)
+        except Exception:
+            pass  # never block startup on the dev seed
+
+    # Assign vault shards from the now-current claim set (restored + seeded) so
+    # possession proofs work from boot. _refresh_vault_owners otherwise only runs
+    # on a runtime claim/birth, so a fresh start (or restart-from-DB) would leave
+    # every wallet with zero shards — making the PoAW "Secure" gate (and the
+    # Secured score it credits) impossible until someone happened to claim.
+    try:
+        _refresh_vault_owners()
+    except Exception:
+        pass  # never block startup on vault owner assignment
 
 
 @app.on_event("startup")
@@ -1256,6 +1285,13 @@ def post_vault_submit_proof(req: VaultSubmitProofRequest) -> VaultSubmitProofRes
             )
         except Exception:
             pass  # never break proof submission on a mint error
+        # Credit +1 Secured chain for the terminal "Secure" action. The PoAW
+        # possession proof does not open a securing position, so this is what
+        # moves the player's Secured score on the Scores widget.
+        try:
+            g.securing_registry.credit_proof_secured(req.wallet_index)
+        except Exception:
+            pass  # never break proof submission on a bookkeeping error
     return VaultSubmitProofResponse(
         accepted=accepted,
         cpu_credit=VAULT_PROOF_CPU_CREDIT if accepted else 0.0,
