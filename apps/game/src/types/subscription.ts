@@ -1,3 +1,6 @@
+import { useParamsStore } from "@/store/paramsStore";
+import { ECONOMY_DEFAULTS } from "@/lib/economyDefaults";
+
 export type SubscriptionTier = "COMMUNITY" | "PROFESSIONAL";
 
 export interface SubscriptionPlan {
@@ -11,6 +14,16 @@ export interface SubscriptionPlan {
   cpuRegen: number; // CPU Energy gained per turn (passive income)
   features: string[];
   accent: string; // Tailwind color classes: text border bg
+}
+
+/** Read the per-tier start-resources from the params store (server-overridable).
+ *  Falls back to ECONOMY_DEFAULTS when the store hasn't hydrated yet or the
+ *  tier entry is absent (e.g. dormant MAX tier).
+ *  SUBSCRIPTION_PLANS retains its numeric fields for static/display use;
+ *  live gameplay must call this function instead. */
+export function getSubscriptionEconomy(tier: SubscriptionTier) {
+  const eco = useParamsStore.getState().economy ?? ECONOMY_DEFAULTS;
+  return eco.subscription[tier] ?? ECONOMY_DEFAULTS.subscription[tier] ?? ECONOMY_DEFAULTS.subscription.COMMUNITY;
 }
 
 /** Subscription plans — determines starting conditions at registration */

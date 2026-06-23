@@ -22,7 +22,7 @@ import { getWalletIndex } from "@/lib/walletIndex";
 import { useChainEvents } from "@/hooks/useChainEvents";
 import type { SubscriptionTier } from "@/types";
 import type { Tier } from "@/types";
-import { SUBSCRIPTION_PLANS } from "@/types/subscription";
+import { getSubscriptionEconomy } from "@/types/subscription";
 import { createCellInternal } from "@/lib/lattice";
 import { getNextSpawnCell } from "@/lib/spawn";
 import { useParamsStore } from "@/store/paramsStore";
@@ -247,12 +247,12 @@ export default function GamePage() {
           setCurrentUserTier(identity.tier);
           revealTier(identity.tier);
           if (identity.source === "dev") {
-            const plan = SUBSCRIPTION_PLANS.find((p) => p.tier === identity.subscription) ?? SUBSCRIPTION_PLANS[0];
+            const eco = getSubscriptionEconomy((identity.subscription as SubscriptionTier) ?? "COMMUNITY");
             useGameStore.setState({
-              energy: plan.startEnergy,
-              agntcBalance: plan.startAgntc + 1, // +1 genesis airdrop
-              minerals: plan.startMinerals,
-              cpuRegenPerTurn: plan.cpuRegen,
+              energy: eco.startEnergy,
+              agntcBalance: eco.startAgntc + 1, // +1 genesis airdrop
+              minerals: eco.startMinerals,
+              cpuRegenPerTurn: eco.cpuRegen,
               currentUserTier: identity.tier,
             });
             revealTier("community");
@@ -274,16 +274,16 @@ export default function GamePage() {
           subscription: "COMMUNITY" as SubscriptionTier,
           source: "server" as const,
         };
-        const plan = SUBSCRIPTION_PLANS.find((p) => p.tier === resolved.subscription) ?? SUBSCRIPTION_PLANS[0];
+        const eco = getSubscriptionEconomy(resolved.subscription);
         const newUserTier: Tier = resolved.tier;
 
         const newUserId = `user-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
         useGameStore.setState({
           currentUserId: newUserId,
-          energy: plan.startEnergy,
-          agntcBalance: plan.startAgntc + 1, // +1 genesis airdrop
-          minerals: plan.startMinerals,
-          cpuRegenPerTurn: plan.cpuRegen,
+          energy: eco.startEnergy,
+          agntcBalance: eco.startAgntc + 1, // +1 genesis airdrop
+          minerals: eco.startMinerals,
+          cpuRegenPerTurn: eco.cpuRegen,
         });
         // Open-grid spawn: set tier first, then claim the next available origin-out cell.
         useGameStore.setState({ currentUserTier: newUserTier });
