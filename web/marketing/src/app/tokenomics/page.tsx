@@ -5,18 +5,23 @@ import FeatureCard from "@/components/FeatureCard";
 import { ZapIcon, LockIcon, VoteIcon, ShieldIcon, DiamondIcon } from "@/components/Icons";
 
 const healthMetrics = [
-  { label: "Soft Cap", value: "1B", unit: "AGNTC" },
-  { label: "Genesis Supply", value: "900", unit: "AGNTC" },
-  { label: "Inflation Ceiling", value: "5", unit: "%/yr" },
+  { label: "Fixed Supply", value: "1B", unit: "AGNTC" },
+  { label: "Community / Earned", value: "58", unit: "%" },
+  { label: "Release Ceiling", value: "5", unit: "%/yr" },
   { label: "Fee Burn", value: "50", unit: "%" },
-  { label: "Signup Bonus", value: "1", unit: "AGNTC" },
+  { label: "Chain Genesis", value: "900", unit: "AGNTC" },
 ];
 
-// Supply is mining-driven: there is no pre-allocated faction distribution.
-// New AGNTC enters circulation only through subgrid Secure mining (the sole mint path).
+// Fixed 1B supply allocated across six buckets. The community/earned majority
+// (participation mining + ongoing emissions + ecosystem = 58%) reaches participants
+// through subgrid Secure mining; operating reserves vest on published schedules.
 const distribution = [
-  { label: "Mined via subgrid Secure (sole mint path)", percentage: 99, color: "#00D4FF" },
-  { label: "Genesis (900 AGNTC, 100 to Singularity core)", percentage: 1, color: "#8B5CF6" },
+  { label: "Participation mining (earned)", percentage: 25, color: "#00D4FF" },
+  { label: "Ongoing emissions (earned)", percentage: 25, color: "#22D3EE" },
+  { label: "Team (vested)", percentage: 18, color: "#8B5CF6" },
+  { label: "Treasury", percentage: 14, color: "#A78BFA" },
+  { label: "Liquidity", percentage: 10, color: "#F59E0B" },
+  { label: "Ecosystem", percentage: 8, color: "#34D399" },
 ];
 
 const utilities = [
@@ -29,8 +34,8 @@ const comparisons = [
   { metric: "Ledger Consensus", agntc: "PoAIV (9/13 committee)", sol: "Tower BFT", aleo: "Proof of Succinct Work", mina: "Ouroboros" },
   { metric: "Staking Model", agntc: "CPU + Disk + Token", sol: "Token Only", aleo: "GPU (Proving)", mina: "Token Only" },
   { metric: "Privacy", agntc: "Private by Default (SMT)", sol: "Public", aleo: "Private by Default", mina: "Public" },
-  { metric: "Supply", agntc: "1B Soft Cap (5% ceiling)", sol: "~600M (Inflationary)", aleo: "1.5B (Fixed)", mina: "~1.2B (Inflationary)" },
-  { metric: "Genesis Supply", agntc: "900 AGNTC (mining-driven)", sol: "~260M (43%)", aleo: "~187M (12.5%)", mina: "~800M (67%)" },
+  { metric: "Supply", agntc: "1B (Fixed)", sol: "~600M (Inflationary)", aleo: "1.5B (Fixed)", mina: "~1.2B (Inflationary)" },
+  { metric: "Chain Genesis", agntc: "900 AGNTC (earned-release)", sol: "~260M (43%)", aleo: "~187M (12.5%)", mina: "~800M (67%)" },
   { metric: "State Security", agntc: "Proof-of-Vault (CPU+disk)", sol: "Full replication", aleo: "Full replication", mina: "Recursive SNARK" },
 ];
 
@@ -40,7 +45,7 @@ export default function TokenomicsPage() {
       <Hero
         title="AGNTC"
         highlight="Tokenomics"
-        subtitle="Agentic Coin — the native token of ZK Agentic Chain. Gas, dual staking, and governance. Mining is the sole mint path; a 5% annual ceiling and 50% fee burn keep supply honest."
+        subtitle="Agentic Coin — the native token of ZK Agentic Chain. Gas, dual staking, and governance. A fixed 1B supply, earned through mining; a 5% release ceiling and 50% fee burn keep it honest."
       />
 
       {/* Token Economics at a glance */}
@@ -70,8 +75,13 @@ export default function TokenomicsPage() {
           </div>
           <div className="mt-6 glass-card p-5 border-l-2 border-accent-cyan/40">
             <p className="text-sm text-text-secondary leading-relaxed">
-              <span className="text-text-primary font-medium">No pre-allocated distribution.</span> There is no 25%-per-faction split, no team allocation, and no treasury minting authority.
-              New AGNTC enters circulation only through one pathway: each node&apos;s private 8×8 subgrid mints AGNTC from its active Secure cells. At genesis only the Singularity is seated, with its 100 AGNTC minted to a never-selling reserve at the core; the remaining 800 of the 900 genesis supply enters as participants join and mine. Founders&apos; own mined AGNTC vests over 4 years with a 12-month cliff.
+              <span className="text-text-primary font-medium">Fixed supply, two layers.</span> The 1B total is allocated across six buckets (above); the community/earned share — participation mining, ongoing emissions, and ecosystem — is 58%. Operating reserves (team, treasury, liquidity) release on published, smoothed schedules.
+              The earned buckets are not handed out administratively: they reach participants through the live-chain internal economy, where each node&apos;s private subgrid releases AGNTC from its active Secure cells. The chain&apos;s own genesis is 900 AGNTC (100 to the never-selling Singularity reserve at the core). The 5% annual figure is the per-epoch <span className="text-text-primary font-medium">release rate</span> of the earned buckets — not open-ended inflation — so issuance can never exceed the fixed 1B.
+            </p>
+          </div>
+          <div className="mt-4 glass-card p-5 border-l-2 border-accent-purple/40">
+            <p className="text-sm text-text-secondary leading-relaxed">
+              <span className="text-text-primary font-medium">Participation is earned, not sold.</span> The 25% participation bucket is allocated for verifiable protocol work performed during an extended free participation period, converted to mainnet by a fixed, pro-rata formula — so the total is capped at the bucket by construction, no matter how many people take part. Distribution is identity-gated (anti-Sybil); unclaimed tokens return to the treasury. There is no purchase and no representation of any monetary outcome.
             </p>
           </div>
         </div>
@@ -102,16 +112,16 @@ export default function TokenomicsPage() {
             Economic <span className="gradient-text">Model</span>
           </h2>
           <p className="text-center text-text-secondary mb-12 max-w-2xl mx-auto">
-            Mining-only issuance under a hard ceiling, with two channels of permanent deflationary pressure.
+            Fixed-supply issuance: earned release under a 5% ceiling, with two channels of permanent deflationary pressure.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="glass-card p-6 text-center group hover:border-accent-cyan/30 transition-colors">
               <div className="w-10 h-10 mx-auto mb-3 rounded-lg bg-accent-cyan/10 flex items-center justify-center text-accent-cyan">
                 <DiamondIcon size={20} />
               </div>
-              <p className="text-sm text-text-muted uppercase tracking-widest mb-2">Inflation Ceiling</p>
+              <p className="text-sm text-text-muted uppercase tracking-widest mb-2">Release Ceiling</p>
               <p className="text-3xl font-bold gradient-text">5%</p>
-              <p className="text-sm text-text-secondary mt-2">Hard annual cap, enforced per epoch</p>
+              <p className="text-sm text-text-secondary mt-2">Per-epoch release rate of the earned buckets</p>
               <p className="text-xs text-text-muted mt-1">Mining hardness (16·band) keeps it well below</p>
             </div>
             <div className="glass-card p-6 text-center group hover:border-accent-cyan/30 transition-colors">

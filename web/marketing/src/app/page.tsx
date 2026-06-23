@@ -34,7 +34,7 @@ const differentiators = [
 ];
 
 const metrics = [
-  { label: "Total Supply", value: "1B", unit: "AGNTC (soft cap)" },
+  { label: "Total Supply", value: "1B", unit: "AGNTC (fixed)" },
   { label: "Genesis Supply", value: "900", unit: "AGNTC" },
   { label: "Consensus", value: "PoAIV" },
   { label: "Fee Burn", value: "50", unit: "%" },
