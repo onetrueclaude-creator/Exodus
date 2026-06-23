@@ -25,6 +25,7 @@ import type { Tier } from "@/types";
 import { SUBSCRIPTION_PLANS } from "@/types/subscription";
 import { createCellInternal } from "@/lib/lattice";
 import { getNextSpawnCell } from "@/lib/spawn";
+import { useParamsStore } from "@/store/paramsStore";
 
 /** Block time on chain — refresh grid every 60 seconds to sync with ledger */
 const CHAIN_SYNC_INTERVAL_MS = 60_000;
@@ -369,6 +370,8 @@ export default function GamePage() {
       // waiting a full CHAIN_SYNC_INTERVAL_MS — the Scores board read 0 for ~60s
       // after load because syncFromChain only ran on the interval.
       syncFromChain();
+      // Hydrate economy params from /api/params (fire-and-forget; no-ops offline).
+      useParamsStore.getState().hydrate();
     }
     init();
 
