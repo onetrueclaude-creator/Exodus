@@ -9,9 +9,9 @@ import {
   getNodeCpuPerTurn,
   getLevelUpTurns,
   getLevelUpCost,
+  getMiningPresets,
+  getSecuringPresets,
   TIER_DISPLAY_NAME,
-  MINING_PRESETS,
-  SECURING_PRESETS,
   type NodeTier,
 } from '@/lib/nodeTier';
 import { getDistance } from '@/lib/proximity';
@@ -1095,8 +1095,8 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
                     {nodeLabel} · Lv {agent.level} {TIER_DISPLAY_NAME[getNodeTier(agent.level)]} · {nodeOutput} CPU/turn generated
                   </div>
 
-                  <PresetRow label="Mining"   value={miningCpuState}   onChange={setMiningCpuState}   presets={MINING_PRESETS} />
-                  <PresetRow label="Securing" value={securingCpuState} onChange={setSecuringCpuState} presets={SECURING_PRESETS} />
+                  <PresetRow label="Mining"   value={miningCpuState}   onChange={setMiningCpuState}   presets={getMiningPresets()} />
+                  <PresetRow label="Securing" value={securingCpuState} onChange={setSecuringCpuState} presets={getSecuringPresets()} />
 
                   <div className="text-[12px] text-text-muted" style={{ fontFamily: "'Fira Code', monospace" }}>
                     Net (this node): +{nodeOutput} generated · −{committed} committed · {net >= 0 ? '+' : ''}{net}/turn

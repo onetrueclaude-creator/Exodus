@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import {
   getNodeTier,
   getTierMultiplier,
@@ -6,9 +6,13 @@ import {
   getLevelUpTurns,
   TIER_DISPLAY_NAME,
   getLevelUpCost,
-  MINING_PRESETS,
-  SECURING_PRESETS,
+  getMiningPresets,
+  getSecuringPresets,
 } from "@/lib/nodeTier";
+import { useParamsStore } from "@/store/paramsStore";
+import { ECONOMY_DEFAULTS } from "@/lib/economyDefaults";
+
+beforeEach(() => useParamsStore.setState({ economy: ECONOMY_DEFAULTS, loaded: false }));
 
 describe("getNodeTier", () => {
   it.each([
@@ -94,9 +98,29 @@ describe("getLevelUpCost", () => {
   });
 });
 
-describe("MINING_PRESETS / SECURING_PRESETS", () => {
-  it("both contain 0/100/200/500/1000", () => {
-    expect([...MINING_PRESETS]).toEqual([0, 100, 200, 500, 1000]);
-    expect([...SECURING_PRESETS]).toEqual([0, 100, 200, 500, 1000]);
+describe("getMiningPresets / getSecuringPresets", () => {
+  it("both return [0, 100, 200, 500, 1000] at defaults", () => {
+    expect(getMiningPresets()).toEqual([0, 100, 200, 500, 1000]);
+    expect(getSecuringPresets()).toEqual([0, 100, 200, 500, 1000]);
+  });
+  it("getMiningPresets reflects a store override", () => {
+    useParamsStore.setState({ economy: { ...ECONOMY_DEFAULTS, miningPresets: [0, 50, 250] } });
+    expect(getMiningPresets()).toEqual([0, 50, 250]);
+  });
+});
+
+describe("nodeTier reads params store", () => {
+  it("default getLevelUpCost matches the legacy curve (200 × 1.8^(L-1))", () => {
+    expect(getLevelUpCost(1)).toBe(200);
+    expect(getLevelUpCost(3)).toBe(Math.floor(200 * 1.8 ** 2));
+  });
+  it("reflects a server override of upgradeCostBase", () => {
+    useParamsStore.setState({ economy: { ...ECONOMY_DEFAULTS, upgradeCostBase: 400 } });
+    expect(getLevelUpCost(1)).toBe(400);
+  });
+  it("default getNodeCpuPerTurn unchanged; getNodeTier bands unchanged", () => {
+    expect(getNodeCpuPerTurn(1)).toBe(Math.floor((5 + 1 * 5) * 1.0));
+    expect(getNodeTier(3)).toBe("synapse");
+    expect(getNodeTier(4)).toBe("cortex");
   });
 });

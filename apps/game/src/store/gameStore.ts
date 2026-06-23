@@ -6,7 +6,7 @@ import type { Tier, BlockNode, GridNode } from "@/types";
 import type { ResearchProgress } from "@/types/research";
 import { RESEARCH_TREES } from "@/lib/research";
 import { buildCellsForRing, buildAllCells } from "@/lib/lattice";
-import { getNodeCpuPerTurn, getNodeTier as getNodeTierFromStore, getLevelUpCost, MINING_PRESETS } from "@/lib/nodeTier";
+import { getNodeCpuPerTurn, getNodeTier as getNodeTierFromStore, getLevelUpCost, getMiningPresets } from "@/lib/nodeTier";
 import { EDGE_FADE_BLOCKS } from "@/lib/orbitalEdges";
 
 /** CPU Energy deducted per turn for each owned blocknode (maintenance cost) */
@@ -681,7 +681,7 @@ export const useGameStore = create<GameState>((set) => ({
   setSyncedAgntcBalance: (agntc) => set({ agntcBalance: agntc }),
 
   setNodeMiningSecuring: (agentId, mining, securing) => {
-    const validPresets: ReadonlyArray<number> = MINING_PRESETS;
+    const validPresets: ReadonlyArray<number> = getMiningPresets();
     if (!validPresets.includes(mining) || !validPresets.includes(securing)) return false;
     const s = useGameStore.getState();
     if (!s.agents[agentId]) return false;
