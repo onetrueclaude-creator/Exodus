@@ -16,6 +16,10 @@ from agentic.ledger.crypto import verify_ed25519
 DOMAIN = b"Agentic:Tx:v1"
 CHAIN_ID = "testnet"
 
+# Keys that the B2 gateway overrides server-side — excluded from the signed
+# canonical message so a signature is invariant under the gateway's injection.
+WALLET_KEYS = ("wallet_index", "sender_wallet", "self_wallet")
+
 
 class SignatureError(Exception):
     """Raised when a write fails signature/nonce verification (-> HTTP 401)."""
@@ -68,7 +72,8 @@ def verify_write(
     expected = g.account_nonces.get(owner, 0)
     if nonce != expected:
         raise SignatureError(f"bad nonce: expected {expected}, got {nonce}")
-    msg = canonical_message(action_type, params, owner.hex(), nonce)
+    signed_params = {k: v for k, v in params.items() if k not in WALLET_KEYS}
+    msg = canonical_message(action_type, signed_params, owner.hex(), nonce)
     try:
         sig = bytes.fromhex(signature_hex)
     except ValueError as e:

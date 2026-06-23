@@ -18,6 +18,7 @@ import { getDistance } from '@/lib/proximity';
 import { postTransact, getStatus as fetchChainStats } from '@/services/testnetApi';
 import { getWalletIndex } from '@/lib/walletIndex';
 import { runSecure } from '@/lib/vaultGate';
+import { isOnChainRequiredError } from '@/lib/writeSigner';
 import { useTerminalStore, type ChatMessage } from '@/store/terminalStore';
 import { SINGULARITY_ID } from '@/lib/orbitalSeats';
 import { logAction } from '@/lib/actionLogger';
@@ -432,9 +433,14 @@ export default function AgentChat({ agent, onClose, onDeploy, chainService, init
           addMsg('system', `Secure failed: ${res.reason}`);
         }
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Secure failed';
-        logAction('chain-err', 'Secure failed', msg);
-        addMsg('system', `Secure failed: ${msg}`);
+        if (isOnChainRequiredError(err)) {
+          logAction('chain-err', 'Secure failed', 'Hollow-DB: no wallet');
+          addMsg('system', 'Connect a wallet to act on-chain.');
+        } else {
+          const msg = err instanceof Error ? err.message : 'Secure failed';
+          logAction('chain-err', 'Secure failed', msg);
+          addMsg('system', `Secure failed: ${msg}`);
+        }
       }
       setProcessing(false);
       return;

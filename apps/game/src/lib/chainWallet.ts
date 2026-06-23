@@ -9,7 +9,7 @@ export const WALLET_KEYS = ['wallet_index', 'sender_wallet', 'self_wallet'] as c
 // User-scoped path shapes where a segment IS the wallet index.
 const WALLET_PATH_PATTERNS: Array<{ re: RegExp; build: (wi: number, m: RegExpMatchArray) => string }> = [
   { re: /^api\/resources\/\d+\/assign$/, build: (wi) => `api/resources/${wi}/assign` },
-  { re: /^api\/(balance|rewards|staking|settings|vesting|secure|name)\/\d+$/, build: (wi, m) => `api/${m[1]}/${wi}` },
+  { re: /^api\/(balance|rewards|staking|settings|vesting|secure|name|nonce)\/\d+$/, build: (wi, m) => `api/${m[1]}/${wi}` },
   { re: /^api\/vault\/(assignment|status)\/\d+$/, build: (wi, m) => `api/vault/${m[1]}/${wi}` },
 ];
 
