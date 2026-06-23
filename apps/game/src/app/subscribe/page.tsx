@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useBindWallet } from '@/hooks/useBindWallet';
 import { SUBSCRIPTION_PLANS } from '@/types/subscription';
 import type { SubscriptionTier } from '@/types/subscription';
 
@@ -11,6 +12,8 @@ export default function SubscribePage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [step, setStep] = useState<'plan' | 'wallet'>('plan');
+  const { bind, status, error: bindError } = useBindWallet(() => router.push('/game'));
 
   const handleSelect = async (tier: SubscriptionTier) => {
     setSubmitting(true);
@@ -29,13 +32,52 @@ export default function SubscribePage() {
         }
         throw new Error(data.error || 'Subscription failed');
       }
-      router.push('/game');
+      setStep('wallet');
     } catch (err) {
       console.error('Subscribe error:', err);
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setSubmitting(false);
     }
   };
+
+  if (step === 'wallet') {
+    const busy = status === 'connecting' || status === 'signing' || status === 'binding';
+    const label =
+      status === 'connecting' ? 'Connecting…' :
+      status === 'signing' ? 'Sign in Phantom…' :
+      status === 'binding' ? 'Binding…' : 'Connect Phantom';
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center bg-background">
+        <div className="flex flex-col items-center w-full max-w-sm px-6 text-center">
+          <h2 className="text-[22px] font-semibold text-text-primary mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
+            Go on-chain (optional)
+          </h2>
+          <p className="text-[13px] text-text-muted mb-6">
+            Connect a Phantom wallet to sign real on-chain actions. You can also do this
+            later from the game — playing without a wallet is fully supported.
+          </p>
+          {bindError && (
+            <div className="w-full mb-4 text-[12px] text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg py-2 px-4">
+              {bindError}
+            </div>
+          )}
+          <button
+            onClick={() => void bind()}
+            disabled={busy}
+            className="w-full py-3 rounded-lg text-[14px] font-medium bg-accent-purple/15 text-accent-purple border border-accent-purple/30 hover:bg-accent-purple/25 disabled:opacity-30 transition-all mb-3"
+          >
+            {label}
+          </button>
+          <button
+            onClick={() => router.push('/game')}
+            className="text-[12px] text-text-muted/60 hover:text-text-secondary transition-colors"
+          >
+            Skip for now
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   if (!REGISTRATION_OPEN) {
     return (
