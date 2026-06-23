@@ -8,7 +8,7 @@ const phases = [
     title: "Token Launch & Research",
     status: "completed" as const,
     items: [
-      "AGNTC minted as a Solana SPL token (1B soft cap)",
+      "AGNTC minted as a Solana SPL token (1B fixed supply)",
       "PoAIV consensus design + ZK private-channel architecture",
       "Economic model & phyllotaxis lattice specification",
       "Whitepaper v1.3 (Proof-of-Vault revision) published",

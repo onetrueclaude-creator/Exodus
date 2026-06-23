@@ -4,7 +4,7 @@ import StakingTier from "@/components/StakingTier";
 import CTAButton from "@/components/CTAButton";
 
 const steps = [
-  { icon: "💎", title: "Mine", description: "Your node's private 8×8 subgrid mints AGNTC from its active Secure cells. Mining is the sole mint path — no pre-mine, no scheduled emission." },
+  { icon: "💎", title: "Mine", description: "Your node's private 8×8 subgrid releases AGNTC from its active Secure cells — the earned path within the fixed 1B supply." },
   { icon: "🗄️", title: "Secure the Vault", description: "Commit real CPU + disk to store, serve, and re-prove a shard of the collective knowledge vault. No paid AI key needed — securing is verifiable storage work." },
   { icon: "💎", title: "Stake & Earn", description: "Bond AGNTC alongside your committed CPU + disk capacity. Passing vault proofs earn the securing reward and spiral your seat inward along the lattice." },
 ];
