@@ -67,3 +67,62 @@ def test_nonce_endpoint_returns_sign_context():
         assert body["chain_id"] == "testnet"
         # owner_hex is the wallet's public key hex
         assert body["owner_hex"] == api._g().wallets[2].public_key.hex()
+
+
+def test_secure_endpoint_rejects_unsigned_when_bypass_off(monkeypatch):
+    """Production posture: unsigned secure → 401; correctly-signed secure → 200.
+
+    Proves Task 1 enforcement without any code change: ALLOW_DEV_CUSTODIAL_SIGN
+    absent means verify_write runs; a missing signature must be rejected, and a
+    valid ed25519 signature over the canonical message must be accepted.
+
+    Uses wallet 0 (the genesis claim holder) so the secured wallet already owns
+    a node — this lets us hit 200 on success rather than stopping at 400 "no claim".
+    """
+    import importlib
+    import agentic.testnet.api as api
+    from fastapi.testclient import TestClient
+    from agentic.testnet.signing import canonical_message
+
+    monkeypatch.setenv("ADMIN_TOKEN", "test-admin")
+    monkeypatch.delenv("ALLOW_DEV_CUSTODIAL_SIGN", raising=False)
+    importlib.reload(api)
+
+    with TestClient(api.app) as c:
+        # Reset to a known state; wallet 0 always holds the genesis claim.
+        c.post(
+            "/api/reset?wallets=10&seed=42",
+            headers={"X-Admin-Token": "test-admin"},
+        )
+
+        # Bind a fresh ed25519 key to wallet 0 in the live in-memory state.
+        sk = nacl.signing.SigningKey.generate()
+        g = api._g()
+        owner = g.wallets[0].public_key
+        g.account_signing_keys[owner] = bytes(sk.verify_key)
+
+        # --- RED path: unsigned request must be rejected (401) ---
+        r = c.post("/api/secure", json={"wallet_index": 0, "duration_blocks": 10})
+        assert r.status_code == 401, (
+            f"Expected 401 for unsigned write, got {r.status_code}: {r.text}"
+        )
+
+        # --- GREEN path: correctly-signed request must be accepted (200) ---
+        nonce = g.account_nonces.get(owner, 0)
+        # Sign only the non-wallet-key params (wallet_index is stripped by verify_write).
+        signed_params = {"duration_blocks": 10}
+        msg = canonical_message("secure", signed_params, owner.hex(), nonce)
+        sig = sk.sign(msg).signature.hex()
+
+        r2 = c.post(
+            "/api/secure",
+            json={
+                "wallet_index": 0,
+                "duration_blocks": 10,
+                "signature": sig,
+                "nonce": nonce,
+            },
+        )
+        assert r2.status_code == 200, (
+            f"Expected 200 for correctly-signed write, got {r2.status_code}: {r2.text}"
+        )

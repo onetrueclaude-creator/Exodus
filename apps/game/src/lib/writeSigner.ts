@@ -1,6 +1,19 @@
 // apps/game/src/lib/writeSigner.ts
 import { canonicalMessage } from "@/lib/canonicalSign";
 
+/**
+ * Returns true when `err` is a gateway 401 from a chain write — meaning the
+ * session has no `chainWalletIndex` (Hollow-DB user) or the signature was
+ * rejected. The caller should show a "connect a wallet" affordance rather
+ * than a raw error string.
+ *
+ * Pattern matched: Error message contains both "POST" and "401".
+ */
+export function isOnChainRequiredError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  return err.message.includes("POST") && err.message.includes(": 401");
+}
+
 export interface WriteSigner {
   pubkeyBase58: string;
   signMessage: (message: Uint8Array) => Promise<Uint8Array>;
