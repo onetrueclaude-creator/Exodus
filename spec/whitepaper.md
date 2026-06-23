@@ -1,10 +1,12 @@
-# AGNTC Whitepaper v1.5
+# AGNTC Whitepaper v1.6
 
 > **ZK Agentic Chain: A Privacy-Preserving Blockchain with AI-Powered Verification**
 >
-> Version 1.5 (Finality Firewall Revision) | June 2026
+> Version 1.6 (Fixed-Supply Tokenomics Revision) | June 2026
 >
-> v1.5 supersedes v1.4 (ZK-Agentic Revision). It makes **one consensus-behaviour change and reframes the document around it**: as of 2026-06-22 the **finality weight** — committee (verifier) selection *and* leader selection — is **AGNTC token-stake ONLY** (the "finality firewall"). The dual-staking effective stake `S_eff = α·token + β·cpu` (α=0.40, β=0.60) is **preserved unchanged as the ECONOMIC weight** — reward share and earnings proportionality — so CPU work still earns proportionally more (primarily through mining yield); it simply no longer weights *finality selection*. The reason is a security one (blueprint item P1-1): CPU / Proof-of-Vault-derived work is **Sybil-weak** until it is PoRep-hardened, so letting it weight finality would be a cheap path to consensus capture (cheaply corrupting Proof-of-Vault would buy committee influence). CPU-weighted committee selection — the original §13 dual-staking-in-finality vision — is therefore **relabelled from current behaviour to a mainnet GOAL, gated on PoRep-hardening the CPU stake** (making committed CPU+disk Sybil-resistant), in exactly the same honesty style as the ZK ladder (§5B.2). The affected surfaces: the Abstract/§1.3 lead, §5 committee/leader selection, §8 Sybil analysis (the "~2.5× more expensive" claim is **reframed as the PoRep-gated mainnet target, not deleted**), §13 (the new finality-firewall vs economic-weight split; the v1.4 "Architectural keystone" pre-mainnet caveat is **replaced by the firewall as now-shipped**), §23.3, §24.3, and the glossary (new `finality_weight` / *finality firewall* terms). v1.5 changes nothing in §22: ALPHA/BETA and every parameter value are unchanged (the firewall is a *selection-source* change, not a parameter change), so the concordance suite stays green.
+> v1.6 supersedes v1.5. It is a **token-economics revision** that reconciles the paper with the fixed-supply distribution model. AGNTC is stated as a **fixed total supply of 1,000,000,000**, allocated across defined buckets — participation mining 25% / ongoing emissions 25% / team 18% / treasury 14% / liquidity 10% / ecosystem 8% (community/earned share ≈ 58%). The document now distinguishes two layers: a **distribution layer** (the fixed 1B and its allocation) and the existing **internal economy** (subgrid mining, the 900-AGNTC chain genesis, fee burn), and reframes the **"5% ceiling" as the per-epoch *release rate* of the fixed participation/emissions buckets**, not open-ended inflation. A new **§10.1.3 Participation Distribution** documents the earned, **pro-rata-capped** distribution of the 250M participation bucket from an extended free participation period to mainnet (identity-gated; unclaimed → treasury; framed as earned-for-work, not a sale). Affected surfaces: §9.1, §9.3, §10.1 (new §10.1.1/§10.1.2/§10.1.3), §10.4, §11.1. **§22 is unchanged numerically** — `MAX_SUPPLY = 1,000,000,000` and `GENESIS_SUPPLY = 900` are *both* already in the parameters and remain concordant (1B = distribution layer; 900 = internal-economy genesis) — so the concordance suite stays green. All protocol mechanics (PoAIV, Proof-of-Vault, dual staking, the finality firewall, BME burns) are unchanged.
+>
+> v1.5 (historical) made **one consensus-behaviour change and reframed the document around it**: as of 2026-06-22 the **finality weight** — committee (verifier) selection *and* leader selection — is **AGNTC token-stake ONLY** (the "finality firewall"). The dual-staking effective stake `S_eff = α·token + β·cpu` (α=0.40, β=0.60) is **preserved unchanged as the ECONOMIC weight** — reward share and earnings proportionality — so CPU work still earns proportionally more (primarily through mining yield); it simply no longer weights *finality selection*. The reason is a security one (blueprint item P1-1): CPU / Proof-of-Vault-derived work is **Sybil-weak** until it is PoRep-hardened, so letting it weight finality would be a cheap path to consensus capture (cheaply corrupting Proof-of-Vault would buy committee influence). CPU-weighted committee selection — the original §13 dual-staking-in-finality vision — is therefore **relabelled from current behaviour to a mainnet GOAL, gated on PoRep-hardening the CPU stake** (making committed CPU+disk Sybil-resistant), in exactly the same honesty style as the ZK ladder (§5B.2). The affected surfaces: the Abstract/§1.3 lead, §5 committee/leader selection, §8 Sybil analysis (the "~2.5× more expensive" claim is **reframed as the PoRep-gated mainnet target, not deleted**), §13 (the new finality-firewall vs economic-weight split; the v1.4 "Architectural keystone" pre-mainnet caveat is **replaced by the firewall as now-shipped**), §23.3, §24.3, and the glossary (new `finality_weight` / *finality firewall* terms). v1.5 changes nothing in §22: ALPHA/BETA and every parameter value are unchanged (the firewall is a *selection-source* change, not a parameter change), so the concordance suite stays green.
 >
 > v1.4 (historical) did not change the mechanism; it **named and framed** what v1.3 already shipped as what the brand promises — *zero-knowledge-proven agentic activity*. The principal additions: (1) a new section, **The ZK-Agentic Gate / Proof of Agentic Work** (§5B), stating the substrate-vs-identity framing (storage is the verifiable *substrate* — the WHAT; an autonomous agent proving protocol-obedient work is the *identity* — the HOW) and the universal **gate contract** — *to mutate state, a participant running any agent, model, or algorithm must submit a valid proof it followed the protocol; the Singularity verifies the proof and nothing else; no proof, no state change*; (2) a **3-rung ZK honesty ladder** (§5B.2, §5A.2/§5A.6) that labels exactly where zero-knowledge is real today versus a dated future milestone — and **forbids any present-tense ZK claim above the rung that ships**; (3) the Singularity restated as a **model-agnostic protocol-obedience-proof verifier** (§4.5, §5A.4), the brand-correct name for the role it already plays; (4) the storage-proof SNARK added as a fourth ZK use case (§6.4); (5) governance promoted from "deferred/core-team" to the specified **Bitcoin-Core-style PIP process** (§21.2, §24.5) — improvement proposals, multi-client diversity, an immutable-vs-tunable split, and soft-fork-default fork resistance, with the testnet/alpha honestly disclosed as team-stewarded; (6) the Abstract and §1 lead with *zero-knowledge-proven agentic activity* and the *built and operated by agentic force* transparency claim (provenance + proof-of-work-obedience, **not** proof-of-cognition). The economic core (subgrid mining as the sole mint path, dual staking weights, Burn-Mint Equilibrium, the 5% inflation ceiling, vesting, phyllotaxis seating, the two-layer security model) is preserved unchanged. See §5B, §5A, §21.2, §24.5, and the glossary (PoAW, ZK-Agentic Gate, PIP, protocol-obedience proof).
 >
@@ -20,7 +22,7 @@ We present ZK Agentic Chain as a Layer-1 blockchain protocol that introduces *Pr
 
 The protocol employs a dual-staking model that, for **economic** purposes, weights computational contribution (60%) over capital (40%), reducing plutocratic concentration in earnings inherent in pure proof-of-stake designs. Validators commit both AGNTC tokens and CPU compute resources; the effective stake `S_eff = α·token + β·cpu` is a weighted combination of both dimensions and governs **reward share / earnings proportionality** — CPU work earns proportionally more. **Consensus finality is firewalled from CPU.** Because CPU / Proof-of-Vault work is Sybil-weak until it is PoRep-hardened, the **finality weight** — committee (verifier) selection *and* leader selection — is **AGNTC token-stake only** (the *finality firewall*, Section 13.5), so cheaply corrupting the storage layer cannot buy consensus influence; CPU-weighted committee selection is a PoRep-gated mainnet goal, not current behaviour. Security is two-layered: a 13-agent PoAIV committee secures the *ledger*, while participants' committed CPU and disk secure the *state* — the collective knowledge vault — through Proof-of-Vault sampled storage proofs.
 
-ZK Agentic Chain renders its network as a **golden-angle phyllotaxis lattice** — a deterministic sunflower of agent seats around a central Singularity core, in which standing is a function of activity rather than administrative allocation. Each participant occupies a single seat given by an integer rank `k` (the Singularity is the core at `k = 0`): seat `k` sits at angle `k × 137.50776°` and radius proportional to `√k`. Because the golden angle is the most irrational divergence angle, no two seats ever share a spoke to the core, and the disk packs evenly as participants join. Standing is intrinsic and shared: every client computes the identical seat from the on-chain rank, with no coordinate to claim or contest. Inner seats are high-standing; sustained activity draws a seat inward, while inactivity lets it drift outward. Mining remains the sole supply-expanding mechanism — new AGNTC enters circulation only through each node's private subgrid Secure cells. Hardness tiers are equal-width radial **bands** (`band(k) = ceil(√(k / 8))`, `hardness = 16 × band`), so inner bands are cheaper and higher-yield while outer bands naturally hold more seats; a per-node density function (a deterministic SHA-256 hash of the node identifier) creates a non-uniform value landscape independent of position. A soft cap with a 5% annual inflation ceiling prevents runaway supply expansion. A 50% transaction fee burn and the Singularity's permanent AGNTC accumulation at the core provide sustained deflationary pressure as network usage grows.
+ZK Agentic Chain renders its network as a **golden-angle phyllotaxis lattice** — a deterministic sunflower of agent seats around a central Singularity core, in which standing is a function of activity rather than administrative allocation. Each participant occupies a single seat given by an integer rank `k` (the Singularity is the core at `k = 0`): seat `k` sits at angle `k × 137.50776°` and radius proportional to `√k`. Because the golden angle is the most irrational divergence angle, no two seats ever share a spoke to the core, and the disk packs evenly as participants join. Standing is intrinsic and shared: every client computes the identical seat from the on-chain rank, with no coordinate to claim or contest. Inner seats are high-standing; sustained activity draws a seat inward, while inactivity lets it drift outward. Mining releases AGNTC from a fixed total supply — new circulating AGNTC enters only through each node's private subgrid Secure cells. Hardness tiers are equal-width radial **bands** (`band(k) = ceil(√(k / 8))`, `hardness = 16 × band`), so inner bands are cheaper and higher-yield while outer bands naturally hold more seats; a per-node density function (a deterministic SHA-256 hash of the node identifier) creates a non-uniform value landscape independent of position. AGNTC has a **fixed total supply of 1,000,000,000**, allocated across defined buckets (Section 10.1.1); the 5% annual ceiling caps the per-epoch *release rate* of the earned buckets, so supply expansion can never exceed the fixed cap. A 50% transaction fee burn and the Singularity's permanent AGNTC accumulation at the core provide sustained deflationary pressure as network usage grows.
 
 Privacy is enforced at every layer. Each user's state resides in an isolated ledger space backed by a Sparse Merkle Tree of depth 26 with nullifier-based ownership proofs derived from the Zcash Sapling design. Verification agents communicate exclusively through ZK private channels — proving correctness of state transitions without exposing the underlying data to other agents or to the network. All state is private by default unless explicitly published by the user.
 
@@ -1053,7 +1055,7 @@ AGNTC (Agentic Coin) is the native token of the ZK Agentic Chain protocol. It se
 3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd
 ```
 
-**Future deployment:** Upon mainnet launch of ZK Agentic Chain as an independent Layer-1 network, AGNTC becomes the native chain token with the same 1 billion nominal soft cap, minted through subgrid Secure mining on the phyllotaxis lattice.
+**Future deployment:** Upon mainnet launch of ZK Agentic Chain as an independent Layer-1 network, AGNTC becomes the native chain token with the same **1 billion fixed supply**, released to participants through subgrid Secure mining on the phyllotaxis lattice (Section 10.1).
 
 #### 9.2 Token Utility
 
@@ -1093,9 +1095,28 @@ The protocol follows a phased deployment strategy, beginning on Solana and migra
 
 #### 10.1 Total Supply Architecture
 
-AGNTC has a soft-capped supply with a **5% annual inflation ceiling** enforced per epoch. The nominal maximum is 1,000,000,000 (1 billion) tokens — a familiar headline figure inherited from the Solana SPL mint, not a hard ceiling tied to any grid size. In practice the effective supply is constrained far below this by the inflation ceiling, the increasing per-band mining hardness, and sustained fee burns; the 1B figure is a soft cap, and the real cap is the 5% annual ceiling.
+AGNTC has a **fixed total supply of 1,000,000,000 (1 billion) tokens.** The full supply is minted once, at the token-distribution layer (the Solana SPL contract, Section 9.1); the protocol never mints beyond this cap. Two complementary layers govern the token:
 
-**Mining is the sole supply-expanding mechanism.** New AGNTC enters circulation only through one pathway: a node's private subgrid mints AGNTC from its active Secure cells (Section 16). There is no pre-mine beyond the genesis allocation, no scheduled emission curve, no treasury minting authority. If no node secures, no new AGNTC enters circulation.
+- **Distribution layer (the fixed 1B).** The entire supply exists from the contract's inception and is allocated across defined buckets — the community/earned share, ongoing participation rewards, and the operating reserves needed to launch and sustain the network (Section 10.1.1). No mechanism can increase the 1B total.
+- **Internal economy (how the earned share reaches participants).** The participation buckets are not handed out administratively; they are released to participants through subgrid Secure mining on the phyllotaxis lattice (Section 16). The live chain carries its own internal genesis of 900 AGNTC (Section 10.1.2) and releases the participation buckets at a rate bounded by the **5% annual ceiling** — which is not an open-ended inflation allowance but a *rate limit on releasing the fixed buckets*, so cumulative issuance can never exceed the 1B cap. Increasing per-band mining hardness and sustained fee burns constrain the effective circulating supply further still.
+
+#### 10.1.1 Allocation of the Fixed Supply
+
+The 1B supply is allocated across six buckets. The community/earned majority — participation mining, ongoing emissions, and ecosystem — is **58%**; the operating reserves (team, treasury, liquidity) are released on **published, smoothed schedules**, never all at once.
+
+| Allocation | Share | AGNTC | Purpose |
+|---|---|---|---|
+| Participation mining | 25% | 250,000,000 | Earned by participants through mining and securing during the network's extended free participation period (Section 10.1.3). Distributed by pro-rata conversion; unclaimed tokens return to the treasury. |
+| Ongoing emissions | 25% | 250,000,000 | Continued mining / securing / staking rewards on the live chain after the participation period — the earned engine continues, drawn from this fixed pool rather than open-ended inflation. |
+| Team | 18% | 180,000,000 | Contributors and advisors, on a published multi-year vesting schedule (Section 10.2). |
+| Treasury | 14% | 140,000,000 | Protocol development, audits, and operations, governed on-chain. |
+| Liquidity | 10% | 100,000,000 | Exchange and on-chain liquidity provisioning. |
+| Ecosystem | 8% | 80,000,000 | Grants, integrations, and contributor incentives. |
+| **Total** | **100%** | **1,000,000,000** | |
+
+All unlock schedules are public. The fixed cap replaces any notion of open-ended inflation: the "5% ceiling" referenced throughout this paper is the per-epoch *release rate* of the participation and emissions buckets, not a licence to mint new supply above 1B.
+
+**Mining is the sole supply-*issuing* mechanism on the live chain.** Participation and emissions AGNTC reaches participants through one pathway: a node's private subgrid releases AGNTC from its active Secure cells (Section 16), drawing down the fixed participation and emissions buckets. The team, treasury, liquidity, and ecosystem buckets are **pre-defined allocations of the fixed 1B — not new issuance** — released on the published schedules of Section 10.1.1. Nothing mints supply above the 1B cap; if no node secures, no participation AGNTC is released.
 
 Note the verb separation introduced in v1.3: **mining** is local AGNTC *issuance* in a node's subgrid; **securing** is the *verifiable resource commitment* of CPU+disk to the collective knowledge vault, proven through the Singularity link (Section 5A). Mining can run locally, but mining that is not linked to the Singularity is unfinalized and unrewarded — issuance is attested by securing. The phrase "if no node secures, no new AGNTC enters circulation" means: without the securing link that attests vault work, mined AGNTC is not finalized.
 
@@ -1105,7 +1126,9 @@ Note the verb separation introduced in v1.3: **mining** is local AGNTC *issuance
 
 **Signup bonus:** Each new user registration mints 1 AGNTC as a signup bonus, ensuring every participant enters the economy with a non-zero balance. This minor supply expansion is subject to the same inflation ceiling enforcement.
 
-**Genesis supply:** 900 AGNTC. At protocol launch, **only the Singularity is seated** (the core, `k = 0`); its 100 AGNTC is minted to the Singularity accumulator at genesis. The innermost competitive ranks are open at launch and the remaining 800 AGNTC enters circulation only as participants join and their subgrids mine — there is no pre-seeded ring of claims.
+#### 10.1.2 Internal-Economy Genesis
+
+**Internal genesis supply:** 900 AGNTC. This is the *live-chain* economy's starting point — distinct from the fixed 1B distribution layer above — corresponding to the chain's nine genesis seats. At protocol launch, **only the Singularity is seated** (the core, `k = 0`); its 100 AGNTC is credited to the Singularity accumulator at genesis. The innermost competitive ranks are open at launch and the remaining 800 AGNTC enters circulation only as participants join and their subgrids mine — there is no pre-seeded ring of claims.
 
 | Seat | Rank | Initial Owner | AGNTC |
 |------|------|---------------|-------|
@@ -1113,6 +1136,26 @@ Note the verb separation introduced in v1.3: **mining** is local AGNTC *issuance
 | Inner band seats | k = 1, 2, 3, … | Open | minted via subgrid mining as participants join and secure |
 
 The open inner ranks carry no faction binding. The historical v1.0 "Community Master" / "Machines Master" names and the v1.1 eight pre-seeded ring-1 cells are both retired; under v1.2 nothing but the core is seated at genesis.
+
+#### 10.1.3 Participation Distribution
+
+The 25% participation-mining bucket (250,000,000 AGNTC) is allocated by **earned participation, not by sale.** During an extended, free participation period, the network runs as a public testnet on which participants mine and secure exactly as the live protocol prescribes; each participant's recorded protocol work over the period determines their share of the bucket at mainnet, through a **pro-rata conversion**:
+
+```
+share_i = (score_i / Σ_j score_j) × POOL,    POOL = 250,000,000 (fixed)
+```
+
+Because `POOL` is a fixed constant, the sum of all shares equals the pool exactly — or less, if part is withheld for ineligible participants and returned to the treasury — **regardless of how many participants take part or how the displayed mining rate is calibrated.** The total is bounded by construction; no growth in participation can cause it to exceed the 250M allocation.
+
+Distribution properties:
+
+- **Earned for work, not purchased.** Participation AGNTC is allocated for verifiable protocol work performed during the period. There is no purchase, no pre-sale of this bucket, and no representation of any monetary outcome.
+- **Identity-gated.** At mainnet, eligible participants complete identity and proof-of-personhood verification (anti-Sybil) and claim their pro-rata share within a generous claim window.
+- **Unclaimed returns to treasury.** Shares left unclaimed return to the treasury rather than being recycled to active participants.
+- **Early-contribution weighting.** The displayed mining rate declines on a published schedule keyed to verified-participant milestones, so sustained early contributors carry proportionally more weight — while the pro-rata cap fixes the total at 250M irrespective of the rate.
+- **Time-weighted, anti-Sybil scoring.** Scoring weights sustained, genuine protocol work; the conversion formula is identical for every participant.
+
+This earned-participation model directs the community bucket to the participants who actually ran and secured the network during its formative period, while the fixed cap and pro-rata conversion remove any dependence on predicting participant numbers.
 
 #### 10.2 Mining-Driven Distribution
 
@@ -1175,7 +1218,7 @@ For comparison:
 | Ethereum | No cap | ~1,700 ETH/day issuance, EIP-1559 burn |
 | Solana | ~600,000,000 | 8% to 1.5% inflation decay |
 | Filecoin | 2,000,000,000 | Dual minting (time + utility) |
-| **AGNTC** | **Soft cap (5% ceiling)** | **Mining-only expansion, BME burns, hardness 16N** |
+| **AGNTC** | **1,000,000,000 (fixed)** | **Fixed-cap allocation; earned mining release (5% ceiling = per-epoch release rate), BME burns, hardness 16·band** |
 
 ---
 
@@ -1185,10 +1228,10 @@ For comparison:
 
 ZK Agentic Chain's supply model is fundamentally different from both fixed-schedule emission (Bitcoin halvings) and algorithmic inflation (Solana's annual decay). Supply growth is purely organic:
 
-- No scheduled emission curve
-- No algorithmic minting
-- No treasury minting authority
-- **Mining is the sole supply-expanding mechanism**
+- No open-ended inflation — the total supply is **fixed at 1B** (Section 10.1)
+- No algorithmic minting of new supply above the cap
+- No chain-level treasury minting — the team / treasury / liquidity / ecosystem buckets are **pre-allocated at the distribution layer** (Section 10.1.1), not minted by the live chain
+- **Mining is the sole supply-*issuing* mechanism on the live chain**, releasing the fixed participation and emissions buckets
 
 New AGNTC enters circulation through one and only one mechanism: a node's subgrid **mines** it from active Secure cells (Section 16). Mining is *issuance*. The separate act of **securing** — committing CPU+disk to the knowledge vault and proving it through the Singularity link (Section 5A) — is what attests and finalizes that issuance and what earns the securing reward; the two are coupled (you mine locally, you link to secure) but distinct. The rate at which supply grows is determined entirely by participant behavior — how many nodes are online, how much CPU Energy they deploy to Secure, and how deep in the bands they sit.
 
@@ -1267,7 +1310,7 @@ These figures represent a solo node at an average-density seat. In a network wit
 
 #### 11.5 Supply Flattening Analysis
 
-The organic growth model produces a supply curve that flattens asymptotically. The soft cap emerges from two reinforcing constraints: (1) the per-epoch 5% annual inflation ceiling, which hard-limits the maximum expansion rate, and (2) the market equilibrium at which the mining cost (CPU Energy spent) exceeds the market value of the AGNTC obtained.
+The organic growth model produces a supply curve that flattens asymptotically. The effective circulating-supply plateau — well below the fixed 1B cap — emerges from two reinforcing constraints: (1) the per-epoch 5% release ceiling, which hard-limits the maximum expansion rate, and (2) the market equilibrium at which the mining cost (CPU Energy spent) exceeds the market value of the AGNTC obtained.
 
 **Practical flattening bands** by network size:
 
@@ -2472,7 +2515,7 @@ The following table provides the complete set of protocol-level parameters that 
 
 | Parameter | Value | Description |
 |-----------|-------|-------------|
-| MAX_SUPPLY | 1,000,000,000 | Nominal soft cap on AGNTC supply (inherited headline; real cap is the 5% ceiling) |
+| MAX_SUPPLY | 1,000,000,000 | Fixed total supply (distribution layer, Section 10.1); released via allocation + earned mining within the 5% per-epoch release ceiling |
 | GENESIS_SUPPLY | 900 | AGNTC minted at genesis (100 to the Singularity core; remainder enters as participants mine) |
 | FEE_BURN_RATE ‡ | 0.50 | Fraction of all transaction fees permanently burned |
 | SINGULARITY_MIN_SELL_RATIO | 1.0 | Singularity: never sells below acquisition cost (effective never-sell). Alias: `MACHINES_MIN_SELL_RATIO` (kept one release) |
@@ -2628,7 +2671,7 @@ S(N) = Σ_{k=1}^{N} 8k = 4N(N+1)
 
 The series S(N) grows quadratically, but the *rate of growth* (dS/dN = 8N+4) is bounded by the mining cost that grows at 16N. Since mining cost growth (16N) exceeds seat-count growth (8N), the economic incentive to mine diminishes monotonically. In equilibrium, the supply asymptotically approaches a value determined by the intersection of the mining cost curve and the AGNTC market price curve.
 
-**Corollary.** Under the economic assumptions below, the equilibrium supply for a network of 1,000 active miners converges to approximately 42 million AGNTC — the natural "soft cap" at band 324. ∎
+**Corollary.** Under the economic assumptions below, the equilibrium supply for a network of 1,000 active miners converges to approximately 42 million AGNTC — the natural circulating plateau at band 324, far below the fixed 1B cap. ∎
 
 **Economic assumptions (not mathematical constants):**
 - Electricity cost: $0.05/kWh (global average for data centers)
@@ -2957,5 +3000,5 @@ A natural question is whether the *AI compute* itself — agents running inferen
 
 ---
 
-*AGNTC Whitepaper v1.5 — ZK Agentic Chain*
+*AGNTC Whitepaper v1.6 — ZK Agentic Chain*
 *Copyright © 2026 ZK Agentic Network. All rights reserved.*
