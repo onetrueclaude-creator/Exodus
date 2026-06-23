@@ -4,6 +4,14 @@
 const WALLET_KEYS = new Set(["wallet_index", "sender_wallet", "self_wallet"]);
 const DOMAIN = "Agentic:Tx:v1";
 
+/** Match Python json.dumps(ensure_ascii=True): escape every code point >= U+0080
+ * as \uXXXX (BMP) / surrogate pair (astral), so non-ASCII strings serialize
+ * byte-identically to the chain. JS already escapes <0x20 control chars like Python. */
+function pyJsonString(s: string): string {
+  return JSON.stringify(s).replace(/[\x80-￿]/g, (c) =>
+    "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"));
+}
+
 /** Recursive sorted-key, no-whitespace JSON — byte-identical to Python
  * json.dumps(sort_keys=True, separators=(",",":")). Only JSON-stable primitives
  * are allowed in signed params (ints/strings/bools/null/arrays/objects); floats
@@ -15,7 +23,7 @@ function canonicalJSON(value: unknown): string {
     return String(value); // integers only by contract; matches Python for ints
   }
   if (typeof value === "boolean") return value ? "true" : "false";
-  if (typeof value === "string") return JSON.stringify(value);
+  if (typeof value === "string") return pyJsonString(value);
   if (Array.isArray(value)) return "[" + value.map(canonicalJSON).join(",") + "]";
   if (typeof value === "object") {
     const o = value as Record<string, unknown>;
