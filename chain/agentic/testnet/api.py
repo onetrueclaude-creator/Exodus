@@ -72,6 +72,7 @@ from agentic.lattice.node_subgrid import compute_node_output, NodeOutput, coord_
 from agentic.lattice.seating import band_of
 from agentic.lattice.subgrid import SubgridAllocator
 from agentic.ledger.transaction import BirthTx, validate_birth
+import agentic.params as params
 from agentic.params import (
     ALPHA, BASE_BIRTH_COST, BASE_CPU_PER_SECURE_BLOCK, BETA, BLOCK_TIME_MS,
     CANONICAL_CLAUDE_HASH, LEGACY_PER_WALLET_SUBGRID, NODE_GRID_SPACING,
@@ -859,6 +860,35 @@ def health_check() -> dict:
         "auto_mine": _auto_mine,
         "uptime_s": uptime,
         "total_claims": len(g.claim_registry.all_active_claims()),
+    }
+
+
+@app.get("/api/params")
+def get_params() -> dict:
+    """Server-authoritative economy params (the client reads these at runtime so
+    balance/mining-rate changes need no client redeploy). Source: params.py."""
+    return {
+        "economy": {
+            "upgradeCostBase": params.NODE_UPGRADE_COST_BASE,
+            "upgradeCostGrowth": params.NODE_UPGRADE_COST_GROWTH,
+            "cpuPerTurnFlat": params.NODE_CPU_PER_TURN_FLAT,
+            "cpuPerTurnPerLevel": params.NODE_CPU_PER_TURN_PER_LEVEL,
+            "tierMultipliers": params.NODE_TIER_MULTIPLIERS,
+            "tierBands": params.NODE_TIER_BANDS,
+            "miningPresets": params.MINING_PRESETS,
+            "securingPresets": params.SECURING_PRESETS,
+            "subscription": params.SUBSCRIPTION_ECONOMY,
+        },
+        "chain": {
+            "baseMiningRatePerBlock": params.BASE_MINING_RATE_PER_BLOCK,
+            "hardnessMultiplier": params.HARDNESS_MULTIPLIER,
+            "secureRewardImmediate": params.SECURE_REWARD_IMMEDIATE,
+            "secureRewardVestDays": params.SECURE_REWARD_VEST_DAYS,
+            "baseCpuClaimCost": params.BASE_CPU_CLAIM_COST,
+            "baseCpuPerSecureBlock": params.BASE_CPU_PER_SECURE_BLOCK,
+            "annualInflationCeiling": params.ANNUAL_INFLATION_CEILING,
+            "feeBurnRate": params.FEE_BURN_RATE,
+        },
     }
 
 
