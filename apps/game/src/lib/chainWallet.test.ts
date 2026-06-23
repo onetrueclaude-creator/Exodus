@@ -27,4 +27,8 @@ describe('overrideWalletIdentity', () => {
     const r = overrideWalletIdentity('api/status', '', undefined, 1);
     expect(r.path).toBe('api/status');
   });
+  it('rewrites the wallet index in an api/nonce/{n} sign-context path', () => {
+    const r = overrideWalletIdentity('api/nonce/0', '', undefined, 7);
+    expect(r.path).toBe('api/nonce/7');
+  });
 });
