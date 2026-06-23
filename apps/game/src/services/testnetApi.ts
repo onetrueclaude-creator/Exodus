@@ -110,7 +110,10 @@ export function claimNode(
 ): Promise<ClaimNodeResult> {
   return signedPost<ClaimNodeResult>('/api/claim', 'claim', {
     wallet_index: walletIndex,
-    ...(x !== undefined && y !== undefined ? { x, y } : {}),
+    // Always send x/y (null when absent) so the signed canonical message matches
+    // the chain's model_dump (ClaimNodeRequest x/y default None → emits null). (B4b parity)
+    x: x ?? null,
+    y: y ?? null,
     stake,
   });
 }
@@ -221,9 +224,13 @@ export function postTransact(
     amount: opts.amount,                     // float on the wire (chain logic uses it)
   };
   // Sign over the micro-canonicalized amount (parity with chain _transact_signed_params).
+  // recipient_name/_wallet use `?? null` so the by-INDEX path (no name) doesn't leave
+  // `undefined` in the signed body (canonicalJSON throws on undefined) and matches the
+  // chain's model_dump (which emits null for the absent field). (B4b parity)
   return signedPost<TransactResponse>('/api/transact', 'transact', wire, {
     ...wire, amount: Math.round(opts.amount * 1_000_000),
     recipient_wallet: opts.recipientWallet ?? null,
+    recipient_name: opts.recipientName ?? null,
   });
 }
 
