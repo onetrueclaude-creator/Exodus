@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBindWallet } from '@/hooks/useBindWallet';
-import { SUBSCRIPTION_PLANS } from '@/types/subscription';
+import { SUBSCRIPTION_PLANS, getSubscriptionEconomy } from '@/types/subscription';
 import type { SubscriptionTier } from '@/types/subscription';
 
 const REGISTRATION_OPEN = true;
@@ -122,6 +122,7 @@ export default function SubscribePage() {
             const textClass = accentParts[0];
             const borderClass = accentParts[1];
             const bgClass = accentParts[2];
+            const eco = getSubscriptionEconomy(plan.tier);
             return (
               <button
                 key={plan.tier}
@@ -140,9 +141,9 @@ export default function SubscribePage() {
                   </span>
                 </div>
                 <div className="flex gap-4 text-[10px] text-text-muted/50 mb-2" style={{ fontFamily: "'Fira Code', monospace" }}>
-                  <span>{plan.startEnergy} CPU Energy</span>
-                  <span>{plan.startAgntc} AGNTC</span>
-                  <span>{plan.startMinerals} Data Frags</span>
+                  <span>{eco.startEnergy} CPU Energy</span>
+                  <span>{eco.startAgntc} AGNTC</span>
+                  <span>{eco.startMinerals} Data Frags</span>
                 </div>
               </button>
             );

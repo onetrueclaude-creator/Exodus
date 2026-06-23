@@ -201,3 +201,18 @@ VAULT_MIN_STAKE_CAPACITY = 100.0   # dual-stake committed-capacity floor to be a
 VAULT_PROOF_CPU_CREDIT = 50.0      # CPU-equivalent credited to activity/reward per passing proof
 VAULT_SLASH_RATE = 0.10            # fraction of committed capacity slashed on missed/failed proof
 SECURE_AGNTC_REWARD = 1.0  # AGNTC minted to the prover's wallet on an accepted possession proof (testnet earn-source; mainnet routes from fees per whitepaper)
+
+# ── Game-economy params (client reads via GET /api/params; tunable server-side) ──
+# Changing these takes effect on next server restart — no client redeploy needed.
+NODE_UPGRADE_COST_BASE = 200
+NODE_UPGRADE_COST_GROWTH = 1.8
+NODE_CPU_PER_TURN_FLAT = 5
+NODE_CPU_PER_TURN_PER_LEVEL = 5
+NODE_TIER_MULTIPLIERS = {"synapse": 1.0, "cortex": 1.25, "lattice": 1.5, "nexus": 2.0}
+NODE_TIER_BANDS = {"synapse": 3, "cortex": 6, "lattice": 9}
+MINING_PRESETS = [0, 100, 200, 500, 1000]
+SECURING_PRESETS = [0, 100, 200, 500, 1000]
+SUBSCRIPTION_ECONOMY = {
+    "COMMUNITY":    {"startEnergy": 1000, "cpuRegen": 100,  "startAgntc": 10,  "startMinerals": 10},
+    "PROFESSIONAL": {"startEnergy": 5000, "cpuRegen": 200,  "startAgntc": 100, "startMinerals": 50},
+}

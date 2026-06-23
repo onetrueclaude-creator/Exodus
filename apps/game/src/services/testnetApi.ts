@@ -295,6 +295,12 @@ export function getVaultStatus(walletIndex: number): Promise<VaultStatusResponse
   return get<VaultStatusResponse>(`/api/vault/status/${walletIndex}`);
 }
 
+import type { EconomyParams } from "@/lib/economyDefaults";
+/** GET /api/params — server-authoritative economy params. */
+export function getParams(): Promise<{ economy: EconomyParams; chain: Record<string, number> }> {
+  return get('/api/params');
+}
+
 /** Check if the testnet API is reachable */
 export async function isTestnetOnline(): Promise<boolean> {
   try {
