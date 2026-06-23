@@ -14,6 +14,7 @@ import type {
   VaultChallengeResponse, VaultSubmitProofRequest, VaultSubmitProofResponse,
   VaultStatusResponse,
 } from '@/types';
+import { signedPost } from '@/lib/writeSigner';
 
 // Same-origin gateway (B2): the browser never holds the chain URL. The
 // /api/chain/[...path] proxy authenticates and injects the server-resolved wallet.
@@ -76,8 +77,9 @@ export function setOwnerName(
   walletIndex: number,
   name: string,
 ): Promise<{ wallet_index: number; name: string; success: boolean }> {
-  return post<{ wallet_index: number; name: string; success: boolean }>(
+  return signedPost<{ wallet_index: number; name: string; success: boolean }>(
     '/api/name',
+    'set_name',
     { wallet_index: walletIndex, name },
   );
 }
@@ -96,7 +98,7 @@ export function mineBlock(): Promise<MineResult> {
 
 /** POST /api/birth — birth a new star system by spending AGNTC */
 export function birthNode(walletIndex: number): Promise<BirthResult> {
-  return post<BirthResult>('/api/birth', { wallet_index: walletIndex });
+  return signedPost<BirthResult>('/api/birth', 'birth', { wallet_index: walletIndex });
 }
 
 /** POST /api/claim — lightweight node claiming (no Record creation) */
@@ -106,7 +108,7 @@ export function claimNode(
   y?: number,
   stake: number = 200,
 ): Promise<ClaimNodeResult> {
-  return post<ClaimNodeResult>('/api/claim', {
+  return signedPost<ClaimNodeResult>('/api/claim', 'claim', {
     wallet_index: walletIndex,
     ...(x !== undefined && y !== undefined ? { x, y } : {}),
     stake,
@@ -124,7 +126,7 @@ export function setIntro(
   coord: { x: number; y: number },
   message: string,
 ): Promise<IntroResult> {
-  return post<IntroResult>('/api/intro', {
+  return signedPost<IntroResult>('/api/intro', 'intro', {
     wallet_index: walletIndex,
     agent_coordinate: coord,
     message,
@@ -138,7 +140,7 @@ export function sendMessage(
   targetCoord: { x: number; y: number },
   text: string,
 ): Promise<MessageResult> {
-  return post<MessageResult>('/api/message', {
+  return signedPost<MessageResult>('/api/message', 'message', {
     sender_wallet: senderWallet,
     sender_coord: senderCoord,
     target_coord: targetCoord,
@@ -182,15 +184,16 @@ export function getStaking(walletIndex: number): Promise<{
 export function assignSubgrid(walletIndex: number, allocation: {
   secure: number; develop: number; research: number; storage: number;
 }): Promise<{ status: string; free_cells: number }> {
-  return post<{ status: string; free_cells: number }>(
+  return signedPost<{ status: string; free_cells: number }>(
     `/api/resources/${walletIndex}/assign`,
+    'subgrid_assign',
     allocation,
   );
 }
 
 /** POST /api/secure — commit CPU Energy for N block cycles */
 export function postSecure(walletIndex: number, durationBlocks: number): Promise<SecureResponse> {
-  return post<SecureResponse>('/api/secure', { wallet_index: walletIndex, duration_blocks: durationBlocks });
+  return signedPost<SecureResponse>('/api/secure', 'secure', { wallet_index: walletIndex, duration_blocks: durationBlocks });
 }
 
 /** GET /api/secure/{wallet_index} — securing positions for a wallet */
@@ -201,16 +204,26 @@ export function getSecuringStatus(walletIndex: number): Promise<SecuringStatusRe
 /** POST /api/transact — AGNTC wallet-to-wallet transfer.
  *
  * The recipient may be given by explicit wallet index OR by owner-name
- * (case-insensitive, resolved server-side). Exactly one should be supplied. */
+ * (case-insensitive, resolved server-side). Exactly one should be supplied.
+ *
+ * The wire body carries `amount` as a float (chain logic uses it directly).
+ * The signed canonical form uses integer microAGNTC (parity with the chain's
+ * `_transact_signed_params`) and includes `recipient_wallet: null` when absent
+ * so the signed bytes match the chain's model_dump output. */
 export function postTransact(
   senderWallet: number,
   opts: { recipientWallet?: number; recipientName?: string; amount: number },
 ): Promise<TransactResponse> {
-  return post<TransactResponse>('/api/transact', {
+  const wire = {
     sender_wallet: senderWallet,
     recipient_wallet: opts.recipientWallet,
     recipient_name: opts.recipientName,
-    amount: opts.amount,
+    amount: opts.amount,                     // float on the wire (chain logic uses it)
+  };
+  // Sign over the micro-canonicalized amount (parity with chain _transact_signed_params).
+  return signedPost<TransactResponse>('/api/transact', 'transact', wire, {
+    ...wire, amount: Math.round(opts.amount * 1_000_000),
+    recipient_wallet: opts.recipientWallet ?? null,
   });
 }
 
@@ -259,7 +272,7 @@ export function getVaultShard(shardId: number, walletIndex: number): Promise<Vau
 
 /** POST /api/vault/challenge — fresh per-block sampled-PDP challenge for a shard */
 export function getVaultChallenge(walletIndex: number, shardId: number): Promise<VaultChallengeResponse> {
-  return post<VaultChallengeResponse>('/api/vault/challenge', {
+  return signedPost<VaultChallengeResponse>('/api/vault/challenge', 'vault_challenge', {
     wallet_index: walletIndex,
     shard_id: shardId,
   });
@@ -267,7 +280,7 @@ export function getVaultChallenge(walletIndex: number, shardId: number): Promise
 
 /** POST /api/vault/submit-proof — submit a possession proof through the Singularity gate */
 export function submitVaultProof(req: VaultSubmitProofRequest): Promise<VaultSubmitProofResponse> {
-  return post<VaultSubmitProofResponse>('/api/vault/submit-proof', req);
+  return signedPost<VaultSubmitProofResponse>('/api/vault/submit-proof', 'vault_submit_proof', req as unknown as Record<string, unknown>);
 }
 
 /** GET /api/vault/status/{wallet_index} — securing history for a wallet */

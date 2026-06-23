@@ -27,12 +27,17 @@ async function fetchSignContext(): Promise<{ nonce: number; owner_hex: string; c
  * chain's dev bypass accepts it. `action` must match the chain's verify_write
  * action string; `body` is the raw request body (wallet-index keys are stripped
  * from the signed message by canonicalMessage, but stay in the body for the gateway).
+ *
+ * Optional `signBody`: when provided, the canonical message is built from this
+ * object instead of `body` (still stripped of wallet keys). The wire body sent
+ * to the chain is always `body`. Use this when the signed representation differs
+ * from the wire representation (e.g. transact amount→microAGNTC).
  */
-export async function signedPost<T>(path: string, action: string, body: Record<string, unknown>): Promise<T> {
+export async function signedPost<T>(path: string, action: string, body: Record<string, unknown>, signBody?: Record<string, unknown>): Promise<T> {
   let finalBody = body;
   if (_signer) {
     const { nonce, owner_hex, chain_id } = await fetchSignContext();
-    const msg = canonicalMessage(action, body, owner_hex, nonce, chain_id);
+    const msg = canonicalMessage(action, signBody ?? body, owner_hex, nonce, chain_id);
     const sig = await _signer.signMessage(msg);
     finalBody = { ...body, signature: toHex(sig), nonce, pubkey: _signer.pubkeyBase58 };
   }
