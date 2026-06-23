@@ -195,7 +195,7 @@ export default function AccountView() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-mono text-text-primary capitalize">{currentUserTier}</p>
-                <p className="text-[10px] text-text-muted/50 mt-0.5">testnet \u2014 free</p>
+                <p className="text-[10px] text-text-muted/50 mt-0.5">testnet {'\u2014'} free</p>
               </div>
               {tierConfirming ? (
                 <div className="flex items-center gap-2">
