@@ -7,6 +7,7 @@ import { getWalletIndex } from '@/lib/walletIndex';
 import type { RewardsResponse, SecuringStatusResponse, VestingResponse, WalletSettingsResponse } from '@/types';
 import { getNodeTier, TIER_DISPLAY_NAME } from '@/lib/nodeTier';
 import { sciFormat } from '@/lib/format';
+import { getSubscriptionEconomy } from '@/types/subscription';
 
 export default function AccountView() {
   const currentAgentId = useGameStore((s) => s.currentAgentId);
@@ -19,6 +20,7 @@ export default function AccountView() {
   const securedChains = useGameStore((s) => s.securedChains);
   const chainMode = useGameStore((s) => s.chainMode);
   const switchAgent = useGameStore((s) => s.switchAgent);
+  const currentUserTier = useGameStore((s) => s.currentUserTier);
 
   // Every agent the player owns — primary (homenode) first, sub-agents next.
   // Replaces the single-agent "Network Overview" view which only ever showed
@@ -48,6 +50,40 @@ export default function AccountView() {
   const [nameInput, setNameInput] = useState('');
   const [nameStatus, setNameStatus] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
   const [savingName, setSavingName] = useState(false);
+
+  // Subscription tier change
+  const [tierConfirming, setTierConfirming] = useState(false);
+  const [tierChanging, setTierChanging] = useState(false);
+  const [tierError, setTierError] = useState<string | null>(null);
+
+  const changeTier = async () => {
+    if (!currentUserTier || currentUserTier === 'founder') return;
+    const sub = currentUserTier === 'professional' ? 'PROFESSIONAL' : 'COMMUNITY';
+    const target = sub === 'COMMUNITY' ? 'PROFESSIONAL' : 'COMMUNITY';
+
+    setTierChanging(true);
+    setTierError(null);
+    try {
+      const res = await fetch('/api/tier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tier: target }),
+      });
+      if (res.ok) {
+        useGameStore.getState().setCurrentUserTier(target === 'PROFESSIONAL' ? 'professional' : 'community');
+        useGameStore.getState().setCpuRegen(getSubscriptionEconomy(target).cpuRegen);
+        // Fire-and-forget: keep server-authoritative identity in sync
+        fetch('/api/me').catch(() => {});
+      } else {
+        setTierError('Could not change tier. Please try again.');
+      }
+    } catch {
+      setTierError('Could not change tier. Please try again.');
+    } finally {
+      setTierChanging(false);
+      setTierConfirming(false);
+    }
+  };
 
   // Seed the field from the self agent's username (owner name from the chain),
   // falling back to GET /api/name for the player's wallet. Only seeds while the
@@ -148,6 +184,52 @@ export default function AccountView() {
             1{'\u2013'}24 characters: letters, digits, {'\u2019'}_{'\u2019'} or {'\u2019'}-{'\u2019'}. Must be unique across the network.
           </p>
         </div>
+
+        {/* Subscription \u2014 show only for Community/Professional players (not Founder role axis) */}
+        {currentUserTier && currentUserTier !== 'founder' && (
+          <div className="glass-card p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-accent-cyan text-sm">{'\u25c8'}</span>
+              <h2 className="text-lg font-heading font-bold text-text-primary tracking-wide">Subscription</h2>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-mono text-text-primary capitalize">{currentUserTier}</p>
+                <p className="text-[10px] text-text-muted/50 mt-0.5">testnet \u2014 free</p>
+              </div>
+              {tierConfirming ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={changeTier}
+                    disabled={tierChanging}
+                    className="px-4 py-2 rounded-lg text-sm font-semibold border border-accent-cyan/40 text-accent-cyan hover:bg-accent-cyan/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {tierChanging ? 'Switching\u2026' : 'Confirm'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setTierConfirming(false); setTierError(null); }}
+                    className="px-4 py-2 rounded-lg text-sm font-semibold border border-card-border text-text-muted hover:bg-white/[0.04] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => { setTierConfirming(true); setTierError(null); }}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold border border-accent-cyan/40 text-accent-cyan hover:bg-accent-cyan/10 transition-colors"
+                >
+                  {currentUserTier === 'professional' ? 'Downgrade to Community' : 'Upgrade to Professional'}
+                </button>
+              )}
+            </div>
+            {tierError && (
+              <p className="text-[11px] font-mono mt-2 text-rose-400">{tierError}</p>
+            )}
+          </div>
+        )}
 
         {/* Owned agents \u2014 one entry per agent, click to switch terminal context */}
         <div className="glass-card p-6">
