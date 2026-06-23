@@ -31,6 +31,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "challenge missing or expired" }, { status: 400 });
   }
 
+  if (user.walletBindingPubkey !== pubkey) {
+    return NextResponse.json({ error: "challenge was issued for a different wallet" }, { status: 400 });
+  }
+
   const message = buildBindingMessage(pubkey, user.walletBindingNonce);
   if (!verifyBindingSignature(pubkey, message, signature)) {
     return NextResponse.json({ error: "signature verification failed" }, { status: 401 });
@@ -79,7 +83,7 @@ export async function POST(req: Request) {
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { phantomWalletPubkey: pubkey, walletBoundAt: new Date(), walletBindingNonce: null, walletBindingExpires: null },
+    data: { phantomWalletPubkey: pubkey, walletBoundAt: new Date(), walletBindingNonce: null, walletBindingExpires: null, walletBindingPubkey: null },
   });
 
   return NextResponse.json({ isOnChain: true, pubkey, chainWalletIndex: walletIndex });

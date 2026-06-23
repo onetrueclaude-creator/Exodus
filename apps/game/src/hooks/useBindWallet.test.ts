@@ -7,8 +7,6 @@ vi.mock("@solana/wallet-adapter-react", () => ({ useWallet: () => useWallet() })
 
 import { useBindWallet } from "./useBindWallet";
 
-const enc = new TextEncoder();
-
 beforeEach(() => {
   vi.restoreAllMocks();
   useWallet.mockReturnValue({

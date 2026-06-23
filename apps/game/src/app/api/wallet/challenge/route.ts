@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   const expires = new Date(Date.now() + TTL_MS);
   await prisma.user.update({
     where: { id: session.user.id },
-    data: { walletBindingNonce: nonce, walletBindingExpires: expires },
+    data: { walletBindingNonce: nonce, walletBindingExpires: expires, walletBindingPubkey: pubkey },
   });
 
   return NextResponse.json({

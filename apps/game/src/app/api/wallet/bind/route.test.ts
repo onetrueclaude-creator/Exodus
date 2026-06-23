@@ -43,7 +43,7 @@ beforeEach(() => {
   auth.mockResolvedValue({ user: { id: "u1" } });
   findUnique.mockResolvedValue({
     id: "u1", walletBindingNonce: nonce, walletBindingExpires: future(),
-    phantomWalletPubkey: null, chainWalletIndex: null,
+    walletBindingPubkey: pubkey, phantomWalletPubkey: null, chainWalletIndex: null,
   });
   findFirst.mockResolvedValue(null);     // pubkey not bound elsewhere
   update.mockResolvedValue({});
@@ -104,7 +104,7 @@ describe("POST /api/wallet/bind", () => {
     aggregate.mockResolvedValue({ _max: { chainWalletIndex: null } });
     findUnique.mockResolvedValue({
       id: "u1", walletBindingNonce: nonce, walletBindingExpires: future(),
-      phantomWalletPubkey: null, chainWalletIndex: null,
+      walletBindingPubkey: pubkey, phantomWalletPubkey: null, chainWalletIndex: null,
     });
 
     const res = await POST(makeReq({ pubkey, signature: goodSigHex }));
@@ -118,5 +118,19 @@ describe("POST /api/wallet/bind", () => {
     // Response must reflect the assigned index
     const body = await res.json();
     expect(body.chainWalletIndex).toBe(2);
+  });
+
+  it("400s when challenge was issued for a different pubkey", async () => {
+    findUnique.mockResolvedValue({
+      id: "u1", walletBindingNonce: nonce, walletBindingExpires: future(),
+      walletBindingPubkey: "DIFFERENT_PUBKEY", phantomWalletPubkey: null, chainWalletIndex: null,
+    });
+    const res = await POST(makeReq({ pubkey, signature: goodSigHex }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain("different wallet");
+    expect(registerSigningKey).not.toHaveBeenCalled();
+    const setPubkeyCall = update.mock.calls.find((c) => c[0].data?.phantomWalletPubkey);
+    expect(setPubkeyCall).toBeUndefined();
   });
 });

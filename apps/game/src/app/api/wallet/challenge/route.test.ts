@@ -33,6 +33,7 @@ describe("POST /api/wallet/challenge", () => {
     expect(arg.where).toEqual({ id: "u1" });
     expect(arg.data.walletBindingNonce).toBe(json.nonce);
     expect(arg.data.walletBindingExpires).toBeInstanceOf(Date);
+    expect(arg.data.walletBindingPubkey).toBe("PUBKEY");
   });
 
   it("400s when pubkey missing", async () => {
