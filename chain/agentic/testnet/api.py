@@ -418,6 +418,15 @@ class NodeSessionResponse(BaseModel):
     claude_hash: Optional[str] = None
 
 
+class BindSigningKeyRequest(BaseModel):
+    """Admin-only: register an account's external (Phantom) authorization key.
+    Decoupled-key model — owner stays the chain identity; this key authorizes
+    its writes (design spec §16.1). Called server-to-server by the Next.js
+    gateway after a verified SIWS binding."""
+    wallet_index: int
+    signing_pubkey_hex: str
+
+
 # ---------------------------------------------------------------------------
 # Application
 # ---------------------------------------------------------------------------
@@ -1648,6 +1657,36 @@ async def toggle_automine(request: Request, enabled: bool = True) -> dict:
     global _auto_mine
     _auto_mine = enabled
     return {"auto_mine": _auto_mine, "current_block_time": _BLOCK_TIME_S}
+
+
+@app.post("/api/bind-signing-key")
+def bind_signing_key(req: BindSigningKeyRequest, request: Request) -> dict:
+    """Admin-only: register an account's external (Phantom) authorization key.
+
+    Decoupled-key model — the chain owner stays the BLAKE2b wallet public_key;
+    the bound key authorizes that account's signed writes (design spec §16.1).
+    Called server-to-server by the Next.js gateway after a verified SIWS binding.
+    """
+    _require_admin(request)
+    g = _g()
+    if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="wallet_index out of range")
+    try:
+        signing_pub = bytes.fromhex(req.signing_pubkey_hex)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="malformed signing_pubkey_hex")
+    if len(signing_pub) != 32:
+        raise HTTPException(status_code=400, detail="signing pubkey must be 32 bytes")
+    owner = g.wallets[req.wallet_index].public_key
+    g.account_signing_keys[owner] = signing_pub
+    # Persist the binding immediately so it survives a restart (mirrors the
+    # persistence pattern used by the miner after each block).
+    try:
+        from agentic.testnet.persistence import save_state
+        save_state(g, _last_block_time, _DB_PATH)
+    except Exception:
+        pass  # never crash the bind endpoint on persistence errors
+    return {"wallet_index": req.wallet_index, "owner_hex": owner.hex(), "bound": True}
 
 
 @app.post("/api/claim", response_model=ClaimNodeResult)
