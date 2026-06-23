@@ -8,6 +8,7 @@ const auth = vi.fn();
 const findUnique = vi.fn();
 const findFirst = vi.fn();
 const update = vi.fn();
+const aggregate = vi.fn();
 const registerSigningKey = vi.fn();
 
 vi.mock("@/lib/auth", () => ({ auth: () => auth() }));
@@ -17,7 +18,7 @@ vi.mock("@/lib/prisma", () => ({
       findUnique: (a: unknown) => findUnique(a),
       findFirst: (a: unknown) => findFirst(a),
       update: (a: unknown) => update(a),
-      aggregate: async () => ({ _max: { chainWalletIndex: 1 } }),
+      aggregate: (a: unknown) => aggregate(a),
     },
   },
 }));
@@ -38,7 +39,7 @@ const makeReq = (body: unknown) =>
 const future = () => new Date(Date.now() + 60_000);
 
 beforeEach(() => {
-  [auth, findUnique, findFirst, update, registerSigningKey].forEach((m) => m.mockReset());
+  [auth, findUnique, findFirst, update, aggregate, registerSigningKey].forEach((m) => m.mockReset());
   auth.mockResolvedValue({ user: { id: "u1" } });
   findUnique.mockResolvedValue({
     id: "u1", walletBindingNonce: nonce, walletBindingExpires: future(),
@@ -46,6 +47,7 @@ beforeEach(() => {
   });
   findFirst.mockResolvedValue(null);     // pubkey not bound elsewhere
   update.mockResolvedValue({});
+  aggregate.mockResolvedValue({ _max: { chainWalletIndex: 1 } });
   registerSigningKey.mockResolvedValue(undefined);
 });
 
@@ -95,5 +97,26 @@ describe("POST /api/wallet/bind", () => {
     // The no-partial-commit invariant: no update call may carry phantomWalletPubkey
     const setPubkeyCall = update.mock.calls.find((c) => c[0].data?.phantomWalletPubkey);
     expect(setPubkeyCall).toBeUndefined();
+  });
+
+  it("assigns FIRST_PLAYER_INDEX (2) when no users have a slot yet", async () => {
+    // Simulate a fresh chain: aggregate returns null max, user has no index
+    aggregate.mockResolvedValue({ _max: { chainWalletIndex: null } });
+    findUnique.mockResolvedValue({
+      id: "u1", walletBindingNonce: nonce, walletBindingExpires: future(),
+      phantomWalletPubkey: null, chainWalletIndex: null,
+    });
+
+    const res = await POST(makeReq({ pubkey, signature: goodSigHex }));
+    expect(res.status).toBe(200);
+
+    // Slot-assignment update must have used chainWalletIndex: 2
+    const slotCall = update.mock.calls.find((c) => c[0].data?.chainWalletIndex != null);
+    expect(slotCall).toBeDefined();
+    expect(slotCall![0].data.chainWalletIndex).toBe(2);
+
+    // Response must reflect the assigned index
+    const body = await res.json();
+    expect(body.chainWalletIndex).toBe(2);
   });
 });

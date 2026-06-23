@@ -45,12 +45,28 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "wallet already bound to another account" }, { status: 409 });
   }
 
-  // Assign a chain wallet slot if the user has none yet.
+  // Assign a chain wallet slot if the user has none yet. The aggregate→update
+  // is not atomic, so two concurrent new-user binds can compute the same index;
+  // chainWalletIndex is @unique, so the loser's write throws P2002 — we re-read
+  // the max and retry rather than surfacing a 500. Fail explicitly (503) if we
+  // can't allocate after a few attempts (never silently).
   let walletIndex = user.chainWalletIndex;
   if (walletIndex == null) {
-    const max = await prisma.user.aggregate({ _max: { chainWalletIndex: true } });
-    walletIndex = Math.max(FIRST_PLAYER_INDEX, (max._max.chainWalletIndex ?? FIRST_PLAYER_INDEX - 1) + 1);
-    await prisma.user.update({ where: { id: user.id }, data: { chainWalletIndex: walletIndex } });
+    for (let attempt = 0; attempt < 5 && walletIndex == null; attempt++) {
+      const max = await prisma.user.aggregate({ _max: { chainWalletIndex: true } });
+      const candidate = Math.max(FIRST_PLAYER_INDEX, (max._max.chainWalletIndex ?? FIRST_PLAYER_INDEX - 1) + 1);
+      try {
+        await prisma.user.update({ where: { id: user.id }, data: { chainWalletIndex: candidate } });
+        walletIndex = candidate;
+      } catch (e) {
+        const code = (e as { code?: string })?.code;
+        if (code === "P2002") continue; // another bind took this index — retry
+        throw e;                        // unexpected DB error — let it surface
+      }
+    }
+    if (walletIndex == null) {
+      return NextResponse.json({ error: "could not allocate a chain wallet slot" }, { status: 503 });
+    }
   }
 
   // Register the authorization key on the chain BEFORE marking On-chain.
