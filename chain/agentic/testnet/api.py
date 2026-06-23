@@ -957,7 +957,13 @@ def get_nonce(wallet_index: int):
     if wallet_index < 0 or wallet_index >= len(g.wallets):
         raise HTTPException(status_code=404, detail="Wallet not found")
     owner = g.wallets[wallet_index].public_key
-    return {"wallet_index": wallet_index, "nonce": g.account_nonces.get(owner, 0)}
+    from agentic.testnet.signing import CHAIN_ID
+    return {
+        "wallet_index": wallet_index,
+        "nonce": g.account_nonces.get(owner, 0),
+        "owner_hex": owner.hex(),
+        "chain_id": CHAIN_ID,
+    }
 
 
 @app.get("/api/vesting/{wallet_index}", response_model=VestingResponse)

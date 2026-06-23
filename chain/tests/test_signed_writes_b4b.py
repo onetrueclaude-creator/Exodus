@@ -52,3 +52,18 @@ def test_transact_amount_signed_as_microagntc(monkeypatch):
     from agentic.testnet.api import _transact_signed_params
     received = {"sender_wallet": 1, "recipient_wallet": None, "recipient_name": "alice", "amount": 5.5}
     verify_write(g, owner, "transact", _transact_signed_params(received), sig, 0)  # must NOT raise
+
+
+def test_nonce_endpoint_returns_sign_context():
+    from fastapi.testclient import TestClient
+    import agentic.testnet.api as api
+    with TestClient(api.app) as c:
+        c.post("/api/reset?wallets=10&seed=7", headers={"X-Admin-Token": "x"}) if api._ADMIN_TOKEN else None
+        r = c.get("/api/nonce/2")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["wallet_index"] == 2
+        assert "nonce" in body
+        assert body["chain_id"] == "testnet"
+        # owner_hex is the wallet's public key hex
+        assert body["owner_hex"] == api._g().wallets[2].public_key.hex()
