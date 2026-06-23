@@ -483,6 +483,8 @@ describe('ResourceBar', () => {
     useTerminalStore.setState({ messagesByNode: {} });
     useGameStore.getState().setCurrentUser('u1', 'a1');
     useGameStore.getState().addAgent(makeAgent());
+    // Stub fetch so the /api/me effect in ResourceBar doesn't throw in jsdom
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ json: async () => ({ isOnChain: false }) }));
     const mod = await import('@/components/ResourceBar');
     ResourceBar = mod.default;
   });

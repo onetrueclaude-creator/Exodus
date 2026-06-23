@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useGameStore } from "@/store";
 import { getNodeCpuPerTurn } from "@/lib/nodeTier";
 import { useWallet } from "@solana/wallet-adapter-react";
@@ -8,6 +8,7 @@ import { sciFormat } from "@/lib/format";
 import { DeltaFlash } from "@/components/DeltaFlash";
 import type { Tier } from "@/types";
 import { TIER_LABELS, TIER_CROWN } from "@/types";
+import ConnectWalletButton from "@/components/ConnectWalletButton";
 
 function LiveClock() {
   const [time, setTime] = useState(new Date());
@@ -60,6 +61,17 @@ function TurnCountdown() {
 
 export default function ResourceBar() {
   const { publicKey } = useWallet();
+  const [isOnChain, setIsOnChain] = useState(false);
+
+  const fetchMe = useCallback(() => {
+    fetch("/api/me")
+      .then((r) => r.json())
+      .then((data) => { if (data?.isOnChain) setIsOnChain(true); })
+      .catch(() => { /* offline or unauthenticated — stay hollow */ });
+  }, []);
+
+  useEffect(() => { fetchMe(); }, [fetchMe]);
+
   const energy = useGameStore((s) => s.energy);
   const minerals = useGameStore((s) => s.minerals);
   const agntcBalance = useGameStore((s) => s.agntcBalance);
@@ -188,6 +200,7 @@ export default function ResourceBar() {
             <span className="text-[12px] font-mono text-text-muted/40">No wallet</span>
           </>
         )}
+        <ConnectWalletButton isOnChain={isOnChain} onBound={fetchMe} />
       </div>
 
       <div className="h-4 w-px bg-card-border" />
