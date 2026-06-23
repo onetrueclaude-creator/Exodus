@@ -26,6 +26,7 @@ model User {
   phantomWalletPubkey  String?   @unique
   walletBindingNonce   String?
   walletBindingExpires DateTime?
+  walletBindingPubkey  String?              // pubkey the active challenge was issued for
   walletBoundAt        DateTime?
 
   // Billing-readiness (nullable now; Stripe webhook writes these later)

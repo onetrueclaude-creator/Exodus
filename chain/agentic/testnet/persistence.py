@@ -87,6 +87,12 @@ CREATE TABLE IF NOT EXISTS resource_totals (
     research_points  REAL  NOT NULL DEFAULT 0.0,
     storage_units    REAL  NOT NULL DEFAULT 0.0
 );
+
+CREATE TABLE IF NOT EXISTS account_keys (
+    owner_hex          TEXT PRIMARY KEY,
+    signing_pubkey_hex TEXT,
+    nonce              INTEGER NOT NULL DEFAULT 0
+);
 """
 
 
@@ -202,6 +208,24 @@ def save_state(g: GenesisState, last_block_time: float, db_path: Path) -> None:
                     "(owner_hex, dev_points, research_points, storage_units) "
                     "VALUES (?, ?, ?, ?)",
                     totals_rows,
+                )
+
+            # -- Account keys: signing pubkey + replay nonce ------------------
+            # Union of both maps' owners (a nonce can advance before a key is bound).
+            owners = set(g.account_signing_keys) | set(g.account_nonces)
+            acct_rows = [
+                (
+                    owner.hex(),
+                    g.account_signing_keys[owner].hex() if owner in g.account_signing_keys else None,
+                    int(g.account_nonces.get(owner, 0)),
+                )
+                for owner in owners
+            ]
+            if acct_rows:
+                conn.executemany(
+                    "INSERT OR REPLACE INTO account_keys "
+                    "(owner_hex, signing_pubkey_hex, nonce) VALUES (?, ?, ?)",
+                    acct_rows,
                 )
 
     except Exception:
@@ -353,6 +377,16 @@ def load_state(g: GenesisState, db_path: Path) -> float:
                     "timestamp":    row["timestamp"],
                 })
 
+            # -- Account keys: signing pubkey + replay nonce ------------------
+            acct_rows = conn.execute(
+                "SELECT owner_hex, signing_pubkey_hex, nonce FROM account_keys"
+            ).fetchall()
+            for row in acct_rows:
+                owner_bytes = bytes.fromhex(row["owner_hex"])
+                if row["signing_pubkey_hex"]:
+                    g.account_signing_keys[owner_bytes] = bytes.fromhex(row["signing_pubkey_hex"])
+                g.account_nonces[owner_bytes] = int(row["nonce"])
+
     except Exception:
         pass  # load failures are non-fatal — fall back to fresh genesis
 
@@ -372,6 +406,7 @@ def clear_state(db_path: Path) -> None:
                 DELETE FROM message_history;
                 DELETE FROM subgrid_allocations;
                 DELETE FROM resource_totals;
+                DELETE FROM account_keys;
             """)
     except Exception:
         pass
