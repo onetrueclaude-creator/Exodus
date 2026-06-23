@@ -2150,6 +2150,15 @@ class TransactResponse(BaseModel):
     message: str
 
 
+def _transact_signed_params(params: dict) -> dict:
+    """Canonicalize transact params for signing: amount (float AGNTC) -> integer
+    microAGNTC, so the signed bytes never depend on float repr (TS/Python parity)."""
+    p = dict(params)
+    if "amount" in p and p["amount"] is not None:
+        p["amount"] = int(round(float(p["amount"]) * 1_000_000))
+    return p
+
+
 @app.post("/api/transact", response_model=TransactResponse)
 @limiter.limit("10/10seconds")
 def transact(request: Request, req: TransactRequest) -> TransactResponse:
@@ -2161,7 +2170,9 @@ def transact(request: Request, req: TransactRequest) -> TransactResponse:
     if req.sender_wallet < 0 or req.sender_wallet >= len(g.wallets):
         raise HTTPException(status_code=404, detail="Sender wallet not found")
     try:
-        verify_write(g, g.wallets[req.sender_wallet].public_key, "transact", req.model_dump(exclude={"signature", "nonce"}), req.signature, req.nonce)
+        verify_write(g, g.wallets[req.sender_wallet].public_key, "transact",
+                     _transact_signed_params(req.model_dump(exclude={"signature", "nonce"})),
+                     req.signature, req.nonce)
     except SignatureError as e:
         raise HTTPException(status_code=401, detail=f"signature: {e}")
     # Resolve recipient by name when provided (case-insensitive), else by index.

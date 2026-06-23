@@ -120,9 +120,11 @@ def test_secure_endpoint_enforces_signature(monkeypatch):
     r = client.post("/api/secure", json={"wallet_index": 1, "duration_blocks": 5})
     assert r.status_code == 401
 
-    # Correctly-signed write with the expected nonce → auth passes (NOT 401)
-    params = {"wallet_index": 1, "duration_blocks": 5}
-    msg = canonical_message("secure", params, owner.hex(), 0)
+    # Correctly-signed write with the expected nonce → auth passes (NOT 401).
+    # Clients sign WITHOUT wallet-index keys (B4b: gateway injects them server-side;
+    # verify_write strips them before building the canonical message).
+    signed_params = {"duration_blocks": 5}
+    msg = canonical_message("secure", signed_params, owner.hex(), 0)
     sig = sign_ed25519(bytes(sk), msg).hex()
-    r2 = client.post("/api/secure", json={**params, "signature": sig, "nonce": 0})
+    r2 = client.post("/api/secure", json={"wallet_index": 1, **signed_params, "signature": sig, "nonce": 0})
     assert r2.status_code != 401
