@@ -9,7 +9,7 @@ const productLinks = [
 ];
 
 const resourceLinks = [
-  { label: "Whitepaper (v1.3)", href: "/AGNTC-Whitepaper-v1.3.pdf" },
+  { label: "Whitepaper (v1.6)", href: "/AGNTC-Whitepaper-v1.6.pdf" },
   { label: "Open the Network", href: "https://zkagenticnetwork.com" },
 ];
 

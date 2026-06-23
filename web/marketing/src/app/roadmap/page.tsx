@@ -11,7 +11,7 @@ const phases = [
       "AGNTC minted as a Solana SPL token (1B fixed supply)",
       "PoAIV consensus design + ZK private-channel architecture",
       "Economic model & phyllotaxis lattice specification",
-      "Whitepaper v1.3 (Proof-of-Vault revision) published",
+      "Whitepaper v1.6 (fixed-supply tokenomics revision) published",
       "Marketing site live at zkagentic.com",
     ],
   },
