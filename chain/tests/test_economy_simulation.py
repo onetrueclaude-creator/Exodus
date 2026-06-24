@@ -28,16 +28,18 @@ Why these modules:
 
 CRITICAL: if the real engine violates an invariant, that is a real economic
 finding — it is NEVER weakened to make the suite pass. The inflation-ceiling
-invariant below is one such finding: ``SimulationEngine`` mints against a
+invariant below WAS one such finding: ``SimulationEngine`` minted against a
 hardcoded legacy 10%-annual disinflation curve (``_LEGACY_INITIAL_RATE=0.10``)
-and never enforces ``ANNUAL_INFLATION_CEILING=0.05``. Realized annualized
-growth is ~10.5% at genesis and ~7.5% at year 3 — roughly 2× the protocol
-ceiling. That invariant is therefore encoded as ``xfail(strict=True)`` for the
-inflation-ON configs: it documents the finding, keeps the gate green today, and
-*flips to a hard failure the moment the engine is fixed to honor the ceiling*
-(strict xfail errors if it unexpectedly passes), so it is a live gate for the
-fix. For the inflation-OFF config the ceiling is asserted for real (it holds:
-0 growth).
+and never enforced ``ANNUAL_INFLATION_CEILING=0.05``, so realized annualized
+growth ran ~2× the protocol ceiling. That finding has now been FIXED:
+``SimulationEngine._inflation_rate_at_year`` (and the sibling projection tool
+``simulation/growth.py``) clamp the legacy curve to
+``params.ANNUAL_INFLATION_CEILING`` — the SAME 5% hard cap the live chain
+minting path already enforces in ``agentic/lattice/mining.py`` (params is the
+single source of truth). The inflation-ON invariant below is therefore now a
+hard asserting test (previously ``xfail(strict=True)`` documenting the bug); it
+must PASS for real. For the inflation-OFF config the ceiling holds trivially
+(0 growth).
 
 Performance: the engine's transfer/record-discovery path is ~O(epochs²·wallets),
 so horizons are kept modest (≤8 wallets, ≤24 epochs = 2 simulated years at
@@ -213,23 +215,17 @@ def test_invariant_inflation_ceiling_holds_when_off(cfg_id):
 
 
 @pytest.mark.parametrize("cfg_id", _ON_IDS)
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "REAL FINDING: SimulationEngine mints against the legacy 10%-annual "
-        "disinflation curve (_LEGACY_INITIAL_RATE=0.10) and never enforces "
-        "params.ANNUAL_INFLATION_CEILING=0.05. Realized annualized supply "
-        "growth is ~2x the protocol ceiling (~10.5% at genesis, ~7.5% at "
-        "year 3). This xfail records the finding without weakening the "
-        "assertion; strict=True makes the test ERROR the moment the engine is "
-        "fixed to honor the ceiling, turning it into a live gate for that fix."
-    ),
-)
 def test_invariant_inflation_ceiling_when_on(cfg_id):
     """Assert the protocol inflation ceiling against the inflation-ON engine.
 
-    Expected to FAIL today (xfail) — see the strict-xfail reason above. The
-    assertion itself is the same protocol-correct check; it is NOT relaxed.
+    Previously ``xfail(strict=True)``: the engine minted against the legacy
+    10%-annual disinflation curve and ran ~2× over the protocol ceiling. That
+    finding is now FIXED — ``SimulationEngine._inflation_rate_at_year`` clamps
+    the curve to ``params.ANNUAL_INFLATION_CEILING`` (5%), the same hard cap
+    the live chain enforces in ``agentic/lattice/mining.py``. This is now a
+    hard asserting test and MUST PASS for real; the assertion is the same
+    protocol-correct check and is NOT relaxed beyond the small integer-flooring
+    tolerance inside ``_check_inflation_ceiling``.
     """
     _check_inflation_ceiling(cfg_id)
 
@@ -260,8 +256,9 @@ def test_invariant_no_death_spiral_and_solvent(cfg_id):
             f"collapsed below genesis {genesis:,} — tokens vanished / "
             f"death-spiral"
         )
-        # No divergence: 5% ceiling over <=2y => at most ~1.1x; the engine's
-        # (over-ceiling) ~10% curve still stays under 2x at this horizon.
+        # No divergence: 5% ceiling over <=2y => at most ~1.1x. (Before the
+        # ceiling fix the engine's over-ceiling ~10% curve also stayed under 2x
+        # at this horizon, so this bound never depended on the bug.)
         # Anything beyond 2x genesis is runaway issuance.
         assert s.circulating_supply <= max(genesis * 2, genesis + 1), (
             f"[{cfg_id}] epoch {s.epoch}: supply {s.circulating_supply:,} "
