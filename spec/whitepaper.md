@@ -1137,6 +1137,8 @@ Note the verb separation introduced in v1.3: **mining** is local AGNTC *issuance
 
 The open inner ranks carry no faction binding. The historical v1.0 "Community Master" / "Machines Master" names and the v1.1 eight pre-seeded ring-1 cells are both retired; under v1.2 nothing but the core is seated at genesis.
 
+**Reconciliation with the distribution layer.** The 900 internal-genesis AGNTC and all subsequently mined AGNTC are **draw-downs of the fixed participation/emissions buckets (§10.1.1), reconciled 1:1 with the distribution layer at migration (§9.3) — not additive to the 1B.** The internal economy meters *when and to whom* the fixed buckets release; it never creates supply beyond them.
+
 #### 10.1.3 Participation Distribution
 
 The 25% participation-mining bucket (250,000,000 AGNTC) is allocated by **earned participation, not by sale.** During an extended, free participation period, the network runs as a public testnet on which participants mine and secure exactly as the live protocol prescribes; each participant's recorded protocol work over the period determines their share of the bucket at mainnet, through a **pro-rata conversion**:
@@ -1196,9 +1198,9 @@ Under v1.3 the Singularity additionally serves as the **vault coordinator** (Sec
 
 #### 10.4 Supply Curve Projections
 
-The following table shows illustrative supply growth as the field fills through successive radial bands, assuming average density of 0.5 (cumulative seat counts scale as `∝ B²·K1`, recovering the v1.0/v1.1 `∝ N²` shape):
+The following table shows illustrative **internal-economy issuance** — the cumulative earned AGNTC *released from the fixed participation + emissions buckets* (Section 10.1.1) through subgrid mining as the field fills through successive radial bands (average density 0.5; cumulative seat counts scale as `∝ B²·K1`, recovering the v1.0/v1.1 `∝ N²` shape; the AGNTC column is the seat count × the ~100-AGNTC/seat genesis-accounting basis of §10.1.2 — illustrative, not literal per-block subgrid yield). These are **release dynamics**, bounded by the fixed earned buckets and the 5% per-epoch release ceiling — **not** the distribution-layer supply:
 
-| Band | Cumulative Seats | Cumulative AGNTC | Hardness (16·band) | Blocks per 1 AGNTC (solo node) |
+| Band | Cumulative Seats | Cumulative Earned AGNTC Released | Hardness (16·band) | Blocks per 1 AGNTC (solo node) |
 |------|------------------|------------------|--------------------|--------------------------------|
 | 1 (genesis) | 9 | 900 | 16 | 64 |
 | 10 | 441 | 44,100 | 160 | 640 |
@@ -1208,7 +1210,7 @@ The following table shows illustrative supply growth as the field fills through 
 | 324 | 421,201 | ~42,120,100 | 5,184 | 20,736 |
 | 500 | 1,002,001 | ~100,200,100 | 8,000 | 32,000 |
 
-The ~42 million AGNTC landmark emerges naturally around band 324 — the point at which mining cost makes further expansion economically impractical for a network of approximately 1,000 active nodes. This is an emergent property of the hardness curve, not a declared cap.
+The ~42 million AGNTC landmark is where, for a network of ~1,000 active nodes, rising mining cost (hardness 16·band) makes further issuance economically impractical — a **behavioral plateau of internal-economy issuance**, well within the fixed 500M earned buckets (participation + emissions) and far below the 1B distribution cap. It is an emergent property of the hardness curve: it describes the *release* dynamics, **not** the total supply and **not** a declared cap. The binding limits are the fixed buckets and the 5% per-epoch release rate (Section 10.1).
 
 For comparison:
 
@@ -1314,12 +1316,14 @@ The organic growth model produces a supply curve that flattens asymptotically. T
 
 **Practical flattening bands** by network size:
 
-| Network Size | Flattening Band | Approximate Supply | Individual Mining Time per AGNTC |
+| Network Size | Flattening Band | Approx. Earned Issuance | Individual Mining Time per AGNTC |
 |-------------|----------------|--------------------|---------------------------------|
 | Solo node | ~100-150 | 4M-9M | 4-7 days |
 | Small (~100 nodes) | ~200-250 | 16M-25M | 9-11 days |
 | Medium (~1,000 nodes) | ~324 | ~42M | 14 days |
 | Large (~10,000 nodes) | ~500+ | 100M+ | 22+ days |
+
+All figures above are **internal-economy earned issuance** — release of the fixed 500M earned buckets, bounded by them and by the 1B cap. The **flattening is *economic*** (miners exit once rising hardness makes further mining unprofitable), not combinatorial — the seat curve itself keeps growing; the "+" denotes the hardness-slowed, bucket-bounded approach, never beyond the fixed buckets.
 
 **Net supply after burns:** The actual circulating supply is reduced by multiple burn channels:
 
@@ -2655,11 +2659,13 @@ At ring N, the time to mine all 8N coordinates is:
 T(N) = 512N² minutes = 8.53N² hours
 ```
 
-| Ring | Time to Complete | Cumulative Supply |
+| Band | Time to Complete | Cumulative Seats |
 |------|-----------------|-------------------|
-| 10 | 853 hours (36 days) | 440 AGNTC |
-| 100 | 85,333 hours (9.7 years) | 40,400 AGNTC |
-| 324 | 896,000 hours (102 years) | ~421,500 AGNTC |
+| 10 | 853 hours (36 days) | 440 |
+| 100 | 85,333 hours (9.7 years) | 40,400 |
+| 324 | 896,000 hours (102 years) | ~421,500 |
+
+These are cumulative **seat (cell) counts**, not AGNTC. Network **earned issuance** applies the genesis accounting basis of ~100 AGNTC per node-seat (§10.1.2): ~421,500 seats × ~100 ≈ **42M AGNTC** at band 324 — consistent with §10.4 and the corollary below. Per §10.1, that issuance is a *release of the fixed earned buckets*, not new supply.
 
 For any individual miner, there exists a band N* beyond which the mining cost (electricity, CPU + disk to hold and re-prove the vault shard) exceeds the AGNTC market value. At that point, the miner exits, and no further supply expansion occurs from that participant.
 
