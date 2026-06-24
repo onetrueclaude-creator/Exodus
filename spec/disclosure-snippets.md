@@ -4,7 +4,7 @@
 >
 > Posture they encode (constitution §II): never market future value (Howey), earn-don't-sell pre-mainnet, zero-knowledge-ladder honesty, "built with AI" quarantined from financial claims.
 
-## 1. Testnet-token value disclaimer
+## 1. Testnet token disclaimer (valueless)
 
 > AGNTC on the testnet is a **valueless token** with no market price. It is not offered for sale, is not an investment, and is not a representation or promise of any present or future value, yield, or return. Participation in the network is **earned through work**, not purchased — there is no pre-mainnet sale.
 
