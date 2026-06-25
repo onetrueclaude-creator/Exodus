@@ -46,6 +46,21 @@ model User {
   // Game starting conditions (cached from chain)
   startAgentId  String?
   startEnergy   Int?
+
+  // --- W7 Genesis cohort + referral + streaks ---
+  genesisCohortBatch Int?      // permanent batch number (1-based); NULL = not in a Genesis batch
+  genesisJoinedAt    DateTime?
+  referralCode       String?   @unique  // this user's own shareable code
+  kycVerifiedAt      DateTime?           // referral rewards gate on this being set
+  currentStreak      Int       @default(0)
+  longestStreak      Int       @default(0)
+  lastCheckInAt      DateTime?
+
+  questCompletions   QuestCompletion[]
+  scoreLedger        ScoreLedgerEntry[]
+  referralsMade      Referral[]         @relation("ReferralReferrer")
+  referralReceived   Referral?          @relation("ReferralReferee")
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -108,4 +123,104 @@ enum UserRole {
   PLAYER   // default
   FOUNDER  // closed dev/admin role — granted only via FOUNDER_EMAILS allowlist
   ADMIN    // reserved for ops
+}
+
+// --- W7 public-presence launch kit ---
+
+enum QuestCadence {
+  DAILY      // lightweight check-in / react → habit
+  WEEKLY     // substantive: a testnet tx / governance vote / bug report
+  MILESTONE  // deep: N-day node uptime / content / N verified referrals
+}
+
+enum ScoreEventType {
+  CHECK_IN        // bare daily check-in — FLOOR weight
+  QUEST_DAILY
+  QUEST_WEEKLY
+  QUEST_MILESTONE
+  SECURE          // protocol-valuable (5-10x)
+  MINE
+  BUG_REPORT      // protocol-valuable
+  GOVERNANCE_VOTE // protocol-valuable
+  REFERRAL_CREDIT // ongoing, proportional to referee real activity
+  STREAK_BONUS
+}
+
+model Quest {
+  id          String       @id @default(cuid())
+  key         String       @unique          // stable slug e.g. "daily_check_in"
+  cadence     QuestCadence
+  title       String
+  description String
+  // raw score awarded on completion BEFORE multipliers; the 5-10x protocol
+  // weighting lives in scoring.ts, this is the catalog base.
+  baseScore   Int
+  active      Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+
+  completions QuestCompletion[]
+
+  @@index([cadence])
+}
+
+model QuestCompletion {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questId     String
+  quest       Quest    @relation(fields: [questId], references: [id], onDelete: Cascade)
+  // the accrual window this completion belongs to (UTC date for daily,
+  // ISO-week string for weekly, "" for one-shot milestones) — used to
+  // enforce one-completion-per-window.
+  windowKey   String
+  awardedScore Int
+  completedAt DateTime @default(now())
+
+  @@unique([userId, questId, windowKey])
+  @@index([userId])
+}
+
+model Referral {
+  id          String   @id @default(cuid())
+  // exactly one referral edge per referee (single-level, no chains)
+  referrerId  String
+  referrer    User     @relation("ReferralReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  refereeId   String   @unique
+  referee     User     @relation("ReferralReferee", fields: [refereeId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  // set when the referee crosses the 30-day-real-activity threshold; until
+  // then the referrer earns nothing (anti-mercenary).
+  qualifiedAt DateTime?
+
+  credits     ReferralCredit[]
+
+  @@index([referrerId])
+}
+
+model ReferralCredit {
+  id          String   @id @default(cuid())
+  referralId  String
+  referral    Referral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  referrerId  String   // denormalized for fast per-referrer sums (orphan-safe: User delete cascades User→Referral→ReferralCredit, so these rows clear before any referrer row)
+  // proportional to the referee's real on-chain activity in the window;
+  // negative entries are allowed (inactive referee LOWERS the referrer score).
+  scoreDelta  Int
+  windowKey   String   // ISO-week
+  createdAt   DateTime @default(now())
+
+  @@unique([referralId, windowKey])
+  @@index([referrerId])
+}
+
+model ScoreLedgerEntry {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventType   ScoreEventType
+  scoreDelta  Int            // may be negative (referral clawback / decay)
+  relatedId   String?        // questCompletion / referralCredit id
+  createdAt   DateTime       @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
 }
