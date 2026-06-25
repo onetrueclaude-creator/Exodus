@@ -9,6 +9,7 @@ import { DeltaFlash } from "@/components/DeltaFlash";
 import type { Tier } from "@/types";
 import { TIER_LABELS, TIER_CROWN } from "@/types";
 import ConnectWalletButton from "@/components/ConnectWalletButton";
+import GenesisBadge from "@/components/GenesisBadge";
 import { DISCLOSURES } from "@/lib/disclosures";
 
 function LiveClock() {
@@ -138,6 +139,7 @@ export default function ResourceBar() {
         <span className={`text-sm font-heading ${TIER_TEXT[tier]}`} suppressHydrationWarning>
           {TIER_CROWN[tier] ? `${TIER_CROWN[tier]} ` : ""}{TIER_LABELS[tier]} Tier
         </span>
+        <GenesisBadge />
         {ownedBlocknodes.length > 0 && (
           <span className="text-[12px] font-mono text-text-muted/60">
             {ownedBlocknodes.length} node{ownedBlocknodes.length !== 1 ? "s" : ""}

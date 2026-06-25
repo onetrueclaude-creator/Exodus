@@ -31,7 +31,7 @@ export default function ReferralPanel() {
   if (!active) return null;
 
   return (
-    <div className="glass-panel-floating animate-slide-left z-[25] w-80 p-4 text-sm">
+    <div className="p-4 text-sm h-full overflow-y-auto">
       <h2 className="mb-2 text-base font-semibold">Invite (trust circle)</h2>
       <p className="mb-1 text-xs text-neutral-400">Your code</p>
       <code className="mb-3 block rounded bg-neutral-800 px-2 py-1">{code || "…"}</code>

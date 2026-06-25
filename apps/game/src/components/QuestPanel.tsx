@@ -53,7 +53,7 @@ export default function QuestPanel() {
   const byCadence = (c: QuestRow["cadence"]) => quests.filter((q) => q.cadence === c);
 
   return (
-    <div className="glass-panel-floating animate-slide-left z-[25] w-80 p-4 text-sm">
+    <div className="p-4 text-sm h-full overflow-y-auto">
       <h2 className="mb-2 text-base font-semibold">Quests</h2>
       <p className="mb-3 text-xs text-cyan-300">Streak: {streak} day(s)</p>
       {(["DAILY", "WEEKLY", "MILESTONE"] as const).map((c) => (
