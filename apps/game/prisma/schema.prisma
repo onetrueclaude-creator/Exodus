@@ -146,6 +146,11 @@ enum ScoreEventType {
   STREAK_BONUS
 }
 
+// Standalone, optional DB-backed catalog for a future admin-editable quest list.
+// The OPERATIVE source of truth in Part A is the in-code QUEST_CATALOG (scoring.ts),
+// keyed by slug. No Quest rows are seeded here; QuestCompletion deliberately stores
+// the catalog slug (not a Quest FK) so completions never depend on this table being
+// populated. Keep them decoupled — wiring a FK back would break runtime completion.
 model Quest {
   id          String       @id @default(cuid())
   key         String       @unique          // stable slug e.g. "daily_check_in"
@@ -158,8 +163,6 @@ model Quest {
   active      Boolean      @default(true)
   createdAt   DateTime     @default(now())
 
-  completions QuestCompletion[]
-
   @@index([cadence])
 }
 
@@ -167,8 +170,9 @@ model QuestCompletion {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // the catalog SLUG (QUEST_CATALOG[].key), NOT a Quest table FK — completions
+  // must not depend on Quest rows existing (the catalog is in-code). See Quest.
   questId     String
-  quest       Quest    @relation(fields: [questId], references: [id], onDelete: Cascade)
   // the accrual window this completion belongs to (UTC date for daily,
   // ISO-week string for weekly, "" for one-shot milestones) — used to
   // enforce one-completion-per-window.
