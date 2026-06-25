@@ -14,7 +14,7 @@
     "test:e2e:beta": "playwright test 05-beta-testers --workers=4",
     "test:chain": "cd chain && python3 -m pytest tests/ -v",
     "lint": "cd apps/game && npm run lint",
-    "playtest": "tsx tests/playtest/run.playtest.mjs"
+    "playtest": "cd apps/game && tsx scripts/playtest/run.playtest.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
