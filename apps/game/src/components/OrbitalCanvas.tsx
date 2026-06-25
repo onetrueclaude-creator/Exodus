@@ -6,7 +6,7 @@ import { buildScene, carryBodyState } from "@/lib/orbitalScene";
 import { assignRanks } from "@/lib/rankMapping";
 import { bandOf } from "@/lib/orbitalGeometry";
 import { step, DEFAULT_PHYSICS, type PhysicsBody } from "@/lib/orbitalPhysics";
-import { seatsFromAgents, SINGULARITY_ID } from "@/lib/orbitalSeats";
+import { seatsFromAgents } from "@/lib/orbitalSeats";
 import { edgeAlpha, EDGE_FADE_BLOCKS } from "@/lib/orbitalEdges";
 import { VISUAL_SETTLE_STEPS, VISUAL_FRAME_MS } from "@/lib/visualTest";
 import type { SeatInput } from "@/types/orbital";
