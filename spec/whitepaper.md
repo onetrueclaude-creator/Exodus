@@ -1198,19 +1198,17 @@ Under v1.3 the Singularity additionally serves as the **vault coordinator** (Sec
 
 #### 10.4 Supply Curve Projections
 
-The following table shows illustrative **internal-economy issuance** — the cumulative earned AGNTC *released from the fixed participation + emissions buckets* (Section 10.1.1) through subgrid mining as the field fills through successive radial bands (average density 0.5; cumulative seat counts scale as `∝ B²·K1`, recovering the v1.0/v1.1 `∝ N²` shape; the AGNTC column is the seat count × the ~100-AGNTC/seat genesis-accounting basis of §10.1.2 — illustrative, not literal per-block subgrid yield). These are **release dynamics**, bounded by the fixed earned buckets and the 5% per-epoch release ceiling — **not** the distribution-layer supply:
+The following table shows illustrative **internal-economy issuance** — the cumulative earned AGNTC *released from the fixed participation + emissions buckets* (Section 10.1.1) through subgrid mining as the field fills through successive radial bands (average density 0.5; cumulative seat capacity is the band-native `C(B) = K1·B² = 8·B²` of Section 11.2; the AGNTC column is the seat count × the ~100-AGNTC/seat genesis-accounting basis of §10.1.2 — illustrative, not literal per-block subgrid yield). These are **release dynamics**, bounded by the fixed earned buckets and the 5% per-epoch release ceiling — **not** the distribution-layer supply:
 
-| Band | Cumulative Seats | Cumulative Earned AGNTC Released | Hardness (16·band) | Blocks per 1 AGNTC (solo node) |
-|------|------------------|------------------|--------------------|--------------------------------|
-| 1 (genesis) | 9 | 900 | 16 | 64 |
-| 10 | 441 | 44,100 | 160 | 640 |
-| 50 | 10,201 | 1,020,100 | 800 | 3,200 |
-| 100 | 40,401 | 4,040,100 | 1,600 | 6,400 |
-| 200 | 160,801 | 16,080,100 | 3,200 | 12,800 |
-| 324 | 421,201 | ~42,120,100 | 5,184 | 20,736 |
-| 500 | 1,002,001 | ~100,200,100 | 8,000 | 32,000 |
+| Band `B` | Cumulative Seats `8·B²` | Cumulative Earned AGNTC Released | Hardness (16·band) | Blocks per 1 AGNTC (solo node) |
+|----------|--------------------------|------------------|--------------------|--------------------------------|
+| 1 (genesis) | 8 (+1 origin) | 900 (genesis basis) | 16 | 64 |
+| 10 | 800 | ~80,000 | 160 | 640 |
+| 50 | 20,000 | ~2,000,000 | 800 | 3,200 |
+| 100 | 80,000 | ~8,000,000 | 1,600 | 6,400 |
+| 200 | 320,000 | ~32,000,000 | 3,200 | 12,800 |
 
-The ~42 million AGNTC landmark is where, for a network of ~1,000 active nodes, rising mining cost (hardness 16·band) makes further issuance economically impractical — a **behavioral plateau of internal-economy issuance**, well within the fixed 500M earned buckets (participation + emissions) and far below the 1B distribution cap. It is an emergent property of the hardness curve: it describes the *release* dynamics, **not** the total supply and **not** a declared cap. The binding limits are the fixed buckets and the 5% per-epoch release rate (Section 10.1).
+As the field fills through successive bands, rising mining cost (hardness 16·band) and the inversely-declining per-seat reward make further issuance progressively impractical — a **behavioral plateau of internal-economy issuance** (proved band-native in Section 23.1), well within the fixed 500M earned buckets (participation + emissions) and far below the 1B distribution cap. The plateau is an emergent property of the hardness curve: it describes the *release* dynamics, **not** the total supply and **not** a declared cap. The binding limits are the fixed buckets and the 5% per-epoch release rate (Section 10.1) — not any single hardness-intersection landmark or node-count figure (a ~1,000-node field, for reference, fills through only ~band 11).
 
 For comparison:
 
@@ -1314,16 +1312,16 @@ These figures represent a solo node at an average-density seat. In a network wit
 
 The organic growth model produces a supply curve that flattens asymptotically. The effective circulating-supply plateau — well below the fixed 1B cap — emerges from two reinforcing constraints: (1) the per-epoch 5% release ceiling, which hard-limits the maximum expansion rate, and (2) the market equilibrium at which the mining cost (CPU Energy spent) exceeds the market value of the AGNTC obtained.
 
-**Practical flattening bands** by network size:
+**Practical flattening by network size.** Because the band-native seat capacity is `C(B) = 8·B²` (Section 11.2), a network of `n` active nodes is seated through roughly band `B(n) = ceil(√(n/8))`. The occupied band, and the corresponding illustrative earned issuance at the ~100-AGNTC/seat genesis basis (Section 10.1.2), are:
 
-| Network Size | Flattening Band | Approx. Earned Issuance | Individual Mining Time per AGNTC |
-|-------------|----------------|--------------------|---------------------------------|
-| Solo node | ~100-150 | 4M-9M | 4-7 days |
-| Small (~100 nodes) | ~200-250 | 16M-25M | 9-11 days |
-| Medium (~1,000 nodes) | ~324 | ~42M | 14 days |
-| Large (~10,000 nodes) | ~500+ | 100M+ | 22+ days |
+| Network Size | Occupied Band `≈ ⌈√(n/8)⌉` | Illustrative Earned Issuance (`8·B²` × ~100) | Individual Mining Time per AGNTC |
+|-------------|-----------------------------|-----------------------------------------------|---------------------------------|
+| Solo node | ~band 1 | ~900 (genesis basis) | ~1 hour |
+| Small (~100 nodes) | ~band 4 | ~13,000 | ~5 hours |
+| Medium (~1,000 nodes) | ~band 11 | ~97,000 | ~12 hours |
+| Large (~10,000 nodes) | ~band 36 | ~1,000,000 | ~1.5 days |
 
-All figures above are **internal-economy earned issuance** — release of the fixed 500M earned buckets, bounded by them and by the 1B cap. The **flattening is *economic*** (miners exit once rising hardness makes further mining unprofitable), not combinatorial — the seat curve itself keeps growing; the "+" denotes the hardness-slowed, bucket-bounded approach, never beyond the fixed buckets.
+All figures above are **illustrative internal-economy earned issuance** — release of the fixed 500M earned buckets, bounded by them and by the 1B cap. The **flattening is *economic*** (miners exit once the rising hardness `16·band` and the inversely-declining per-seat reward make further mining unprofitable — proved band-native in Section 23.1), not combinatorial: the seat curve itself keeps growing, but the marginal incentive `∝ 1/band²` is summable, so total release converges beneath the fixed buckets. The binding ceiling is always the fixed buckets and the 5% per-epoch release rate, never a node-count or hardness-intersection landmark.
 
 **Net supply after burns:** The actual circulating supply is reduced by multiple burn channels:
 
@@ -2635,56 +2633,58 @@ Under v1.2, **only the Singularity core is seated at genesis** (`k = 0`, origin)
 
 #### 23.1 Hardness Curve Convergence
 
-**Theorem.** The total AGNTC minted approaches a finite limit as the number of bands approaches infinity, under the assumption that individual miners exit when the cost of mining exceeds the market value of the reward.
+**Theorem.** The total AGNTC released through subgrid mining approaches a finite limit as the number of radial bands approaches infinity, under the assumption that individual miners exit a band once its marginal mining cost exceeds the marginal reward.
 
-> *Note: this proof retains the legacy ring parameterization (ring index `N`, with `8N` cells per ring) for continuity with earlier revisions. Under v1.2 the radial label is the band index `B`; the seat-count per band is `(2B − 1)·K1` and cumulative capacity is `∝ B²·K1` (Section 11.2). The quadratic growth that drives convergence is identical under either parameterization (`∝ N² ≡ ∝ B²·K1`), so the result is unchanged.*
-
-**Proof sketch.** Consider a single miner in band N with average density d = 0.5:
+**Setup (band-native).** The lattice is the phyllotaxis seating of Section 4.1. With `K1 = SEATS_INNER_BAND = 8`, the band of seat `k` is `band(k) = ceil(√(k / 8))`, band `b` holds `(2b − 1)·K1 = (2b − 1)·8` seats, and the cumulative seat capacity through band `B` is exactly
 
 ```
-yield_per_block(N) = BASE_RATE × d / hardness(N) = 0.5 × 0.5 / (16N) = 1/(64N)
+C(B) = K1 · B² = 8 · B²        (band b spans k ∈ (8(b−1)², 8b²])
 ```
 
-The total AGNTC mined by this miner across all blocks at ring N, assuming they mine until the ring is complete (8N coordinates):
+Mining hardness is a linear function of the band, `hardness(b) = HARDNESS_MULTIPLIER × b = 16·b` (Section 11.3), and per-seat mining yield is inverse in hardness, so it declines as `∝ 1/(16·b)` (Section 11.4).
+
+**Proof.** Consider a single miner at a seat in band `b` with average density `d = 0.5`. Its per-block yield is
 
 ```
-blocks_needed(N) = 8N / yield_per_block(N) = 8N × 64N = 512N²
+yield_per_block(b) = BASE_MINING_RATE × d / hardness(b) = 0.5 × 0.5 / (16·b) = 1 / (64·b)
 ```
 
-The time cost per ring grows quadratically: T(N) = 512N² × 60 seconds per block.
+Two band-monotone quantities drive the convergence:
 
-At ring N, the time to mine all 8N coordinates is:
+1. **Marginal mining cost rises ∝ band.** Each step outward raises hardness by a constant `HARDNESS_MULTIPLIER = 16`, so the CPU+disk cost to finalize one unit of yield at band `b` grows linearly in `b`.
+2. **Marginal per-seat reward declines ∝ 1/band.** Since `yield_per_block(b) = 1/(64·b)`, the AGNTC a seat earns per block falls inversely with `b`.
 
-```
-T(N) = 512N² minutes = 8.53N² hours
-```
-
-| Band | Time to Complete | Cumulative Seats |
-|------|-----------------|-------------------|
-| 10 | 853 hours (36 days) | 440 |
-| 100 | 85,333 hours (9.7 years) | 40,400 |
-| 324 | 896,000 hours (102 years) | ~421,500 |
-
-These are cumulative **seat (cell) counts**, not AGNTC. Network **earned issuance** applies the genesis accounting basis of ~100 AGNTC per node-seat (§10.1.2): ~421,500 seats × ~100 ≈ **42M AGNTC** at band 324 — consistent with §10.4 and the corollary below. Per §10.1, that issuance is a *release of the fixed earned buckets*, not new supply.
-
-For any individual miner, there exists a band N* beyond which the mining cost (electricity, CPU + disk to hold and re-prove the vault shard) exceeds the AGNTC market value. At that point, the miner exits, and no further supply expansion occurs from that participant.
-
-For M miners operating concurrently, the fill rate is M× faster, but the aggregate supply still follows:
+Combining, the marginal incentive to mine at band `b` — reward per unit cost — scales as
 
 ```
-S(N) = Σ_{k=1}^{N} 8k = 4N(N+1)
+incentive(b)  ∝  yield_per_block(b) / hardness(b)  =  [1/(64·b)] / (16·b)  =  1 / (1024·b²)
 ```
 
-The series S(N) grows quadratically, but the *rate of growth* (dS/dN = 8N+4) is bounded by the mining cost that grows at 16N. Since mining cost growth (16N) exceeds seat-count growth (8N), the economic incentive to mine diminishes monotonically. In equilibrium, the supply asymptotically approaches a value determined by the intersection of the mining cost curve and the AGNTC market price curve.
+which decreases monotonically toward zero as `b → ∞`. The cost-to-yield ratio therefore degrades smoothly and without bound (Section 11.3), producing continuous disinflation rather than discrete halving shocks.
 
-**Corollary.** Under the economic assumptions below, the equilibrium supply for a network of 1,000 active miners converges to approximately 42 million AGNTC — the natural circulating plateau at band 324, far below the fixed 1B cap. ∎
+Now aggregate across bands. The *seat capacity* opened by advancing to band `b` is `(2b − 1)·8`, growing `∝ b`, while the per-seat *reward* falls `∝ 1/b`, so the raw earned AGNTC a band could in principle contribute is
 
-**Economic assumptions (not mathematical constants):**
-- Electricity cost: $0.05/kWh (global average for data centers)
-- AGNTC price: $0.10 at band 50, growing logarithmically
-- Miner hardware: consumer GPU, 300W continuous
+```
+ΔS_raw(b)  =  (seats in band b) × (per-seat reward at band b)  ∝  (2b − 1)·8 × 1/(16·b)  →  constant per band.
+```
 
-These assumptions determine the convergence point (~42M AGNTC at band 324) but are NOT part of the mathematical proof. The mathematical claim is only: the hardness function H(N) = 16N causes the marginal mining cost to increase linearly with band distance, while the reward per cell decreases inversely.
+This raw quantity alone does **not** converge — a constant-per-band series diverges. Convergence comes from the **economic cutoff**: the *participation-weighted* contribution of band `b` is `ΔS_raw(b)` scaled by the share of miners willing to operate there, and that share collapses with the marginal incentive `incentive(b) ∝ 1/b²`. For any miner there is a finite band `b*` beyond which `incentive(b)` falls below the miner's marginal operating cost (electricity, CPU + disk to hold and re-prove the vault shard, Section 5A); at `b*` the miner exits and contributes no further expansion. Since every miner has a finite `b*` and the per-band economic weight decays as `∝ 1/b²` (and `Σ 1/b²` converges), the realized earned AGNTC released by the economy is dominated by a convergent series and therefore approaches a finite limit. ∎
+
+For `M` miners operating concurrently the fill rate is `M×` faster, but each individual node's marginal cost and exit band are unchanged, so the *limit* is unaffected — only the time to approach it shortens.
+
+**Illustrative internal-economy issuance (bucket-bounded).** The table below applies the genesis accounting basis of ~100 AGNTC per node-seat (Section 10.1.2) to the band-native cumulative capacity `C(B) = 8·B²`. It is **illustrative release dynamics**, not literal per-block subgrid yield: the figures are *releases of the fixed earned buckets* (Section 10.1.1: 250M participation + 250M emissions), bounded by those buckets and by the 5% per-epoch release ceiling — not a declared cap and not the distribution-layer supply.
+
+| Band `B` | Cumulative seats `8·B²` | Hardness `16·B` | Illustrative earned AGNTC released (~100/seat) |
+|----------|--------------------------|-----------------|------------------------------------------------|
+| 1 (genesis) | 8 (+1 origin) | 16 | 900 (genesis basis) |
+| 10 | 800 | 160 | ~80,000 |
+| 50 | 20,000 | 800 | ~2,000,000 |
+| 100 | 80,000 | 1,600 | ~8,000,000 |
+| 200 | 320,000 | 3,200 | ~32,000,000 |
+
+**Where convergence settles.** The convergence *level* is **not** read off a mining-cost-vs-price intersection figure. It is bounded above by the fixed earned buckets (Section 10.1.1: 250M participation + 250M emissions = 500M of the 1B fixed cap) and gated in rate by the 5% per-epoch release ceiling (Section 10.1). The hardness curve `16·b` and the `∝ 1/b²` incentive decay establish *that* mining-driven release decelerates to zero; the fixed buckets and the release ceiling establish *the ceiling it decelerates beneath*. The mathematical claim is only that `hardness(b) = 16·b` makes marginal cost rise linearly in band while per-seat reward falls inversely, so the marginal incentive `∝ 1/b²` is summable and total release is finite.
+
+> *Node-count premise note: a band-native field has `8·B²` seats through band `B`, so a network of ~1,000 active nodes occupies through roughly **band 11** (`8·11² = 968`), not the deeper bands; ~100 nodes fill through ~band 4 and ~10,000 nodes through ~band 36. The table above ranges over bands, not over a single node-count, precisely because the convergence is bounded by the fixed buckets rather than by any one network-size landmark.*
 
 #### 23.2 Byzantine Tolerance Proof
 
