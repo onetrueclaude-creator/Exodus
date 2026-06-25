@@ -207,7 +207,11 @@ export default function OrbitalCanvas() {
           }
         }
 
-        nodeLayer.removeChildren();
+        // W6: destroy the outgoing node graphics — removeChildren() alone only
+        // detaches them, leaking a Sprite (+ self-ring Graphics) every rebuild.
+        // Safe: fresh sprites are created below; carryBodyState carries only
+        // physics state, never the sprite object.
+        nodeLayer.removeChildren().forEach((c) => c.destroy());
         // Snapshot the outgoing bodies so each surviving node can carry its live
         // physics state across this rebuild (see carryBodyState below).
         const prevBodyById = new Map(bodies.map((pb) => [pb.id, pb] as const));
