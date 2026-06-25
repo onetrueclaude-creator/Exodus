@@ -9,6 +9,7 @@ import { DeltaFlash } from "@/components/DeltaFlash";
 import type { Tier } from "@/types";
 import { TIER_LABELS, TIER_CROWN } from "@/types";
 import ConnectWalletButton from "@/components/ConnectWalletButton";
+import { DISCLOSURES } from "@/lib/disclosures";
 
 function LiveClock() {
   const [time, setTime] = useState(new Date());
@@ -112,6 +113,7 @@ export default function ResourceBar() {
             ? "border-yellow-400/40 bg-yellow-400/10"
             : "border-card-border bg-card-border/20"
         }`}
+        title={chainMode === "testnet" ? DISCLOSURES.testnetToken : undefined}
       >
         <div
           className={`w-1.5 h-1.5 rounded-full ${
