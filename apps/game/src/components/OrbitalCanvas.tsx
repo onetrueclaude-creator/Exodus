@@ -380,7 +380,13 @@ export default function OrbitalCanvas() {
             camY = cy() - zoom * (cy() + target.y);
             applyCamera();
           }
-          useGameStore.getState().clearFocusRequest();
+          // W6: consume the request only once its target is in the scene (or it
+          // ages out) — otherwise retain it for the next tick. A target absent
+          // during the init/rebuild race was being silently dropped (dead Home
+          // button / no recenter). Rule mirrored + tested in lib/focusRetain.ts.
+          if (target || Date.now() - fr.ts > 5000) {
+            useGameStore.getState().clearFocusRequest();
+          }
         }
         edgeG.clear();
         for (const [pid, kid] of familyPairs) {
