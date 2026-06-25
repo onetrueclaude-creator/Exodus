@@ -8,6 +8,7 @@ import { bandOf } from "@/lib/orbitalGeometry";
 import { step, DEFAULT_PHYSICS, type PhysicsBody } from "@/lib/orbitalPhysics";
 import { seatsFromAgents, SINGULARITY_ID } from "@/lib/orbitalSeats";
 import { edgeAlpha, EDGE_FADE_BLOCKS } from "@/lib/orbitalEdges";
+import { VISUAL_SETTLE_STEPS, VISUAL_FRAME_MS } from "@/lib/visualTest";
 import type { SeatInput } from "@/types/orbital";
 
 const RADIAL_SCALE = 46; // px per √k — wider spacing so subnodes have room
@@ -37,7 +38,7 @@ type BodyVM = PhysicsBody & {
 type NodeMeta = { rank: number; band: number; tier: string; kind: string; isSelf?: boolean };
 type PointerLike = { global: { x: number; y: number }; target?: unknown };
 
-export default function OrbitalCanvas() {
+export default function OrbitalCanvas({ visualTest = false }: { visualTest?: boolean }) {
   const hostRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -473,6 +474,24 @@ export default function OrbitalCanvas() {
       });
       cleanup.push(unsub);
       a.ticker.add(tick);
+      if (visualTest) {
+        // Deterministic freeze: stop the real-time loop and advance the ticker a
+        // fixed number of fixed-deltaMS frames so the settled scene is identical
+        // every run, then render once and signal the screenshot test.
+        a.stop();
+        // Reset the ticker baseline: app.init() sets lastTime to a real timestamp,
+        // so the FIRST update(t) would otherwise diff against wall-clock time and
+        // make step 1 non-deterministic across runs. Pin it to 0 so every update
+        // delta is exactly VISUAL_FRAME_MS from frame one.
+        a.ticker.lastTime = 0;
+        let t = 0;
+        for (let i = 0; i < VISUAL_SETTLE_STEPS; i++) {
+          t += VISUAL_FRAME_MS;
+          a.ticker.update(t);
+        }
+        a.render();
+        (window as unknown as { __visualReady?: boolean }).__visualReady = true;
+      }
 
       // ---- pan (drag empty space) ----
       a.stage.eventMode = "static";
@@ -635,7 +654,7 @@ export default function OrbitalCanvas() {
       for (const fn of cleanup) fn();
       if (app) app.destroy(true);
     };
-  }, []);
+  }, [visualTest]);
 
   return <div ref={hostRef} className="absolute inset-0" />;
 }
