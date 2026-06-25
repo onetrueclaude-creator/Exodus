@@ -22,7 +22,7 @@ export const MINE_GRID_CPU_COST = 10;
 export const CLAIM_GRID_AGNTC_COST = 1;
 
 export type GameTab = "network" | "account" | "researches" | "skills";
-export type DockPanelId = "chat" | "terminal" | "deploy" | "stats" | "timeRewind" | "nodes";
+export type DockPanelId = "chat" | "terminal" | "deploy" | "stats" | "timeRewind" | "nodes" | "quests" | "referral";
 
 interface GameState {
   // Entities
@@ -187,6 +187,8 @@ interface GameState {
   claimGridNode: (cx: number, cy: number) => boolean;
   setVisibleTiers: (tiers: Tier[]) => void;
   setCurrentUserTier: (tier: Tier | null) => void;
+  genesisCohortBatch: number | null;
+  setGenesisCohortBatch: (n: number | null) => void;
   revealTier: (tier: Tier) => void;
   devRevealAll: boolean;
   setDevRevealAll: (on: boolean) => void;
@@ -230,6 +232,7 @@ const initialState = {
   totalBlocksMined: 0,
   devRevealAll: false,
   currentUserTier: null as Tier | null,
+  genesisCohortBatch: null as number | null,
   researchProgress: {} as Record<string, ResearchProgress>,
   completedResearch: [] as string[],
   unlockedSkills: [] as string[],
@@ -947,6 +950,8 @@ export const useGameStore = create<GameState>((set) => ({
   setVisibleTiers: (tiers) => set({ visibleTiers: tiers }),
 
   setCurrentUserTier: (tier) => set({ currentUserTier: tier }),
+
+  setGenesisCohortBatch: (n) => set({ genesisCohortBatch: n }),
 
   revealTier: (tier) =>
     set((s) => ({
