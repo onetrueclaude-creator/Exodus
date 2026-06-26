@@ -1,9 +1,10 @@
 name: Public Language (W1 legal posture)
 
-# Advisory scan of tracked PUBLIC docs (spec/) for securities-risky / false-claim
+# BLOCKING scan of tracked PUBLIC docs (spec/) for securities-risky / false-claim
 # / ZK-over-claim language (constitution §II "never market future value").
-# ADVISORY for now: reports findings, does not block. Flip to `--strict` (exit 1
-# on any P0) once the W1 doc-rewrite PRs land and the docs are clean.
+# Runs `--strict` (exit 1 on any P0). Flipped to blocking 2026-06-26 after the W1
+# doc-rewrite PRs (#171/#172) landed and main is P0-clean — this now PREVENTS any
+# future P0 securities-risk language from re-entering the public docs.
 
 on:
   pull_request:
@@ -16,7 +17,7 @@ permissions:
 
 jobs:
   public-language:
-    name: Public-doc language scan (advisory)
+    name: Public-doc language scan
     runs-on: ubuntu-latest
     steps:
       # Pinned to commit SHAs (supply-chain hardening) — match ci.yml.
@@ -28,5 +29,5 @@ jobs:
         run: pip install pytest
       - name: Lint the linter (unit tests)
         run: python3 -m pytest scripts/test_check_public_language.py -q
-      - name: Scan public docs (advisory — does not block yet)
-        run: python3 scripts/check_public_language.py
+      - name: Scan public docs (--strict — blocks on any P0)
+        run: python3 scripts/check_public_language.py --strict
