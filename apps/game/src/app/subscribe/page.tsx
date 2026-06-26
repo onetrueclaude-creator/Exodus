@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useBindWallet } from '@/hooks/useBindWallet';
 import { SUBSCRIPTION_PLANS, getSubscriptionEconomy } from '@/types/subscription';
 import type { SubscriptionTier } from '@/types/subscription';
+import { DISCLOSURES } from '@/lib/disclosures';
 
 const REGISTRATION_OPEN = true;
 
@@ -150,7 +151,11 @@ export default function SubscribePage() {
           })}
         </div>
 
-        <p className="mt-6 text-[11px] text-text-muted/30 text-center max-w-sm">
+        <p className="mx-auto mt-6 max-w-xl text-center text-xs leading-snug text-neutral-400">
+          {DISCLOSURES.testnetToken}
+        </p>
+
+        <p className="mt-3 text-[11px] text-text-muted/30 text-center max-w-sm">
           Your AGNTC blockchain token coordinate will be assigned automatically.
           <br />
           Phantom wallet connection is available later for on-chain actions.

@@ -99,6 +99,7 @@ export default function GamePage() {
   const initLattice = useGameStore((s) => s.initLattice);
   const claimBlocknode = useGameStore((s) => s.claimBlocknode);
   const setCurrentUserTier = useGameStore((s) => s.setCurrentUserTier);
+  const setGenesisCohortBatch = useGameStore((s) => s.setGenesisCohortBatch);
   const revealTier = useGameStore((s) => s.revealTier);
   const chainMode = useGameStore((s) => s.chainMode);
 
@@ -224,6 +225,10 @@ export default function GamePage() {
       } catch {
         // unauthenticated or offline — fall through to the dev resolution
       }
+      // Wire genesis cohort batch to the store so GenesisBadge can render.
+      // This always runs when serverIdentity resolves (not gated on a branch).
+      setGenesisCohortBatch(serverIdentity?.genesisCohortBatch ?? null);
+
       const { resolveClientIdentity } = await import("@/lib/identity");
       const identity = resolveClientIdentity(serverIdentity, {
         devIdentityEnabled,
