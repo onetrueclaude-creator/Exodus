@@ -63,3 +63,34 @@ def test_skips_nx_cost_reduction_but_flags_nx_returns():
 
 def test_clean_text_has_no_findings():
     assert scan_text("The agent secures a node by submitting a possession proof each epoch.") == []
+
+
+def test_skips_retraction_and_disclaimer_lines():
+    # A term that is DISCLAIMED, or directly DENIED, is not a violation.
+    for ok in [
+        "## 1. Testnet-token value disclaimer",
+        "This is not a fair launch; there is a treasury (14%).",
+        "The Singularity is not a buy-side mechanism and creates no price floor.",
+        "We make no claim about the token value or any future value.",
+        "The four-faction model is retired.",
+    ]:
+        assert scan_text(ok) == [], ok
+
+
+def test_false_claim_list_still_flags_each_item():
+    # The genuine litepaper false claim: every 'no X' asserts absence as a
+    # selling point — each must flag, even though each is preceded by another
+    # 'no' (the bug a naive negation-skip would introduce).
+    bad = "There is no pre-mine, no ICO, no private sale, and no treasury."
+    ls = [f.label.lower() for f in scan_text(bad)]
+    assert any("pre-mine" in l or "premine" in l for l in ls)
+    assert any("private sale" in l for l in ls)   # preceded by 'no ICO' — must NOT be masked
+    assert any("treasury" in l for l in ls)
+
+
+def test_real_claims_with_stray_negation_still_flag():
+    # FN-guard: a negation elsewhere on the line must not mask a real claim.
+    hot = "The token value will rise over time; do not miss it."
+    assert any("token value" in f.label.lower() for f in scan_text(hot))
+    fair = "This is a fair launch with zero allocation to the team."
+    assert any("fair launch" in f.label.lower() for f in scan_text(fair))
