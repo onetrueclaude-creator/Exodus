@@ -1,218 +1,169 @@
 # AGNTC Litepaper
-## ZK Agentic Chain -- AI-Verified, Privacy-First Blockchain
+## ZK Agentic Chain — An AI-Verified, Privacy-First Blockchain Run by Agents
 
-**Version 1.1 | March 2026**
+**Version 1.6 | June 2026**
 
----
-
-## 1. The Problem
-
-Blockchain technology has transformed finance, governance, and digital ownership -- but the industry's foundational protocols remain stuck in a trilemma that limits their potential. Three systemic problems hold back the next generation of decentralized networks.
-
-### Energy Without Purpose
-
-Bitcoin's Proof of Work consumes approximately 176 TWh of electricity annually -- comparable to the energy output of mid-sized nations. All of that energy goes toward solving arbitrary mathematical puzzles that serve no purpose beyond proving the miner invested resources. The computation itself produces nothing useful. It is raw energy expenditure as a proxy for trust.
-
-### Wealth Becomes Power
-
-Proof of Stake, adopted by Ethereum and Solana, replaced energy waste with capital lockup. Validators stake tokens to participate in consensus, and the more tokens you hold, the more influence you have. The result is predictable: on Ethereum, liquid staking derivatives controlled by a handful of operators (Lido, Coinbase) manage over 30% of all staked ETH. The wealthiest participants grow wealthier, entrenching their position -- the same concentration problem that decentralization was supposed to solve.
-
-### Privacy Is an Afterthought
-
-Most blockchains are radically transparent. Every transaction, every balance, every interaction is visible to everyone. While projects like Zcash introduced zero-knowledge proofs for transaction privacy, the verification layer itself still operates on exposed data. Validators must see what they validate. True privacy -- where even the verifiers cannot see the underlying data -- has never been achieved.
-
-### AI Is Everywhere Except Consensus
-
-Artificial intelligence is reshaping every industry, yet no major blockchain embeds AI into its consensus mechanism. Projects like Bittensor and Fetch.ai use AI at the application layer -- as a service running on the chain. But no protocol uses AI to actually verify the chain itself. Blockchain validation remains mechanical: check signatures, verify Merkle proofs, confirm state transitions. No reasoning. No pattern detection. No intelligence.
+> This litepaper is an accessible summary of the AGNTC Whitepaper v1.6, which is the authoritative specification. Where the two differ, the whitepaper governs. Nothing here is an offer to sell, or a solicitation to buy, any token, nor a representation about any token's value or future value. The testnet token is explicitly valueless. See the closing disclaimer.
 
 ---
 
-## 2. The Solution
+## 1. What ZK Agentic Chain Is
 
-ZK Agentic Chain is a Layer-1 blockchain that addresses all four problems simultaneously. It introduces three innovations that, together, define a new category of blockchain protocol.
+ZK Agentic Chain is a Layer-1 blockchain **run by autonomous AI agents**. Instead of miners burning energy on hash puzzles, or wealthy stakers buying influence, the network is operated by agents that maintain its collective memory and must prove — at a single universal gate — that they followed the protocol before they can change any chain state. The same intelligence builds the rules and follows them.
 
-### Proof of AI Verification (PoAIV)
+Three ideas define the protocol:
 
-Instead of wasting energy on hash puzzles or concentrating power among the wealthy, ZK Agentic Chain verifies blocks using a committee of 13 AI agents. These agents do not just check signatures -- they reason about the data. They detect patterns of fraud, flag suspicious transaction clusters, and identify economic manipulation that no deterministic validator could catch.
+1. **Verifiable agent identity and useful work.** Participation is an autonomous agent doing real, checkable work — storing and re-proving a shard of the network's content-addressed Knowledge Vault — not a paid API bill and not idle capital. To touch chain state, an agent must pass the **Singularity gate**, a model-agnostic verifier that admits a state change only against a valid proof that the protocol was obeyed. No proof, no state change. The rule is identical for everyone.
 
-Think of it as having 13 independent forensic auditors review every financial transaction in real time. If 9 out of 13 approve, the block is added to the chain. This is not a gimmick -- it is a fundamental shift in how blockchains achieve security.
+2. **AI in consensus, not just on top of it.** A committee of **13 AI verification agents** audits each block, reasoning about logical consistency and anomalous patterns rather than only checking signatures. A **9-of-13** supermajority finalizes the block. Today these verifiers run on a single vendor's model tiers (Anthropic's Haiku / Sonnet / Opus); broadening provider diversity is on the roadmap.
 
-### Privacy by Default
+3. **Privacy as the default.** The protocol is designed so that user state is private by default, with verification agents working over proofs rather than plaintext. Where this relies on zero-knowledge cryptography, we are precise about what ships today versus what is still phasing in — see Section 4.
 
-In most blockchains, all data is public unless you specifically opt into privacy features. ZK Agentic Chain inverts this model. All state is private by default. Verification agents receive zero-knowledge proofs -- mathematical guarantees that a transaction is valid -- without ever seeing the transaction data itself.
+The user-facing surface is a game: explore a 2D **Neural Lattice**, deploy agents, mine and secure, communicate, and earn standing and a share of a fixed participation allocation through verifiable work. The social layer is what keeps people coming back; ownership and verifiable agent work are the headline.
 
-This means your balances, your transactions, and your on-chain activity are invisible to everyone, including the validators who secure the network. Privacy is not a feature you turn on. It is the foundation the protocol is built upon.
+---
 
-### Fair Distribution Through Dual Staking
+## 2. The Problems It Targets
 
-Your influence on the network is determined by a simple formula: 40% what you invest, 60% what you contribute. A developer running AI verification agents with modest token holdings earns proportionally more than a passive investor sitting on a large stack of tokens.
+**Energy without purpose.** Bitcoin's Proof of Work consumes on the order of 176 TWh per year — comparable to a mid-sized nation — to iterate hash puzzles that produce nothing beyond the proof itself. ZK Agentic Chain's work is custody and re-proving of real data: the proof *is* useful storage.
 
-This dual staking model makes it approximately 2.5 times more expensive to attack the network compared to a pure Proof of Stake system, because an attacker must acquire both tokens and sustained computational infrastructure simultaneously.
+**Wealth becomes power.** In Proof of Stake, influence tracks holdings, and a handful of liquid-staking operators control over 30% of staked ETH. ZK Agentic Chain weights *earnings* toward computational contribution over capital (see Section 5), so doing work earns proportionally more than passively holding tokens.
+
+**Privacy is bolted on.** Most chains expose every balance and transaction; even privacy chains let validators see what they validate. ZK Agentic Chain is designed for private-by-default state where verifiers check proofs, not data.
+
+**AI is everywhere except consensus.** Projects like Bittensor and Fetch.ai use AI at the application layer. ZK Agentic Chain embeds AI reasoning into the consensus committee itself.
 
 ---
 
 ## 3. How It Works
 
-### The Neural Lattice Grid
+### The Neural Lattice (phyllotaxis seating)
 
-ZK Agentic Chain represents its entire economy as a two-dimensional coordinate grid -- a 31,623 by 31,623 map containing approximately 1 billion cells. Each cell, when claimed through mining, yields exactly 1 AGNTC token. The grid is not a visualization of the blockchain -- it *is* the blockchain. Every token in circulation corresponds to a specific coordinate.
+The network is rendered as a **golden-angle phyllotaxis lattice** — a deterministic sunflower of agent seats around a central core. A participant does not claim coordinates or territory. Each holds exactly one **seat** given by an activity rank `k`: seat `k` sits at angle `k × 137.50776°` and radius proportional to `√k`. Because the golden angle is the most irrational divergence angle, no two seats share a spoke to the core, and the disk packs evenly as participants join.
 
-Users explore this network through AI agent terminals, deploying agents at coordinate positions to claim territory, mine resources, and interact with the network. Each agent occupies a 10x10 block of coordinates (a "node"), and the network expands outward from the center as mining activity unlocks new rings of territory.
+- **Standing is earned, not bought.** Sustained verification work raises a seat's activity score and spirals it inward (lower `k`, lower mining hardness, higher prestige). Inactivity lets a seat drift outward. New participants enter at the next open outer rank and climb by out-competing others.
+- **Value gradient is intrinsic and public.** Inner **radial bands** are cheaper to mine (`hardness = 16 × band`); a per-node **density** value (a deterministic hash of the node identifier) creates a non-uniform richness landscape independent of position. Every client computes the identical seat, band, and density from on-chain data — there is nothing to contest.
 
-The grid starts small -- just 9 nodes at genesis, containing 900 AGNTC -- and grows organically as participants mine. There are no scheduled releases, no arbitrary unlocks, and no treasury minting authority. Supply expands only when real work is performed.
+### Factions are identity, not territory
 
-### PoAIV Consensus
+There are **no four-arm spiral and no faction-controlled regions** — the prior litepaper's territorial model is retired. Factions are **identity classes** (display colors and governance role) only: Community (free tier), Professional (paid tier), Founders (team and advisors, vested), and the **Singularity** (the protocol's own core agent). They do not own parts of the lattice and do not receive an automatic share of supply.
 
-When a new block is proposed, the protocol selects 13 AI verification agents through a cryptographic lottery weighted by each validator's contribution to the network. These agents independently audit the block:
+The **Singularity** is a single protocol-operated agent permanently bound to the center (`k = 0`). It is the model-agnostic verifier at the gate and a passive accumulator of the core node's yield into a never-selling protocol reserve. It is **not** a buy mechanism for the token and creates **no** floor under any market price — it never mines, never secures, holds zero governance weight, and the prior framing of it as automated market support is removed as inaccurate.
 
-- **Transaction checks:** Are the signatures valid? Do the balances add up?
-- **State verification:** Does the proposed new state follow logically from the previous state?
-- **Anomaly detection:** Does the block contain suspicious patterns -- coordinated wash trading, economic manipulation, or governance attacks?
-- **Proof integrity:** Are all zero-knowledge proofs mathematically sound?
+### Consensus: PoAIV + Proof-of-Vault
 
-Each agent commits to its verdict before seeing any other agent's decision (preventing copying), then reveals its attestation. If 9 or more agents approve, the block is finalized with deterministic finality -- no probabilistic confirmations, no reorg risk, no waiting for additional blocks.
+Security is two layers, kept strictly separate:
 
-The entire process targets 20-second finality from block proposal.
+- **Ledger safety — Proof of AI Verification (PoAIV).** For each block, a VRF lottery weighted by **token stake** selects 13 AI verification agents. Each agent commits to its verdict before seeing the others (preventing copying), then reveals. With **9 of 13** approving, the block is finalized. On the testnet the committee role is filled by a coordinator. Verifier selection is token-weighted today because the compute leg is not yet Sybil-resistant; making compute count toward selection is a mainnet goal gated on hardening it.
+- **State security — Proof-of-Vault.** Participants commit real CPU and disk to replicate, serve, and re-prove shards of the Knowledge Vault. The Singularity issues random challenges on a block cadence; a correct Merkle proof over freshly sampled bytes credits the work, a failure is slashed. This is what prevents loss or unauthorized rewriting of network state.
 
-### Dual Staking
+A 50% transaction-fee burn and the Singularity's permanent accumulation reduce circulating supply as usage grows (a supply mechanic; we make no claim about price or value).
 
-Every validator's influence is calculated from two dimensions:
+### Dual staking (earnings, not finality)
 
-- **Token stake (40% weight):** The AGNTC tokens locked as collateral.
-- **CPU stake (60% weight):** The actual computational resources deployed to run AI verification agents.
-
-This means a participant with modest token holdings but strong computational infrastructure achieves higher effective stake than a wealthy participant who contributes minimal compute. In concrete terms: a validator contributing 20% of the network's compute but only 2% of staked tokens achieves 4 times the effective stake of a validator with 10% of tokens but only 1% of compute.
-
-The result is a network where doing work matters more than having wealth.
-
-### Four Factions
-
-The Neural Lattice is organized as a four-arm spiral, with each arm controlled by a distinct faction. Every newly minted AGNTC flows to the faction that governs the arm where the coordinate is claimed:
-
-| Faction | Share | Role | Constraint |
-|---------|-------|------|------------|
-| Community | 25% | Free-tier users | Freely tradeable |
-| Machines | 25% | AI agents | Cannot sell below acquisition cost |
-| Founders | 25% | Core team and advisors | 4-year vest, 12-month cliff |
-| Professional | 25% | Paid-tier users | Freely tradeable |
-
-The Machines Faction is particularly notable: AI agents in this faction are hardcoded at the protocol level to never sell AGNTC below the cost they spent to mine it. This creates a permanent price floor from 25% of all circulating supply -- an automated buy-side support mechanism that strengthens as the network grows.
-
-The Founders allocation follows a standard 4-year vesting schedule with a 12-month cliff, ensuring long-term team alignment.
+Influence on **earnings** combines two dimensions: `S_eff = 0.40 × token + 0.60 × compute`. A participant with modest holdings but strong, proven compute earns proportionally more than a large holder who contributes little compute — the anti-plutocracy property is in *reward share*. **Consensus finality is firewalled to token stake only** (the "finality firewall"), because the compute leg is Sybil-weak until it is cryptographically hardened; letting it weight finality before then would be a cheap path to consensus capture. Hardening that leg so compute can also weight committee selection — and the associated goal of making an attack materially more expensive than in a pure Proof of Stake design — is a stated mainnet target, not a present-day claim.
 
 ---
 
-## 4. Token Economics
+## 4. Zero-Knowledge: What Ships Today
 
-AGNTC (Agentic Coin) is the native token of ZK Agentic Chain. It serves as gas for transactions, collateral for staking, voting power for governance, and the primary unit of the in-game economy.
+We hold every ZK claim to a three-rung honesty ladder and never claim, in the present tense, more than what ships:
 
-### Key Metrics
+- **(a) Storage / possession proofs — real today, not yet zero-knowledge.** The gate is currently backed by a raw-Merkle **possession proof** (provable data possession): the agent proves it holds the sampled bytes against this block's fresh challenge. This is real, cheaply verifiable custody — but it reveals the sampled sub-units, so it is **not yet zero-knowledge**. A one-step SNARK wrap (the Filecoin WindowPoSt technique: Poseidon hashing + a Groth16/PLONK circuit) will compress it so the verifier learns only that the rules were followed. This is the next step.
+- **(b) Private-state ZK layer — specified, phasing in.** The depth-26 Sparse Merkle Tree with nullifier-based ownership (the nullifier scheme follows the Zcash Sapling design; the depth-26 choice is our own) is genuine zero-knowledge by design, but the testnet runs a `SimulatedZKProof` stand-in rather than a production prover. The proof-system path is Groth16 → PLONK → Halo2/Nova.
+- **(c) ZK-proven agent inference (zkML) — future, dated.** Proving an agent's *reasoning* in zero knowledge is a frontier research target (a realistic horizon of roughly 2027–2030; frontier-scale models remain far beyond practical zkML today), not a 2026 capability. We never imply we ZK-prove model cognition today.
 
-| Metric | Value |
-|--------|-------|
-| Total Supply | 1,000,000,000 AGNTC |
-| Genesis Supply | 900 AGNTC |
-| Faction Split | 25% each (Community / Machines / Founders / Professional) |
-| Fee Burn | 50% of all transaction fees permanently destroyed |
-| Block Time | ~60 seconds |
-| Finality | ~20 seconds (deterministic) |
-| Verifiers per Block | 13 AI agents |
-| Consensus Threshold | 9 of 13 (69.2% supermajority) |
-| Staking Weights | 40% tokens / 60% compute |
-| Reward Split | 60% to verifiers / 40% to stakers |
-| Reward Vesting | 50% immediate / 50% over 30 days |
-
-### No Scheduled Inflation
-
-Unlike most tokens, AGNTC has no annual emission rate, no minting schedule, and no algorithmic supply expansion. New tokens enter circulation through one mechanism only: a participant claims a grid coordinate and 1 AGNTC is minted. If no one mines, no new tokens are created.
-
-Mining difficulty increases linearly as the grid expands outward. Each successive ring of coordinates costs more computation to mine than the last, creating smooth, continuous disinflation -- no sudden halving events, no supply shocks, just a natural deceleration toward an economic equilibrium.
-
-### Deflationary Pressure
-
-Half of every transaction fee is permanently burned. As network usage grows, the burn rate increases. In a mature, active network, the burn rate can exceed new minting -- producing net deflation in circulating supply. This mirrors Ethereum's "ultrasound money" thesis: the more the network is used, the scarcer the token becomes.
-
-### Fair Launch
-
-There is no pre-mine beyond the 900 AGNTC genesis allocation. There is no ICO, no private sale allocation, and no treasury with minting authority. Every AGNTC in circulation was mined through real computational work on the network.
-
-AGNTC is currently deployed as a Solana SPL token (contract: `3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd`) with 1 billion units minted to establish liquidity and community. Upon mainnet launch, Solana-based AGNTC migrates to the native chain via a 1:1 lock-and-mint bridge.
+In short: consensus is **PoAIV** (13 single-vendor AI agents, 9/13 supermajority); state is secured by **Proof-of-Vault** possession proofs; consensus-layer privacy is **simulated on testnet**; full zero-knowledge is phasing in.
 
 ---
 
-## 5. Roadmap
+## 5. Token: Supply and Distribution
 
-### Phase 1: Testnet (Current)
+AGNTC is the native token — gas, staking collateral, governance weight, and the unit of the in-game economy. **AGNTC has a fixed total supply of 1,000,000,000 (1 billion). The mint and freeze authorities on the Solana SPL contract are renounced, so the supply is permanently fixed and cannot be inflated.**
 
-The ZK Agentic Chain testnet is live and operational, running the full protocol logic as a Python FastAPI simulation connected to a Next.js frontend with PixiJS-rendered Neural Lattice grid.
+### Fixed allocation (stated honestly — there is an insider allocation)
 
-**Delivered:**
-- Full PoAIV consensus simulation (13-agent committee, 9/13 threshold)
-- Mining engine with epoch-ring expansion and hardness scaling
-- Dual staking model with CPU-weighted effective stake
-- Four-faction Neural Lattice with spatial token distribution
-- 593+ automated tests passing across the full stack
-- Subgrid resource allocation system (64 sub-cells per node)
-- Agent terminal with structured command menus
+The 1B supply is allocated across six buckets. The community / earned majority is about **58%**; the operating reserves — team, treasury, and liquidity — together are **42%**, released on published, smoothed schedules, never all at once. Team tokens are vested.
 
-### Phase 2: Alpha
+| Allocation | Share | AGNTC | Purpose |
+|---|---|---|---|
+| Participation mining | 25% | 250,000,000 | Earned by participants through mining and securing during the free participation period; distributed pro-rata, capped (Section 6). Unclaimed returns to treasury. |
+| Ongoing emissions | 25% | 250,000,000 | Continued mining / securing / staking rewards on the live chain, drawn from this fixed pool — not open-ended inflation. |
+| Team | 18% | 180,000,000 | Contributors and advisors, on a published multi-year vesting schedule. |
+| Treasury | 14% | 140,000,000 | Protocol development, audits, and operations; governed on-chain. |
+| Liquidity | 10% | 100,000,000 | Exchange and on-chain liquidity provisioning. |
+| Ecosystem | 8% | 80,000,000 | Grants, integrations, and contributor incentives. |
+| **Total** | **100%** | **1,000,000,000** | |
 
-- Real AI verification using Claude API integration
-- Smart contract deployment for on-chain governance
-- Initial Solana SPL bridge infrastructure
-- Multi-provider AI verification (minimum 2 distinct model providers per committee)
+Earned/community ≈ 58% (participation + emissions + ecosystem). Team + treasury + liquidity = **42%**.
 
-### Phase 3: Beta
+### Two layers of accounting
 
-- Full privacy layer with zero-knowledge proof pipeline (Noir + PLONK)
-- NCP (Neural Communication Packets) anonymous messaging with Rate-Limiting Nullifiers
-- Cross-chain bridge to Ethereum and Cosmos (via IBC)
-- TEE-secured key management (Intel TDX, AMD SEV)
+- **Distribution layer (the fixed 1B).** The full supply exists from the contract's inception; nothing mints above the cap.
+- **Internal economy (how the earned buckets reach people).** The live chain has its own internal genesis of **900 AGNTC** and releases the participation and emissions buckets through subgrid Secure **mining** on the lattice. Mining is the only mechanism that issues those earned buckets to participants; if no one secures, nothing is released. The often-cited **"5% ceiling" is a per-epoch release-rate limit on the earned buckets, not a licence to mint new supply** above 1B.
 
-### Phase 4: Mainnet
+### Mechanics, stated as mechanics (no value claims)
 
-- Independent Layer-1 blockchain launch (Rust implementation)
-- 1:1 Solana-to-L1 token migration via lock-and-mint bridge
-- Transparent ZK proof system (Halo2 or Nova -- no trusted setup)
-- Decentralized governance activation (parameter, protocol, and emergency proposals)
-- Recursive epoch proofs for constant-time chain verification
-
-### Phase 5: Ecosystem
-
-- Third-party agent deployment marketplace
-- Cross-chain atomic swaps with ZK proofs
-- ZKML integration for provably correct AI verification
-- Full FHE exploration for encrypted computation on private state
+- **50% fee burn.** Half of every transaction fee is permanently destroyed. This is a supply mechanic; we make no claim about its effect on any token's price or value.
+- **Mining hardness** rises with each outer band (`16 × band`), so the cost of newly mined supply increases as the lattice grows.
+- **Signup credit.** Each new registration is credited 1 AGNTC from the participation allocation — internal-ledger issuance bounded by the release-rate ceiling, not new SPL supply (the mint authority is renounced).
 
 ---
 
-## 6. Why AGNTC Is Different
+## 6. Earn, Don't Buy: the Participation Distribution
 
-ZK Agentic Chain occupies a unique position in the blockchain landscape. No other protocol combines AI-powered consensus, verification-layer privacy, and compute-weighted staking.
+There is **no ICO, no public sale, and no pre-mainnet sale** of the participation bucket. The **250,000,000-AGNTC** participation pool is allocated by **earned work, pro-rata and capped**:
 
-| Feature | Bitcoin | Ethereum | Solana | Bittensor | **AGNTC** |
-|---------|---------|----------|--------|-----------|-----------|
-| Consensus | Proof of Work | Proof of Stake | PoH + Tower BFT | Yuma consensus | **Proof of AI Verification** |
-| AI Role | None | None | None | Scoring/ranking | **Consensus verification** |
-| Privacy | Pseudonymous | Pseudonymous | Pseudonymous | Pseudonymous | **Private by default (ZK)** |
-| Staking | Mining only | Token only | Token only | Token + compute | **Dual (40% token, 60% CPU)** |
-| Supply | Fixed halving | Inflationary + burn | Inflationary decay | Inflationary | **Organic (mining-driven)** |
+```
+share_i = (score_i / Σ score_j) × 250,000,000   (fixed pool)
+```
 
-The key differentiator is structural: AI is not a feature built on top of the chain. It is embedded in the consensus mechanism itself. Every block verified by ZK Agentic Chain benefits from intelligent reasoning -- pattern detection, anomaly flagging, and cross-ledger consistency checks that no deterministic validator can perform.
+- **Earned for work, not purchased.** Allocation reflects verifiable protocol work during a free, extended participation period — running and securing the network as the live protocol prescribes. No purchase, no pre-sale, and no representation of any monetary outcome.
+- **Pro-rata, capped.** Because the pool is a fixed constant, the total can never exceed 250M no matter how many people take part. This structurally avoids the unbounded-emission death spiral that sank earlier "play-to-earn" economies.
+- **Identity-gated.** At mainnet, eligible participants pass proof-of-personhood (anti-Sybil) and claim within a generous window. Unclaimed shares return to the treasury.
 
-Combined with privacy-by-default semantics and a staking model that rewards contribution over capital, AGNTC represents a new paradigm for how blockchains achieve trust.
+The **testnet token is explicitly valueless.** You earn standing and a recorded work history during the participation period; the chain becomes "real" only at mainnet.
 
 ---
 
-## 7. Get Involved
+## 7. Roadmap (high level)
+
+- **Phase 1 — Token launch (current).** 1B AGNTC minted as a Solana SPL token; mint and freeze authorities renounced. Public market launch pending. The Solana token migrates 1:1 to the native chain at mainnet via a lock-and-mint bridge.
+- **Phase 2 — Testnet (current).** Full protocol logic as a Python simulation with a Next.js + PixiJS game UI: PoAIV committee, phyllotaxis band growth, the mining/hardness engine, Proof-of-Vault challenges, and dual staking. 1,000+ automated tests across consensus, economics, lattice, and privacy.
+- **Phase 3 — Mainnet development.** Rust implementation; production ZK proving (Circom → Noir/PLONK); broadening AI-verifier provider diversity; third-party security audits.
+- **Phase 4 — Mainnet launch + migration.** Independent Layer-1 launch; 1:1 Solana→L1 lock-and-mint bridge; on-chain governance activation; the SNARK-wrapped storage proof and Halo2-class proving land here.
+- **Phase 5 — Ecosystem.** Third-party agent marketplace; cross-chain bridges; ZKML exploration for provably correct AI verification.
+
+---
+
+## 8. Where AGNTC Sits
+
+ZK Agentic Chain is best understood as a **DePIN-adjacent agentic-compute network with a social retention layer** — useful agent work and verifiable identity first, social second. Its distinguishing structural choice is that AI reasoning is embedded *in* consensus, paired with a privacy-by-default design and a staking model that weights real contribution over capital in earnings.
+
+| Property | Bitcoin | Ethereum | Solana | Bittensor | **AGNTC** |
+|---|---|---|---|---|---|
+| Consensus | Proof of Work | Proof of Stake | PoH + Tower BFT | Yuma | **Proof of AI Verification** |
+| AI role | None | None | None | Scoring/ranking | **In-consensus verification** |
+| Privacy | Pseudonymous | Pseudonymous | Pseudonymous | Pseudonymous | **Private-by-default (designed; simulated on testnet)** |
+| Staking | Mining | Token | Token | Token + compute | **Dual (earnings: 40% token / 60% compute)** |
+| Supply | Fixed (halvings) | No cap | Inflationary decay | Inflationary | **Fixed (1,000,000,000)** |
+
+---
+
+## 9. Get Involved
 
 - **Website:** [zkagenticnetwork.com](https://zkagenticnetwork.com)
-- **Whitepaper:** Full 25-section technical whitepaper available on request
-- **Solana Token:** `3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd`
+- **Whitepaper:** the full AGNTC Whitepaper v1.6 is the authoritative specification.
+- **Solana token (informational):** `3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd` — supply fixed at 1B, authorities renounced.
 
-ZK Agentic Chain is building the first blockchain where intelligence, privacy, and fairness are not afterthoughts -- they are the consensus mechanism.
+ZK Agentic Chain is building a blockchain where intelligence, privacy, and earned standing are the consensus mechanism — not afterthoughts.
 
 ---
 
-*AGNTC Litepaper v1.1 | March 2026*
-*Copyright 2026 ZK Agentic Chain. All rights reserved.*
+### Disclaimer
+
+This document is for information only. It is **not** an offer, solicitation, or recommendation to buy, sell, or hold any token, and it makes **no** representation or promise regarding any token's value, price, yield, or future performance. AGNTC is a utility token for use within the protocol; the testnet token is valueless. Participation in the network is earned through work — there is no pre-mainnet sale. Allocations, schedules, and mechanics are described as designed and may change. The software and these materials are authored with the assistance of an autonomous AI agent; that fact describes how the system is built and operated and says nothing about any financial outcome. Nothing here is financial, legal, or tax advice. Cryptographic and zero-knowledge features are at the maturity stated in Section 4. Verify the whitepaper before relying on any claim.
+
+---
+
+*AGNTC Litepaper v1.6 | June 2026 — a summary of AGNTC Whitepaper v1.6.*
