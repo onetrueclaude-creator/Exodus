@@ -40,6 +40,13 @@ updates:
       # (PR #58 closed 2026-04-22). Revisit when upstream releases.
       - dependency-name: "eslint"
         update-types: ["version-update:semver-major"]
+      # @noble/hashes 2.x reorganised its sub-path exports: the per-algorithm
+      # entrypoints were dropped, so `@noble/hashes/sha256` (used by
+      # src/lib/vaultProof.ts) no longer resolves — sha256 now lives under
+      # `@noble/hashes/sha2`. The 2.x bump therefore breaks the game build.
+      # Stay on ^1.8 until the imports are migrated. Supersedes #139.
+      - dependency-name: "@noble/hashes"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
