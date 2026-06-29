@@ -22,6 +22,15 @@ RUN mkdir -p /app/data
 
 EXPOSE 8080
 
+# R7: arm the single-worker runtime guard. The chain keeps module-global state
+# and does an unlocked nonce read-modify-write, so it is correct ONLY as a single
+# Uvicorn worker. The CMD below runs exactly one uvicorn process (no --workers),
+# which acquires an exclusive startup file lock; if anyone later adds --workers
+# N>1, the extra workers fail fast with a FATAL R7 message instead of silently
+# corrupting the shared SQLite DB + per-account nonce counters. The OS releases
+# the flock on process exit, so restarts re-acquire cleanly (no stale-lock).
+ENV AGENTIC_SINGLE_WORKER_GUARD=1
+
 # A container must bind 0.0.0.0 to be reachable across the container/network
 # boundary (127.0.0.1 here would only be reachable from inside the container).
 # This is deliberate for a deployed node -- the host/platform firewall and the
