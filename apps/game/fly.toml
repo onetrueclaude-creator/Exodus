@@ -4,8 +4,12 @@
 # SAME Fly org as the chain so the game can reach the chain over `.internal`.
 #   app = "zkan-game"            # <-- CHANGE ME (or run `fly launch` to set it)
 #
-# Build context is THIS directory (apps/game). Deploy with:
-#   cd apps/game && fly deploy
+# Build context is the REPO ROOT (not apps/game). apps/game is a pnpm-workspace
+# member, so Next's standalone tracing nests the output under apps/game/ and the
+# Dockerfile MUST build from the root to match (see apps/game/Dockerfile header).
+# flyctl has no `[build] context` key, so set the context via the deploy
+# working-dir arg. Deploy FROM THE REPO ROOT with:
+#   fly deploy . --config apps/game/fly.toml --app zkan-game
 #
 # Public entry: this app is the ONLY internet-facing service. The browser talks to
 # the Next.js server here; the server proxies to the chain over the private network
@@ -16,7 +20,9 @@ app = "zkan-game"          # <-- CHANGE ME before `fly deploy`
 primary_region = "iad"     # pick a region near your users / the chain (keep both together)
 
 [build]
-  dockerfile = "Dockerfile"
+  # Path is relative to the build context (the repo root), so include the
+  # apps/game/ prefix. Deploy from the root: fly deploy . --config apps/game/fly.toml
+  dockerfile = "apps/game/Dockerfile"
 
 [env]
   # server.js reads PORT; must match http_service.internal_port below.

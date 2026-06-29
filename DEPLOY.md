@@ -121,7 +121,11 @@ The chain's private address is now `zkan-chain.internal` (port 8080). Note it fo
 ## 4. Deploy the GAME
 
 ```bash
-cd apps/game     # build context = apps/game (self-contained npm project)
+# 4a-4c (register / secrets / migrate) don't build, so run them from apps/game
+# for convenience. 4d (fly deploy) BUILDS and must use the REPO ROOT as context
+# (apps/game is a pnpm-workspace member → Next nests the standalone output;
+# building from apps/game crashes on boot) — it cd's back out first.
+cd apps/game
 
 # 4a. Register the app in the SAME org/region as the chain (do not deploy yet).
 fly launch --no-deploy --copy-config --name zkan-game --region iad
@@ -145,8 +149,12 @@ DATABASE_URL='<prod-url>' npx prisma migrate deploy
 #     (Prisma 7 + prisma-client generator + @prisma/adapter-pg — no engine binary.
 #      `migrate deploy` applies committed migrations; it does not generate new ones.)
 
-# 4d. Deploy.
-fly deploy --app zkan-game
+# 4d. Deploy. BUILD CONTEXT = REPO ROOT: cd back out, then point flyctl at the
+#     game config. (`fly deploy .` makes the repo root the Docker context so Next
+#     sees pnpm-workspace.yaml/turbo.json and nests the standalone output, which
+#     is what apps/game/Dockerfile expects.)
+cd ..
+fly deploy . --config apps/game/fly.toml --app zkan-game
 
 # 4e. Smoke test the public app.
 fly status --app zkan-game
@@ -274,7 +282,8 @@ and depend on live infra / secrets. Check each before declaring the deploy done:
 1. **`docker build` of the game image actually completes on Fly's builder.** The
    Node build + `npm run build` standalone output were verified locally and the
    standalone server boots and serves HTTP 200 — but the *Docker image build itself*
-   was not run here. Watch the first `fly deploy --app zkan-game` build logs.
+   was not run here. Watch the first `fly deploy . --config apps/game/fly.toml
+   --app zkan-game` (repo-root context) build logs.
 2. **Monorepo standalone layout copied correctly.** The Dockerfile copies
    `.next/standalone` (nested as `apps/game/server.js`) and overlays static/public
    into the nested dir. If Next changes its nesting, the `COPY` paths in
@@ -315,10 +324,10 @@ fly volumes create chain_data --size 1 --region iad --app zkan-chain
 fly secrets set --app zkan-chain ADMIN_TOKEN=... SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... ALLOWED_ORIGINS=https://zkagenticnetwork.com
 fly deploy --app zkan-chain && fly scale count 1 --app zkan-chain
 
-# Game
+# Game  (register/secrets/migrate from apps/game; DEPLOY from the REPO ROOT)
 cd apps/game && fly launch --no-deploy --copy-config --name zkan-game --region iad
 fly secrets set --app zkan-game DATABASE_URL=... AUTH_SECRET=... AUTH_GOOGLE_ID=... AUTH_GOOGLE_SECRET=... CHAIN_ADMIN_TOKEN=... FOUNDER_EMAILS=... TESTNET_API=http://zkan-chain.internal:8080
 DATABASE_URL='<prod-url>' npx prisma migrate deploy
-fly deploy --app zkan-game
+cd .. && fly deploy . --config apps/game/fly.toml --app zkan-game   # context = REPO ROOT
 fly certs add zkagenticnetwork.com --app zkan-game
 ```
