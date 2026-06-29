@@ -1,6 +1,7 @@
 import Hero from "@/components/Hero";
 import ComparisonTable from "@/components/ComparisonTable";
 import FeatureCard from "@/components/FeatureCard";
+import Disclosure from "@/components/Disclosure";
 import { ShieldIcon, BrainIcon, LockIcon, LayersIcon, NetworkIcon, CpuIcon } from "@/components/Icons";
 
 const consensusColumns = [
@@ -15,14 +16,14 @@ const consensusRows = [
   { label: "Securing work", values: { agntc: "Vault storage proofs", pow: "Hash computation", pos: "Capital lockup" } },
   { label: "Hardware", values: { agntc: "Any CPU + disk", pow: "ASIC / GPU", pos: "None" } },
   { label: "Energy use", values: { agntc: "Low", pow: "Very high", pos: "Very low" } },
-  { label: "Privacy", values: { agntc: "ZK native", pow: "None", pos: "None" } },
+  { label: "Privacy", values: { agntc: "Private by design (ZK phasing in)", pow: "None", pos: "None" } },
   { label: "Barrier to entry", values: { agntc: "Low (CPU + disk)", pow: "High ($$$)", pos: "High (capital)" } },
 ];
 
 const layers = [
-  { name: "Ledger Layer — PoAIV", description: "A 13-agent committee is selected per block by VRF; a 9/13 supermajority attestation finalizes balances and ordering. BFT ordering plus ZK-proof finality is the source of truth for the ledger.", color: "border-l-accent-cyan" },
+  { name: "Ledger Layer — PoAIV", description: "A 13-agent committee is selected per block by VRF; a 9/13 supermajority attestation finalizes balances and ordering. BFT ordering plus committee-attested finality is the source of truth for the ledger (zero-knowledge finality proofs phasing in; see §5B.2).", color: "border-l-accent-cyan" },
   { name: "State Layer — Proof-of-Vault", description: "The network's collective knowledge — a content-addressed Merkle-DAG vault — is secured by participants' real CPU + disk. Each holds a shard and re-proves possession on demand; this is the proven storage-network pattern (Filecoin/Arweave-style PDP), metered by the Singularity.", color: "border-l-accent-purple/80" },
-  { name: "Privacy Layer", description: "ZK private channels between agents and a per-user Sparse Merkle Tree (depth 26) of private notes. Nullifier-based ownership and client-side proving keep state private by default — published only when the user chooses.", color: "border-l-accent-purple/60" },
+  { name: "Privacy Layer", description: "A per-user Sparse Merkle Tree (depth 26) of private notes, with nullifier-based ownership. The design keeps state private by default, published only when the user chooses — ZK private channels and client-side proving are phasing in (see whitepaper §5B.2).", color: "border-l-accent-purple/60" },
   { name: "Content Layer — optional LLM", description: "Agents may use any Claude model (Haiku / Sonnet / Opus) to author and curate vault entries. This is an optional content layer, not a security primitive — no paid AI key is required to secure the chain.", color: "border-l-accent-cyan/60" },
   { name: "Spatial Layer — Phyllotaxis Lattice", description: "A golden-angle sunflower of agent seats around a central Singularity core. A seat is an activity rank, not a coordinate; rising activity spirals it inward. The lattice is the blockchain state, rendered live in the game.", color: "border-l-accent-cyan/40" },
 ];
@@ -43,7 +44,7 @@ export default function TechnologyPage() {
             How <span className="gradient-text">ZK Agentic Chain</span> Compares
           </h2>
           <p className="text-center text-text-secondary mb-12 max-w-2xl mx-auto">
-            Ledger safety comes from an AI verification committee; state safety comes from verifiable CPU + disk work on the knowledge vault — accessible to any machine, with the privacy of zero-knowledge proofs.
+            Ledger safety comes from an AI verification committee; state safety comes from verifiable CPU + disk work on the knowledge vault — accessible to any machine, with privacy by design (zero-knowledge features phasing in).
           </p>
           <div className="glass-card p-6">
             <ComparisonTable columns={consensusColumns} rows={consensusRows} />
@@ -110,6 +111,7 @@ export default function TechnologyPage() {
             <FeatureCard icon={<LockIcon size={28} />} title="ZK Private Channels" description="Verification agents communicate through zero-knowledge channels. They prove correctness without revealing the underlying data, with client-side proving." />
             <FeatureCard icon={<NetworkIcon size={28} />} title="Proof Without Exposure" description="Consensus is reached by verifying proofs — not by inspecting raw data. The chain is auditable without being transparent." />
           </div>
+          <Disclosure id="zk" className="mt-8 max-w-3xl mx-auto" />
         </div>
       </section>
 
@@ -127,6 +129,7 @@ export default function TechnologyPage() {
             <FeatureCard icon={<LayersIcon size={28} />} title="Reasoned Attestations" description="PoAIV committee members apply reasoning to ledger audits — checking logical consistency and flagging anomalies — a verification layer that improves as models advance." />
             <FeatureCard icon={<NetworkIcon size={28} />} title="No Key Required to Secure" description="An agent may use an LLM to write better vault entries, but security comes from storage proofs. You can secure the chain with zero paid AI keys." />
           </div>
+          <Disclosure id="ai" className="mt-8 max-w-3xl mx-auto" />
         </div>
       </section>
     </>

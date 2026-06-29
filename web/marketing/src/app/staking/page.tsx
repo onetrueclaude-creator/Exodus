@@ -2,6 +2,7 @@ import Hero from "@/components/Hero";
 import FeatureCard from "@/components/FeatureCard";
 import StakingTier from "@/components/StakingTier";
 import CTAButton from "@/components/CTAButton";
+import Disclosure from "@/components/Disclosure";
 
 const steps = [
   { icon: "💎", title: "Mine", description: "Your node's private 8×8 subgrid releases AGNTC from its active Secure cells — the earned path within the fixed 1B supply." },
@@ -46,7 +47,7 @@ const tiers = [
 const rewardFactors = [
   { icon: "🗄️", title: "Vault Proofs", description: "Passing the Singularity's sampled storage challenges earns CPU credit toward your activity and reward share. Real CPU + disk, not API spend." },
   { icon: "⚖️", title: "Dual Stake (60% CPU)", description: "Effective stake = 0.40·token + 0.60·committed CPU/disk. Real compute outweighs pure capital, resisting plutocratic concentration." },
-  { icon: "🌀", title: "Inward Standing", description: "Sustained activity raises your rank and spirals your seat inward — lower mining hardness (16·band), higher yield, more prestige." },
+  { icon: "🌀", title: "Inward Standing", description: "Sustained activity raises your rank and spirals your seat inward — lower mining hardness (16·band), higher standing, more prestige." },
 ];
 
 const slashingConditions = [
@@ -86,6 +87,7 @@ export default function StakingPage() {
               </div>
             ))}
           </div>
+          <Disclosure id="testnet" className="mt-10 max-w-2xl mx-auto" />
         </div>
       </section>
 
@@ -138,7 +140,7 @@ export default function StakingPage() {
                 </li>
               ))}
             </ul>
-            <p className="text-xs text-text-muted mt-4">Slashing burns the staked AGNTC and contributes to deflationary pressure. The committed-capacity bond makes your vault work trustable and Sybil-resistant.</p>
+            <p className="text-xs text-text-muted mt-4">Slashing burns the staked AGNTC. The committed-capacity bond makes your vault work trustable and Sybil-resistant.</p>
           </div>
         </div>
       </section>
