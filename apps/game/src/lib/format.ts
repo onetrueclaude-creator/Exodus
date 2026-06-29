@@ -54,3 +54,18 @@ export function sciRate(n: number): string {
 
   return `${sign}${abs.toFixed(2)}`;
 }
+
+/**
+ * Format a resource delta for the +/- flash indicator (DeltaFlash). Reuses
+ * sciFormat so the magnitude obeys the SAME precision/scientific rules as the
+ * rest of the HUD (a +1,234,567 gain shows "+1.23e6", not "1234567"), with an
+ * explicit "+" on gains. Losses already carry sciFormat's "-"; zero → "0".
+ *
+ *   500      → "+500"
+ *   -500     → "-500"
+ *   1234567  → "+1.23e6"
+ *   0        → "0"
+ */
+export function formatDelta(n: number): string {
+  return `${n > 0 ? '+' : ''}${sciFormat(n)}`;
+}

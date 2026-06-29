@@ -8,6 +8,7 @@ import type { RewardsResponse, SecuringStatusResponse, VestingResponse, WalletSe
 import { getNodeTier, TIER_DISPLAY_NAME } from '@/lib/nodeTier';
 import { sciFormat } from '@/lib/format';
 import { getSubscriptionEconomy } from '@/types/subscription';
+import { DISCLOSURES } from '@/lib/disclosures';
 
 export default function AccountView() {
   const currentAgentId = useGameStore((s) => s.currentAgentId);
@@ -448,6 +449,9 @@ export default function AccountView() {
               <StatCard label="Research Points" value={rewards.research_points.toFixed(1)} valueClass="text-accent-purple" />
               <StatCard label="Secured Chains" value={String(rewards.secured_chains)} valueClass="text-emerald-400" />
             </div>
+            <p className="mt-4 border-t border-card-border pt-3 text-[10px] leading-snug text-text-muted/70">
+              {DISCLOSURES.testnetToken}
+            </p>
           </div>
         )}
 
@@ -477,7 +481,7 @@ export default function AccountView() {
                     </div>
                   </div>
                   {planet.isZeroKnowledge && (
-                    <span className="text-[10px] text-accent-purple font-mono bg-accent-purple/10 px-2 py-0.5 rounded-full border border-accent-purple/20">ZK</span>
+                    <span className="text-[10px] text-accent-purple font-mono bg-accent-purple/10 px-2 py-0.5 rounded-full border border-accent-purple/20" title={DISCLOSURES.zkRungStatus}>ZK</span>
                   )}
                 </div>
               ))}

@@ -10,10 +10,18 @@ from agentic.consensus.simulator import ConsensusSimulator
 from agentic.params import (
     GENESIS_BALANCE, SLOTS_PER_EPOCH,
     ALPHA, BETA,
+    ANNUAL_INFLATION_CEILING,
 )
 
 # TODO(v2): redesign for organic growth model — no scheduled inflation.
 # Legacy inflation constants kept for backward-compat simulation.
+#
+# These describe the SHAPE of the projection curve only (a 10%-at-genesis
+# disinflation glide). The protocol ceiling (params.ANNUAL_INFLATION_CEILING,
+# 5%) is the SAME hard cap the LIVE chain minting path enforces in
+# agentic/lattice/mining.py, and it is applied on top of this curve in
+# _inflation_rate_at_year so the projection can never mint faster than the
+# real economy. params is the single source of truth for the ceiling.
 _LEGACY_INITIAL_RATE = 0.10
 _LEGACY_DISINFLATION = 0.10
 _LEGACY_FLOOR = 0.01
@@ -78,9 +86,19 @@ class SimulationEngine:
         }
 
     def _inflation_rate_at_year(self, year: float) -> float:
-        """Get annual inflation rate at a given year (disinflation curve)."""
+        """Get annual inflation rate at a given year (disinflation curve),
+        clamped to the protocol ceiling.
+
+        The legacy disinflation curve starts at 10% and decays, but the
+        protocol caps annualized supply growth at
+        ``params.ANNUAL_INFLATION_CEILING`` (5%) — the SAME ceiling the live
+        chain minting path enforces in ``agentic/lattice/mining.py``. We clamp
+        the curve to that ceiling here so the offline projection can never mint
+        above the real-economy cap. params is the single source of truth.
+        """
         rate = _LEGACY_INITIAL_RATE * ((1 - _LEGACY_DISINFLATION) ** year)
-        return max(rate, _LEGACY_FLOOR)
+        rate = max(rate, _LEGACY_FLOOR)
+        return min(rate, ANNUAL_INFLATION_CEILING)
 
     def _distribute_staking_rewards(self, epoch: int, slot: int) -> tuple[int, list[int]]:
         """Mint inflation rewards to validators proportional to effective stake.

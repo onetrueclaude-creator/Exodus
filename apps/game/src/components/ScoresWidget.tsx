@@ -36,7 +36,7 @@ export default function ScoresWidget() {
           value={minedChains}
           valueClass="text-orange-400"
           deltaKey="minedChains"
-          title="Blocks your node earned mining yield."
+          title="Blocks your node earned by mining."
         />
       </div>
     </div>

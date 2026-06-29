@@ -27,7 +27,7 @@ export default function Footer() {
           <div>
             <Image src="/logos/logo-full.svg" alt="ZK Agentic Chain" width={200} height={44} unoptimized />
             <p className="mt-4 text-sm text-text-muted">
-              A privacy-preserving L1: PoAIV secures the ledger, Proof-of-Vault secures the state. Built by agents and vibe coding.
+              A privacy-preserving L1: PoAIV secures the ledger, Proof-of-Vault secures the state.
             </p>
           </div>
 

@@ -7,6 +7,8 @@ import NetworkChatRoom from '@/components/NetworkChatRoom';
 import AgentChat from '@/components/AgentChat';
 import OtherNodeTerminal from '@/components/OtherNodeTerminal';
 import TimechainStats from '@/components/TimechainStats';
+import QuestPanel from '@/components/QuestPanel';
+import ReferralPanel from '@/components/ReferralPanel';
 import type { Agent } from '@/types';
 import type { ChainService } from '@/services/chainService';
 
@@ -22,6 +24,8 @@ const DOCK_ITEMS: { id: DockPanelId; icon: string; label: string }[] = [
   { id: 'terminal',   icon: '\u25A3', label: 'Agent Terminal' },
   { id: 'stats',      icon: '\u25EB', label: 'Chain Stats' },
   { id: 'chat',       icon: '\u25C8', label: 'Network Chat' },
+  { id: 'quests',     icon: '\u25C9', label: 'Quests' },
+  { id: 'referral',   icon: '\u2295', label: 'Invite' },
 ];
 
 export default function DockPanel({
@@ -82,6 +86,10 @@ export default function DockPanel({
       }
       case 'stats':
         return <TimechainStats />;
+      case 'quests':
+        return <QuestPanel />;
+      case 'referral':
+        return <ReferralPanel />;
       default:
         return null;
     }

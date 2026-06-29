@@ -208,7 +208,11 @@ export default function OrbitalCanvas({ visualTest = false }: { visualTest?: boo
           }
         }
 
-        nodeLayer.removeChildren();
+        // W6: destroy the outgoing node graphics — removeChildren() alone only
+        // detaches them, leaking a Sprite (+ self-ring Graphics) every rebuild.
+        // Safe: fresh sprites are created below; carryBodyState carries only
+        // physics state, never the sprite object.
+        nodeLayer.removeChildren().forEach((c) => c.destroy());
         // Snapshot the outgoing bodies so each surviving node can carry its live
         // physics state across this rebuild (see carryBodyState below).
         const prevBodyById = new Map(bodies.map((pb) => [pb.id, pb] as const));
@@ -381,7 +385,13 @@ export default function OrbitalCanvas({ visualTest = false }: { visualTest?: boo
             camY = cy() - zoom * (cy() + target.y);
             applyCamera();
           }
-          useGameStore.getState().clearFocusRequest();
+          // W6: consume the request only once its target is in the scene (or it
+          // ages out) — otherwise retain it for the next tick. A target absent
+          // during the init/rebuild race was being silently dropped (dead Home
+          // button / no recenter). Rule mirrored + tested in lib/focusRetain.ts.
+          if (target || Date.now() - fr.ts > 5000) {
+            useGameStore.getState().clearFocusRequest();
+          }
         }
         edgeG.clear();
         for (const [pid, kid] of familyPairs) {

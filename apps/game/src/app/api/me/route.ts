@@ -16,7 +16,7 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { username: true, subscription: true, role: true, phantomWalletPubkey: true },
+    select: { username: true, subscription: true, role: true, phantomWalletPubkey: true, genesisCohortBatch: true },
   });
 
   const role = isFounderEmail(session.user.email) ? 'FOUNDER' : (user?.role ?? 'PLAYER');
@@ -26,5 +26,6 @@ export async function GET() {
     tier: user?.subscription ?? null,
     role,
     isOnChain: !!user?.phantomWalletPubkey,
+    genesisCohortBatch: user?.genesisCohortBatch ?? null,
   });
 }

@@ -121,6 +121,11 @@ def sync_to_supabase(g: GenesisState, next_block_in: float = 60.0) -> None:
     except Exception:
         pass
 
+    try:
+        _sync_score_ledger(g)
+    except Exception:
+        pass
+
 
 def sync_message(
     msg_id: str,
@@ -372,6 +377,38 @@ def _sync_resource_rewards(g: GenesisState) -> None:
 
     if rows:
         client.table("resource_rewards").upsert(rows).execute()
+
+
+def _sync_score_ledger(g: GenesisState) -> None:
+    """Upsert per-owner cumulative contribution rows to the score_ledger table.
+
+    Mirrors _sync_resource_rewards: fire-and-forget, keyed by owner_hex (the
+    ledger's PK). The Supabase score_ledger table is the snapshot/leaderboard
+    query surface the deferred M13 airdrop-transform will consume.
+    """
+    ledger = getattr(g, "score_ledger", None)
+    if ledger is None:
+        return
+    ledger_rows = ledger.all()
+    if not ledger_rows:
+        return
+
+    client = _get_client()
+    rows = []
+    for owner_hex, row in ledger_rows.items():
+        rows.append({
+            "owner_hex": owner_hex,
+            "mined_blocks": int(row.get("mined_blocks", 0)),
+            "proof_secured_count": int(row.get("proof_secured_count", 0)),
+            "activity_score": round(float(row.get("activity_score", 0.0)), 6),
+            "capped_contribution": round(float(row.get("capped_contribution", 0.0)), 6),
+            "last_activity_block": row.get("last_activity_block"),
+            "updated_at_block": int(row.get("updated_at_block", 0)),
+            "synced_at": _iso_now(),
+        })
+
+    if rows:
+        client.table("score_ledger").upsert(rows).execute()
 
 
 def _iso_now() -> str:

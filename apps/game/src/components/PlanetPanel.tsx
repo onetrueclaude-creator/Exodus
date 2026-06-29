@@ -1,6 +1,7 @@
 "use client";
 
 import { useGameStore } from '@/store';
+import { DISCLOSURES } from '@/lib/disclosures';
 import type { FogLevel } from '@/types';
 
 interface PlanetPanelProps {
@@ -30,7 +31,7 @@ export default function PlanetPanel({ agentId, fogLevel, clarityLevel, isOwner }
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-mono text-accent-cyan capitalize">{planet.contentType}</span>
               {planet.isZeroKnowledge && (
-                <span className="text-xs text-accent-purple">ZK</span>
+                <span className="text-xs text-accent-purple" title={DISCLOSURES.zkRungStatus}>ZK</span>
               )}
             </div>
             {visible ? (
@@ -44,6 +45,7 @@ export default function PlanetPanel({ agentId, fogLevel, clarityLevel, isOwner }
               <button
                 onClick={() => toggleZK(planet.id)}
                 className="mt-1 text-xs text-text-muted hover:text-accent-purple"
+                title={DISCLOSURES.zkRungStatus}
               >
                 {planet.isZeroKnowledge ? 'Decrypt' : 'Encrypt (ZK)'}
               </button>

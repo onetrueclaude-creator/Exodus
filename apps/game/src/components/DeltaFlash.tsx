@@ -2,20 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { useGameStore } from "@/store";
+import { formatDelta } from "@/lib/format";
 
 /** Flash delta indicator — shows +N or -N for 3 seconds after a resource change */
 export function DeltaFlash({ resourceKey }: { resourceKey: string }) {
   const delta = useGameStore((s) => s.resourceDeltas[resourceKey]);
-  const [visible, setVisible] = useState(false);
+  // Track the most recently DISMISSED delta. Visibility is DERIVED from it, so the
+  // effect never calls setState synchronously (no cascading renders) — it only
+  // schedules the auto-hide. A fresh delta shows immediately; it hides after 3s.
+  const [dismissedTs, setDismissedTs] = useState<number | null>(null);
 
   useEffect(() => {
     if (!delta) return;
-    setVisible(true);
-    const timer = setTimeout(() => setVisible(false), 3000);
+    const ts = delta.ts;
+    const timer = setTimeout(() => setDismissedTs(ts), 3000);
     return () => clearTimeout(timer);
-  }, [delta?.ts]);
+  }, [delta]);
 
-  if (!visible || !delta) return null;
+  if (!delta || delta.ts === dismissedTs) return null;
 
   const isPositive = delta.value > 0;
   return (
@@ -24,8 +28,7 @@ export function DeltaFlash({ resourceKey }: { resourceKey: string }) {
         isPositive ? "text-green-400" : "text-red-400"
       }`}
     >
-      {isPositive ? "+" : ""}
-      {delta.value}
+      {formatDelta(delta.value)}
     </span>
   );
 }

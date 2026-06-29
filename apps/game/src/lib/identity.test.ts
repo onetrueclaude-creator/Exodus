@@ -4,7 +4,7 @@ import { resolveClientIdentity } from './identity';
 describe('resolveClientIdentity', () => {
   it('uses the server response when present (server is authoritative)', () => {
     const r = resolveClientIdentity(
-      { tier: 'COMMUNITY', role: 'PLAYER', isOnChain: false, username: 'neo' },
+      { tier: 'COMMUNITY', role: 'PLAYER', isOnChain: false, username: 'neo', genesisCohortBatch: null },
       { devIdentityEnabled: true, devTier: 'founder', devSubscription: 'PROFESSIONAL' },
     );
     expect(r).toEqual({ tier: 'community', subscription: 'COMMUNITY', source: 'server' });
@@ -12,7 +12,7 @@ describe('resolveClientIdentity', () => {
 
   it('maps a FOUNDER server role to the founder client tier', () => {
     const r = resolveClientIdentity(
-      { tier: 'PROFESSIONAL', role: 'FOUNDER', isOnChain: true, username: 'root' },
+      { tier: 'PROFESSIONAL', role: 'FOUNDER', isOnChain: true, username: 'root', genesisCohortBatch: null },
       { devIdentityEnabled: false },
     );
     expect(r).toEqual({ tier: 'founder', subscription: 'PROFESSIONAL', source: 'server' });
