@@ -30,6 +30,12 @@ updates:
           - "react-dom"
           - "@types/react"
           - "@types/react-dom"
+      # Dev tooling (tailwind, vite, vitest, postcss…) shares apps/game's single
+      # package-lock.json; individual-PR mode triggers the same adjacent-line
+      # rebase-storm documented for chain-deps above — hit live on #184/#190/#191
+      # (three open PRs, one lockfile). Batch them into one weekly PR.
+      dev-tooling:
+        dependency-type: "development"
     ignore:
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
@@ -55,3 +61,10 @@ updates:
     labels:
       - "dependencies"
       - "ci"
+    ignore:
+      # Major bumps of CI actions are adopted by hand, not auto-proposed:
+      # checkout v4→v7 (#135), setup-node v4→v6 (#134), gitleaks-action v2→v3
+      # (#137) each sat open as BLOCKED PRs. Patches/minors + security updates
+      # still flow normally; revisit majors when adopting a new runner feature.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
