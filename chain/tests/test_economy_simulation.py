@@ -327,19 +327,13 @@ def test_invariant_conservation(cfg_id):
 
 
 # ── Invariant 5: Airdrop cap-holding (master-spec §4.3) ─────────────────────
-def _prorata_airdrop(scores, pool):
-    """Reference pro-rata airdrop: allocation_i = (score_i / Σscores) * POOL.
-
-    No such function exists in the chain code (grep for airdrop/pro-rata is
-    empty), so the master-spec §4.3 property is implemented here as the
-    specified formula and asserted. The pool is a FIXED constant; the spec's
-    load-bearing claim is that the total airdrop cannot exceed it regardless of
-    user count or score distribution.
-    """
-    total = sum(scores)
-    if total <= 0:
-        return [0.0 for _ in scores]
-    return [(sc / total) * pool for sc in scores]
+# The pro-rata reference now lives in the chain code — the W5 Slice-2 shared
+# transform module ``agentic/economics/airdrop.py`` — so this gate and the live
+# ``/api/airdrop-preview`` endpoint exercise the SAME math (DRY). It is imported
+# under the original private name; the cap-holding invariants below are
+# unchanged. (allocation_i = (score_i / Σscores) * POOL; pool is a FIXED
+# constant, so the total can never exceed it regardless of user count.)
+from agentic.economics.airdrop import prorata_allocations as _prorata_airdrop
 
 
 # Broad, adversarial score-vector set standing in for property-based fuzzing
@@ -439,7 +433,6 @@ def test_horizon_actually_ran(cfg_id):
 
 
 # ── W5 Invariant 7: M13 whale-cap + quadratic redistribution (design §3, §5.7)
-import math
 
 
 # Default per-wallet airdrop cap used by the reference M13 computation.
@@ -449,72 +442,18 @@ import math
 M13_DEFAULT_CAP = PARTICIPATION_POOL // 20
 
 
-def _m13_capped_quadratic_airdrop(scores, pool, cap):
-    """M13 reference: pro-rata, then per-wallet cap, then redistribute the
-    capped excess to SUB-CAP wallets ∝ √(current allocation) (quadratic,
-    favoring small contributors). Iterate until no wallet exceeds the cap OR
-    no sub-cap headroom remains; any residual that cannot be placed under the
-    cap is left UNALLOCATED (→ treasury), so Σ alloc <= pool.
-
-    Returns (allocations, treasury_residual).
-
-    Design §3 (M13): "cap per wallet; excess above the cap redistributed
-    quadratically (∝√contribution) to sub-cap contributors → U-shaped
-    incentive that breaks whale monopoly." Design §5.7: "with M13, no single
-    wallet's airdrop alloc exceeds the per-wallet cap regardless of
-    contribution."
-    """
-    n = len(scores)
-    total = sum(scores)
-    if n == 0:
-        return [], 0.0
-    if total <= 0:
-        return [0.0] * n, float(pool)
-
-    # 1. Naive pro-rata seed.
-    alloc = [(sc / total) * pool for sc in scores]
-
-    # 2. Iteratively cap + redistribute excess to sub-cap wallets ∝ √alloc.
-    #    Bounded iteration count: each pass caps >=1 new wallet or exits, and a
-    #    field of n wallets can be capped at most n times.
-    for _ in range(n + 2):
-        excess = 0.0
-        for i in range(n):
-            if alloc[i] > cap:
-                excess += alloc[i] - cap
-                alloc[i] = cap
-        if excess <= 0:
-            break
-
-        # Sub-cap wallets are the redistribution targets. Weight ∝ √(current
-        # allocation) — quadratic-favoring-small. A sub-cap wallet with zero
-        # allocation (zero score) gets weight 0 (no score => no airdrop).
-        sub_idx = [i for i in range(n) if alloc[i] < cap]
-        weights = [math.sqrt(alloc[i]) for i in sub_idx]
-        wsum = sum(weights)
-        if wsum <= 0:
-            # No sub-cap headroom with positive weight — residual to treasury.
-            return alloc, excess
-
-        # Distribute excess, but never push a target above the cap; any
-        # un-placeable remainder loops back as new excess (next iteration) or,
-        # if everyone hits the cap, falls through to the treasury.
-        placed = 0.0
-        for i, w in zip(sub_idx, weights):
-            give = excess * (w / wsum)
-            room = cap - alloc[i]
-            give = min(give, room)
-            alloc[i] += give
-            placed += give
-        leftover = excess - placed
-        if leftover <= 1e-6:
-            break
-        # else: loop again to re-place the leftover among remaining sub-cap.
-    else:
-        leftover = 0.0  # exhausted iterations cleanly
-
-    treasury = max(0.0, pool - sum(alloc))
-    return alloc, treasury
+# The M13 reference now lives in the chain code — ``agentic/economics/airdrop.py``
+# (W5 Slice 2). This gate and the live ``/api/airdrop-preview`` endpoint call the
+# SAME transform (DRY). It is imported under the original private name and keeps
+# the same signature — ``(scores, pool, cap) -> (allocations, treasury_residual)``
+# — so the §3/§5.7 invariants asserted below are unchanged. Design §3 (M13):
+# "cap per wallet; excess above the cap redistributed quadratically
+# (∝√contribution) to sub-cap contributors → U-shaped incentive that breaks
+# whale monopoly." Design §5.7: "no single wallet's airdrop alloc exceeds the
+# per-wallet cap regardless of contribution."
+from agentic.economics.airdrop import (
+    m13_capped_quadratic as _m13_capped_quadratic_airdrop,
+)
 
 
 _M13_CASES = [

@@ -67,6 +67,7 @@ import random as _random
 from agentic.consensus.block import Block, BlockStatus
 from agentic.consensus.validator import Validator
 from agentic.economics.activity import resolve_ranks
+from agentic.economics.airdrop import airdrop_allocations
 from agentic.lattice.allocator import CoordinateAllocator
 from agentic.lattice.claims import claim_cost
 from agentic.lattice.coordinate import GridCoordinate, resource_density, storage_slots
@@ -2639,6 +2640,53 @@ def get_scores() -> dict:
     and public (like /api/status)."""
     g = _g()
     return g.score_ledger.all()
+
+
+@app.get("/api/airdrop-preview")
+def get_airdrop_preview() -> dict:
+    """Project the live score snapshot onto the fixed 250M participation airdrop.
+
+    Runs the M13 transform (``agentic/economics/airdrop.py``) over every owner's
+    ``capped_contribution``: pro-rata of ``AIRDROP_POOL``, whale-capped at
+    ``AIRDROP_POOL // AIRDROP_WHALE_CAP_DIVISOR``, capped excess redistributed
+    ∝√(allocation) to sub-cap contributors. ``Σ projected ≤ pool`` by
+    construction (the unallocated remainder is the implicit treasury residual).
+
+    Read-only / public (like /api/scores). This is a PROJECTION, not a
+    commitment — it mints/moves nothing; the real mainnet snapshot is a deferred
+    milestone. Response::
+
+        {
+          "allocations": { "<owner_hex>": {"contribution": float,
+                                           "projected_allocation": float}, ... },
+          "total_allocated": float,   # Σ projected_allocation (≤ pool)
+          "pool": float,              # AIRDROP_POOL (fixed 250M)
+          "cap": float                # per-wallet whale-cap (pool / divisor)
+        }
+    """
+    g = _g()
+    pool = float(params.AIRDROP_POOL)
+    cap = pool / params.AIRDROP_WHALE_CAP_DIVISOR
+
+    contributions = {
+        owner_hex: float(row.get("capped_contribution", 0.0))
+        for owner_hex, row in g.score_ledger.all().items()
+    }
+    allocations = airdrop_allocations(contributions, pool, cap)
+
+    preview = {
+        owner_hex: {
+            "contribution": contributions[owner_hex],
+            "projected_allocation": allocations.get(owner_hex, 0.0),
+        }
+        for owner_hex in contributions
+    }
+    return {
+        "allocations": preview,
+        "total_allocated": sum(allocations.values()),
+        "pool": pool,
+        "cap": cap,
+    }
 
 
 @app.post("/api/reset", response_model=ResetResult)
