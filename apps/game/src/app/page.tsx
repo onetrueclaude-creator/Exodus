@@ -150,7 +150,7 @@ function ProductionLanding() {
           className="text-[14px] text-text-muted mb-10"
           style={{ fontFamily: "'Inter', sans-serif" }}
         >
-          AI-powered privacy chain agents
+          AI-verified, privacy-by-design chain agents
         </p>
 
         <button

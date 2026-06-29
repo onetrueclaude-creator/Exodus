@@ -6,9 +6,9 @@ python-dotenv>=1.2.2
 slowapi>=0.1.10
 pydantic>=2.13.4
 PyNaCl>=1.5.0
+numpy>=1.24  # runtime dep — agentic.consensus.validator + verification.pipeline import it at boot
 
 # Development / visualization (not needed for production)
-# numpy>=1.24
 # matplotlib>=3.7
 # pytest>=7.0
 # streamlit>=1.30

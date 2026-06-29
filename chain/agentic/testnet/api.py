@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import asyncio
 import json as _json
+import logging
 import os as _os
+import sys
 import time
 from typing import Dict, List, Literal, Optional
 
@@ -498,6 +500,113 @@ _DB_PATH: _Path = _Path(
 _SEED_DEV_FOUNDER: bool = _os.environ.get("SEED_DEV_FOUNDER", "1") != "0"
 # Dev Founder wallet index (0 is the Singularity; 1 is a normal genesis player).
 _DEV_FOUNDER_WALLET_INDEX: int = 1
+
+
+# ---------------------------------------------------------------------------
+# R7 — single-worker runtime guard
+# ---------------------------------------------------------------------------
+# This module holds mutable module-GLOBAL state (`_genesis`, `_last_block_time`,
+# the auto-miner task) and `signing.verify_write` does an *unlocked* nonce
+# read-modify-write. The chain is therefore correct ONLY when served by a SINGLE
+# Uvicorn worker. Running `uvicorn --workers N` (N>1) forks N processes that each
+# get their own private copy of this state; they then diverge and silently
+# corrupt the shared SQLite DB and per-account nonce counters (replay window).
+# Uvicorn cannot enforce single-worker for us, so the first worker takes an
+# exclusive OS file lock at startup; any later worker fails to acquire it, logs a
+# FATAL message citing R7, and refuses to serve.
+#
+# Test-safety: the pytest suite builds the app many times inside ONE process, and
+# `flock` treats each separate open file description independently (a second
+# acquire in the same process WOULD self-block). So the guard is (a) OPT-IN via
+# AGENTIC_SINGLE_WORKER_GUARD=1 — set by the deploy/runbook, never by the suite,
+# (b) re-entrant within a single process, and (c) skipped under pytest. Any one of
+# these keeps the suite green; all three are belt-and-suspenders.
+_log = logging.getLogger("agentic.testnet.api")
+
+_SINGLE_WORKER_GUARD_ENABLED: bool = (
+    _os.environ.get("AGENTIC_SINGLE_WORKER_GUARD") == "1"
+)
+_SINGLE_WORKER_LOCK_PATH: _Path = _Path(
+    _os.environ.get(
+        "AGENTIC_SINGLE_WORKER_LOCK",
+        str(_DB_PATH.parent / "agentic-chain.worker.lock"),
+    )
+)
+# Held for the whole process lifetime once acquired — closing the fd would release
+# the OS lock, so we keep a module-global reference. None = not acquired *here*.
+_single_worker_lock_fd: Optional[int] = None
+
+
+def _running_under_pytest() -> bool:
+    """True when executing inside a pytest run (so the guard self-disables)."""
+    return "PYTEST_CURRENT_TEST" in _os.environ or "pytest" in sys.modules
+
+
+def _acquire_single_worker_lock(lock_path: "_Path") -> int:
+    """Open *lock_path* and take a non-blocking exclusive ``flock``.
+
+    Returns the held file descriptor on success. Raises ``OSError``
+    (``BlockingIOError``) when another process/open-fd already holds the lock.
+    Pure helper (no module state) so the R7 mechanism is unit-testable.
+    """
+    import fcntl  # POSIX-only; imported lazily so the module loads without it
+
+    fd = _os.open(str(lock_path), _os.O_CREAT | _os.O_RDWR, 0o644)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        _os.close(fd)
+        raise
+    # Advisory: stamp the holder PID so an operator can see who owns the lock.
+    try:
+        _os.ftruncate(fd, 0)
+        _os.write(fd, f"{_os.getpid()}\n".encode())
+        _os.fsync(fd)
+    except OSError:
+        pass  # bookkeeping only — never fail the lock on a write error
+    return fd
+
+
+@app.on_event("startup")
+def _enforce_single_worker_guard() -> None:
+    """R7: refuse to run as a non-first Uvicorn worker (module-global state).
+
+    No-op unless AGENTIC_SINGLE_WORKER_GUARD=1. Re-entrant within a single
+    process and skipped under pytest, so the suite's repeated in-process app
+    startups never trip it. Registered before `_init_genesis` so a losing second
+    worker bails before touching genesis / the DB / the miner.
+    """
+    global _single_worker_lock_fd
+    if not _SINGLE_WORKER_GUARD_ENABLED or _running_under_pytest():
+        return
+    if _single_worker_lock_fd is not None:
+        return  # already acquired in this process — re-entrant, harmless
+    try:
+        _single_worker_lock_fd = _acquire_single_worker_lock(_SINGLE_WORKER_LOCK_PATH)
+    except ImportError:
+        # fcntl is POSIX-only; on a platform without it we cannot enforce R7.
+        # Warn loudly rather than block startup (the deploy target is Linux).
+        _log.warning(
+            "R7 single-worker guard requested but fcntl is unavailable — "
+            "NOT enforced on this platform."
+        )
+        return
+    except OSError:
+        _log.critical(
+            "FATAL (R7): another Agentic Chain worker already holds %s. The chain "
+            "keeps module-global state and does an unlocked nonce read-modify-write, "
+            "so it MUST run as a SINGLE Uvicorn worker. Refusing to serve — restart "
+            "with one worker (do NOT pass --workers N>1).",
+            _SINGLE_WORKER_LOCK_PATH,
+        )
+        raise RuntimeError(
+            "R7 single-worker guard: lock already held by another worker — "
+            "refusing to start (module-global state would corrupt under >1 worker)."
+        )
+    _log.info(
+        "R7 single-worker guard engaged (lock=%s, pid=%s).",
+        _SINGLE_WORKER_LOCK_PATH, _os.getpid(),
+    )
 
 
 @app.on_event("startup")
@@ -1718,7 +1827,18 @@ def get_grid_region(
 @app.post("/api/mine", response_model=MineResult)
 @limiter.limit("5/10seconds")
 def mine_block(request: Request) -> MineResult:
-    """Mine one block manually (rate-limited). Auto-miner handles this normally."""
+    """Mine one block manually (rate-limited). Auto-miner handles this normally.
+
+    INTENTIONALLY OPEN (no verify_write / no admin token) — W4 access-control
+    audit. Block production is a public, un-attributed testnet action: it runs the
+    same deterministic mining path as the background auto-miner and distributes
+    rewards strictly by on-chain rules (claims/stake/securing), never to the
+    caller, so a per-identity signature would gate nothing meaningful. Abuse is
+    bounded by two controls: the SlowAPI rate limit (5/10s) and the hard 60s
+    block-time floor enforced below (an early call gets HTTP 429). This is a
+    testnet convenience trigger; mainnet block production is leader-scheduled and
+    has no public mine endpoint.
+    """
     global _last_block_time
     now = time.time()
     elapsed = now - _last_block_time
@@ -2708,7 +2828,14 @@ def _check_node_hash(request: Request):
 
 @app.post("/api/node/verify", response_model=NodeVerifyResponse)
 def verify_node_hash(req: NodeVerifyRequest) -> NodeVerifyResponse:
-    """Stateless hash check — does the provided hash match the canonical template?"""
+    """Stateless hash check — does the provided hash match the canonical template?
+
+    INTENTIONALLY OPEN (no verify_write / no admin token) — W4 access-control
+    audit. Despite being a POST it mutates NO state: it is a pure comparison that
+    echoes whether `claude_hash` equals CANONICAL_CLAUDE_HASH (which is public by
+    design — the node-integrity model is "anyone can verify", not "secret hash").
+    Nothing to gate.
+    """
     return NodeVerifyResponse(
         valid=verify_hash(req.claude_hash),
         canonical_hash=CANONICAL_CLAUDE_HASH,
@@ -2717,7 +2844,26 @@ def verify_node_hash(req: NodeVerifyRequest) -> NodeVerifyResponse:
 
 @app.post("/api/node/register", response_model=NodeRegisterResponse)
 def register_node(req: NodeRegisterRequest) -> NodeRegisterResponse:
-    """Create a node session (403 on hash mismatch, 409 on duplicate)."""
+    """Create a node session (403 on hash mismatch, 409 on duplicate).
+
+    INTENTIONALLY OPEN to ed25519/admin gating, by design — W4 access-control
+    audit. This is the pre-auth software-integrity HANDSHAKE that runs *before* a
+    Phantom signing key is bound (so it cannot require verify_write without
+    breaking onboarding), and it mutates only the ephemeral, in-memory
+    `_active_sessions` map (node_session.py) — NOT consensus, ledger, or any
+    chain state. Sessions are read solely by GET /api/node/session and gate no
+    on-chain write; every state-changing chain route has its own verify_write /
+    admin gate independent of this session. Its gate is `verify_hash` (the caller
+    must run the canonical node software).
+
+    Known, accepted testnet limitation: because the canonical hash is public and
+    no ownership of `wallet_index` is proven, a caller could squat a session for
+    a wallet it does not own, blocking that wallet's own register (HTTP 409) for
+    up to NODE_SESSION_TIMEOUT_S (1h). That is a minor griefing/DoS vector with
+    zero chain-integrity or fund impact; it is left open here deliberately rather
+    than coupling this handshake to wallet signatures. Revisit if node sessions
+    ever gate a privileged action.
+    """
     try:
         session = register_session(
             wallet_index=req.wallet_index,
