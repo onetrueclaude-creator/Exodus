@@ -1,0 +1,52 @@
+# .dockerignore — REPO ROOT
+# ---------------------------------------------------------------------------
+# The game image builds with the repo root as the Docker context (so Next sees
+# the pnpm-workspace.yaml / turbo.json workspace markers and emits the nested
+# standalone layout — see apps/game/Dockerfile). Docker reads .dockerignore from
+# the CONTEXT ROOT, so THIS file (not apps/game/.dockerignore) governs the build.
+# Deploy from the repo root:  fly deploy . --config apps/game/fly.toml
+#
+# Keep the context lean & deterministic: nothing host-built is shipped in; the
+# Prisma client and .next/standalone are produced FRESH inside the image so the
+# build can't be poisoned by stale local state.
+
+# VCS & CI meta
+.git
+.gitignore
+.github
+
+# Secrets — NEVER ship into the image (real values arrive via `fly secrets set`)
+**/.env
+**/.env.*
+!**/.env.example
+
+# Dependencies & build output (reinstalled / regenerated in-image)
+**/node_modules
+**/.next
+**/out
+**/dist
+apps/game/src/generated/prisma
+
+# Not part of the game image
+chain
+spec
+docs
+
+# Tests & tooling not needed to build or run the server
+tests
+playwright*.config.*
+**/__tests__
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+**/vitest.config.*
+**/vitest.setup.*
+apps/game/scripts/visual-debug
+
+# Local env files & editor / OS cruft
+.vscode
+.idea
+**/.DS_Store
+**/*.log
+**/coverage

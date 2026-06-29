@@ -67,6 +67,7 @@ import random as _random
 from agentic.consensus.block import Block, BlockStatus
 from agentic.consensus.validator import Validator
 from agentic.economics.activity import resolve_ranks
+from agentic.economics.airdrop import airdrop_allocations
 from agentic.lattice.allocator import CoordinateAllocator
 from agentic.lattice.claims import claim_cost
 from agentic.lattice.coordinate import GridCoordinate, resource_density, storage_slots
@@ -722,6 +723,43 @@ def _compute_per_wallet_yields(g: "GenesisState") -> dict:
     return totals
 
 
+def _build_score_metrics(g: "GenesisState") -> dict:
+    """Compose per-owner_hex verifiable-work metrics for the W5 score ledger.
+
+    Mining (``_blocks_mined_per_owner``) and activity are already keyed by
+    owner_hex; securing's PoAW proofs (``_proof_secured``) are keyed by
+    wallet_index and are mapped to owner_hex via ``g.wallets[i].public_key`` —
+    the same identity mining/activity use. Only owners with non-zero work appear,
+    so the ledger stays scoped to real participants.
+    """
+    metrics: dict[str, dict] = {}
+
+    def _slot(owner_hex: str) -> dict:
+        return metrics.setdefault(owner_hex, {"mined": 0, "proofs": 0, "activity": 0.0})
+
+    # Mining: cumulative-since-restart blocks-mined, keyed by owner bytes.
+    for owner_bytes, count in g.mining_engine._blocks_mined_per_owner.items():
+        _slot(owner_bytes.hex())["mined"] = int(count)
+
+    # Securing PoAW proofs: per wallet_index → owner_hex (the keying risk).
+    proof_secured = getattr(g.securing_registry, "_proof_secured", {})
+    for wallet_index, count in proof_secured.items():
+        if 0 <= wallet_index < len(g.wallets):
+            _slot(g.wallets[wallet_index].public_key.hex())["proofs"] = int(count)
+
+    # Activity EMA: recorded (not earned). The live ActivityTracker may not be
+    # wired onto GenesisState yet — tolerate its absence.
+    tracker = getattr(g, "activity_tracker", None)
+    if tracker is not None:
+        try:
+            for owner_hex, score in tracker.all_scores().items():
+                _slot(owner_hex)["activity"] = float(score)
+        except Exception:
+            pass
+
+    return metrics
+
+
 def _do_mine(g: GenesisState) -> dict:
     """Core mining logic shared by auto-miner and /api/mine."""
     global _last_block_time
@@ -904,6 +942,20 @@ def _do_mine(g: GenesisState) -> dict:
                 }))
     except RuntimeError:
         pass
+
+    # W5 score ledger: accrue this block's NEW verifiable work (mining + PoAW
+    # proofs) into the durable per-owner contribution record, at the same
+    # save cadence. Delta-tracked so a restart never double-counts. This MUST
+    # NEVER crash the mining critical path — wrapped + logged.
+    try:
+        metrics = _build_score_metrics(g)
+        if metrics:
+            g.score_ledger.record_epoch(metrics, block_slot)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).warning(
+            "score_ledger accrual failed for block %s", block_slot, exc_info=True
+        )
 
     # Push chain state to Supabase after each block so the frontend
     # receives real-time updates via postgres_changes subscriptions.
@@ -2534,6 +2586,107 @@ def get_wallet_settings(wallet_index: int) -> WalletSettingsResponse:
         total_mined_chains=g.mining_engine.get_mined_chains(wallet.public_key),
         effective_stake=round(effective, 4),
     )
+
+
+# ---------------------------------------------------------------------------
+# Score ledger (W5) — durable per-owner contribution record (read-only)
+# ---------------------------------------------------------------------------
+
+
+class ScoreLedgerRow(BaseModel):
+    """One participant's cumulative, M4/M5-capped contribution (airdrop-weight
+    input). ``capped_contribution`` is the figure the deferred mainnet airdrop
+    snapshot pro-ratas; the raw components are kept for auditability."""
+    owner_hex: str
+    wallet_index: Optional[int] = None
+    mined_blocks: int = 0
+    proof_secured_count: int = 0
+    activity_score: float = 0.0
+    capped_contribution: float = 0.0
+    last_activity_block: Optional[int] = None
+    updated_at_block: int = 0
+
+
+def _zero_score_row() -> dict:
+    return {
+        "mined_blocks": 0,
+        "proof_secured_count": 0,
+        "activity_score": 0.0,
+        "capped_contribution": 0.0,
+        "last_activity_block": None,
+        "updated_at_block": 0,
+    }
+
+
+@app.get("/api/score/{wallet_index}", response_model=ScoreLedgerRow)
+def get_score(wallet_index: int) -> ScoreLedgerRow:
+    """Return one wallet's cumulative contribution row.
+
+    404 on an unknown (out-of-range) wallet. A valid wallet that hasn't earned
+    yet returns a zeroed row — its contribution is genuinely 0, not missing.
+    """
+    g = _g()
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    owner_hex = g.wallets[wallet_index].public_key.hex()
+    row = g.score_ledger.get(owner_hex) or _zero_score_row()
+    return ScoreLedgerRow(owner_hex=owner_hex, wallet_index=wallet_index, **row)
+
+
+@app.get("/api/scores")
+def get_scores() -> dict:
+    """Return ``{owner_hex: row}`` for every scored owner — the snapshot /
+    leaderboard source the deferred airdrop-transform will consume. Read-only
+    and public (like /api/status)."""
+    g = _g()
+    return g.score_ledger.all()
+
+
+@app.get("/api/airdrop-preview")
+def get_airdrop_preview() -> dict:
+    """Project the live score snapshot onto the fixed 250M participation airdrop.
+
+    Runs the M13 transform (``agentic/economics/airdrop.py``) over every owner's
+    ``capped_contribution``: pro-rata of ``AIRDROP_POOL``, whale-capped at
+    ``AIRDROP_POOL // AIRDROP_WHALE_CAP_DIVISOR``, capped excess redistributed
+    ∝√(allocation) to sub-cap contributors. ``Σ projected ≤ pool`` by
+    construction (the unallocated remainder is the implicit treasury residual).
+
+    Read-only / public (like /api/scores). This is a PROJECTION, not a
+    commitment — it mints/moves nothing; the real mainnet snapshot is a deferred
+    milestone. Response::
+
+        {
+          "allocations": { "<owner_hex>": {"contribution": float,
+                                           "projected_allocation": float}, ... },
+          "total_allocated": float,   # Σ projected_allocation (≤ pool)
+          "pool": float,              # AIRDROP_POOL (fixed 250M)
+          "cap": float                # per-wallet whale-cap (pool / divisor)
+        }
+    """
+    g = _g()
+    pool = float(params.AIRDROP_POOL)
+    cap = pool / params.AIRDROP_WHALE_CAP_DIVISOR
+
+    contributions = {
+        owner_hex: float(row.get("capped_contribution", 0.0))
+        for owner_hex, row in g.score_ledger.all().items()
+    }
+    allocations = airdrop_allocations(contributions, pool, cap)
+
+    preview = {
+        owner_hex: {
+            "contribution": contributions[owner_hex],
+            "projected_allocation": allocations.get(owner_hex, 0.0),
+        }
+        for owner_hex in contributions
+    }
+    return {
+        "allocations": preview,
+        "total_allocated": sum(allocations.values()),
+        "pool": pool,
+        "cap": cap,
+    }
 
 
 @app.post("/api/reset", response_model=ResetResult)

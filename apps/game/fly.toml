@@ -1,0 +1,53 @@
+# Fly.io config — ZK Agentic Network GAME UI (Next.js standalone)
+# ----------------------------------------------------------------
+# SET app NAME before first deploy. It must be unique within Fly and live in the
+# SAME Fly org as the chain so the game can reach the chain over `.internal`.
+#   app = "zkan-game"            # <-- CHANGE ME (or run `fly launch` to set it)
+#
+# Build context is the REPO ROOT (not apps/game). apps/game is a pnpm-workspace
+# member, so Next's standalone tracing nests the output under apps/game/ and the
+# Dockerfile MUST build from the root to match (see apps/game/Dockerfile header).
+# flyctl has no `[build] context` key, so set the context via the deploy
+# working-dir arg. Deploy FROM THE REPO ROOT with:
+#   fly deploy . --config apps/game/fly.toml --app zkan-game
+#
+# Public entry: this app is the ONLY internet-facing service. The browser talks to
+# the Next.js server here; the server proxies to the chain over the private network
+# (server-only env TESTNET_API → http://<chain-app>.internal:8080). The chain itself
+# is NEVER exposed publicly. See DEPLOY.md.
+
+app = "zkan-game"          # <-- CHANGE ME before `fly deploy`
+primary_region = "iad"     # pick a region near your users / the chain (keep both together)
+
+[build]
+  # Path is relative to the build context (the repo root), so include the
+  # apps/game/ prefix. Deploy from the root: fly deploy . --config apps/game/fly.toml
+  dockerfile = "apps/game/Dockerfile"
+
+[env]
+  # server.js reads PORT; must match http_service.internal_port below.
+  PORT = "3000"
+  NODE_ENV = "production"
+  # NextAuth v5 sits behind Fly's proxy → it must trust the forwarded host or it
+  # throws UntrustedHost on every /api/auth/* call. (Verified: standalone logs this
+  # without it.) Alternatively set AUTH_URL=https://zkagenticnetwork.com as a secret.
+  AUTH_TRUST_HOST = "true"
+  # All secrets (DATABASE_URL, AUTH_GOOGLE_ID/SECRET, AUTH_SECRET, TESTNET_API,
+  # CHAIN_ADMIN_TOKEN, FOUNDER_EMAILS) are set via `fly secrets set` — NOT here.
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "suspend"   # cheap idle behaviour; flip to false if you want it always-hot
+  auto_start_machines = true
+  min_machines_running = 1          # keep one warm so OAuth callbacks never cold-miss
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 200
+    hard_limit = 250
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"   # bump to 1gb if Next SSR memory pressure shows up under load
