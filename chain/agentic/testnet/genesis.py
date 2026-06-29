@@ -9,6 +9,7 @@ from unittest.mock import patch
 from agentic.actions.pipeline import ActionPipeline
 from agentic.consensus.validator import Validator
 from agentic.economics.fees import FeeEngine
+from agentic.economics.score_ledger import ScoreLedger
 from agentic.economics.securing import SecuringRegistry
 from agentic.economics.staking import StakeRegistry
 from agentic.lattice.claims import ClaimRegistry
@@ -69,6 +70,11 @@ class GenesisState:
     fee_engine: FeeEngine = field(default_factory=FeeEngine)
     stake_registry: StakeRegistry = field(default_factory=StakeRegistry)
     securing_registry: SecuringRegistry = field(default_factory=SecuringRegistry)
+    # W5 score ledger — durable per-owner contribution record (airdrop-weight
+    # input). Persisted to the score_ledger SQLite table + Supabase. A fresh
+    # ledger per genesis (create_genesis / reset); load_state restores its
+    # cumulative rows on boot.
+    score_ledger: ScoreLedger = field(default_factory=ScoreLedger)
     # Proof-of-Vault: content-addressed knowledge vault + coordinator registry.
     # Built in __post_init__ because the registry must wrap *its own* dag.
     vault_dag: VaultDag = None

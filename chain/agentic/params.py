@@ -179,6 +179,17 @@ ACTIVITY_CHEAP_ACTION_CAP = 0.05  # max share of a block's score from cheap acti
 PROMOTION_COOLDOWN_BLOCKS = 10    # anti-flicker on per-block re-ranking
 EDGE_FADE_BLOCKS = 30             # interaction-edge decay window (~30 min)
 
+# ── Score ledger (W5) — durable contribution record for the airdrop snapshot ─
+# Composes the chain's per-owner verifiable-work metrics (mined blocks +
+# accepted PoAW vault proofs) into a velocity-capped cumulative contribution.
+# Securing is the real CPU+disk work, so it carries the heaviest weight. The
+# per-epoch cap is the load-bearing anti-sybil layer (M4/M5): it bounds each
+# wallet's gain per epoch so splitting work across N wallets cannot beat one
+# honest wallet. Tunable (pending the founder-confirm tuning pass).
+SCORE_W_MINE = 1.0      # weight on cumulative mined blocks
+SCORE_W_SECURE = 3.0    # weight on accepted vault proofs (real CPU+disk work — heaviest)
+SCORE_EPOCH_CAP = 100.0 # max capped_contribution gain per wallet per epoch (anti-sybil)
+
 # ── Singularity (renamed from Machines; aliases kept one release) ───────────
 SINGULARITY_ORIGIN_COORD = MACHINES_ORIGIN_COORD
 SINGULARITY_MIN_SELL_RATIO = MACHINES_MIN_SELL_RATIO
