@@ -2,6 +2,7 @@ import Hero from "@/components/Hero";
 import StatCard from "@/components/StatCard";
 import TokenDistChart from "@/components/TokenDistChart";
 import FeatureCard from "@/components/FeatureCard";
+import Disclosure from "@/components/Disclosure";
 import { ZapIcon, LockIcon, VoteIcon, ShieldIcon, DiamondIcon } from "@/components/Icons";
 
 const healthMetrics = [
@@ -33,7 +34,7 @@ const utilities = [
 const comparisons = [
   { metric: "Ledger Consensus", agntc: "PoAIV (9/13 committee)", sol: "Tower BFT", aleo: "Proof of Succinct Work", mina: "Ouroboros" },
   { metric: "Staking Model", agntc: "CPU + Disk + Token", sol: "Token Only", aleo: "GPU (Proving)", mina: "Token Only" },
-  { metric: "Privacy", agntc: "Private by Default (SMT)", sol: "Public", aleo: "Private by Default", mina: "Public" },
+  { metric: "Privacy", agntc: "Private by design (SMT)", sol: "Public", aleo: "Private by Default", mina: "Public" },
   { metric: "Supply", agntc: "1B (Fixed)", sol: "~600M (Inflationary)", aleo: "1.5B (Fixed)", mina: "~1.2B (Inflationary)" },
   { metric: "Chain Genesis", agntc: "900 AGNTC (earned-release)", sol: "~260M (43%)", aleo: "~187M (12.5%)", mina: "~800M (67%)" },
   { metric: "State Security", agntc: "Proof-of-Vault (CPU+disk)", sol: "Full replication", aleo: "Full replication", mina: "Recursive SNARK" },
@@ -76,14 +77,15 @@ export default function TokenomicsPage() {
           <div className="mt-6 glass-card p-5 border-l-2 border-accent-cyan/40">
             <p className="text-sm text-text-secondary leading-relaxed">
               <span className="text-text-primary font-medium">Fixed supply, two layers.</span> The 1B total is allocated across six buckets (above); the community/earned share — participation mining, ongoing emissions, and ecosystem — is 58%. Operating reserves (team, treasury, liquidity) release on published, smoothed schedules.
-              The earned buckets are not handed out administratively: they reach participants through the live-chain internal economy, where each node&apos;s private subgrid releases AGNTC from its active Secure cells. The chain&apos;s own genesis is 900 AGNTC (100 to the never-selling Singularity reserve at the core). The 5% annual figure is the per-epoch <span className="text-text-primary font-medium">release rate</span> of the earned buckets — not open-ended inflation — so issuance can never exceed the fixed 1B.
+              The earned buckets are not handed out administratively: they reach participants through the live-chain internal economy, where each node&apos;s private subgrid releases AGNTC from its active Secure cells. The chain&apos;s own genesis is 900 AGNTC (100 to the protocol-held Singularity reserve at the core). The 5% annual figure is the per-epoch <span className="text-text-primary font-medium">release rate</span> of the earned buckets — not open-ended inflation — so issuance can never exceed the fixed 1B.
             </p>
           </div>
           <div className="mt-4 glass-card p-5 border-l-2 border-accent-purple/40">
             <p className="text-sm text-text-secondary leading-relaxed">
-              <span className="text-text-primary font-medium">Participation is earned, not sold.</span> The 25% participation bucket is allocated for verifiable protocol work performed during an extended free participation period, converted to mainnet by a fixed, pro-rata formula — so the total is capped at the bucket by construction, no matter how many people take part. Distribution is identity-gated (anti-Sybil); unclaimed tokens return to the treasury. There is no purchase and no representation of any monetary outcome.
+              <span className="text-text-primary font-medium">Participation is earned, not sold.</span> The 25% participation bucket is allocated for verifiable protocol work performed during an extended free participation period, converted to mainnet by a fixed, pro-rata formula — so the total is capped at the bucket by construction, no matter how many people take part. Distribution is identity-gated (anti-Sybil); unclaimed tokens return to the treasury.
             </p>
           </div>
+          <Disclosure id="testnet" className="mt-4" />
         </div>
       </section>
 
@@ -94,7 +96,7 @@ export default function TokenomicsPage() {
             <span className="gradient-text">AGNTC</span> Token Utility
           </h2>
           <p className="text-center text-text-secondary mb-12 max-w-2xl mx-auto">
-            Three pillars of utility drive demand and secure the network.
+            Three pillars of on-chain utility: gas, dual staking, and governance.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {utilities.map((u) => (
@@ -112,7 +114,7 @@ export default function TokenomicsPage() {
             Economic <span className="gradient-text">Model</span>
           </h2>
           <p className="text-center text-text-secondary mb-12 max-w-2xl mx-auto">
-            Fixed-supply issuance: earned release under a 5% ceiling, with two channels of permanent deflationary pressure.
+            Fixed-supply issuance: earned release under a 5% ceiling, with two channels that permanently remove AGNTC from circulation (50% fee burn + 50/50 BME).
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="glass-card p-6 text-center group hover:border-accent-cyan/30 transition-colors">
@@ -138,9 +140,9 @@ export default function TokenomicsPage() {
                 <ShieldIcon size={20} />
               </div>
               <p className="text-sm text-text-muted uppercase tracking-widest mb-2">Singularity Reserve</p>
-              <p className="text-3xl font-bold text-accent-purple">Never Sells</p>
-              <p className="text-sm text-text-secondary mt-2">Core accrues the top single-node yield into a never-selling reserve</p>
-              <p className="text-xs text-text-muted mt-1">Monotonic growth = protocol health metric</p>
+              <p className="text-3xl font-bold text-accent-purple">Protocol-Held</p>
+              <p className="text-sm text-text-secondary mt-2">The core node&apos;s accrued mining allocation is held in the protocol accumulator</p>
+              <p className="text-xs text-text-muted mt-1">Accumulator balance = protocol telemetry</p>
             </div>
           </div>
         </div>
@@ -241,7 +243,7 @@ export default function TokenomicsPage() {
             Tokenomics <span className="gradient-text">Dashboard</span>
           </h2>
           <p className="text-center text-text-secondary mb-8 max-w-2xl mx-auto">
-            Explore supply growth across radial bands, mining hardness, fee-burn dynamics, and staking yields — powered by our on-chain simulation engine.
+            Explore supply growth across radial bands, mining hardness, fee-burn dynamics, and staking reward share — powered by our on-chain simulation engine.
           </p>
           <div className="glass-card overflow-hidden" style={{ minHeight: "800px" }}>
             <iframe

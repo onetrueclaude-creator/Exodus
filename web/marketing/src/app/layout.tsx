@@ -5,7 +5,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "ZK Agentic Chain - Proof of AI Verification & Proof-of-Vault",
-  description: "A privacy-preserving Layer-1 where a PoAIV committee secures the ledger and participants' real CPU + disk secure the collective knowledge vault. AGNTC token. No paid AI key required to secure. Built by agents and vibe coding.",
+  description: "A privacy-preserving Layer-1 where a PoAIV committee secures the ledger and participants' real CPU + disk secure the collective knowledge vault. AGNTC token. No paid AI key required to secure.",
   icons: {
     icon: [
       { url: "/logos/logo-mini.svg", type: "image/svg+xml" },
