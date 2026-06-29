@@ -190,6 +190,19 @@ SCORE_W_MINE = 1.0      # weight on cumulative mined blocks
 SCORE_W_SECURE = 3.0    # weight on accepted vault proofs (real CPU+disk work — heaviest)
 SCORE_EPOCH_CAP = 100.0 # max capped_contribution gain per wallet per epoch (anti-sybil)
 
+# ── Airdrop / M13 transform (W5 Slice 2) — the snapshot → allocation math ─────
+# The fixed 250M-AGNTC participation airdrop (whitepaper §10.1.3, §22): 25% of
+# MAX_SUPPLY, allocated pro-rata of each owner's capped_contribution, bounded by
+# construction so Σ shares ≤ POOL regardless of participant count. AIRDROP_POOL
+# is derived from MAX_SUPPLY (single source of truth) and equals the same 250M
+# the whitepaper §10.1 distribution table and the econ-sim gate assert.
+AIRDROP_POOL = MAX_SUPPLY // 4            # 250,000,000 AGNTC participation bucket
+# M13 whale-cap: no single wallet's airdrop may exceed POOL / divisor. The
+# capped excess is redistributed ∝√(allocation) to sub-cap contributors
+# (agentic/economics/airdrop.py) — the U-shaped, anti-whale incentive. Divisor
+# 20 ⇒ a 5%-of-pool per-wallet ceiling (design §3/§5.7; tunable via /api/params).
+AIRDROP_WHALE_CAP_DIVISOR = 20            # per-wallet cap = AIRDROP_POOL // 20 (5%)
+
 # ── Singularity (renamed from Machines; aliases kept one release) ───────────
 SINGULARITY_ORIGIN_COORD = MACHINES_ORIGIN_COORD
 SINGULARITY_MIN_SELL_RATIO = MACHINES_MIN_SELL_RATIO
