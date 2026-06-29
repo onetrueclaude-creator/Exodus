@@ -93,6 +93,16 @@ CREATE TABLE IF NOT EXISTS account_keys (
     signing_pubkey_hex TEXT,
     nonce              INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS score_ledger (
+    owner_hex            TEXT PRIMARY KEY,
+    mined_blocks         INTEGER NOT NULL DEFAULT 0,
+    proof_secured_count  INTEGER NOT NULL DEFAULT 0,
+    activity_score       REAL    NOT NULL DEFAULT 0.0,
+    capped_contribution  REAL    NOT NULL DEFAULT 0.0,
+    last_activity_block  INTEGER,
+    updated_at_block     INTEGER NOT NULL
+);
 """
 
 
@@ -227,6 +237,30 @@ def save_state(g: GenesisState, last_block_time: float, db_path: Path) -> None:
                     "(owner_hex, signing_pubkey_hex, nonce) VALUES (?, ?, ?)",
                     acct_rows,
                 )
+
+            # -- Score ledger (W5): per-owner cumulative contribution ----------
+            ledger = getattr(g, "score_ledger", None)
+            if ledger is not None:
+                ledger_rows = [
+                    (
+                        owner_hex,
+                        int(row.get("mined_blocks", 0)),
+                        int(row.get("proof_secured_count", 0)),
+                        float(row.get("activity_score", 0.0)),
+                        float(row.get("capped_contribution", 0.0)),
+                        row.get("last_activity_block"),
+                        int(row.get("updated_at_block", 0)),
+                    )
+                    for owner_hex, row in ledger.all().items()
+                ]
+                if ledger_rows:
+                    conn.executemany(
+                        "INSERT OR REPLACE INTO score_ledger "
+                        "(owner_hex, mined_blocks, proof_secured_count, activity_score, "
+                        " capped_contribution, last_activity_block, updated_at_block) "
+                        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        ledger_rows,
+                    )
 
     except Exception:
         pass  # persistence must never crash the miner
@@ -387,6 +421,32 @@ def load_state(g: GenesisState, db_path: Path) -> float:
                     g.account_signing_keys[owner_bytes] = bytes.fromhex(row["signing_pubkey_hex"])
                 g.account_nonces[owner_bytes] = int(row["nonce"])
 
+            # -- Score ledger (W5): restore the cumulative contribution rows ---
+            # _last_flushed stays empty (fresh ScoreLedger) so the first
+            # post-restart delta is measured from 0 — no double-count. Guarded
+            # so an old db lacking the table just leaves the empty ledger.
+            try:
+                from agentic.economics.score_ledger import ScoreLedger
+                ledger_rows = conn.execute(
+                    "SELECT owner_hex, mined_blocks, proof_secured_count, activity_score, "
+                    "       capped_contribution, last_activity_block, updated_at_block "
+                    "FROM score_ledger"
+                ).fetchall()
+                loaded: dict[str, dict] = {
+                    row["owner_hex"]: {
+                        "mined_blocks": int(row["mined_blocks"]),
+                        "proof_secured_count": int(row["proof_secured_count"]),
+                        "activity_score": float(row["activity_score"]),
+                        "capped_contribution": float(row["capped_contribution"]),
+                        "last_activity_block": row["last_activity_block"],
+                        "updated_at_block": int(row["updated_at_block"]),
+                    }
+                    for row in ledger_rows
+                }
+                g.score_ledger = ScoreLedger(rows=loaded)
+            except Exception:
+                pass  # missing/old score_ledger table → keep the fresh empty ledger
+
     except Exception:
         pass  # load failures are non-fatal — fall back to fresh genesis
 
@@ -407,6 +467,7 @@ def clear_state(db_path: Path) -> None:
                 DELETE FROM subgrid_allocations;
                 DELETE FROM resource_totals;
                 DELETE FROM account_keys;
+                DELETE FROM score_ledger;
             """)
     except Exception:
         pass

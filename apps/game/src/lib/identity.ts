@@ -7,6 +7,7 @@ export interface ServerIdentity {
   role: 'PLAYER' | 'FOUNDER' | 'ADMIN';
   isOnChain: boolean;
   username: string | null;
+  genesisCohortBatch: number | null;
 }
 
 export interface DevIdentityOpts {

@@ -12,8 +12,11 @@
     "test:e2e:report": "playwright show-report",
     "test:e2e:watch": "playwright test --watch",
     "test:e2e:beta": "playwright test 05-beta-testers --workers=4",
+    "test:visual": "playwright test --config playwright.visual.config.ts",
+    "test:visual:update": "playwright test --config playwright.visual.config.ts --update-snapshots",
     "test:chain": "cd chain && python3 -m pytest tests/ -v",
-    "lint": "cd apps/game && npm run lint"
+    "lint": "cd apps/game && npm run lint",
+    "playtest": "cd apps/game && tsx scripts/playtest/run.playtest.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

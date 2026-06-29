@@ -22,10 +22,18 @@ from dataclasses import dataclass, field
 from agentic.params import (
     GENESIS_SUPPLY,
     FEE_BURN_RATE,
+    ANNUAL_INFLATION_CEILING,
 )
 
 # TODO(v2): redesign for organic growth model — no scheduled inflation.
 # Legacy constants kept for backward-compat growth projections.
+#
+# The 10%-at-genesis disinflation glide below only sets the SHAPE of the
+# projected issuance curve. The hard protocol cap is
+# params.ANNUAL_INFLATION_CEILING (5%) — the SAME ceiling the live chain
+# minting path enforces in agentic/lattice/mining.py — and it is clamped on
+# top of this curve in _inflation_rate_at_year. params is the single source of
+# truth for the ceiling.
 _LEGACY_TOTAL_SUPPLY = 21_000_000
 _LEGACY_INITIAL_CIRCULATING = 6_300_000
 _LEGACY_INITIAL_RATE = 0.10
@@ -141,8 +149,13 @@ class GrowthSimulator:
         return capacity / (1 + math.exp(k - rate * t))
 
     def _inflation_rate_at_year(self, year: float) -> float:
+        # Clamp the legacy disinflation glide to the protocol ceiling
+        # (params.ANNUAL_INFLATION_CEILING, 5%) — the same hard cap the live
+        # chain enforces in agentic/lattice/mining.py. The projection can never
+        # mint above the real-economy cap. params is the single source of truth.
         rate = _LEGACY_INITIAL_RATE * ((1 - _LEGACY_DISINFLATION) ** year)
-        return max(rate, _LEGACY_FLOOR)
+        rate = max(rate, _LEGACY_FLOOR)
+        return min(rate, ANNUAL_INFLATION_CEILING)
 
     @staticmethod
     def _compute_vesting_schedule(months: int) -> list[float]:

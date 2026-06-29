@@ -117,6 +117,19 @@ describe('PlanetCreator', () => {
     }));
   });
 
+  it('shows the ZK rung-status disclosure only after the ZK toggle is enabled', () => {
+    render(<PlanetCreator agentId="a1" onSubmit={() => {}} onClose={() => {}} />);
+
+    // Before enabling ZK, no present-tense ZK claim is qualified yet.
+    expect(screen.queryByText(/raw-Merkle possession proof/i)).toBeNull();
+
+    fireEvent.click(screen.getByRole('checkbox'));
+
+    // The honest rung-status caveat (disclosure #2) is co-located with the claim.
+    expect(screen.getByText(/raw-Merkle possession proof/i)).toBeInTheDocument();
+    expect(screen.getByText(/not yet zero-knowledge/i)).toBeInTheDocument();
+  });
+
   it('does not submit when content is empty', () => {
     const onSubmit = vi.fn();
     render(<PlanetCreator agentId="a1" onSubmit={onSubmit} onClose={() => {}} />);

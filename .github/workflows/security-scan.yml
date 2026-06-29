@@ -1,12 +1,13 @@
 name: Security Scan
 
-# Advisory security scanners (P0-10 gitleaks, P0-19 Bandit + Semgrep).
+# Security scanners (P0-10 gitleaks, P0-19 Bandit + Semgrep).
 #
-# This is a SEPARATE workflow from ci.yml on purpose: every job here is
-# NON-BLOCKING (continue-on-error / report-only). It informs but must never
-# fail the branch-protection required checks ("Chain Tests (Python)",
-# "Game Build + Tests (Node)") that live in ci.yml. Pre-existing findings are
-# surfaced for triage, not used to block merges.
+# This is a SEPARATE workflow from ci.yml on purpose. The bandit job (Python
+# SAST) is a BLOCKING gate (W4 Security): a medium-or-higher severity finding
+# fails the run. gitleaks and semgrep stay NON-BLOCKING (continue-on-error /
+# report-only) — they surface findings for triage without blocking merges.
+# To enforce bandit on merges as well, add "bandit (python SAST)" to the
+# branch-protection required checks (alongside the ci.yml checks).
 #
 # All actions are pinned to commit SHAs (supply-chain hardening, P0-11).
 
@@ -44,7 +45,8 @@ jobs:
   bandit:
     name: bandit (python SAST)
     runs-on: ubuntu-latest
-    continue-on-error: true
+    # BLOCKING gate (W4 Security) — no continue-on-error. A medium-or-higher
+    # severity finding fails this job and the workflow run.
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
@@ -52,12 +54,14 @@ jobs:
           python-version: '3.12'
       - name: Install bandit
         run: pip install bandit
-      - name: Run bandit over chain/
-        # Report-only: never exit non-zero. --exit-zero makes findings advisory;
-        # we still print the full human report and skip vendored/test trees.
+      - name: Run bandit over chain/ and scripts/
+        # -ll raises the severity floor to MEDIUM: low-severity noise is still
+        # printed but does not fail the run, while any medium+ finding exits
+        # non-zero (no --exit-zero) and blocks the branch. Vendored/test trees
+        # are skipped to avoid fixture false positives.
         run: |
-          bandit -r chain/ \
-            --exit-zero \
+          bandit -r chain/ scripts/ \
+            -ll \
             --exclude chain/tests,chain/benchmarks \
             --format screen
 

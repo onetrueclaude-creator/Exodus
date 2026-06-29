@@ -1,5 +1,9 @@
 # AGNTC Feasibility Report
 
+> ⚠️ **HISTORICAL — superseded.** This early feasibility report describes a retired 'organic growth' tokenomics model. The canonical economic model is the v1.6 **fixed 1,000,000,000 AGNTC** supply (whitepaper §22 / litepaper). AGNTC is a valueless testnet token; this document is not a representation of any present or future value. Where this report conflicts with whitepaper v1.6, the whitepaper governs.
+
+---
+
 > **ZK Agentic Chain: Technology, Risk, and Market Assessment**
 >
 > Version 1.0 | March 2026
@@ -17,9 +21,9 @@ ZK Agentic Chain (AGNTC) is a Layer-1 blockchain protocol that introduces Proof 
 
 **What is theoretical.** The Solana-to-L1 bridge (lock-and-mint), governance voting system, TEE key storage, heterogeneous model enforcement, and real ZKML integration remain at the design stage.
 
-**Competitive position.** Research across 35+ projects confirms that PoAIV is genuinely novel -- no competitor embeds AI into the consensus mechanism itself. The coordinate-based token mapping, organic growth tokenomics, and Neural Lattice game interface have zero direct competitors. The primary threat is prompt injection (scored 25/25 on the threat matrix), which must be fully mitigated before any mainnet launch.
+**Competitive position.** Research across 35+ projects confirms that PoAIV is genuinely novel -- no competitor embeds AI into the consensus mechanism itself. The coordinate-based token mapping, organic growth tokenomics *(historical model — superseded by the v1.6 fixed-supply model; see top banner)*, and Neural Lattice game interface have zero direct competitors. The primary threat is prompt injection (scored 25/25 on the threat matrix), which must be fully mitigated before any mainnet launch.
 
-**Assessment.** The protocol design is technically sound, well-documented, and backed by a substantial test suite. The gap between the current simulation and a production blockchain is significant but clearly scoped. The primary risks are (1) proving that PoAIV consensus works at scale with real AI providers, (2) implementing production-grade ZK circuits within acceptable proving times, and (3) managing dependency on a single AI provider (Anthropic). The organic growth tokenomics model and dual-staking design are economically defensible and differentiated from all analyzed competitors.
+**Assessment.** The protocol design is technically sound, well-documented, and backed by a substantial test suite. The gap between the current simulation and a production blockchain is significant but clearly scoped. The primary risks are (1) proving that PoAIV consensus works at scale with real AI providers, (2) implementing production-grade ZK circuits within acceptable proving times, and (3) managing dependency on a single AI provider (Anthropic). The organic growth tokenomics model *(historical — superseded by the v1.6 fixed-supply model; see top banner)* and dual-staking design are economically defensible and differentiated from all analyzed competitors.
 
 ---
 
@@ -135,7 +139,7 @@ Based on analysis of 35+ projects across blockchain tokenomics, ZK systems, agen
 | AI role | **Consensus verifier** | None | None | None | None | Scoring/ranking | Application layer |
 | Privacy | **Private by default (ZK)** | Pseudonymous | Pseudonymous | Pseudonymous | Opt-in shielded | Pseudonymous | Pseudonymous |
 | Staking | **Dual (40T/60C)** | Mining only | Token only | Token only | Mining only | Token + compute | Token bonding |
-| Supply model | **Organic (claim-driven)** | Fixed 21M, halving | Inflationary + burn | 8% to 1.5% decay | Fixed 21M, halving | Fixed 21M, halving | Bonding curves |
+| Supply model | ~~**Organic (claim-driven)**~~ *(superseded — v1.6 is a fixed 1,000,000,000 supply; see banner)* | Fixed 21M, halving | Inflationary + burn | 8% to 1.5% decay | Fixed 21M, halving | Fixed 21M, halving | Bonding curves |
 | Block time | 60s | ~10 min | ~12s | ~400ms | ~75s | ~12s | N/A |
 | Market cap | Pre-market | $1.8T | $400B | $80B | $600M | $3.9B | $500M+ |
 | Game layer | **Real-time agent orchestration** | None | None | None | None | Subnet competition | Agent speculation |
@@ -159,7 +163,7 @@ Based on analysis of 35+ projects across blockchain tokenomics, ZK systems, agen
 | PoAIV is novel -- no competitor uses AI as consensus verifier | **Confirmed.** 35+ project analysis found no L1 with AI in consensus. Bittensor uses AI for scoring, not block verification. | High |
 | Dual staking reduces plutocratic concentration | **Supported.** Mathematical analysis shows Gini reduction of ~35-43% vs pure PoS. Comparable to Bittensor's token+compute model but formalized with explicit S_eff formula. | High |
 | Coordinate-based token mapping is unique | **Confirmed.** Zero competitors map tokens to spatial coordinates with economic properties (density, hardness, faction). | High |
-| Organic growth tokenomics is distinct | **Confirmed.** No analyzed competitor uses mining-driven supply with no scheduled inflation, no pre-mine, and hardness = 16N. Closest analog is Filecoin's utility-gated emissions, which still has time-based components. | High |
+| ~~Organic growth tokenomics is distinct~~ *(retired claim — superseded; see banner)* | **Superseded by the fixed-supply model.** The originally-proposed organic-growth model assumed purely mining-driven issuance with a minimal genesis allocation and hardness = 16N; the canonical v1.6 model is instead a **fixed 1,000,000,000 AGNTC** supply with pre-allocated team, treasury, and liquidity buckets (whitepaper §22). This row no longer describes the protocol. | n/a |
 | Game interface provides competitive moat | **Supported.** No blockchain project offers real-time agent orchestration gameplay. Virtuals and ElizaOS have gaming tracks emerging but focus on agent speculation, not territory strategy. | Medium-High |
 
 ### 3.3 Market Gap Analysis
@@ -287,13 +291,13 @@ The competitor research identifies a clear unoccupied position:
 
 ### 5.1 Token Sustainability
 
-The organic growth model has distinct economic properties compared to competitors:
+The (now-retired) organic growth model — **superseded by the v1.6 fixed-supply model; see top banner** — was described with the following economic properties relative to competitors:
 
 | Property | AGNTC | Bitcoin | Ethereum | Solana | Filecoin |
 |----------|-------|---------|----------|--------|----------|
 | Inflation mechanism | Mining-driven only | Halving schedule | Block issuance | Annual decay | Dual minting |
-| Scheduled emissions | **None** | Yes (halvings) | Yes (~1,700/day) | Yes (8% to 1.5%) | Yes (6yr half-life) |
-| Pre-mine | **None** (900 genesis) | None | 72M ETH | ~500M SOL | Complex allocation |
+| Scheduled emissions | ~~**None**~~ *(historical; superseded — see banner)* | Yes (halvings) | Yes (~1,700/day) | Yes (8% to 1.5%) | Yes (6yr half-life) |
+| Pre-mine | ~~**None** (900 genesis)~~ *(historical; superseded — the v1.6 model pre-allocates team 18% / treasury 14% / liquidity 10%; see banner)* | None | 72M ETH | ~500M SOL | Complex allocation |
 | Fee burn | 50% of all fees | None | 100% base fee | 50% base fee | Revenue-based |
 | Supply cap | 1B theoretical | 21M hard | No cap | ~600M | 2B hard |
 
@@ -517,7 +521,7 @@ The dual staking formula S_eff = 0.40T + 0.60C produces anti-plutocratic propert
 | **Consensus (PoAIV)** | **High** | Novel, no production precedent. BFT foundation is sound but AI verification is unproven at scale. |
 | **ZK Implementation** | **Medium-High** | Significant engineering effort (circuits, migration, proving pipeline). Design is complete; execution risk remains. |
 | **AI Provider Dependency** | **High** | Single-provider risk for 60% of staking weight. Mitigation roadmap exists but is 12-18 months from implementation. |
-| **Token Economics** | **Medium** | Organic growth model is theoretically sound but untested in live markets. Machines Faction floor provides structural support. |
+| **Token Economics** | **Medium** | *(Historical — retired; superseded by the v1.6 fixed-supply model, see banner.)* As originally assessed, the organic-growth model was theoretically sound in design but untested in live markets. |
 | **Scalability** | **Medium** | 0.83 TPS is adequate for game-state management but not for general-purpose blockchain. AI cost per block is manageable but scales linearly. |
 | **Regulatory** | **Medium** | Utility token arguments are strong but jurisdiction-dependent. AI liability and GDPR compliance require legal review. |
 | **Competition** | **Low-Medium** | No direct competitor in the AI-consensus + ZK-privacy quadrant. Window of 6-12 months to establish position before larger players may enter. |
@@ -527,7 +531,7 @@ The dual staking formula S_eff = 0.40T + 0.60C produces anti-plutocratic propert
 
 1. **PoAIV consensus** -- the only L1 where AI agents make the block verification decision. This is a publishable research contribution with no existing competitor.
 2. **Coordinate-token binding** -- territorial scarcity creates strategic depth that pure token metrics cannot replicate. Zero competitors.
-3. **Organic growth tokenomics** -- no scheduled inflation, no pre-mine, hardness-driven disinflation. Distinct from all analyzed models.
+3. **Tokenomics design** — *the original 'organic growth' framing here is **retired** and superseded; see the top-of-document banner.* The originally-proposed organic-growth model assumed mining-driven issuance with a minimal genesis; the canonical v1.6 model is a **fixed 1,000,000,000 AGNTC** supply (whitepaper §22). AGNTC is a valueless testnet token, with no present or future value claim.
 4. **Dual staking with anti-plutocratic properties** -- formalized with explicit S_eff = 0.40T + 0.60C, mathematically proven Gini reduction.
 
 ### 9.3 Critical Path Items

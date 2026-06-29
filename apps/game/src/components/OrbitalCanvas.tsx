@@ -6,8 +6,9 @@ import { buildScene, carryBodyState } from "@/lib/orbitalScene";
 import { assignRanks } from "@/lib/rankMapping";
 import { bandOf } from "@/lib/orbitalGeometry";
 import { step, DEFAULT_PHYSICS, type PhysicsBody } from "@/lib/orbitalPhysics";
-import { seatsFromAgents, SINGULARITY_ID } from "@/lib/orbitalSeats";
+import { seatsFromAgents } from "@/lib/orbitalSeats";
 import { edgeAlpha, EDGE_FADE_BLOCKS } from "@/lib/orbitalEdges";
+import { VISUAL_SETTLE_STEPS, VISUAL_FRAME_MS } from "@/lib/visualTest";
 import type { SeatInput } from "@/types/orbital";
 
 const RADIAL_SCALE = 46; // px per √k — wider spacing so subnodes have room
@@ -37,7 +38,7 @@ type BodyVM = PhysicsBody & {
 type NodeMeta = { rank: number; band: number; tier: string; kind: string; isSelf?: boolean };
 type PointerLike = { global: { x: number; y: number }; target?: unknown };
 
-export default function OrbitalCanvas() {
+export default function OrbitalCanvas({ visualTest = false }: { visualTest?: boolean }) {
   const hostRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -207,7 +208,11 @@ export default function OrbitalCanvas() {
           }
         }
 
-        nodeLayer.removeChildren();
+        // W6: destroy the outgoing node graphics — removeChildren() alone only
+        // detaches them, leaking a Sprite (+ self-ring Graphics) every rebuild.
+        // Safe: fresh sprites are created below; carryBodyState carries only
+        // physics state, never the sprite object.
+        nodeLayer.removeChildren().forEach((c) => c.destroy());
         // Snapshot the outgoing bodies so each surviving node can carry its live
         // physics state across this rebuild (see carryBodyState below).
         const prevBodyById = new Map(bodies.map((pb) => [pb.id, pb] as const));
@@ -380,7 +385,13 @@ export default function OrbitalCanvas() {
             camY = cy() - zoom * (cy() + target.y);
             applyCamera();
           }
-          useGameStore.getState().clearFocusRequest();
+          // W6: consume the request only once its target is in the scene (or it
+          // ages out) — otherwise retain it for the next tick. A target absent
+          // during the init/rebuild race was being silently dropped (dead Home
+          // button / no recenter). Rule mirrored + tested in lib/focusRetain.ts.
+          if (target || Date.now() - fr.ts > 5000) {
+            useGameStore.getState().clearFocusRequest();
+          }
         }
         edgeG.clear();
         for (const [pid, kid] of familyPairs) {
@@ -473,6 +484,24 @@ export default function OrbitalCanvas() {
       });
       cleanup.push(unsub);
       a.ticker.add(tick);
+      if (visualTest) {
+        // Deterministic freeze: stop the real-time loop and advance the ticker a
+        // fixed number of fixed-deltaMS frames so the settled scene is identical
+        // every run, then render once and signal the screenshot test.
+        a.stop();
+        // Reset the ticker baseline: app.init() sets lastTime to a real timestamp,
+        // so the FIRST update(t) would otherwise diff against wall-clock time and
+        // make step 1 non-deterministic across runs. Pin it to 0 so every update
+        // delta is exactly VISUAL_FRAME_MS from frame one.
+        a.ticker.lastTime = 0;
+        let t = 0;
+        for (let i = 0; i < VISUAL_SETTLE_STEPS; i++) {
+          t += VISUAL_FRAME_MS;
+          a.ticker.update(t);
+        }
+        a.render();
+        (window as unknown as { __visualReady?: boolean }).__visualReady = true;
+      }
 
       // ---- pan (drag empty space) ----
       a.stage.eventMode = "static";
@@ -635,7 +664,7 @@ export default function OrbitalCanvas() {
       for (const fn of cleanup) fn();
       if (app) app.destroy(true);
     };
-  }, []);
+  }, [visualTest]);
 
   return <div ref={hostRef} className="absolute inset-0" />;
 }

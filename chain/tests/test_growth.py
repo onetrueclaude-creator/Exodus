@@ -72,10 +72,26 @@ class TestGrowthSimulator:
         snapshots = sim.run()
         assert snapshots[-1].circulating_supply > snapshots[0].circulating_supply
 
-    def test_inflation_rate_decreases(self):
+    def test_inflation_rate_non_increasing_and_capped(self):
+        # The legacy disinflation glide (10% at genesis, decaying) is now clamped
+        # to the protocol ceiling params.ANNUAL_INFLATION_CEILING (5%) — the same
+        # hard cap the live chain enforces in agentic/lattice/mining.py. Over the
+        # baseline 5-year horizon the unclamped curve (0.10 -> ~0.059) never falls
+        # below 5%, so the realized rate is flat at the ceiling the whole time.
+        # The honest invariant is therefore: the rate is non-increasing AND never
+        # exceeds the protocol ceiling. (This replaces the old strictly-decreasing
+        # assertion, which depended on the now-fixed over-ceiling 10% curve.)
+        from agentic.params import ANNUAL_INFLATION_CEILING
         sim = GrowthSimulator(GrowthScenario.baseline())
         snapshots = sim.run()
-        assert snapshots[-1].inflation_rate < snapshots[0].inflation_rate
+        rates = [s.inflation_rate for s in snapshots]
+        assert all(b <= a + 1e-12 for a, b in zip(rates, rates[1:])), (
+            "inflation rate must be non-increasing (disinflation glide)"
+        )
+        assert all(r <= ANNUAL_INFLATION_CEILING + 1e-12 for r in rates), (
+            "inflation rate must never exceed the protocol ceiling"
+        )
+        assert snapshots[-1].inflation_rate <= snapshots[0].inflation_rate + 1e-12
 
     def test_fee_revenue_grows(self):
         sim = GrowthSimulator(GrowthScenario.baseline())

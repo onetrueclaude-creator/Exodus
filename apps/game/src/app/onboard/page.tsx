@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { DISCLOSURES } from '@/lib/disclosures';
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
 
@@ -158,6 +159,11 @@ export default function OnboardPage() {
             {submitting ? 'Setting...' : 'Continue'}
           </button>
         </form>
+
+        <div className="mx-auto mt-8 max-w-md space-y-3 text-center text-xs leading-snug text-neutral-400">
+          <p>{DISCLOSURES.testnetToken}</p>
+          <p className="border-t border-neutral-800 pt-3">{DISCLOSURES.builtWithAi}</p>
+        </div>
       </div>
     </main>
   );
