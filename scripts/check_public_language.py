@@ -7,7 +7,10 @@ with file:line and a suggested category.
 
 Context-aware (this is the point — a naive grep produces ~50% false positives):
   * HOWEY value/yield phrases are skipped when the line describes a COMPETITOR
-    chain (e.g. "Solana ... 8% APY") rather than AGNTC.
+    chain (e.g. "Solana ... 8% APY") rather than AGNTC. Competitor names match
+    on WORD BOUNDARIES, not substrings, so a short ticker ('mina', 'near',
+    'fet') can never silently mute a real claim by sitting inside an ordinary
+    word ("terminal", "linear", "safety").
   * "guarantee" is only flagged near OUR-token profit language.
   * "Nx" is only flagged near return/profit language.
   * "faction" is skipped on lines that RETRACT it; flagged when used live.
@@ -45,7 +48,22 @@ COMPETITORS = (
     "ethereum", "solana", "bitcoin", "zcash", "cardano", "polkadot",
     "avalanche", "cosmos", "filecoin", "helium", "chia", "sia", "monero",
     "the merge", "pos variant", "proof of history", "aztec", "near protocol",
+    # Decentralized-AI / DePIN / ZK competitive surface (W1). These appear in
+    # the whitepaper's comparison table; naming one on a line means the line
+    # describes a RIVAL chain's economics, not an AGNTC claim → skip it.
+    "akash", "akt", "near", "aleo", "mina", "celestia", "eigenlayer",
+    "io.net", "bittensor", "tao", "render", "rndr", "arweave",
+    "fetch.ai", "fet", "ritual", "morpheus", "olas", "autonolas",
+    "ocean", "nosana", "gensyn", "mor",
 )
+# Competitor names match on WORD BOUNDARIES, never as bare substrings. A
+# substring test would let short tickers silently DISABLE the P0 howey rules on
+# any line that merely contains them: 'mina' ⊂ "terminal"/"dominant", 'near' ⊂
+# "linear", 'fet' ⊂ "safety"/"lifetime", 'mor' ⊂ "more". Muting a real claim is
+# a false negative — the one failure a legal linter must never have — so the
+# boundary keeps the legitimate competitor-skip while closing that hole.
+_COMPETITOR_RX = re.compile(
+    r"\b(?:" + "|".join(re.escape(c) for c in COMPETITORS) + r")\b", re.I)
 PROFIT_WORDS = (
     "return", "profit", "gain", "appreciat", "investor", "buyer", "moon",
     "income", "roi", "apy", "apr", "token value", "price target", "upside",
@@ -74,8 +92,7 @@ _NEG_BEFORE = re.compile(
 
 
 def _competitor_ctx(line, *_):
-    low = line.lower()
-    return any(c in low for c in COMPETITORS)
+    return bool(_COMPETITOR_RX.search(line))
 
 
 def _not_profit_ctx(line, *_):
@@ -141,6 +158,39 @@ RULES = [
     ("HYPE: Nx returns",              r"\b\d{2,}x\b",                 "P1", _not_profit_ctx),
     ("STALE: faction",                r"\bfaction",                   "P1", _or(_faction_retraction, _disclaimed_howey)),
     ("ZK-LADDER: present-tense ZK",   r"zero[\s-]*knowledge[\s-]*proven", "P1", _zk_caveat_nearby),
+    # --- W1 recall hardening (targeted families; verified zero hits across the
+    #     honest, earn-framed copy in spec/). These cover the linter blind spots
+    #     the RED baseline exposed: reward-worded guarantees, FOMO/urgency,
+    #     free-token framing, and exchange/price-movement claims. ---
+    # Guaranteed PROFIT (P0): "guaranteed <profit-noun>". The bare `\bguarantee`
+    # rule above is profit-WORD-gated and misses this because 'reward'/'payout'
+    # are deliberately NOT in PROFIT_WORDS (so honest "earn AGNTC by working"
+    # copy passes). This rule matches the noun directly, and skips honest denials
+    # ("we make no guarantee of value", "do not guarantee any return") via the
+    # disclaimer/negation gate. 'guarantee\w*' + ≤12 chars + a profit noun.
+    ("HOWEY: guaranteed profit",
+        r"guarantee\w*\b[\w\s]{0,12}\b(?:reward|return|payout|yield|profit|income|gain)s?",
+        "P0", _or(_competitor_ctx, _disclaimed_howey)),
+    # FOMO / urgency / scarcity (P1): inducement to act under time pressure.
+    ("FOMO: urgency/scarcity",
+        r"before\s+it'?s\s+gone|while\s+(?:supplies|allocation|it)\s+lasts?|"
+        r"don'?t\s+miss|get\s+in\s+(?:early|now|before)|act\s+now|"
+        r"limited\s+time|last\s+chance|everyone\s+will\s+wish",
+        "P1", None),
+    # Free-token framing (P1): value implication + bargained-for-consideration
+    # risk. "free to play" / "feel free" are excluded by construction (the
+    # token-noun / "claim your" context is required).
+    ("FREE-TOKEN: giveaway framing",
+        r"free\s+AGNTC|free\s+tokens?|\bgiveaway\b|claim\s+your\s+free",
+        "P1", None),
+    # Exchange-listing / price-movement (P1): there is no market and we make no
+    # market claim. Competitor-gated so a rival's listing in the comparison
+    # table never trips it.
+    ("HOWEY: exchange/price movement",
+        r"lists?\s+on\s+(?:exchanges?|raydium|jupiter)|"
+        r"before\s+the\s+price\s+(?:moves|moons)|ground\s+floor|"
+        r"next\s+breakout|price\s+target",
+        "P1", _or(_competitor_ctx, _disclaimed_howey)),
 ]
 _COMPILED = [(lbl, re.compile(pat, re.I), sev, skip) for lbl, pat, sev, skip in RULES]
 
