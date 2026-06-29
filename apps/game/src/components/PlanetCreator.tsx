@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { Planet } from '@/types';
+import { DISCLOSURES } from '@/lib/disclosures';
 
 interface PlanetCreatorProps {
   agentId: string;
@@ -80,9 +81,15 @@ export default function PlanetCreator({ agentId, onSubmit, onClose }: PlanetCrea
           className="sr-only"
         />
         <span className="group-hover:text-text-secondary transition-colors">
-          Zero-Knowledge <span className="text-text-muted/60">(encrypted, hidden from others)</span>
+          Zero-Knowledge <span className="text-text-muted/60">(hidden from others; privacy simulated on testnet)</span>
         </span>
       </label>
+
+      {isZK && (
+        <p className="mt-2 text-[9px] leading-snug text-text-muted/60">
+          {DISCLOSURES.zkRungStatus}
+        </p>
+      )}
 
       <button
         onClick={handleSubmit}

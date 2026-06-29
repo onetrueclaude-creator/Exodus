@@ -6,10 +6,11 @@ import StepFlow from "@/components/StepFlow";
 import ProblemSolution from "@/components/ProblemSolution";
 import StatCard from "@/components/StatCard";
 import CTAButton from "@/components/CTAButton";
+import Disclosure from "@/components/Disclosure";
 import { CpuIcon, BrainIcon, ShieldIcon, DiamondIcon, NetworkIcon, LockIcon } from "@/components/Icons";
 
 const steps = [
-  { icon: <DiamondIcon size={24} />, title: "Mine", description: "Each node's private 8×8 subgrid mints AGNTC from its active Secure cells. Mining is the sole supply-expanding mechanism — no pre-mine, no scheduled emission." },
+  { icon: <DiamondIcon size={24} />, title: "Mine", description: "Each node's private 8×8 subgrid mints AGNTC from its active Secure cells. Mining is the sole supply-expanding mechanism; operating reserves vest on published schedules." },
   { icon: <CpuIcon size={24} />, title: "Secure", description: "Commit real CPU + disk to store, serve, and re-prove a shard of the collective knowledge vault. No paid AI key required — security is verifiable storage work." },
   { icon: <ShieldIcon size={24} />, title: "Stake", description: "Bond AGNTC alongside your committed CPU/disk capacity. The dual-stake makes your securing trustable and Sybil-resistant — and is slashed if your storage proofs fail." },
   { icon: <NetworkIcon size={24} />, title: "Earn & Climb", description: "Passing vault proofs earn the securing reward and spiral your seat inward along the lattice. More verified work, higher standing, lower mining hardness." },
@@ -24,7 +25,7 @@ const problems = [
 const solutions = [
   { title: "Dual Staking (60% CPU)", description: "Effective stake weights committed compute 60% over capital 40%. Real CPU + disk earns influence — not just a deep wallet." },
   { title: "Two-Layer Security", description: "A 13-agent PoAIV committee secures the ledger; participants' real CPU + disk secure the state — the knowledge vault — via sampled storage proofs." },
-  { title: "Private by Default", description: "ZK private channels and per-user Sparse Merkle Tree state. The chain is auditable through proofs without being transparent." },
+  { title: "Private by Design", description: "Privacy-by-design with per-user Sparse Merkle Tree state — ZK private channels are phasing in (see whitepaper §5B.2). The chain is auditable through proofs without being transparent." },
 ];
 
 const differentiators = [
@@ -90,6 +91,7 @@ export default function Home() {
             Three distinct-but-coupled verbs. Mining issues AGNTC, securing proves real CPU + disk work on the knowledge vault, and staking bonds it all — slashable if your proofs fail.
           </p>
           <StepFlow steps={steps} />
+          <Disclosure id="testnet" className="mt-10 max-w-2xl mx-auto" />
         </div>
       </section>
 
@@ -216,6 +218,7 @@ export default function Home() {
               <p className="text-text-muted text-[10px]">Reward split: 60% to the verification committee, 40% to the staking pool &middot; passing vault proofs earn the securing reward and inward standing</p>
             </div>
           </div>
+          <Disclosure id="zk" className="mt-6" />
         </div>
       </section>
 
@@ -240,7 +243,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background" />
         <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Built by agents and vibe coding.{" "}
+            Explore the protocol.{" "}
             <span className="gradient-text">Join us.</span>
           </h2>
           <p className="text-text-secondary mb-8">

@@ -661,7 +661,7 @@ The rule that governs all three: **no present-tense zero-knowledge claim above t
 
 ### 5B. The ZK-Agentic Gate / Proof of Agentic Work
 
-Sections 5 and 5A describe two security layers — the PoAIV committee for the *ledger*, Proof-of-Vault for the *state*. This section names the unifying idea the brand stands on: the chain is run by **zero-knowledge-proven agentic activity**, mediated by a single universal rule at the Singularity. The model is **Proof of Agentic Work (PoAW)**: Proof-of-Vault performed by an autonomous agent, admitted only via a zero-knowledge protocol-obedience proof at the model-agnostic Singularity gate. This is a *framing and naming* of mechanisms already specified above — not a new consensus claim — and it is stated with strict honesty about where zero-knowledge is real (Section 5B.2).
+Sections 5 and 5A describe two security layers — the PoAIV committee for the *ledger*, Proof-of-Vault for the *state*. This section names the unifying idea the brand stands on: the chain is run by **agentic possession-proven activity** — with zero-knowledge specified and phasing in (Section 5B.2) — mediated by a single universal rule at the Singularity. The model is **Proof of Agentic Work (PoAW)**: Proof-of-Vault performed by an autonomous agent, admitted via a **protocol-obedience proof** at the model-agnostic Singularity gate (a possession proof today, **not yet zero-knowledge**; its SNARK wrap is rung (a) of Section 5B.2). This is a *framing and naming* of mechanisms already specified above — not a new consensus claim — and it is stated with strict honesty about where zero-knowledge is real (Section 5B.2).
 
 #### 5B.1 Substrate (the WHAT) vs Identity (the HOW)
 
@@ -1049,7 +1049,7 @@ Dispute resolution provides an additional economic deterrent: if the original 13
 
 #### 9.1 Token Identity
 
-AGNTC (Agentic Coin) is the native token of the ZK Agentic Chain protocol. It serves as the unit of account, medium of exchange, and store of value within the network.
+AGNTC (Agentic Coin) is the native token of the ZK Agentic Chain protocol. It serves as the unit of account and medium of exchange within the network.
 
 **Current deployment:** AGNTC is deployed as a Solana SPL token with 1 billion units minted at the contract address:
 
@@ -1075,7 +1075,7 @@ AGNTC serves four primary functions within the protocol:
 
 The protocol follows a phased deployment strategy, beginning on Solana and migrating to an independent Layer-1 chain:
 
-**Phase 1 — Token Launch (current).** 1 billion AGNTC minted as a Solana SPL token. Initial liquidity to be established through decentralized exchanges (Raydium, Jupiter). Community building and early adopter distribution through the game interface.
+**Phase 1 — Token Launch (current).** 1 billion AGNTC minted as a Solana SPL token, with its mint authorities renounced. Network participation is **earned through work on the testnet, not purchased — there is no pre-mainnet sale** (disclosure #1). Any establishment of on-chain liquidity is a **post-mainnet step contingent on legal-counsel review** — not offered, promised, or scheduled here.
 
 **Phase 2 — Testnet (current).** The ZK Agentic Chain testnet operates as a Python FastAPI simulation running the full protocol logic: PoAIV consensus, phyllotaxis band growth, mining hardness, subgrid allocation, and emergent mining distribution. The game UI (built in Next.js with PixiJS rendering) connects to the testnet, providing a functional prototype of the phyllotaxis standing economy.
 
@@ -1087,7 +1087,7 @@ The protocol follows a phased deployment strategy, beginning on Solana and migra
 2. An equivalent amount of native L1 AGNTC is minted on ZK Agentic Chain
 3. The bridge is bidirectional — users can move AGNTC back to Solana if desired
 4. Migration ratio is 1:1 with no fee or slippage
-5. Gradual migration incentives: bonus yield for L1 stakers during the migration period
+5. The protocol offers no yield, bonus, or return for migrating; migration is at the participant's discretion (disclosure #1)
 
 **Phase 5 — Ecosystem expansion.** Third-party agent deployment marketplace, cross-chain bridges to Ethereum and Cosmos (via IBC), governance system activation, and NCP protocol launch.
 
@@ -1312,7 +1312,7 @@ These figures represent a solo node at an average-density seat. In a network wit
 
 #### 11.5 Supply Flattening Analysis
 
-The organic growth model produces a supply curve that flattens asymptotically. The effective circulating-supply plateau — well below the fixed 1B cap — emerges from two reinforcing constraints: (1) the per-epoch 5% release ceiling, which hard-limits the maximum expansion rate, and (2) the market equilibrium at which the mining cost (CPU Energy spent) exceeds the market value of the AGNTC obtained.
+The organic growth model produces a supply curve that flattens asymptotically. The effective circulating-supply plateau — well below the fixed 1B cap — emerges from two reinforcing constraints: (1) the per-epoch 5% release ceiling, which hard-limits the maximum expansion rate, and (2) the internal equilibrium at which the CPU Energy spent to mine an AGNTC exceeds that AGNTC's bounded in-network utility (an illustrative internal-economy dynamic, not a market-price claim; AGNTC is a valueless testnet token — disclosure #1).
 
 **Practical flattening bands** by network size:
 
@@ -2017,7 +2017,7 @@ Inner-band positions yield disproportionately: band 1 produces roughly 5× the p
 
 The four sub-cell types create a rich strategic space. The optimal allocation depends on the participant's time horizon, risk tolerance, and current network conditions:
 
-**Early game (inner bands 1-10, network < 100 participants).** AGNTC scarcity is maximal — few seats are active, market supply is thin, and early AGNTC commands a premium. Optimal strategy: maximize Secure allocation (48-64 cells) with minimal Develop (8-16 cells). The low hardness in inner bands means even level 1 Secure cells produce substantial yield.
+**Early game (inner bands 1-10, network < 100 participants).** Inner-band hardness is low (`hardness = 16 × band`), so each Secure cell mints more AGNTC per block than the same cell would at an outer band — this is a mining mechanism, not a representation of value (disclosure #1). Optimal strategy: maximize Secure allocation (48-64 cells) with minimal Develop (8-16 cells). The low hardness in inner bands means even level 1 Secure cells produce substantial output.
 
 **Mid game (bands 10-100, network 100-1000 participants).** Hardness has increased 10-100×, making raw Secure yield per cell much lower. The compounding advantage of leveled-up Secure cells becomes critical. Optimal strategy: invest heavily in Develop (32-48 cells) to level up Secure cells, then gradually shift allocation toward Secure as levels plateau at diminishing returns.
 
@@ -2389,12 +2389,11 @@ At mainnet launch, a bridge between Solana and ZK Agentic Chain will enable toke
 2. The bridge relayer observes the burn and unlocks the corresponding SPL AGNTC on Solana.
 3. The user receives SPL AGNTC in their Solana wallet.
 
-**Migration incentives.** To encourage migration from Solana to the native chain:
-- L1 stakers receive a 10% bonus yield during the first 6 months after mainnet launch
+**Native-chain functionality.** After mainnet launch, full protocol functionality consolidates on the native chain:
 - Governance voting is only available on the native chain — SPL holders cannot vote
 - Subgrid allocation and Secure operations require native AGNTC
 
-The Solana bridge will be maintained indefinitely for cross-chain liquidity, but the protocol's full functionality (mining, staking, verification, subgrid) is exclusively available on the native ZK Agentic Chain.
+The protocol offers no yield, bonus, or return for migrating; the bridge is 1:1 with no fee or slippage (disclosure #1). The Solana bridge will be maintained indefinitely for cross-chain liquidity, but the protocol's full functionality (mining, staking, verification, subgrid) is exclusively available on the native ZK Agentic Chain.
 
 #### 20.5 Phase 5 — Ecosystem Expansion
 
@@ -2635,7 +2634,9 @@ Under v1.2, **only the Singularity core is seated at genesis** (`k = 0`, origin)
 
 #### 23.1 Hardness Curve Convergence
 
-**Theorem.** The total AGNTC minted approaches a finite limit as the number of bands approaches infinity, under the assumption that individual miners exit when the cost of mining exceeds the market value of the reward.
+**Theorem.** The total AGNTC minted approaches a finite limit as the number of bands approaches infinity, under the assumption that individual miners exit when the CPU-Energy cost to mine one more AGNTC exceeds that AGNTC's in-network utility.
+
+> *Illustrative internal mechanics, not a price model. The dynamics in this subsection are stated in the protocol's internal terms — CPU Energy expended versus AGNTC quantity minted. They are not a representation or promise of any present or future value, yield, return, or market price; AGNTC on the testnet is a valueless token with no market price (see disclosure #1). Specific figures below (e.g. the ~42M convergence point) are illustrative and non-binding.*
 
 > *Note: this proof retains the legacy ring parameterization (ring index `N`, with `8N` cells per ring) for continuity with earlier revisions. Under v1.2 the radial label is the band index `B`; the seat-count per band is `(2B − 1)·K1` and cumulative capacity is `∝ B²·K1` (Section 11.2). The quadratic growth that drives convergence is identical under either parameterization (`∝ N² ≡ ∝ B²·K1`), so the result is unchanged.*
 
@@ -2665,7 +2666,7 @@ T(N) = 512N² minutes = 8.53N² hours
 | 100 | 85,333 hours (9.7 years) | 40,400 AGNTC |
 | 324 | 896,000 hours (102 years) | ~421,500 AGNTC |
 
-For any individual miner, there exists a band N* beyond which the mining cost (electricity, CPU + disk to hold and re-prove the vault shard) exceeds the AGNTC market value. At that point, the miner exits, and no further supply expansion occurs from that participant.
+For any individual miner, there exists a band N* beyond which the CPU-Energy cost to mine one AGNTC (the electricity, CPU, and disk to hold and re-prove the vault shard) exceeds that AGNTC's in-network utility. At that point, the miner exits, and no further supply expansion occurs from that participant.
 
 For M miners operating concurrently, the fill rate is M× faster, but the aggregate supply still follows:
 
@@ -2673,16 +2674,16 @@ For M miners operating concurrently, the fill rate is M× faster, but the aggreg
 S(N) = Σ_{k=1}^{N} 8k = 4N(N+1)
 ```
 
-The series S(N) grows quadratically, but the *rate of growth* (dS/dN = 8N+4) is bounded by the mining cost that grows at 16N. Since mining cost growth (16N) exceeds seat-count growth (8N), the economic incentive to mine diminishes monotonically. In equilibrium, the supply asymptotically approaches a value determined by the intersection of the mining cost curve and the AGNTC market price curve.
+The series S(N) grows quadratically, but the *rate of growth* (dS/dN = 8N+4) is bounded by the mining cost that grows at 16N. Since mining cost growth (16N) exceeds seat-count growth (8N), the incentive to mine diminishes monotonically. In equilibrium, the supply asymptotically approaches a value determined by the intersection of the rising CPU-Energy mining-cost curve and the AGNTC's bounded in-network utility (which, unlike a market price, does not grow with band).
 
-**Corollary.** Under the economic assumptions below, the equilibrium supply for a network of 1,000 active miners converges to approximately 42 million AGNTC — the natural circulating plateau at band 324, far below the fixed 1B cap. ∎
+**Corollary (illustrative).** Under the illustrative internal-economy assumptions below, the equilibrium circulating supply for a network of 1,000 active miners settles near 42 million AGNTC — the plateau at band 324, far below the fixed 1B cap. This specific figure is illustrative and non-binding: it depends on the assumptions, which are not mathematical constants. ∎
 
-**Economic assumptions (not mathematical constants):**
-- Electricity cost: $0.05/kWh (global average for data centers)
-- AGNTC price: $0.10 at band 50, growing logarithmically
-- Miner hardware: consumer GPU, 300W continuous
+**Illustrative internal-economy assumptions (not mathematical constants):**
+- Electricity cost: $0.05/kWh (a real cost input on the CPU-Energy side of the inequality)
+- AGNTC in-network utility: bounded and roughly flat — one AGNTC performs a bounded amount of in-network work (gas, agent deployment, data storage) and does not appreciate; convergence follows from the rising CPU-Energy mining cost crossing this bounded utility, not from any market price
+- Miner hardware: consumer GPU, 300W continuous (a real cost input on the CPU-Energy side)
 
-These assumptions determine the convergence point (~42M AGNTC at band 324) but are NOT part of the mathematical proof. The mathematical claim is only: the hardness function H(N) = 16N causes the marginal mining cost to increase linearly with band distance, while the reward per cell decreases inversely.
+These assumptions determine the illustrative convergence point (~42M AGNTC at band 324) but are NOT part of the mathematical proof. The mathematical claim is only: the hardness function H(N) = 16N causes the marginal mining cost to increase linearly with band distance, while the reward per cell decreases inversely.
 
 #### 23.2 Byzantine Tolerance Proof
 

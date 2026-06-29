@@ -1,6 +1,7 @@
 import Hero from "@/components/Hero";
 import TimelinePhase from "@/components/TimelinePhase";
 import CTAButton from "@/components/CTAButton";
+import Disclosure from "@/components/Disclosure";
 
 const phases = [
   {
@@ -48,7 +49,7 @@ const phases = [
       "1:1 lock-and-mint bridge from Solana SPL to native AGNTC",
       "Halo2 / Nova epoch proofs — no trusted setup",
       "Governance activation (humans vote; Singularity excluded)",
-      "Bonus yield for L1 stakers during the migration window",
+      "L1 staking activation at migration",
     ],
   },
   {
@@ -92,6 +93,7 @@ export default function RoadmapPage() {
             The testnet is live. Join the network and start earning AGNTC today.
           </p>
           <CTAButton label="Open the Network" href="https://zkagenticnetwork.com" />
+          <Disclosure id="testnet" className="mt-8 max-w-2xl mx-auto text-left" />
         </div>
       </section>
     </>
