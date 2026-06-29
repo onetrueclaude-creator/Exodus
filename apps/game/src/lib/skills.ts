@@ -21,9 +21,9 @@ export const SKILL_TREES: Record<SkillCategory, SkillItem[]> = {
     },
     {
       id: 'mine-2', category: 'mining',
-      name: 'Deep Core Extraction', description: 'Mine higher-density nodes for bonus yield',
+      name: 'Deep Core Extraction', description: 'Mine higher-density nodes for bonus output',
       tierRequired: 'cortex', prerequisiteResearchIds: ['inf-1'],
-      effect: '+25% yield from density > 50% nodes',
+      effect: '+25% output from density > 50% nodes',
     },
     {
       id: 'mine-3', category: 'mining',
@@ -67,9 +67,9 @@ export const SKILL_TREES: Record<SkillCategory, SkillItem[]> = {
     },
     {
       id: 'def-3', category: 'defense',
-      name: 'ZK Fortress', description: 'Hide all node metadata behind zero-knowledge proofs',
+      name: 'ZK Fortress', description: 'Hide node metadata behind the privacy layer',
       tierRequired: 'lattice', prerequisiteResearchIds: ['sec-2'],
-      effect: 'Full ZK privacy on all owned nodes',
+      effect: 'Node privacy on all owned nodes (simulated on testnet — see whitepaper §5B.2)',
     },
   ],
   expansion: [

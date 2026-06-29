@@ -6,9 +6,9 @@ export const RESEARCH_TREES: Record<ResearchCategory, ResearchItem[]> = {
   security: [
     {
       id: 'sec-1', category: 'security', tier: 1,
-      name: 'Basic Encryption', description: 'Enable Zero-Knowledge privacy on data packets',
+      name: 'Basic Encryption', description: 'Enable the data-packet privacy toggle',
       energyCost: 50, prerequisiteIds: [],
-      effect: 'Unlock ZK data packet toggle',
+      effect: 'Unlock ZK data packet toggle (simulated on testnet — see whitepaper §5B.2)',
     },
     {
       id: 'sec-2', category: 'security', tier: 2,
@@ -54,7 +54,7 @@ export const RESEARCH_TREES: Record<ResearchCategory, ResearchItem[]> = {
     },
     {
       id: 'dip-2', category: 'diplomacy', tier: 2,
-      name: 'Relay Training', description: 'Deploy relays to improve connections passively',
+      name: 'Relay Training', description: 'Deploy relays to improve connections automatically',
       energyCost: 130, prerequisiteIds: ['dip-1'],
       effect: 'Unlock relay assignments',
     },
