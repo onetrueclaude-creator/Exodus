@@ -1,0 +1,49 @@
+# Fly.io config — Agentic Chain TESTNET (FastAPI + in-process asyncio miner)
+# --------------------------------------------------------------------------
+# HARD SINGLE-WORKER. The chain holds module-global protocol state and runs the
+# block miner as an in-process asyncio task. There must be EXACTLY ONE machine,
+# always running, NEVER autoscaled and NEVER auto-stopped — a second machine (or a
+# cold restart mid-flight) would fork/lose chain state. Persistence is a mounted
+# volume holding the SQLite DB.
+#
+# PRIVATE-ONLY: there is NO [http_service] and NO public [[services]] block, so
+# Fly assigns no public IP / no edge route. The chain is reachable ONLY over the
+# Fly private network at  http://<this-app>.internal:8080 . The GAME app (same Fly
+# org) sets server-only env TESTNET_API to that address. Do NOT add an http_service
+# here — that would expose the chain to the internet. See DEPLOY.md.
+#
+# SET app NAME before first deploy (must be in the SAME org as the game):
+#   app = "zkan-chain"           # <-- CHANGE ME (or run `fly launch --no-deploy`)
+# Deploy with:
+#   cd chain && fly deploy
+
+app = "zkan-chain"         # <-- CHANGE ME before `fly deploy`
+primary_region = "iad"     # MUST match the game's region (private net is fastest in-region)
+
+[build]
+  dockerfile = "Dockerfile"   # the existing chain/Dockerfile
+
+[env]
+  PORT = "8080"
+  ENVIRONMENT = "production"               # disables /docs + /redoc
+  DB_PATH = "/app/data/testnet_state.db"   # on the mounted volume below
+  # ALLOWED_ORIGINS / ADMIN_TOKEN / SUPABASE_* are set via `fly secrets set`.
+  # (ALLOWED_ORIGINS only matters for browser CORS; since the game proxies
+  #  server-side, set it to https://zkagenticnetwork.com for defence-in-depth.)
+
+# Persistent SQLite state. Create the volume ONCE in the same region:
+#   fly volumes create chain_data --size 1 --region iad --app <chain-app-name>
+[mounts]
+  source = "chain_data"
+  destination = "/app/data"
+
+# Pin to exactly one always-on machine. No autoscaling.
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+# Process-group concurrency / scaling guard. Keep the count at 1 via
+# `fly scale count 1` after deploy (see DEPLOY.md). min/max both 1.
+[deploy]
+  # Single-worker state means we cannot run two versions at once → replace in place.
+  strategy = "immediate"

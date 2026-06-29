@@ -1,0 +1,36 @@
+name: visual-regression (advisory)
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    # Advisory until baselines are captured + committed (see tests/visual/README.md);
+    # flip `continue-on-error` to false to make it blocking.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install root deps (Playwright runner)
+        run: npm install
+      - name: Install apps/game deps (Next.js app under test + Prisma/dotenv)
+        run: npm install --prefix apps/game
+      - name: Generate Prisma client
+        run: cd apps/game && npx prisma generate
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run visual regression
+        run: npm run test:visual
+      - name: Upload diffs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
