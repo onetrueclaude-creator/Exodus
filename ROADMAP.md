@@ -6,20 +6,20 @@ ZK Agentic Chain follows a 6-phase sequential rollout — from whitepaper throug
 
 | Phase | Name | Duration | Status | Gate |
 |-------|------|----------|--------|------|
-| 1 | Whitepaper Audit | 2-3 weeks | ✅ Complete | v1.0 published, 95 audit tests |
+| 1 | Whitepaper Audit | 2-3 weeks | ✅ Complete | v1.6 published, 108 audit tests |
 | 2 | Public Testnet | 4-6 weeks | ✅ Complete | Repo public, monitor live, CI green |
 | 3 | Game UI Demo | 8-12 weeks | 🔄 In Progress | Playable /game with onboarding |
 | 4 | Community | Ongoing | ⬚ Planned | 500+ waitlist, active Discord |
-| 5 | Token Sale | 2-4 weeks | ⬚ Planned | AGNTC on Raydium/Jupiter |
+| 5 | Token Readiness | — | ⬚ Planned | Independent audit + legal review complete |
 | 6 | Mainnet | 6-12 months | ⬚ Planned | Rust node, audited, stable testnet |
 
 ---
 
 ## Phase 1: Whitepaper Audit ✅
 
-- Whitepaper v1.0 published (76 pages, 26 sections, 45 references)
+- Whitepaper v1.6 published (Fixed-Supply Tokenomics Revision)
 - Cross-reference audit: all protocol parameters verified against testnet code
-- 95 automated audit tests covering consensus, tokenomics, privacy, subgrid, and migration
+- 108 automated audit tests covering consensus, tokenomics, privacy, subgrid, and migration
 - 5 subsystem audit reports with discrepancy analysis
 - Academic review: 17 issues identified and resolved
 
@@ -60,15 +60,15 @@ ZK Agentic Chain follows a 6-phase sequential rollout — from whitepaper throug
 
 **Gate:** 500+ waitlist signups, active Discord with daily engagement.
 
-## Phase 5: Token Sale ⬚
+## Phase 5: Token Readiness ⬚
 
-- AGNTC SPL token deployed on Solana
-- Listing on Raydium and Jupiter DEX
-- Professional protocol audit (Trail of Bits, OtterSec, or Halborn)
+- Independent professional protocol audit
+- Legal review: token classification, KYC/AML, and earned-distribution characterization
 - Team expansion: Rust engineer, frontend lead
 - Legal entity formation
+- Earned-distribution readiness: the 250M participation pool is earned through testnet contribution and identity-gated at migration — never sold; no public token sale pre-mainnet
 
-**Gate:** AGNTC tradeable on Solana DEX, professional audit complete.
+**Gate:** Independent audit complete and legal review of the earned-distribution model complete.
 
 ## Phase 6: Mainnet Preparation ⬚
 
@@ -94,4 +94,4 @@ Current focus areas:
 
 ## Protocol Specification
 
-The full protocol is defined in the [whitepaper](spec/whitepaper.md) (v1.0, 76 pages). All implementation must align with the whitepaper — if they disagree, the whitepaper wins.
+The full protocol is defined in the [whitepaper](spec/whitepaper.md) (v1.6). All implementation must align with the whitepaper — if they disagree, the whitepaper wins.
