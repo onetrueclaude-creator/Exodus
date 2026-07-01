@@ -45,7 +45,7 @@ ZK Agentic Chain follows a 6-phase sequential rollout — from whitepaper throug
 - All 4 node operations implemented: Secure, Read, Deploy, Write ✅
 - Tier model restrictions removed: any tier, any Claude model (API cost-gated) ✅
 - Game onboarding flow: landing → Google OAuth → username → tier selection → /game
-- Territory visualization: online/offline nodes, agent deployment, faction borders
+- Territory visualization: online/offline nodes, agent deployment, identity-class borders
 - Agent Terminal: pre-defined blockchain operations (Secure, Deploy, Read, Write, Stats)
 
 **Gate:** Playable game at zkagenticnetwork.com with full onboarding pipeline.
