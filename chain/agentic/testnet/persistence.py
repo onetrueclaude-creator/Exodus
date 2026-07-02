@@ -103,6 +103,19 @@ CREATE TABLE IF NOT EXISTS score_ledger (
     last_activity_block  INTEGER,
     updated_at_block     INTEGER NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS pin_shards (
+    owner_hex        TEXT    NOT NULL,
+    shard_id         INTEGER NOT NULL,
+    assigned_block   INTEGER NOT NULL,
+    size_bytes       INTEGER NOT NULL DEFAULT 0,
+    passes           INTEGER NOT NULL DEFAULT 0,
+    misses           INTEGER NOT NULL DEFAULT 0,
+    last_pass_block  INTEGER,
+    last_miss_block  INTEGER,
+    active           INTEGER NOT NULL DEFAULT 1,
+    PRIMARY KEY (owner_hex, shard_id)
+);
 """
 
 
@@ -260,6 +273,29 @@ def save_state(g: GenesisState, last_block_time: float, db_path: Path) -> None:
                         " capped_contribution, last_activity_block, updated_at_block) "
                         "VALUES (?, ?, ?, ?, ?, ?, ?)",
                         ledger_rows,
+                    )
+
+            # -- Pin registry (DePIN S1): per-(owner, shard) audit history -----
+            pins = getattr(g, "pin_registry", None)
+            if pins is not None:
+                pin_rows = [
+                    (
+                        owner_hex, int(sid),
+                        int(r.get("assigned_block", 0)), int(r.get("size_bytes", 0)),
+                        int(r.get("passes", 0)), int(r.get("misses", 0)),
+                        r.get("last_pass_block"), r.get("last_miss_block"),
+                        1 if r.get("active", True) else 0,
+                    )
+                    for owner_hex, shards in pins.all().items()
+                    for sid, r in shards.items()
+                ]
+                if pin_rows:
+                    conn.executemany(
+                        "INSERT OR REPLACE INTO pin_shards "
+                        "(owner_hex, shard_id, assigned_block, size_bytes, passes, misses, "
+                        " last_pass_block, last_miss_block, active) "
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        pin_rows,
                     )
 
     except Exception:
@@ -447,6 +483,28 @@ def load_state(g: GenesisState, db_path: Path) -> float:
             except Exception:
                 pass  # missing/old score_ledger table → keep the fresh empty ledger
 
+            # -- Pin registry (DePIN S1): restore durable audit history --------
+            try:
+                from agentic.vault.pin_registry import PlayerPinRegistry
+                pin_rows = conn.execute(
+                    "SELECT owner_hex, shard_id, assigned_block, size_bytes, passes, "
+                    "       misses, last_pass_block, last_miss_block, active FROM pin_shards"
+                ).fetchall()
+                loaded_pins: dict[str, dict[int, dict]] = {}
+                for row in pin_rows:
+                    loaded_pins.setdefault(row["owner_hex"], {})[int(row["shard_id"])] = {
+                        "assigned_block": int(row["assigned_block"]),
+                        "size_bytes": int(row["size_bytes"]),
+                        "passes": int(row["passes"]),
+                        "misses": int(row["misses"]),
+                        "last_pass_block": row["last_pass_block"],
+                        "last_miss_block": row["last_miss_block"],
+                        "active": bool(row["active"]),
+                    }
+                g.pin_registry = PlayerPinRegistry(rows=loaded_pins)
+            except Exception:
+                pass  # missing/old pin_shards table → keep the fresh empty registry
+
     except Exception:
         pass  # load failures are non-fatal — fall back to fresh genesis
 
@@ -468,6 +526,7 @@ def clear_state(db_path: Path) -> None:
                 DELETE FROM resource_totals;
                 DELETE FROM account_keys;
                 DELETE FROM score_ledger;
+                DELETE FROM pin_shards;
             """)
     except Exception:
         pass

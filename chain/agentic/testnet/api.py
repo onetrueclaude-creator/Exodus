@@ -646,6 +646,14 @@ def _init_genesis() -> None:
     except Exception:
         pass  # never block startup on vault owner assignment
 
+    # DePIN S1: warm the epoch beacon at boot so challenge seeds are
+    # beacon-mixed from the FIRST issued challenge (spec §3.3 — grind-proof
+    # from boot), not only after the first mined block. Default (env unset)
+    # is the deterministic local chain, so genesis determinism is preserved.
+    from agentic.vault.beacon import get_epoch_beacon
+    _genesis.epoch_beacon = get_epoch_beacon(None)
+    _genesis.vault_registry.epoch_beacon_value = _genesis.epoch_beacon.value
+
 
 @app.on_event("startup")
 async def _start_auto_miner() -> None:
@@ -765,6 +773,15 @@ def _do_mine(g: GenesisState) -> dict:
     global _last_block_time
     old_ring = g.epoch_tracker.current_ring
     block_slot = g.mining_engine.total_blocks_processed + 1
+
+    # DePIN S1: refresh the epoch beacon on the challenge cadence; the registry
+    # mixes it into every challenge seed (grind-proof randomness, spec §3.3).
+    from agentic.params import BEACON_REFRESH_INTERVAL_BLOCKS
+    from agentic.vault.beacon import get_epoch_beacon
+    if block_slot % BEACON_REFRESH_INTERVAL_BLOCKS == 1 or not hasattr(g, "epoch_beacon"):
+        g.epoch_beacon = get_epoch_beacon(getattr(g, "epoch_beacon", None))
+        g.vault_registry.epoch_beacon_value = g.epoch_beacon.value
+
     block = Block(slot=block_slot, leader_id=0, status=BlockStatus.ORDERED)
     state_root = g.ledger_state.get_state_root()
 
@@ -890,6 +907,18 @@ def _do_mine(g: GenesisState) -> dict:
                             validator_id=-1, reason=SlashReason.VAULT_PROOF_FAILURE,
                             staked_amount=int(staked), epoch=epoch,
                         )
+                    # DePIN S1: record missed audits durably (owner-level; the
+                    # specific shard is unknown at expiry-drain, so recording
+                    # against one of the owner's assigned shards' registry rows
+                    # would misattribute it — use shard_id -1 as the
+                    # owner-level miss bucket). Inside the per-owner loop (not
+                    # after it) so every owner in this block's miss batch is
+                    # recorded, not just the last one.
+                    try:
+                        pr = _pin_registry(g)
+                        pr.record_audit(owner_hex, shard_id=-1, passed=False, block=block_slot)
+                    except Exception:
+                        pass  # never break mining on bookkeeping
 
         # Distribute subgrid outputs — legacy per-wallet path or new per-node path
         if LEGACY_PER_WALLET_SUBGRID:
@@ -982,6 +1011,14 @@ def _g() -> GenesisState:
     if _genesis is None:
         raise RuntimeError("Genesis state not initialized")
     return _genesis
+
+
+def _pin_registry(g):
+    """Lazy PlayerPinRegistry attach (mirrors the score_ledger pattern)."""
+    if not hasattr(g, "pin_registry"):
+        from agentic.vault.pin_registry import PlayerPinRegistry
+        g.pin_registry = PlayerPinRegistry()
+    return g.pin_registry
 
 
 def _refresh_vault_owners() -> None:
@@ -1447,6 +1484,29 @@ class VaultStatusResponse(BaseModel):
     secured_passes: int
 
 
+class BeaconResponse(BaseModel):
+    source: str
+    round_id: int | None
+    stale: bool
+    value_prefix: str
+
+
+@app.get("/api/beacon", response_model=BeaconResponse)
+def get_beacon() -> BeaconResponse:
+    """Current epoch beacon (public challenge randomness) — source + staleness
+    are public so the trust posture is inspectable (spec §3.3 failure ladder)."""
+    g = _g()
+    if not hasattr(g, "epoch_beacon"):
+        from agentic.vault.beacon import get_epoch_beacon
+        g.epoch_beacon = get_epoch_beacon(None)
+        g.vault_registry.epoch_beacon_value = g.epoch_beacon.value
+    b = g.epoch_beacon
+    return BeaconResponse(
+        source=b.source, round_id=b.round_id, stale=b.stale,
+        value_prefix=b.value[:8].hex(),
+    )
+
+
 @app.get("/api/vault/root", response_model=VaultRootResponse)
 def get_vault_root() -> VaultRootResponse:
     from agentic.params import VAULT_SHARD_COUNT, VAULT_REPLICATION_FACTOR
@@ -1556,6 +1616,14 @@ def post_vault_submit_proof(req: VaultSubmitProofRequest) -> VaultSubmitProofRes
             g.securing_registry.credit_proof_secured(req.wallet_index)
         except Exception:
             pass  # never break proof submission on a bookkeeping error
+        # DePIN S1: record the passed audit in the durable pin registry.
+        try:
+            size = sum(len(u) for u in g.vault_registry.shard_sub_units(req.shard_id))
+            pr = _pin_registry(g)
+            pr.assign_pin(owner, req.shard_id, block_slot, size)
+            pr.record_audit(owner, req.shard_id, passed=True, block=block_slot)
+        except Exception:
+            pass  # never break proof submission on bookkeeping
     return VaultSubmitProofResponse(
         accepted=accepted,
         cpu_credit=VAULT_PROOF_CPU_CREDIT if accepted else 0.0,
@@ -1574,6 +1642,42 @@ def get_vault_status(wallet_index: int) -> VaultStatusResponse:
         shards=g.vault_registry.shards_for_owner(owner_hex),
         last_pass_block=g.vault_registry.last_pass_block(owner_hex),
         secured_passes=g._vault_secured_passes.get(owner_bytes, 0) if hasattr(g, "_vault_secured_passes") else 0,
+    )
+
+
+class PinRow(BaseModel):
+    shard_id: int
+    passes: int
+    misses: int
+    size_bytes: int
+    active: bool
+
+
+class VaultPinsResponse(BaseModel):
+    wallet_index: int
+    owner: str
+    pins: list[PinRow]
+    pinned_bytes: int
+    pass_rate: float
+
+
+@app.get("/api/vault/pins/{wallet_index}", response_model=VaultPinsResponse)
+def get_vault_pins(wallet_index: int) -> VaultPinsResponse:
+    """A wallet's durable pin/audit history — the Disk resource's fact surface."""
+    g = _g()
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    owner = g.wallets[wallet_index].public_key.hex()
+    pr = _pin_registry(g)
+    shards = pr.get(owner) or {}
+    return VaultPinsResponse(
+        wallet_index=wallet_index, owner=owner,
+        # shard_id=-1 is the internal owner-level miss bucket — never a real pin; keep it out of the public surface (pass_rate still absorbs it).
+        pins=[PinRow(shard_id=sid, passes=r["passes"], misses=r["misses"],
+                     size_bytes=r["size_bytes"], active=r["active"])
+              for sid, r in sorted(shards.items()) if sid >= 0],
+        pinned_bytes=pr.pinned_bytes(owner),
+        pass_rate=pr.pass_rate(owner),
     )
 
 
@@ -2714,6 +2818,12 @@ def reset_testnet(
         _refresh_vault_owners()
     except Exception:
         pass  # never break reset on vault-bookkeeping errors
+    # DePIN S1: warm the epoch beacon immediately after rebuilding genesis —
+    # mirrors _init_genesis's boot-warm (spec §3.3) so there is no post-reset
+    # cold window before the beacon is mixed into challenge seeds.
+    from agentic.vault.beacon import get_epoch_beacon
+    g.epoch_beacon = get_epoch_beacon(None)
+    g.vault_registry.epoch_beacon_value = g.epoch_beacon.value
     return ResetResult(
         state_root=g.ledger_state.get_state_root().hex(),
         record_count=g.ledger_state.record_count,

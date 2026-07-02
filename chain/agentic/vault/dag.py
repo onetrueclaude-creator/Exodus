@@ -10,6 +10,8 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
+from agentic.vault.storage_backend import StorageBackend
+
 
 def compute_cid(payload: bytes, links: tuple[str, ...] = ()) -> str:
     """64-hex SHA-256 content identifier over payload + sorted link CIDs."""
@@ -38,15 +40,27 @@ class Link:
 
 
 class VaultDag:
-    """In-memory content-addressed DAG. Deterministic CID enumeration."""
+    """In-memory content-addressed DAG. Deterministic CID enumeration.
 
-    def __init__(self) -> None:
+    ``backend`` is an optional StorageBackend (spec §3.4): when set, every
+    atom is write-through replicated to it, and a memory miss on
+    ``get_payload`` falls back to it before raising. Default None keeps the
+    DAG pure in-memory for every existing caller (genesis, VaultRegistry,
+    tests)."""
+
+    def __init__(self, backend: StorageBackend | None = None) -> None:
         self._atoms: dict[str, bytes] = {}
         self._links: list[Link] = []
+        self._backend = backend
 
     def add_atom(self, payload: bytes) -> str:
         cid = compute_cid(payload)
         self._atoms[cid] = payload
+        if self._backend is not None:
+            try:
+                self._backend.put_shard(cid, payload)
+            except Exception:
+                pass  # write-through must never break atom ingestion
         return cid
 
     def add_link(self, src_cid: str, dst_cid: str) -> None:
@@ -58,6 +72,11 @@ class VaultDag:
 
     def get_payload(self, cid: str) -> bytes:
         if cid not in self._atoms:
+            if self._backend is not None:
+                fetched = self._backend.get_shard(cid)
+                if fetched is not None:
+                    self._atoms[cid] = fetched  # re-warm memory
+                    return fetched
             raise KeyError(f"unknown CID {cid}")
         return self._atoms[cid]
 
