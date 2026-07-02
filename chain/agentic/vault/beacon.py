@@ -32,7 +32,7 @@ class EpochBeacon:
 def _fetch_drand() -> tuple[int, bytes] | None:
     """Latest drand round → (round, 32-byte randomness), or None on any error."""
     try:
-        with urllib.request.urlopen(_DRAND_URL, timeout=BEACON_HTTP_TIMEOUT_S) as r:
+        with urllib.request.urlopen(_DRAND_URL, timeout=BEACON_HTTP_TIMEOUT_S) as r:  # nosec B310 — fixed https constant, never user input
             data = json.loads(r.read())
         return int(data["round"]), bytes.fromhex(data["randomness"])[:32]
     except Exception:
@@ -49,7 +49,7 @@ def _fetch_solana_blockhash() -> bytes | None:
             }).encode(),
             headers={"Content-Type": "application/json"},
         )
-        with urllib.request.urlopen(req, timeout=BEACON_HTTP_TIMEOUT_S) as r:
+        with urllib.request.urlopen(req, timeout=BEACON_HTTP_TIMEOUT_S) as r:  # nosec B310 — fixed https constant, never user input
             data = json.loads(r.read())
         blockhash = data["result"]["value"]["blockhash"]
         return hashlib.sha256(blockhash.encode()).digest()

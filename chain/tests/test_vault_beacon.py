@@ -5,8 +5,6 @@ and CI stay hermetic; real sources are opt-in via AGENTIC_BEACON=1.
 """
 import hashlib
 
-import pytest
-
 from agentic.vault import beacon as beacon_mod
 from agentic.vault.beacon import EpochBeacon, get_epoch_beacon
 
