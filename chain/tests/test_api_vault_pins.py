@@ -18,7 +18,11 @@ def test_get_beacon_reports_source_and_staleness():
 
 def test_beacon_warm_from_boot_seeds_challenges():
     """Spec §3.3: seeds are beacon-mixed from the FIRST challenge after boot —
-    the beacon is warmed at genesis init, not lazily on the first mine."""
+    the beacon is warmed inside _init_genesis() itself, not lazily on first
+    request. Self-boots and asserts BEFORE any HTTP request, so reverting the
+    boot-warm hunk in _init_genesis fails this test (revert-discriminating).
+    Self-boot pattern per tests/test_api_mine_records.py."""
+    api_mod._init_genesis()
     g = api_mod._g()
     assert getattr(g, "epoch_beacon", None) is not None
     assert len(g.epoch_beacon.value) == 32
