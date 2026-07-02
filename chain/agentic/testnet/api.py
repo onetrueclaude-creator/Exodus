@@ -765,6 +765,15 @@ def _do_mine(g: GenesisState) -> dict:
     global _last_block_time
     old_ring = g.epoch_tracker.current_ring
     block_slot = g.mining_engine.total_blocks_processed + 1
+
+    # DePIN S1: refresh the epoch beacon on the challenge cadence; the registry
+    # mixes it into every challenge seed (grind-proof randomness, spec §3.3).
+    from agentic.params import BEACON_REFRESH_INTERVAL_BLOCKS
+    from agentic.vault.beacon import get_epoch_beacon
+    if block_slot % BEACON_REFRESH_INTERVAL_BLOCKS == 1 or not hasattr(g, "epoch_beacon"):
+        g.epoch_beacon = get_epoch_beacon(getattr(g, "epoch_beacon", None))
+        g.vault_registry.epoch_beacon_value = g.epoch_beacon.value
+
     block = Block(slot=block_slot, leader_id=0, status=BlockStatus.ORDERED)
     state_root = g.ledger_state.get_state_root()
 
@@ -1445,6 +1454,29 @@ class VaultStatusResponse(BaseModel):
     shards: list[int]
     last_pass_block: int | None
     secured_passes: int
+
+
+class BeaconResponse(BaseModel):
+    source: str
+    round_id: int | None
+    stale: bool
+    value_prefix: str
+
+
+@app.get("/api/beacon", response_model=BeaconResponse)
+def get_beacon() -> BeaconResponse:
+    """Current epoch beacon (public challenge randomness) — source + staleness
+    are public so the trust posture is inspectable (spec §3.3 failure ladder)."""
+    g = _g()
+    if not hasattr(g, "epoch_beacon"):
+        from agentic.vault.beacon import get_epoch_beacon
+        g.epoch_beacon = get_epoch_beacon(None)
+        g.vault_registry.epoch_beacon_value = g.epoch_beacon.value
+    b = g.epoch_beacon
+    return BeaconResponse(
+        source=b.source, round_id=b.round_id, stale=b.stale,
+        value_prefix=b.value[:8].hex(),
+    )
 
 
 @app.get("/api/vault/root", response_model=VaultRootResponse)
