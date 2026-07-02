@@ -48,7 +48,7 @@ describe("TestnetChainService — pins + beacon pass-throughs", () => {
 
   it("routes getVaultPins and getBeacon through the gateway client", async () => {
     const pinsBody = { wallet_index: 2, owner: "cd".repeat(32), pins: [], pinned_bytes: 0, pass_rate: 1.0 };
-    const beaconBody = { source: "fallback:slot-hash", round_id: null, stale: true, value_prefix: "ff".repeat(8) };
+    const beaconBody = { source: "stale", round_id: null, stale: true, value_prefix: "ff".repeat(8) };
     // Two sequential fetches — each covered by its own mockResolvedValueOnce
     // (project convention in apps/game/CLAUDE.md).
     const fetchMock = vi

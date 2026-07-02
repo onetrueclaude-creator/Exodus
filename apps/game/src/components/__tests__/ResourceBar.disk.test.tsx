@@ -57,6 +57,7 @@ describe("ResourceBar — Disk HUD", () => {
     // Belt-and-suspenders: getByText only ever matches rendered text nodes,
     // never attribute values — this fails if the string regresses to title-only.
     expect(screen.getByText(DISCLOSURES.testnetToken)).toBeInTheDocument();
+    expect(screen.getByTestId("disk-hud")).toHaveAttribute("title", DISCLOSURES.testnetToken);
   });
 
   it("never uses value/yield language in the Disk copy", () => {

@@ -213,7 +213,7 @@ export class MockChainService implements ChainService {
       owner: `mock-owner-${walletIndex}`,
       pins,
       pinned_bytes: pins.filter((p) => p.active).reduce((s, p) => s + p.size_bytes, 0),
-      pass_rate: 0.75,
+      pass_rate: 0.7,  // deliberately ≠ the 6/(6+2)=0.75 row recount — a recount regression stays visible even against mock data
     };
   }
 

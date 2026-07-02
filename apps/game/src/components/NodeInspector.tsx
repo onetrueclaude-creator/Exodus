@@ -256,13 +256,12 @@ export default function NodeInspector({ chainService }: NodeInspectorProps = {})
               </div>
               <div className="text-[10px] font-mono text-text-muted">
                 beacon: {pinPosture.beaconSource}
-                {pinPosture.beaconStale ? " (stale)" : ""}
+                {pinPosture.beaconStale && pinPosture.beaconSource !== "stale" ? " (stale)" : ""}
               </div>
             </div>
           )}
           <div className="text-[9px] text-text-muted/70 leading-snug">
-            Browser pins are evictable — 3-epoch re-pin grace, no penalty; Disk
-            score simply decays while unpinned.
+            Browser pins are evictable — re-pin any time, no penalty.
           </div>
           <div className="grid grid-cols-3 gap-1.5 pt-0.5">
             {SINGULARITY_OPS.map((op) => (

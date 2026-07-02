@@ -136,12 +136,12 @@ describe("NodeInspector — Singularity PoAW gate", () => {
     expect(screen.getByText(/chain offline/i)).toBeInTheDocument();
   });
 
-  it("surfaces the pin quota, held bytes, and re-pin grace on the gate panel", async () => {
+  it("surfaces the pin quota, held bytes, and re-pin messaging on the gate panel", async () => {
     render(<NodeInspector chainService={fakeChain()} />);
     await waitFor(() => expect(screen.getByText(/pins 1\/8 slots/)).toBeInTheDocument());
     expect(screen.getByText(/4\.0 MiB held/)).toBeInTheDocument();
-    // Honest eviction framing (spec §3.2): expected, grace, decay — no penalty.
-    expect(screen.getByText(/3-epoch re-pin grace/)).toBeInTheDocument();
+    // Deliberately present-true (mechanics arrive with S5) — copy must reflect truth today.
+    expect(screen.getByText(/re-pin any time, no penalty/)).toBeInTheDocument();
     // Howey posture: factual copy only, never value language.
     expect(screen.queryByText(/earn|yield|reward|profit/i)).toBeNull();
   });
@@ -155,7 +155,7 @@ describe("NodeInspector — Singularity PoAW gate", () => {
 
     const stale = fakeChain({
       getBeacon: vi.fn().mockResolvedValue({
-        source: "fallback:slot-hash",
+        source: "stale",
         round_id: null,
         stale: true,
         value_prefix: "ff".repeat(8),
@@ -163,7 +163,8 @@ describe("NodeInspector — Singularity PoAW gate", () => {
     });
     render(<NodeInspector chainService={stale} />);
     await waitFor(() =>
-      expect(screen.getByText(/beacon: fallback:slot-hash \(stale\)/)).toBeInTheDocument(),
+      expect(screen.getByText(/beacon: stale/)).toBeInTheDocument(),
     );
+    expect(screen.queryByText(/\(stale\)/)).toBeNull();
   });
 });
