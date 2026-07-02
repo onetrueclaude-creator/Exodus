@@ -1672,9 +1672,10 @@ def get_vault_pins(wallet_index: int) -> VaultPinsResponse:
     shards = pr.get(owner) or {}
     return VaultPinsResponse(
         wallet_index=wallet_index, owner=owner,
+        # shard_id=-1 is the internal owner-level miss bucket — never a real pin; keep it out of the public surface (pass_rate still absorbs it).
         pins=[PinRow(shard_id=sid, passes=r["passes"], misses=r["misses"],
                      size_bytes=r["size_bytes"], active=r["active"])
-              for sid, r in sorted(shards.items())],
+              for sid, r in sorted(shards.items()) if sid >= 0],
         pinned_bytes=pr.pinned_bytes(owner),
         pass_rate=pr.pass_rate(owner),
     )

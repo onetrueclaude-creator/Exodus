@@ -1,8 +1,8 @@
 """StorageBackend — the swappable seam under the vault's bytes (spec §3.4).
 
 Stage 0/1 implementations: MemoryBackend (tests/dev) and BackboneBackend (the
-coordinator's durable file-per-CID replica — the DISCLOSED single custodian
-until Stage-2 erasure across desktop nodes). Stage-2 erasure/federated
+coordinator's restart-durable file-per-CID replica — the DISCLOSED single custodian
+until Stage-2 erasure across desktop nodes) (plain writes, no fsync — power-loss durability arrives with Stage-2 erasure). Stage-2 erasure/federated
 backends implement the same protocol; CID addressing keeps every stage
 portable. Filenames are the SHA-256 hex of the CID string (CIDs stay
 path-safe regardless of their format)."""

@@ -64,3 +64,17 @@ def test_pins_endpoint_returns_registry_state():
 def test_pins_endpoint_404_on_bad_wallet():
     client = TestClient(app)
     assert client.get("/api/vault/pins/99999").status_code == 404
+
+
+def test_pins_endpoint_hides_owner_level_miss_bucket():
+    """shard_id=-1 (owner-level miss sentinel) must not appear as a phantom pin,
+    while pass_rate still reflects those misses."""
+    client = TestClient(app)
+    g = api_mod._g()
+    owner = g.wallets[1].public_key.hex()
+    api_mod._pin_registry(g).record_audit(owner, shard_id=-1, passed=False, block=5)
+    r = client.get("/api/vault/pins/1")
+    assert r.status_code == 200
+    body = r.json()
+    assert all(p["shard_id"] >= 0 for p in body["pins"])
+    assert body["pass_rate"] == 0.0
