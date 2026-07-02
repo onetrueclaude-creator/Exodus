@@ -646,6 +646,14 @@ def _init_genesis() -> None:
     except Exception:
         pass  # never block startup on vault owner assignment
 
+    # DePIN S1: warm the epoch beacon at boot so challenge seeds are
+    # beacon-mixed from the FIRST issued challenge (spec §3.3 — grind-proof
+    # from boot), not only after the first mined block. Default (env unset)
+    # is the deterministic local chain, so genesis determinism is preserved.
+    from agentic.vault.beacon import get_epoch_beacon
+    _genesis.epoch_beacon = get_epoch_beacon(None)
+    _genesis.vault_registry.epoch_beacon_value = _genesis.epoch_beacon.value
+
 
 @app.on_event("startup")
 async def _start_auto_miner() -> None:
