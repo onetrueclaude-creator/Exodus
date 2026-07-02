@@ -42,6 +42,12 @@ function fakeChain(overrides: Partial<ChainService> = {}): ChainService {
       pinned_bytes: 4_194_304,
       pass_rate: 0.6,
     }),
+    getBeacon: vi.fn().mockResolvedValue({
+      source: "drand",
+      round_id: 4711,
+      stale: false,
+      value_prefix: "00112233aabbccdd",
+    }),
     ...overrides,
   } as unknown as ChainService;
 }
@@ -128,5 +134,36 @@ describe("NodeInspector — Singularity PoAW gate", () => {
     render(<NodeInspector chainService={null} />);
     fireEvent.click(screen.getByRole("button", { name: "Read" }));
     expect(screen.getByText(/chain offline/i)).toBeInTheDocument();
+  });
+
+  it("surfaces the pin quota, held bytes, and re-pin grace on the gate panel", async () => {
+    render(<NodeInspector chainService={fakeChain()} />);
+    await waitFor(() => expect(screen.getByText(/pins 1\/8 slots/)).toBeInTheDocument());
+    expect(screen.getByText(/4\.0 MiB held/)).toBeInTheDocument();
+    // Honest eviction framing (spec §3.2): expected, grace, decay — no penalty.
+    expect(screen.getByText(/3-epoch re-pin grace/)).toBeInTheDocument();
+    // Howey posture: factual copy only, never value language.
+    expect(screen.queryByText(/earn|yield|reward|profit/i)).toBeNull();
+  });
+
+  it("shows the beacon source and flags a stale beacon", async () => {
+    const fresh = fakeChain();
+    const { unmount } = render(<NodeInspector chainService={fresh} />);
+    await waitFor(() => expect(screen.getByText(/beacon: drand/)).toBeInTheDocument());
+    expect(screen.queryByText(/stale/)).toBeNull();
+    unmount();
+
+    const stale = fakeChain({
+      getBeacon: vi.fn().mockResolvedValue({
+        source: "fallback:slot-hash",
+        round_id: null,
+        stale: true,
+        value_prefix: "ff".repeat(8),
+      }),
+    });
+    render(<NodeInspector chainService={stale} />);
+    await waitFor(() =>
+      expect(screen.getByText(/beacon: fallback:slot-hash \(stale\)/)).toBeInTheDocument(),
+    );
   });
 });
