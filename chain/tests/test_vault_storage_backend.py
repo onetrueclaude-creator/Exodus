@@ -45,3 +45,41 @@ def test_dag_write_through_and_fallback(tmp_path):
     assert bb.get_shard(cid) == b"atom-payload"       # write-through happened
     dag._atoms.pop(cid)                                 # simulate memory loss (dag.py's actual internal dict is `_atoms`, not `_payloads`)
     assert dag.get_payload(cid) == b"atom-payload"     # served from the backbone
+
+
+class _RaisingBackend:
+    """Backend whose put always fails — proves write-through can't break ingestion."""
+
+    def put_shard(self, cid: str, data: bytes) -> None:
+        raise RuntimeError("disk full")
+
+    def get_shard(self, cid: str):
+        return None
+
+    def has_shard(self, cid: str) -> bool:
+        return False
+
+    def delete_shard(self, cid: str) -> None:
+        pass
+
+    def stats(self):
+        return BackendStats(count=0, total_bytes=0)
+
+
+def test_add_atom_survives_backend_put_failure():
+    """Plan mandate: write-through must never break atom ingestion."""
+    dag = VaultDag(backend=_RaisingBackend())
+    cid = dag.add_atom(b"payload-x")              # must not raise
+    assert dag.get_payload(cid) == b"payload-x"   # memory state intact
+
+
+def test_get_payload_true_miss_with_backend_raises_original_keyerror():
+    """Backend present AND missing the CID → the ORIGINAL KeyError contract holds."""
+    dag = VaultDag(backend=MemoryBackend())
+    with pytest.raises(KeyError, match="unknown CID"):
+        dag.get_payload("never-inserted-cid")
+
+
+def test_delete_shard_missing_cid_is_noop(backend):
+    backend.delete_shard("never-inserted")        # must not raise
+    assert backend.stats().count == 0
