@@ -8,7 +8,7 @@
  * IndexedDB caching (fetch-on-miss-only), and covers the failure branches.
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { runRead, runStats, runSecure } from "@/lib/vaultGate";
+import { runRead, runStats, runSecure, foldPinStats } from "@/lib/vaultGate";
 import { _clearMemoryFallback } from "@/lib/vaultShardStore";
 import { verifyProof, type VaultProof } from "@/lib/vaultProof";
 import type { ChainService } from "@/services/chainService";
@@ -73,6 +73,18 @@ function makeFakeChain(vector: Vector, opts: { accept?: boolean; emptyShards?: b
       last_pass_block: 99,
       secured_passes: 7,
     }),
+    getVaultPins: async (walletIndex: number) => ({
+      wallet_index: walletIndex,
+      owner: `owner-${walletIndex}`,
+      pins: [
+        { shard_id: vector.shard_id, passes: 6, misses: 2, size_bytes: 4_194_304, active: true },
+        { shard_id: vector.shard_id + 1, passes: 1, misses: 0, size_bytes: 4_194_304, active: false },
+      ],
+      pinned_bytes: 4_194_304,
+      // Deliberately NOT any recount of the rows above (6/8 = 0.75): the server
+      // rate absorbs the hidden -1 miss bucket. The fold must read this value.
+      pass_rate: 0.6,
+    }),
   };
   return { chain: chain as ChainService, calls, getSubmitted: () => lastSubmitted };
 }
@@ -95,12 +107,32 @@ describe("vaultGate", () => {
   });
 
   describe("runStats", () => {
-    it("returns securing history", async () => {
+    it("returns securing history folded with Disk pin stats", async () => {
       const { chain } = makeFakeChain(V);
       const s = await runStats(chain, 0);
       expect(s.shards).toEqual([V.shard_id]);
       expect(s.lastPassBlock).toBe(99);
       expect(s.securedPasses).toBe(7);
+      expect(s.pinnedBytes).toBe(4_194_304);
+      expect(s.activePins).toBe(1);
+      // The server's windowed rate — NOT a client recount of rows (which would be 0.75).
+      expect(s.passRate).toBe(0.6);
+    });
+  });
+
+  describe("foldPinStats", () => {
+    it("reads the server pass_rate and never recounts pin rows", () => {
+      const folded = foldPinStats({
+        wallet_index: 1,
+        owner: "o",
+        pins: [
+          { shard_id: 0, passes: 6, misses: 2, size_bytes: 4_194_304, active: true },
+          { shard_id: 1, passes: 1, misses: 0, size_bytes: 4_194_304, active: false },
+        ],
+        pinned_bytes: 4_194_304,
+        pass_rate: 0.6, // ≠ any recount of the rows above
+      });
+      expect(folded).toEqual({ pinnedBytes: 4_194_304, passRate: 0.6, activePins: 1 });
     });
   });
 

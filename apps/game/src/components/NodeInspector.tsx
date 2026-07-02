@@ -6,6 +6,7 @@ import { inspectorModelFor } from "@/lib/inspectorModel";
 import { SINGULARITY_ID } from "@/lib/orbitalSeats";
 import { getWalletIndex } from "@/lib/walletIndex";
 import { runRead, runStats, runSecure } from "@/lib/vaultGate";
+import { formatMiB } from "@/lib/format";
 import type { ChainService } from "@/services/chainService";
 
 /**
@@ -132,6 +133,8 @@ export default function NodeInspector({ chainService }: NodeInspectorProps = {})
           s.shards.length ? `shards: ${s.shards.join(", ")}` : "no shards",
           `last pass: ${s.lastPassBlock ?? "—"}`,
           `secured passes: ${s.securedPasses}`,
+          `pinned: ${formatMiB(s.pinnedBytes)} (${s.activePins} active)`,
+          `audit pass-rate: ${Math.round(s.passRate * 100)}%`,
         ]);
       } else {
         // Secure — the PoAW gate. The browser proves possession of its shard.

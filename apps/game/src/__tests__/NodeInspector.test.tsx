@@ -35,6 +35,13 @@ function fakeChain(overrides: Partial<ChainService> = {}): ChainService {
       last_pass_block: 12,
       secured_passes: 3,
     }),
+    getVaultPins: vi.fn().mockResolvedValue({
+      wallet_index: 0,
+      owner: "owner",
+      pins: [{ shard_id: 4, passes: 6, misses: 2, size_bytes: 4_194_304, active: true }],
+      pinned_bytes: 4_194_304,
+      pass_rate: 0.6,
+    }),
     ...overrides,
   } as unknown as ChainService;
 }
@@ -80,13 +87,15 @@ describe("NodeInspector — Singularity PoAW gate", () => {
     expect(screen.getByText(/your shards: 4/)).toBeInTheDocument();
   });
 
-  it("Stats shows securing history", async () => {
+  it("Stats shows securing history + Disk pin stats", async () => {
     render(<NodeInspector chainService={fakeChain()} />);
     fireEvent.click(screen.getByRole("button", { name: "Stats" }));
 
     await waitFor(() => expect(screen.getByText(/Securing stats/)).toBeInTheDocument());
     expect(screen.getByText(/last pass: 12/)).toBeInTheDocument();
     expect(screen.getByText(/secured passes: 3/)).toBeInTheDocument();
+    expect(screen.getByText(/pinned: 4\.0 MiB \(1 active\)/)).toBeInTheDocument();
+    expect(screen.getByText(/audit pass-rate: 60%/)).toBeInTheDocument();
   });
 
   it("Secure: an accepted proof shows the credit and draws the success edge", async () => {

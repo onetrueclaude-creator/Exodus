@@ -69,3 +69,11 @@ export function sciRate(n: number): string {
 export function formatDelta(n: number): string {
   return `${n > 0 ? '+' : ''}${sciFormat(n)}`;
 }
+
+/**
+ * Format a byte count as MiB for the Disk HUD: one decimal, ".0" kept for a
+ * steady-width HUD. 4_194_304 → "4.0 MiB", 0 → "0.0 MiB".
+ */
+export function formatMiB(bytes: number): string {
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
+}

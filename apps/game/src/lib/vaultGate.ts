@@ -13,6 +13,7 @@
  * milestone).
  */
 import type { ChainService } from "@/services/chainService";
+import type { VaultPinsResponse } from "@/types";
 import { makeProofFromHex } from "@/lib/vaultProof";
 import { getCachedShard, putShard } from "@/lib/vaultShardStore";
 
@@ -24,7 +25,36 @@ export interface ReadResult {
   shards: number[];
 }
 
-export interface StatsResult {
+/** Folded Disk resource stats — the game-facing view of the chain's pins surface. */
+export interface PinStats {
+  /** Bytes of vault shards this wallet durably pins (server-attested). */
+  pinnedBytes: number;
+  /**
+   * Windowed audit pass-rate in [0, 1]. ALWAYS the server's `pass_rate` field —
+   * never recomputed from pin rows client-side: the chain's rate absorbs an
+   * internal owner-level miss bucket (shard_id = -1) that the pins list never
+   * contains, so a client recount would overstate the rate.
+   */
+  passRate: number;
+  /** Count of currently-active pins. */
+  activePins: number;
+}
+
+/** Browser-tier pin quota (design spec §3.2): up to 8 shards (~32 MiB) held
+ *  while playing. Display constant only — the chain registry is authoritative
+ *  for actual assignment. */
+export const BROWSER_PIN_SLOTS = 8;
+
+/** Fold the chain's pins response into the game's Disk stats (HUD + inspector). */
+export function foldPinStats(pins: VaultPinsResponse): PinStats {
+  return {
+    pinnedBytes: pins.pinned_bytes,
+    passRate: pins.pass_rate,
+    activePins: pins.pins.filter((p) => p.active).length,
+  };
+}
+
+export interface StatsResult extends PinStats {
   shards: number[];
   lastPassBlock: number | null;
   securedPasses: number;
@@ -66,16 +96,20 @@ export async function runRead(
   };
 }
 
-/** STATS — securing history: assigned shards, last pass block, passes count. */
+/** STATS — securing history + Disk pin stats: shards, last pass, passes, pins. */
 export async function runStats(
   chain: ChainService,
   walletIndex: number,
 ): Promise<StatsResult> {
-  const status = await chain.getVaultStatus(walletIndex);
+  const [status, pins] = await Promise.all([
+    chain.getVaultStatus(walletIndex),
+    chain.getVaultPins(walletIndex),
+  ]);
   return {
     shards: status.shards,
     lastPassBlock: status.last_pass_block,
     securedPasses: status.secured_passes,
+    ...foldPinStats(pins),
   };
 }
 
