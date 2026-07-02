@@ -118,3 +118,13 @@ def test_missed_challenge_window_yields_slash_list():
     assert owner in misses
     # drained
     assert reg.take_misses(block_slot=expiry) == []
+
+
+def test_block_seed_mixes_beacon_when_provided():
+    reg = VaultRegistry(_dag_with(20))
+    plain = reg.block_seed(7)
+    mixed_a = reg.block_seed(7, beacon=b"\xaa" * 32)
+    mixed_b = reg.block_seed(7, beacon=b"\xbb" * 32)
+    assert plain != mixed_a                      # beacon changes the seed
+    assert mixed_a != mixed_b                    # different beacons differ
+    assert mixed_a == reg.block_seed(7, beacon=b"\xaa" * 32)  # deterministic

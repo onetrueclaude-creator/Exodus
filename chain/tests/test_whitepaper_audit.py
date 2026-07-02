@@ -907,3 +907,21 @@ class TestProofOfVaultInvariants:
         # A proof must have at least one block to land within its window.
         assert params.VAULT_CHALLENGE_WINDOW_BLOCKS >= 1
         assert params.VAULT_CHALLENGE_INTERVAL_BLOCKS >= 1
+
+
+# ---------------------------------------------------------------------------
+# DePIN Vault S1 Concordance Tests (spec 2026-07-02 §3.3)
+# ---------------------------------------------------------------------------
+
+
+class TestDePinS1Params:
+    """DePIN vault S1 (design spec 2026-07-02 §3.3): beacon constants exist and
+    are sane. Guards params.py against silent drift, per the concordance charter."""
+
+    def test_beacon_timeout_bounded_below_block_cadence(self):
+        from agentic.params import BEACON_HTTP_TIMEOUT_S
+        assert 0 < BEACON_HTTP_TIMEOUT_S <= 10.0   # block cadence is 60s
+
+    def test_beacon_refresh_matches_challenge_cadence(self):
+        from agentic.params import BEACON_REFRESH_INTERVAL_BLOCKS, VAULT_CHALLENGE_INTERVAL_BLOCKS
+        assert BEACON_REFRESH_INTERVAL_BLOCKS == VAULT_CHALLENGE_INTERVAL_BLOCKS

@@ -76,10 +76,14 @@ class VaultRegistry:
 
     # -- challenge --------------------------------------------------------- #
 
-    def block_seed(self, block_slot: int) -> bytes:
-        return hashlib.sha256(
-            self._dag.root_cid().encode() + b":" + str(block_slot).encode()
-        ).digest()
+    def block_seed(self, block_slot: int, beacon: bytes | None = None) -> bytes:
+        """Challenge seed: vault-root + slot, mixed with the epoch beacon when
+        provided (spec §3.3) — grind-proof even against the coordinator.
+        ``beacon=None`` preserves the pre-S1 seed exactly (compat + tests)."""
+        base = self._dag.root_cid().encode() + b":" + str(block_slot).encode()
+        if beacon is not None:
+            base = beacon + b":" + base
+        return hashlib.sha256(base).digest()
 
     def shard_sub_units(self, shard_id: int) -> list[bytes]:
         shard_to_cids = assign_shards(self._dag.cids(), shard_count=VAULT_SHARD_COUNT)
@@ -89,7 +93,7 @@ class VaultRegistry:
     def issue_challenge(self, owner_id: str, shard_id: int, block_slot: int) -> Challenge | None:
         if shard_id not in self.shards_for_owner(owner_id):
             return None
-        seed = self.block_seed(block_slot)
+        seed = self.block_seed(block_slot, beacon=getattr(self, "epoch_beacon_value", None))
         n = len(self.shard_sub_units(shard_id))
         indices = derive_challenge(seed, shard_id, n)
         expires = block_slot + VAULT_CHALLENGE_WINDOW_BLOCKS

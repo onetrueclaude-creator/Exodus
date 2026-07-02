@@ -226,6 +226,14 @@ VAULT_PROOF_CPU_CREDIT = 50.0      # CPU-equivalent credited to activity/reward 
 VAULT_SLASH_RATE = 0.10            # fraction of committed capacity slashed on missed/failed proof
 SECURE_AGNTC_REWARD = 1.0  # AGNTC minted to the prover's wallet on an accepted possession proof (testnet earn-source; mainnet routes from fees per whitepaper)
 
+# ── DePIN Vault S1 — public-randomness beacon (spec 2026-07-02 §3.3) ─────────
+# Challenge seeds mix in an epoch beacon so not even the coordinator can grind
+# challenges. Real sources are OPT-IN (AGENTIC_BEACON=1); default is a
+# deterministic local hash-chain so genesis/tests/CI stay hermetic. Ladder:
+# drand → Solana slot-hash → previous beacon flagged stale.
+BEACON_HTTP_TIMEOUT_S = 2.0        # per-source fetch timeout (block cadence is 60s)
+BEACON_REFRESH_INTERVAL_BLOCKS = VAULT_CHALLENGE_INTERVAL_BLOCKS  # refresh cadence
+
 # ── Game-economy params (client reads via GET /api/params; tunable server-side) ──
 # Changing these takes effect on next server restart — no client redeploy needed.
 NODE_UPGRADE_COST_BASE = 200
