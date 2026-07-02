@@ -2,6 +2,7 @@ import type {
   Agent, AgentTier, HaikuMessage, GridPosition, MessageResult, MessageInfo, ClaimNodeResult,
   VaultRootResponse, VaultAssignmentResponse, VaultChallengeResponse, VaultShardResponse,
   VaultSubmitProofRequest, VaultSubmitProofResponse, VaultStatusResponse,
+  VaultPinsResponse, BeaconResponse,
 } from '@/types';
 import { TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
 import { getNodeCpuPerTurn, getNodeTier } from '@/lib/nodeTier';
@@ -35,6 +36,10 @@ export interface ChainService {
   submitVaultProof(req: VaultSubmitProofRequest): Promise<VaultSubmitProofResponse>;
   /** Securing history for a wallet (assigned shards, last pass, passes count). */
   getVaultStatus(walletIndex: number): Promise<VaultStatusResponse>;
+  /** Durable pin/audit history for a wallet — the Disk resource's fact surface. */
+  getVaultPins(walletIndex: number): Promise<VaultPinsResponse>;
+  /** Current epoch challenge-randomness beacon (source + staleness are public). */
+  getBeacon(): Promise<BeaconResponse>;
 }
 
 export class MockChainService implements ChainService {
@@ -194,5 +199,25 @@ export class MockChainService implements ChainService {
       last_pass_block: this.blockNumber,
       secured_passes: 0,
     };
+  }
+
+  async getVaultPins(walletIndex: number): Promise<VaultPinsResponse> {
+    // Mirrors the chain surface: the internal -1 miss bucket is filtered
+    // server-side, so a pins list only ever carries real shard rows, and
+    // pass_rate is the server's windowed owner rate (clients never recount).
+    const pins = [
+      { shard_id: walletIndex % 16, passes: 6, misses: 2, size_bytes: 4_194_304, active: true },
+    ];
+    return {
+      wallet_index: walletIndex,
+      owner: `mock-owner-${walletIndex}`,
+      pins,
+      pinned_bytes: pins.filter((p) => p.active).reduce((s, p) => s + p.size_bytes, 0),
+      pass_rate: 0.75,
+    };
+  }
+
+  async getBeacon(): Promise<BeaconResponse> {
+    return { source: 'mock', round_id: null, stale: false, value_prefix: '00'.repeat(8) };
   }
 }

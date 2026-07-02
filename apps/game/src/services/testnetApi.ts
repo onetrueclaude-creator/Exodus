@@ -12,7 +12,7 @@ import type {
   WalletSettingsResponse, EpochStatus, RewardsResponse, BalanceResponse, VestingResponse,
   VaultRootResponse, VaultAssignmentResponse, VaultShardResponse,
   VaultChallengeResponse, VaultSubmitProofRequest, VaultSubmitProofResponse,
-  VaultStatusResponse,
+  VaultStatusResponse, VaultPinsResponse, BeaconResponse,
 } from '@/types';
 import { signedPost } from '@/lib/writeSigner';
 
@@ -293,6 +293,16 @@ export function submitVaultProof(req: VaultSubmitProofRequest): Promise<VaultSub
 /** GET /api/vault/status/{wallet_index} — securing history for a wallet */
 export function getVaultStatus(walletIndex: number): Promise<VaultStatusResponse> {
   return get<VaultStatusResponse>(`/api/vault/status/${walletIndex}`);
+}
+
+/** GET /api/vault/pins/{wallet_index} — durable pin/audit history (Disk fact surface) */
+export function getVaultPins(walletIndex: number): Promise<VaultPinsResponse> {
+  return get<VaultPinsResponse>(`/api/vault/pins/${walletIndex}`);
+}
+
+/** GET /api/beacon — current epoch challenge-randomness beacon (source + staleness) */
+export function getBeacon(): Promise<BeaconResponse> {
+  return get<BeaconResponse>('/api/beacon');
 }
 
 import type { EconomyParams } from "@/lib/economyDefaults";

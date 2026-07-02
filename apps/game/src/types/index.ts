@@ -45,6 +45,9 @@ export type {
   VaultSubmitProofRequest,
   VaultSubmitProofResponse,
   VaultStatusResponse,
+  VaultPinRow,
+  VaultPinsResponse,
+  BeaconResponse,
 } from "./testnet";
 export { CHAIN_GRID_MIN, CHAIN_GRID_MAX, CHAIN_GRID_SPAN } from "./testnet";
 

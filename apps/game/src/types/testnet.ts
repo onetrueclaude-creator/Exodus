@@ -331,3 +331,33 @@ export interface VaultStatusResponse {
   last_pass_block: number | null;
   secured_passes: number;
 }
+
+// GET /api/vault/pins/{wallet_index} — durable pin/audit history (the Disk
+// resource's fact surface). The chain filters its internal shard_id=-1
+// owner-level miss bucket out of `pins` server-side; `pass_rate` still absorbs
+// it — clients read pass_rate and never recount rows.
+export interface VaultPinRow {
+  shard_id: number;
+  passes: number;
+  misses: number;
+  size_bytes: number;
+  active: boolean;
+}
+
+export interface VaultPinsResponse {
+  wallet_index: number;
+  owner: string;
+  pins: VaultPinRow[];
+  pinned_bytes: number;
+  pass_rate: number;
+}
+
+// GET /api/beacon — current epoch challenge-randomness beacon. Source +
+// staleness are public so the trust posture is inspectable (spec §3.3).
+// round_id is null for non-round sources (e.g. slot-hash fallback).
+export interface BeaconResponse {
+  source: string;
+  round_id: number | null;
+  stale: boolean;
+  value_prefix: string;
+}
