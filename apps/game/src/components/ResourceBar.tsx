@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useGameStore } from "@/store";
 import { getNodeCpuPerTurn } from "@/lib/nodeTier";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { sciFormat } from "@/lib/format";
+import { sciFormat, formatMiB } from "@/lib/format";
 import { DeltaFlash } from "@/components/DeltaFlash";
 import type { Tier } from "@/types";
 import { TIER_LABELS, TIER_CROWN } from "@/types";
@@ -87,6 +87,7 @@ export default function ResourceBar() {
   const miningCpuPerBlock = useGameStore((s) => s.miningCpuPerBlock);
   const securingCpuPerBlock = useGameStore((s) => s.securingCpuPerBlock);
   const allAgents = useGameStore((s) => s.agents);
+  const vaultPinStats = useGameStore((s) => s.vaultPinStats);
 
   const ownedBlocknodes = Object.values(blocknodes).filter((n) => n.ownerId === currentUserId);
   const tier = currentUserTier ?? "community";
@@ -106,118 +107,159 @@ export default function ResourceBar() {
   const netTooltip = `Regen +${cpuRegenPerTurn} · Nodes +${nodeCpuOutput} · Mining −${miningCpuPerBlock} · Securing −${securingCpuPerBlock}`;
 
   return (
-    <div className="h-8 bg-background-light border-b border-card-border flex items-center px-3 gap-3 shrink-0">
-      {/* Network badge */}
-      <div
-        className={`px-2 py-0.5 rounded border flex items-center gap-1.5 ${
-          chainMode === "testnet"
-            ? "border-yellow-400/40 bg-yellow-400/10"
-            : "border-card-border bg-card-border/20"
-        }`}
-        title={chainMode === "testnet" ? DISCLOSURES.testnetToken : undefined}
-      >
+    <>
+      <div className="h-8 bg-background-light border-b border-card-border flex items-center px-3 gap-3 shrink-0">
+        {/* Network badge */}
         <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            chainMode === "testnet" ? "bg-green-400 animate-pulse" : "bg-text-muted"
+          className={`px-2 py-0.5 rounded border flex items-center gap-1.5 ${
+            chainMode === "testnet"
+              ? "border-yellow-400/40 bg-yellow-400/10"
+              : "border-card-border bg-card-border/20"
           }`}
-        />
-        <span
-          className={`text-[12px] font-bold tracking-wider ${
-            chainMode === "testnet" ? "text-yellow-400" : "text-text-muted"
-          }`}
+          title={chainMode === "testnet" ? DISCLOSURES.testnetToken : undefined}
         >
-          {chainMode === "testnet" ? "TESTNET" : "OFFLINE"}
-        </span>
-        {chainMode === "testnet" && testnetBlocks > 0 && (
-          <span className="text-[11px] font-mono text-yellow-400/60">B#{testnetBlocks}</span>
-        )}
-      </div>
-
-      {/* Tier indicator */}
-      <div className="flex items-center gap-1.5" suppressHydrationWarning>
-        <div className={`w-2 h-2 rounded-full animate-pulse ${TIER_DOT[tier]}`} suppressHydrationWarning />
-        <span className={`text-sm font-heading ${TIER_TEXT[tier]}`} suppressHydrationWarning>
-          {TIER_CROWN[tier] ? `${TIER_CROWN[tier]} ` : ""}{TIER_LABELS[tier]} Tier
-        </span>
-        <GenesisBadge />
-        {ownedBlocknodes.length > 0 && (
-          <span className="text-[12px] font-mono text-text-muted/60">
-            {ownedBlocknodes.length} node{ownedBlocknodes.length !== 1 ? "s" : ""}
+          <div
+            className={`w-1.5 h-1.5 rounded-full ${
+              chainMode === "testnet" ? "bg-green-400 animate-pulse" : "bg-text-muted"
+            }`}
+          />
+          <span
+            className={`text-[12px] font-bold tracking-wider ${
+              chainMode === "testnet" ? "text-yellow-400" : "text-text-muted"
+            }`}
+          >
+            {chainMode === "testnet" ? "TESTNET" : "OFFLINE"}
           </span>
-        )}
-      </div>
+          {chainMode === "testnet" && testnetBlocks > 0 && (
+            <span className="text-[11px] font-mono text-yellow-400/60">B#{testnetBlocks}</span>
+          )}
+        </div>
 
-      <div className="h-4 w-px bg-card-border" />
-
-      {/* Resources (spendable) */}
-
-      {/* CPU Energy — yellow */}
-      <div className="flex items-center gap-1">
-        <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
-        <span className="text-xs font-mono text-yellow-300 tabular-nums">{sciFormat(energy)}</span>
-        <span className="text-[11px] font-mono text-text-muted/40">CPU</span>
-        <span
-          className={`text-[11px] font-mono ${netColor} tabular-nums`}
-          title={netTooltip}
-        >
-          {netSign}{Math.abs(netCpuPerTurn)}/t
-        </span>
-        <sup className="text-[11px] leading-none">
-          <DeltaFlash resourceKey="energy" />
-        </sup>
-      </div>
-
-      {/* AGNTC — cyan */}
-      <div className="flex items-center gap-1">
-        <div className="w-1.5 h-1.5 rounded-full bg-accent-cyan shrink-0" />
-        <span className="text-xs font-mono text-accent-cyan tabular-nums">
-          {sciFormat(agntcBalance)}
-        </span>
-        <span className="text-[11px] font-mono text-text-muted/40">AGNTC</span>
-        <sup className="text-[11px] leading-none">
-          <DeltaFlash resourceKey="agntc" />
-        </sup>
-      </div>
-
-      {/* Data on Chain — blue */}
-      <div className="flex items-center gap-1">
-        <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
-        <span className="text-xs font-mono text-blue-300 tabular-nums">{sciFormat(minerals)}</span>
-        <span className="text-[11px] font-mono text-text-muted/40">Frags</span>
-      </div>
-
-      {/* Spacer */}
-      <div className="flex-1" />
-
-      {/* Wallet indicator */}
-      <div className="flex items-center gap-1.5">
-        {publicKey ? (
-          <>
-            <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-            <span className="text-[12px] font-mono text-purple-400/80">
-              {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
+        {/* Tier indicator */}
+        <div className="flex items-center gap-1.5" suppressHydrationWarning>
+          <div className={`w-2 h-2 rounded-full animate-pulse ${TIER_DOT[tier]}`} suppressHydrationWarning />
+          <span className={`text-sm font-heading ${TIER_TEXT[tier]}`} suppressHydrationWarning>
+            {TIER_CROWN[tier] ? `${TIER_CROWN[tier]} ` : ""}{TIER_LABELS[tier]} Tier
+          </span>
+          <GenesisBadge />
+          {ownedBlocknodes.length > 0 && (
+            <span className="text-[12px] font-mono text-text-muted/60">
+              {ownedBlocknodes.length} node{ownedBlocknodes.length !== 1 ? "s" : ""}
             </span>
-          </>
-        ) : (
-          <>
-            <div className="w-1.5 h-1.5 rounded-full bg-text-muted/40" />
-            <span className="text-[12px] font-mono text-text-muted/40">No wallet</span>
-          </>
-        )}
-        <ConnectWalletButton isOnChain={isOnChain} onBound={fetchMe} />
+          )}
+        </div>
+
+        <div className="h-4 w-px bg-card-border" />
+
+        {/* Resources (spendable) */}
+
+        {/* CPU Energy — yellow */}
+        <div className="flex items-center gap-1">
+          <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
+          <span className="text-xs font-mono text-yellow-300 tabular-nums">{sciFormat(energy)}</span>
+          <span className="text-[11px] font-mono text-text-muted/40">CPU</span>
+          <span
+            className={`text-[11px] font-mono ${netColor} tabular-nums`}
+            title={netTooltip}
+          >
+            {netSign}{Math.abs(netCpuPerTurn)}/t
+          </span>
+          <sup className="text-[11px] leading-none">
+            <DeltaFlash resourceKey="energy" />
+          </sup>
+        </div>
+
+        {/* AGNTC — cyan */}
+        <div className="flex items-center gap-1">
+          <div className="w-1.5 h-1.5 rounded-full bg-accent-cyan shrink-0" />
+          <span className="text-xs font-mono text-accent-cyan tabular-nums">
+            {sciFormat(agntcBalance)}
+          </span>
+          <span className="text-[11px] font-mono text-text-muted/40">AGNTC</span>
+          <sup className="text-[11px] leading-none">
+            <DeltaFlash resourceKey="agntc" />
+          </sup>
+        </div>
+
+        {/* Data on Chain — blue */}
+        <div className="flex items-center gap-1">
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
+          <span className="text-xs font-mono text-blue-300 tabular-nums">{sciFormat(minerals)}</span>
+          <span className="text-[11px] font-mono text-text-muted/40">Frags</span>
+        </div>
+
+        {/* Disk — server-attested vault pins (DePIN). The 32px bar has no
+            room for the full canonical disclosure text, so this chip only
+            carries a supplementary hover tooltip — the actual visible
+            disclosure render lives in the strip below the bar (controller
+            resolution, S2 plan, 2026-07-02). Visible copy here is factual
+            only — "pinned" / "audits passed", never value/yield language. */}
+        <div
+          className="flex items-center gap-1"
+          data-testid="disk-hud"
+          title={DISCLOSURES.testnetToken}
+        >
+          <div className="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0" />
+          <span className="text-xs font-mono text-violet-300 tabular-nums">
+            {vaultPinStats ? formatMiB(vaultPinStats.pinnedBytes) : "—"}
+          </span>
+          <span className="text-[11px] font-mono text-text-muted/40">Disk</span>
+          {vaultPinStats && vaultPinStats.pinnedBytes > 0 && (
+            <span className="text-[11px] font-mono text-text-muted/60 tabular-nums">
+              {Math.round(vaultPinStats.passRate * 100)}% audits passed
+            </span>
+          )}
+        </div>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Wallet indicator */}
+        <div className="flex items-center gap-1.5">
+          {publicKey ? (
+            <>
+              <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+              <span className="text-[12px] font-mono text-purple-400/80">
+                {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
+              </span>
+            </>
+          ) : (
+            <>
+              <div className="w-1.5 h-1.5 rounded-full bg-text-muted/40" />
+              <span className="text-[12px] font-mono text-text-muted/40">No wallet</span>
+            </>
+          )}
+          <ConnectWalletButton isOnChain={isOnChain} onBound={fetchMe} />
+        </div>
+
+        <div className="h-4 w-px bg-card-border" />
+
+        {/* Turn counter with countdown */}
+        <div className="flex items-center gap-1 mr-2">
+          <span className="text-xs text-text-muted font-semibold">Turn</span>
+          <span className="text-sm font-mono text-text-primary tabular-nums">{turn}</span>
+          <TurnCountdown />
+        </div>
+
+        {/* Live clock */}
+        <LiveClock />
       </div>
 
-      <div className="h-4 w-px bg-card-border" />
-
-      {/* Turn counter with countdown */}
-      <div className="flex items-center gap-1 mr-2">
-        <span className="text-xs text-text-muted font-semibold">Turn</span>
-        <span className="text-sm font-mono text-text-primary tabular-nums">{turn}</span>
-        <TurnCountdown />
+      {/* Disk disclosure — VISIBLE render of the canonical valueless-testnet
+          snippet, hover-independent (controller resolution, S2 plan,
+          2026-07-02: hover-only `title=` disclosures are below-bar — invisible
+          by default, dead on touch). Verbatim string + muted-caption styling,
+          same precedent as AccountView's Cumulative Rewards disclosure
+          (AccountView.tsx, AccountView.disclosure.test.tsx). Unconditional —
+          renders regardless of chain mode or pin-sync state. */}
+      <div
+        className="shrink-0 bg-background-light/60 border-b border-card-border px-3 py-1"
+        data-testid="disk-disclosure"
+      >
+        <p className="text-[10px] leading-snug text-text-muted/70">
+          {DISCLOSURES.testnetToken}
+        </p>
       </div>
-
-      {/* Live clock */}
-      <LiveClock />
-    </div>
+    </>
   );
 }
