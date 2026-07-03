@@ -35,6 +35,19 @@ function fakeChain(overrides: Partial<ChainService> = {}): ChainService {
       last_pass_block: 12,
       secured_passes: 3,
     }),
+    getVaultPins: vi.fn().mockResolvedValue({
+      wallet_index: 0,
+      owner: "owner",
+      pins: [{ shard_id: 4, passes: 6, misses: 2, size_bytes: 4_194_304, active: true }],
+      pinned_bytes: 4_194_304,
+      pass_rate: 0.6,
+    }),
+    getBeacon: vi.fn().mockResolvedValue({
+      source: "drand",
+      round_id: 4711,
+      stale: false,
+      value_prefix: "00112233aabbccdd",
+    }),
     ...overrides,
   } as unknown as ChainService;
 }
@@ -80,13 +93,15 @@ describe("NodeInspector — Singularity PoAW gate", () => {
     expect(screen.getByText(/your shards: 4/)).toBeInTheDocument();
   });
 
-  it("Stats shows securing history", async () => {
+  it("Stats shows securing history + Disk pin stats", async () => {
     render(<NodeInspector chainService={fakeChain()} />);
     fireEvent.click(screen.getByRole("button", { name: "Stats" }));
 
     await waitFor(() => expect(screen.getByText(/Securing stats/)).toBeInTheDocument());
     expect(screen.getByText(/last pass: 12/)).toBeInTheDocument();
     expect(screen.getByText(/secured passes: 3/)).toBeInTheDocument();
+    expect(screen.getByText(/pinned: 4\.0 MiB \(1 active\)/)).toBeInTheDocument();
+    expect(screen.getByText(/audit pass-rate: 60%/)).toBeInTheDocument();
   });
 
   it("Secure: an accepted proof shows the credit and draws the success edge", async () => {
@@ -119,5 +134,37 @@ describe("NodeInspector — Singularity PoAW gate", () => {
     render(<NodeInspector chainService={null} />);
     fireEvent.click(screen.getByRole("button", { name: "Read" }));
     expect(screen.getByText(/chain offline/i)).toBeInTheDocument();
+  });
+
+  it("surfaces the pin quota, held bytes, and re-pin messaging on the gate panel", async () => {
+    render(<NodeInspector chainService={fakeChain()} />);
+    await waitFor(() => expect(screen.getByText(/pins 1\/8 slots/)).toBeInTheDocument());
+    expect(screen.getByText(/4\.0 MiB held/)).toBeInTheDocument();
+    // Deliberately present-true (mechanics arrive with S5) — copy must reflect truth today.
+    expect(screen.getByText(/re-pin any time, no penalty/)).toBeInTheDocument();
+    // Howey posture: factual copy only, never value language.
+    expect(screen.queryByText(/earn|yield|reward|profit/i)).toBeNull();
+  });
+
+  it("shows the beacon source and flags a stale beacon", async () => {
+    const fresh = fakeChain();
+    const { unmount } = render(<NodeInspector chainService={fresh} />);
+    await waitFor(() => expect(screen.getByText(/beacon: drand/)).toBeInTheDocument());
+    expect(screen.queryByText(/stale/)).toBeNull();
+    unmount();
+
+    const stale = fakeChain({
+      getBeacon: vi.fn().mockResolvedValue({
+        source: "stale",
+        round_id: null,
+        stale: true,
+        value_prefix: "ff".repeat(8),
+      }),
+    });
+    render(<NodeInspector chainService={stale} />);
+    await waitFor(() =>
+      expect(screen.getByText(/beacon: stale/)).toBeInTheDocument(),
+    );
+    expect(screen.queryByText(/\(stale\)/)).toBeNull();
   });
 });

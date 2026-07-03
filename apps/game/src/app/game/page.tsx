@@ -19,6 +19,7 @@ import type { ChainService } from "@/services/chainService";
 import { TestnetChainService } from "@/services/testnetChainService";
 import { isTestnetOnline, getSettings, getTransactions, getWalletBalance } from "@/services/testnetApi";
 import { getWalletIndex } from "@/lib/walletIndex";
+import { foldPinStats } from "@/lib/vaultGate";
 import { useChainEvents } from "@/hooks/useChainEvents";
 import type { SubscriptionTier } from "@/types";
 import type { Tier } from "@/types";
@@ -184,6 +185,16 @@ export default function GamePage() {
       );
     } catch {
       // Transaction sync failed — keep stale edges
+    }
+
+    // Sync the Disk resource (DePIN vault pins): server-attested pinned bytes +
+    // audit pass-rate → ResourceBar Disk HUD. Goes through the ChainService seam,
+    // so it works in mock mode too (offline demo parity with other resources).
+    try {
+      const pins = await svc.getVaultPins(getWalletIndex());
+      store.setVaultPinStats(foldPinStats(pins));
+    } catch {
+      // Pin sync failed — keep the last synced stats
     }
   }, []);
 

@@ -14,6 +14,7 @@ import type {
   TestnetStatus, MessageResult, MessageInfo,
   VaultRootResponse, VaultAssignmentResponse, VaultChallengeResponse, VaultShardResponse,
   VaultSubmitProofRequest, VaultSubmitProofResponse, VaultStatusResponse,
+  VaultPinsResponse, BeaconResponse,
 } from '@/types';
 import { CHAIN_GRID_MIN, CHAIN_GRID_SPAN } from '@/types/testnet';
 import { TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
@@ -286,6 +287,14 @@ export class TestnetChainService implements ChainService {
 
   async getVaultStatus(walletIndex: number): Promise<VaultStatusResponse> {
     return api.getVaultStatus(walletIndex);
+  }
+
+  async getVaultPins(walletIndex: number): Promise<VaultPinsResponse> {
+    return api.getVaultPins(walletIndex);
+  }
+
+  async getBeacon(): Promise<BeaconResponse> {
+    return api.getBeacon();
   }
 
   /** Fetch ledger status for display */

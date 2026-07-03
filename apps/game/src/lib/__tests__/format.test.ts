@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { sciFormat, sciRate, formatDelta } from "@/lib/format";
+import { sciFormat, sciRate, formatDelta, formatMiB } from "@/lib/format";
 
 describe("sciFormat (HUD number formatting)", () => {
   it("renders integers bare and zero as '0'", () => {
@@ -36,5 +36,17 @@ describe("formatDelta (resource +/- flash indicator)", () => {
   it("uses the same sci/precision rules as the rest of the HUD (consistency)", () => {
     expect(formatDelta(1234567)).toBe("+1.23e6"); // was "1234567" raw before
     expect(formatDelta(-1234567)).toBe("-1.23e6");
+  });
+});
+
+describe("formatMiB (Disk HUD byte formatting)", () => {
+  it("formats bytes as MiB with one decimal", () => {
+    expect(formatMiB(4_194_304)).toBe("4.0 MiB");
+    expect(formatMiB(33_554_432)).toBe("32.0 MiB");
+    expect(formatMiB(1_572_864)).toBe("1.5 MiB");
+  });
+
+  it("keeps the .0 on zero for a steady-width HUD", () => {
+    expect(formatMiB(0)).toBe("0.0 MiB");
   });
 });

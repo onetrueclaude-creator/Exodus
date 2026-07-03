@@ -8,6 +8,7 @@ import { RESEARCH_TREES } from "@/lib/research";
 import { buildCellsForRing, buildAllCells } from "@/lib/lattice";
 import { getNodeCpuPerTurn, getNodeTier as getNodeTierFromStore, getLevelUpCost, getMiningPresets } from "@/lib/nodeTier";
 import { EDGE_FADE_BLOCKS } from "@/lib/orbitalEdges";
+import type { PinStats } from "@/lib/vaultGate";
 
 /** CPU Energy deducted per turn for each owned blocknode (maintenance cost) */
 export const NODE_CPU_PER_TURN = 1;
@@ -41,6 +42,9 @@ interface GameState {
   agntcBalance: number;
   securedChains: number;
   minedChains: number;
+  /** Disk resource (DePIN vault pins) — folded from the chain's pins surface;
+   *  null until the first successful sync (offline / never synced → HUD dash). */
+  vaultPinStats: PinStats | null;
 
   // CPU allocation (per-block commitments)
   miningCpuPerBlock: number;
@@ -158,6 +162,8 @@ interface GameState {
    *  micro). Overwrites the optimistic local value on each sync — local mutations
    *  are relative deltas that the next chain sync reconciles. */
   setSyncedAgntcBalance: (agntc: number) => void;
+  /** Replace the Disk pin stats ABSOLUTELY from chain truth (null = unsynced). */
+  setVaultPinStats: (stats: PinStats | null) => void;
   setNodeMiningSecuring: (agentId: string, mining: number, securing: number) => boolean;
   beginNodeLevelUp: (agentId: string) => boolean;
   cancelNodeLevelUp: (agentId: string) => void;
@@ -226,6 +232,7 @@ const initialState = {
   walletSecuringRate: 0,
   walletMiningRate: 0,
   walletEffectiveStake: 0,
+  vaultPinStats: null as PinStats | null,
   blocknodes: {} as Record<string, BlockNode>,
   gridNodes: {} as Record<string, GridNode>,
   visibleTiers: [] as Tier[],
@@ -682,6 +689,8 @@ export const useGameStore = create<GameState>((set) => ({
     }),
 
   setSyncedAgntcBalance: (agntc) => set({ agntcBalance: agntc }),
+
+  setVaultPinStats: (stats) => set({ vaultPinStats: stats }),
 
   setNodeMiningSecuring: (agentId, mining, securing) => {
     const validPresets: ReadonlyArray<number> = getMiningPresets();

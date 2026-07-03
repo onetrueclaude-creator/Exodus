@@ -5,7 +5,8 @@ import { useGameStore } from "@/store";
 import { inspectorModelFor } from "@/lib/inspectorModel";
 import { SINGULARITY_ID } from "@/lib/orbitalSeats";
 import { getWalletIndex } from "@/lib/walletIndex";
-import { runRead, runStats, runSecure } from "@/lib/vaultGate";
+import { runRead, runStats, runSecure, foldPinStats, BROWSER_PIN_SLOTS } from "@/lib/vaultGate";
+import { formatMiB } from "@/lib/format";
 import type { ChainService } from "@/services/chainService";
 
 /**
@@ -71,6 +72,46 @@ export default function NodeInspector({ chainService }: NodeInspectorProps = {})
     return () => window.clearTimeout(t);
   }, [log]);
 
+  // Pin/beacon posture for the Singularity gate panel. Loads when the
+  // Singularity gains focus; source + staleness are public so the trust
+  // posture is inspectable (spec §3.3). Null → the posture lines are omitted.
+  const [pinPosture, setPinPosture] = useState<{
+    activePins: number;
+    pinnedBytes: number;
+    beaconSource: string;
+    beaconStale: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    if (focusedNodeId !== SINGULARITY_ID || !chainService) {
+      setPinPosture(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const [pins, beacon] = await Promise.all([
+          chainService.getVaultPins(getWalletIndex()),
+          chainService.getBeacon(),
+        ]);
+        if (cancelled) return;
+        const folded = foldPinStats(pins);
+        setPinPosture({
+          activePins: folded.activePins,
+          pinnedBytes: folded.pinnedBytes,
+          beaconSource: beacon.source,
+          beaconStale: beacon.stale,
+        });
+      } catch {
+        // Offline / endpoint unavailable — the panel simply omits the posture lines.
+        if (!cancelled) setPinPosture(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [focusedNodeId, chainService]);
+
   const model = inspectorModelFor(focusedNodeId, agents);
   if (!model) return null;
 
@@ -132,6 +173,8 @@ export default function NodeInspector({ chainService }: NodeInspectorProps = {})
           s.shards.length ? `shards: ${s.shards.join(", ")}` : "no shards",
           `last pass: ${s.lastPassBlock ?? "—"}`,
           `secured passes: ${s.securedPasses}`,
+          `pinned: ${formatMiB(s.pinnedBytes)} (${s.activePins} active)`,
+          `audit pass-rate: ${Math.round(s.passRate * 100)}%`,
         ]);
       } else {
         // Secure — the PoAW gate. The browser proves possession of its shard.
@@ -205,6 +248,20 @@ export default function NodeInspector({ chainService }: NodeInspectorProps = {})
               possession proof of the player's held shard — NOT a ZK proof. */}
           <div className="text-[9px] font-mono uppercase tracking-wide text-accent-cyan/70">
             obedience-proof gate · possession proof
+          </div>
+          {pinPosture && (
+            <div className="space-y-0.5">
+              <div className="text-[10px] font-mono text-text-muted">
+                pins {pinPosture.activePins}/{BROWSER_PIN_SLOTS} slots · {formatMiB(pinPosture.pinnedBytes)} held
+              </div>
+              <div className="text-[10px] font-mono text-text-muted">
+                beacon: {pinPosture.beaconSource}
+                {pinPosture.beaconStale && pinPosture.beaconSource !== "stale" ? " (stale)" : ""}
+              </div>
+            </div>
+          )}
+          <div className="text-[9px] text-text-muted/70 leading-snug">
+            Browser pins are evictable — re-pin any time, no penalty.
           </div>
           <div className="grid grid-cols-3 gap-1.5 pt-0.5">
             {SINGULARITY_OPS.map((op) => (
