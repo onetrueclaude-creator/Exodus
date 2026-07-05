@@ -116,6 +116,13 @@ CREATE TABLE IF NOT EXISTS pin_shards (
     active           INTEGER NOT NULL DEFAULT 1,
     PRIMARY KEY (owner_hex, shard_id)
 );
+
+CREATE TABLE IF NOT EXISTS time_ledger (
+    owner_hex        TEXT    PRIMARY KEY,
+    time_accrued     INTEGER NOT NULL DEFAULT 0,
+    passes_watermark INTEGER NOT NULL DEFAULT 0,
+    updated_at_block INTEGER NOT NULL
+);
 """
 
 
@@ -296,6 +303,26 @@ def save_state(g: GenesisState, last_block_time: float, db_path: Path) -> None:
                         " last_pass_block, last_miss_block, active) "
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                         pin_rows,
+                    )
+
+            # -- Time ledger (DePIN S3): soulbound tenure + persisted watermark
+            tl = getattr(g, "time_ledger", None)
+            if tl is not None:
+                time_rows = [
+                    (
+                        owner_hex,
+                        int(row.get("time_accrued", 0)),
+                        int(row.get("passes_watermark", 0)),
+                        int(row.get("updated_at_block", 0)),
+                    )
+                    for owner_hex, row in tl.all().items()
+                ]
+                if time_rows:
+                    conn.executemany(
+                        "INSERT OR REPLACE INTO time_ledger "
+                        "(owner_hex, time_accrued, passes_watermark, "
+                        " updated_at_block) VALUES (?, ?, ?, ?)",
+                        time_rows,
                     )
 
     except Exception:
@@ -505,6 +532,30 @@ def load_state(g: GenesisState, db_path: Path) -> float:
             except Exception:
                 pass  # missing/old pin_shards table → keep the fresh empty registry
 
+            # -- Time ledger (DePIN S3): restore tenure + persisted watermark --
+            # The watermark MUST ride the row: pin-registry passes are
+            # cumulative-since-genesis and persisted, so (unlike score_ledger,
+            # whose metrics reset to 0 on restart) an empty in-memory watermark
+            # after a reboot would re-count all historical passes and grant a
+            # free tick per restart.
+            try:
+                from agentic.economics.time_ledger import TimeLedger
+                time_rows = conn.execute(
+                    "SELECT owner_hex, time_accrued, passes_watermark, "
+                    "       updated_at_block FROM time_ledger"
+                ).fetchall()
+                loaded_time: dict[str, dict] = {
+                    row["owner_hex"]: {
+                        "time_accrued": int(row["time_accrued"]),
+                        "passes_watermark": int(row["passes_watermark"]),
+                        "updated_at_block": int(row["updated_at_block"]),
+                    }
+                    for row in time_rows
+                }
+                g.time_ledger = TimeLedger(rows=loaded_time)
+            except Exception:
+                pass  # missing/old time_ledger table → keep the fresh empty ledger
+
     except Exception:
         pass  # load failures are non-fatal — fall back to fresh genesis
 
@@ -527,6 +578,7 @@ def clear_state(db_path: Path) -> None:
                 DELETE FROM account_keys;
                 DELETE FROM score_ledger;
                 DELETE FROM pin_shards;
+                DELETE FROM time_ledger;
             """)
     except Exception:
         pass

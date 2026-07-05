@@ -111,3 +111,46 @@ class TestInfluenceAndGates:
         assert tl.get(OWNER)["time_accrued"] == 1
         tl.all()[OWNER]["passes_watermark"] = 999
         assert tl.get(OWNER)["passes_watermark"] == 1
+
+
+class TestPersistence:
+    def test_genesis_state_has_fresh_time_ledger(self):
+        from agentic.testnet.genesis import create_genesis
+        g = create_genesis(seed=42)
+        assert g.time_ledger.all() == {}
+
+    def test_sqlite_roundtrip_preserves_counter_and_watermark(self, tmp_path):
+        """save_state -> load_state restores tenure exactly, INCLUDING the
+        watermark — then re-feeding the same cumulative facts grants nothing
+        (the end-to-end restart double-count defense)."""
+        from agentic.testnet.genesis import create_genesis
+        from agentic.testnet.persistence import init_db, save_state, load_state
+
+        db = tmp_path / "t.db"
+        init_db(db)
+        g = create_genesis(seed=42)
+        g.time_ledger.accrue_epoch({OWNER: 3}, block=8)
+        g.time_ledger.accrue_epoch({OWNER: 5}, block=9)
+        before = g.time_ledger.get(OWNER)
+        assert before["time_accrued"] == 2 and before["passes_watermark"] == 5
+        save_state(g, last_block_time=0.0, db_path=db)
+
+        g2 = create_genesis(seed=42)
+        load_state(g2, db_path=db)
+        assert g2.time_ledger.get(OWNER) == before     # incl. passes_watermark
+        g2.time_ledger.accrue_epoch({OWNER: 5}, block=99)   # same facts post-boot
+        assert g2.time_ledger.get(OWNER)["time_accrued"] == 2   # no free tick
+
+    def test_clear_state_wipes_time_rows(self, tmp_path):
+        from agentic.testnet.genesis import create_genesis
+        from agentic.testnet.persistence import init_db, save_state, load_state, clear_state
+
+        db = tmp_path / "t.db"
+        init_db(db)
+        g = create_genesis(seed=42)
+        g.time_ledger.accrue_epoch({OWNER: 1}, block=1)
+        save_state(g, last_block_time=0.0, db_path=db)
+        clear_state(db)
+        g2 = create_genesis(seed=42)
+        load_state(g2, db_path=db)
+        assert g2.time_ledger.get(OWNER) is None
