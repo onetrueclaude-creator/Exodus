@@ -410,3 +410,45 @@ class TestTimeReadEndpoints:
         assert board[0]["influence"] == pytest.approx(2 ** 0.5)
         assert board[1]["time_accrued"] == 1
         assert set(board[0]) == {"owner_hex", "time_accrued", "influence"}
+
+
+class TestSoulboundStructuralInvariants:
+    """Spec §2.1: Time transfers/purchases are structurally impossible — no
+    API path and no ledger operation moves Time between owners. These are
+    tripwires: adding any transfer-shaped surface fails them loudly and
+    forces a deliberate Howey/soulbound re-review."""
+
+    def test_time_api_surface_is_readonly_allowlist(self):
+        from agentic.testnet import api as api_module
+
+        time_routes = [
+            r for r in api_module.app.routes
+            if getattr(r, "path", "").startswith("/api/time")
+        ]
+        surface = {
+            (r.path, tuple(sorted(r.methods))) for r in time_routes
+        }
+        # The frozen allowlist: two read-only routes, nothing else, ever.
+        # (HEAD may be auto-added alongside GET by the framework — allow it.)
+        assert {p for p, _ in surface} == {
+            "/api/time/leaderboard", "/api/time/{wallet_index}",
+        }
+        for path, methods in surface:
+            assert set(methods) <= {"GET", "HEAD"}, (
+                f"{path} exposes {methods} — Time is read-only; no route may "
+                f"write or move it (spec §2.1 soulbound)"
+            )
+
+    def test_time_ledger_public_surface_is_soulbound(self):
+        from agentic.economics.time_ledger import TimeLedger
+
+        public = sorted(
+            name for name, member in vars(TimeLedger).items()
+            if not name.startswith("_") and callable(member)
+        )
+        # The frozen allowlist: no method takes a second owner; nothing spends,
+        # splits, or moves Time. Growing this list is a design decision that
+        # must re-clear the soulbound/Howey review (spec §2.1, dossier §6).
+        assert public == [
+            "accrue_epoch", "all", "get", "meets_gate", "sqrt_influence",
+        ]
