@@ -1322,10 +1322,10 @@ The organic growth model produces a supply curve that flattens asymptotically. T
 
 | Network Size | Flattening Band | Approximate Supply | Individual Mining Time per AGNTC |
 |-------------|----------------|--------------------|---------------------------------|
-| Solo node | ~100-150 | 4M-9M | 4-7 days |
-| Small (~100 nodes) | ~200-250 | 16M-25M | 9-11 days |
-| Medium (~1,000 nodes) | ~324 | a small fraction of the fixed supply | 14 days |
-| Large (~10,000 nodes) | ~500+ | 100M+ | 22+ days |
+| Solo node | ~100-150 | ≈40K–91K | 4-7 days |
+| Small (~100 nodes) | ~200-250 | ≈161K–251K | 9-11 days |
+| Medium (~1,000 nodes) | ~324 | ≈421K | 14 days |
+| Large (~10,000 nodes) | ~500+ | ≈1M+ | 22+ days |
 
 **Net supply after burns:** The actual circulating supply is reduced by multiple burn channels:
 
