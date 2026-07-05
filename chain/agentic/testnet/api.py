@@ -768,6 +768,24 @@ def _build_score_metrics(g: "GenesisState") -> dict:
     return metrics
 
 
+def _build_time_pass_totals(g) -> dict:
+    """{owner_hex: cumulative-since-genesis passed audits} from the pin registry.
+
+    The Time ledger's fact source (spec §2.1): an owner accrues one Time tick
+    for a fixed block window iff their cumulative pass count grew during it.
+    Totals are cumulative — the ledger's per-row persisted watermarks
+    (``passes_watermark`` + ``last_window``, S3 review R1) turn them into a
+    binary per-window attendance fact without double-counting across restarts.
+    """
+    pins = getattr(g, "pin_registry", None)
+    if pins is None:
+        return {}
+    return {
+        owner_hex: sum(int(r.get("passes", 0)) for r in shards.values())
+        for owner_hex, shards in pins.all().items()
+    }
+
+
 def _do_mine(g: GenesisState) -> dict:
     """Core mining logic shared by auto-miner and /api/mine."""
     global _last_block_time
@@ -986,6 +1004,28 @@ def _do_mine(g: GenesisState) -> dict:
             "score_ledger accrual failed for block %s", block_slot, exc_info=True
         )
 
+    # DePIN S3 Time ledger: feed cumulative pin-registry pass totals into the
+    # ledger on every block. TimeLedger.accrue_epoch computes its own fixed
+    # block window internally (window = block // TIME_EPOCH_BLOCKS — S3 review
+    # R1: ring-epochs are mining-paced and decelerate quadratically, so they
+    # cannot drive a time-like resource) and only credits a tick the first
+    # time a window is seen with new pass evidence, so calling this every
+    # block is cadence-safe by construction — no boundary gate is needed
+    # here, and a same-window call just resyncs the watermark (never
+    # double-credits). Runs BEFORE save_state so the pin-registry pass counts
+    # and the ledger's persisted watermarks advance in the SAME SQLite
+    # transaction — a crash can never double-grant or skip-grant. This MUST
+    # NEVER crash the mining critical path — wrapped + logged.
+    try:
+        pass_totals = _build_time_pass_totals(g)
+        if pass_totals:
+            _time_ledger(g).accrue_epoch(pass_totals, block=block_slot)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).warning(
+            "time_ledger accrual failed for block %s", block_slot, exc_info=True
+        )
+
     # Push chain state to Supabase after each block so the frontend
     # receives real-time updates via postgres_changes subscriptions.
     try:
@@ -1019,6 +1059,16 @@ def _pin_registry(g):
         from agentic.vault.pin_registry import PlayerPinRegistry
         g.pin_registry = PlayerPinRegistry()
     return g.pin_registry
+
+
+def _time_ledger(g):
+    """Lazy TimeLedger attach (mirrors _pin_registry). GenesisState already
+    default-factories this field (S3 Task 2), so this is defensive
+    belt-and-suspenders for any state object that predates or bypasses it."""
+    if not hasattr(g, "time_ledger"):
+        from agentic.economics.time_ledger import TimeLedger
+        g.time_ledger = TimeLedger()
+    return g.time_ledger
 
 
 def _refresh_vault_owners() -> None:

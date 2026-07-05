@@ -189,3 +189,146 @@ class TestPersistence:
         g2 = create_genesis(seed=42)
         load_state(g2, db_path=db)
         assert g2.time_ledger.get(OWNER) is None
+
+
+def _force_next_window(g):
+    """Park total_blocks_processed just below the next TIME_EPOCH_BLOCKS
+    boundary so the next _do_mine() call's block_slot (= total_blocks_processed
+    + 1, computed at agentic/testnet/api.py:775) lands in a new fixed window.
+
+    S3 review R1 superseded ring-based accrual: rings open on cumulative
+    AGNTC mined (agentic/lattice/epoch.py, decelerating quadratically) and
+    are NOT time-like, so Time accrual keys on fixed block windows
+    (``block // TIME_EPOCH_BLOCKS``) instead — this helper forces that
+    boundary directly rather than mining TIME_EPOCH_BLOCKS real blocks.
+    """
+    current_window = g.mining_engine.total_blocks_processed // TIME_EPOCH_BLOCKS
+    g.mining_engine.total_blocks_processed = (current_window + 1) * TIME_EPOCH_BLOCKS - 1
+
+
+def _reset(c, api_module) -> None:
+    """Reset the testnet and assert it actually took effect.
+
+    Reads the LIVE ``api_module._ADMIN_TOKEN`` instead of the static
+    ``admin_headers`` fixture value: an unrelated pre-existing bug elsewhere
+    in this suite (tests/test_signed_writes_b4b.py::
+    test_secure_endpoint_rejects_unsigned_when_bypass_off calls
+    ``importlib.reload(api)`` after ``monkeypatch.setenv("ADMIN_TOKEN", ...)``,
+    which re-executes ``_ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "")`` at
+    api.py:447 and permanently overwrites the module global for the rest of
+    the pytest session — outlasting monkeypatch's own env-var teardown) can
+    make the session's admin token silently diverge from what conftest.py's
+    fixture sends, so a reset keyed to the stale fixture value 401s
+    silently and every "before any work" assertion below would be testing
+    stale cross-test leftovers instead of a clean boundary. Asserting the
+    response here turns that hazard into a loud, immediate failure instead
+    of a confusing downstream state-leak assertion.
+    """
+    r = c.post(
+        "/api/reset", headers={"X-Admin-Token": api_module._ADMIN_TOKEN}
+    )
+    assert r.status_code == 200, (
+        f"/api/reset failed ({r.status_code}): {r.text} — admin token may "
+        "have been clobbered by an unrelated test (see docstring)"
+    )
+
+
+class TestBlockWindowAccrualHook:
+    """Integration: the real _do_mine hook (S3 Task 3), driven through fixed
+    block-window boundaries per Controller Resolution R1 — NOT ring-epochs."""
+
+    def test_window_boundary_grants_tick_only_with_passed_audit(self):
+        from fastapi.testclient import TestClient
+        from agentic.testnet import api as api_module
+
+        c = TestClient(api_module.app)
+        _reset(c, api_module)
+        g = api_module._g()
+        owner0_hex = g.wallets[0].public_key.hex()
+
+        # Window closes with NO passes → no Time row (present-and-serving unmet).
+        _force_next_window(g)
+        api_module._do_mine(g)
+        assert g.time_ledger.get(owner0_hex) is None
+
+        # Record a passed audit (the S1 fact source), close the next window.
+        pr = api_module._pin_registry(g)
+        pr.assign_pin(owner0_hex, shard_id=0, block=1, size_bytes=4096)
+        pr.record_audit(owner0_hex, shard_id=0, passed=True, block=2)
+        _force_next_window(g)
+        api_module._do_mine(g)
+        row = g.time_ledger.get(owner0_hex)
+        assert row is not None and row["time_accrued"] == 1
+
+        # Non-boundary block, same window: no accrual.
+        api_module._do_mine(g)
+        assert g.time_ledger.get(owner0_hex)["time_accrued"] == 1
+
+        # Still the same window: calling again still can't double-credit.
+        api_module._do_mine(g)
+        assert g.time_ledger.get(owner0_hex)["time_accrued"] == 1
+
+        # New pass + next window boundary → second tick.
+        pr.record_audit(owner0_hex, shard_id=0, passed=True, block=99)
+        _force_next_window(g)
+        api_module._do_mine(g)
+        assert g.time_ledger.get(owner0_hex)["time_accrued"] == 2
+
+    def test_misses_never_accrue_time(self):
+        from fastapi.testclient import TestClient
+        from agentic.testnet import api as api_module
+
+        c = TestClient(api_module.app)
+        _reset(c, api_module)
+        g = api_module._g()
+        owner0_hex = g.wallets[0].public_key.hex()
+
+        pr = api_module._pin_registry(g)
+        pr.assign_pin(owner0_hex, shard_id=0, block=1, size_bytes=4096)
+        pr.record_audit(owner0_hex, shard_id=0, passed=False, block=2)
+        pr.record_audit(owner0_hex, shard_id=-1, passed=False, block=3)  # owner-level miss bucket
+        _force_next_window(g)
+        api_module._do_mine(g)
+        assert g.time_ledger.get(owner0_hex) is None   # misses are not service
+
+    def test_restart_then_window_boundary_without_new_passes_grants_nothing(
+        self, tmp_path
+    ):
+        """End-to-end restart-farming defense through the REAL persistence path:
+        earn a tick, save, reboot into a fresh genesis, force a window boundary
+        with no new passes → tenure stays flat. Then genuinely serve again →
+        it climbs."""
+        from fastapi.testclient import TestClient
+        from agentic.testnet import api as api_module
+        from agentic.testnet.genesis import create_genesis
+        from agentic.testnet.persistence import init_db, save_state, load_state
+
+        c = TestClient(api_module.app)
+        _reset(c, api_module)
+        g = api_module._g()
+        owner0_hex = g.wallets[0].public_key.hex()
+
+        pr = api_module._pin_registry(g)
+        pr.assign_pin(owner0_hex, shard_id=0, block=1, size_bytes=4096)
+        pr.record_audit(owner0_hex, shard_id=0, passed=True, block=2)
+        _force_next_window(g)
+        api_module._do_mine(g)
+        before = g.time_ledger.get(owner0_hex)
+        assert before["time_accrued"] == 1
+
+        db = tmp_path / "restart.db"
+        init_db(db)
+        save_state(g, last_block_time=1.0, db_path=db)
+
+        g2 = create_genesis(num_wallets=50, num_claims=0, seed=42)
+        load_state(g2, db_path=db)
+        assert g2.time_ledger.get(owner0_hex) == before   # tenure + watermark restored
+
+        _force_next_window(g2)
+        api_module._do_mine(g2)                            # boundary, no new passes
+        assert g2.time_ledger.get(owner0_hex)["time_accrued"] == 1   # no free tick
+
+        g2.pin_registry.record_audit(owner0_hex, shard_id=0, passed=True, block=500)
+        _force_next_window(g2)
+        api_module._do_mine(g2)
+        assert g2.time_ledger.get(owner0_hex)["time_accrued"] == 2
