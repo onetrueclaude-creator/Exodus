@@ -2843,6 +2843,82 @@ def get_airdrop_preview() -> dict:
     }
 
 
+# ---------------------------------------------------------------------------
+# Time ledger (DePIN S3) — soulbound tenure, read-only rank inputs
+# ---------------------------------------------------------------------------
+
+
+class TimeRow(BaseModel):
+    """One wallet's soulbound tenure (DePIN S3, spec §2.1 — GATES ONLY).
+
+    ``time_accrued`` = epochs of service (a monotonic counter — never spent,
+    never moved). ``influence`` = time_accrued ** TIME_INFLUENCE_EXPONENT, the
+    leaderboard/governance rank weight. These are the leaderboard's two rank
+    inputs. Read-only by design: Time has no write or move API. The internal
+    passes_watermark / last_window bookkeeping is deliberately NOT exposed."""
+    wallet_index: int
+    owner_hex: str
+    time_accrued: int = 0
+    influence: float = 0.0
+    updated_at_block: int = 0
+
+
+class TimeLeaderboardEntry(BaseModel):
+    owner_hex: str
+    time_accrued: int
+    influence: float
+
+
+# NOTE: /api/time/leaderboard MUST stay registered BEFORE /api/time/{wallet_index}
+# — routes match in registration order, and the int path converter would
+# otherwise turn "leaderboard" into a 422.
+# TODO(pre-mainnet): paginate — unpaginated is fine at testnet scale (mirrors /api/scores).
+@app.get("/api/time/leaderboard", response_model=list[TimeLeaderboardEntry])
+def get_time_leaderboard() -> list:
+    """Full tenure ranking: every owner with service history, ordered by
+    influence (monotonic in raw tenure; ties broken by owner_hex for
+    determinism). The chain speaks owner_hex only — the game joins usernames
+    and highlights the caller's row (S3b). Read-only and public, like
+    /api/scores."""
+    g = _g()
+    tl = _time_ledger(g)
+    rows = tl.all()
+    ranked = sorted(rows.items(), key=lambda kv: (-kv[1]["time_accrued"], kv[0]))
+    return [
+        TimeLeaderboardEntry(
+            owner_hex=owner_hex,
+            time_accrued=row["time_accrued"],
+            influence=tl.sqrt_influence(owner_hex),
+        )
+        for owner_hex, row in ranked
+    ]
+
+
+@app.get("/api/time/{wallet_index}", response_model=TimeRow)
+def get_time(wallet_index: int) -> TimeRow:
+    """One wallet's tenure row.
+
+    404 on an out-of-range wallet; a valid wallet with no service history
+    returns a zeroed row (its tenure is genuinely 0, not missing). The
+    internal passes_watermark / last_window bookkeeping is deliberately NOT
+    exposed."""
+    g = _g()
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    owner_hex = g.wallets[wallet_index].public_key.hex()
+    tl = _time_ledger(g)
+    row = tl.get(owner_hex)
+    if row is None:
+        return TimeRow(wallet_index=wallet_index, owner_hex=owner_hex)
+    return TimeRow(
+        wallet_index=wallet_index,
+        owner_hex=owner_hex,
+        time_accrued=row["time_accrued"],
+        influence=tl.sqrt_influence(owner_hex),
+        updated_at_block=row["updated_at_block"],
+    )
+
+
 @app.post("/api/reset", response_model=ResetResult)
 def reset_testnet(
     request: Request,

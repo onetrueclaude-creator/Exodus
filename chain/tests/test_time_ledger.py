@@ -332,3 +332,81 @@ class TestBlockWindowAccrualHook:
         _force_next_window(g2)
         api_module._do_mine(g2)
         assert g2.time_ledger.get(owner0_hex)["time_accrued"] == 2
+
+
+class TestTimeReadEndpoints:
+    """Integration: GET /api/time/{wallet_index} + GET /api/time/leaderboard
+    (S3 Task 4). Uses the module's _reset/_force_next_window helpers (S3
+    review pattern), not admin_headers/_force_next_ring — accrual is fixed
+    block-window based (Controller Resolution R1), not ring-based."""
+
+    def test_single_wallet_contract(self):
+        from fastapi.testclient import TestClient
+        from agentic.testnet import api as api_module
+
+        c = TestClient(api_module.app)
+        _reset(c, api_module)
+        g = api_module._g()
+        owner0_hex = g.wallets[0].public_key.hex()
+
+        pr = api_module._pin_registry(g)
+        pr.assign_pin(owner0_hex, shard_id=0, block=1, size_bytes=1024)
+        pr.record_audit(owner0_hex, shard_id=0, passed=True, block=2)
+        _force_next_window(g)
+        api_module._do_mine(g)
+
+        r = c.get("/api/time/0")
+        assert r.status_code == 200
+        body = r.json()
+        # Exact payload: the rank inputs (raw epochs + sqrt influence) and
+        # nothing else — the internal passes_watermark/last_window
+        # bookkeeping must never leak.
+        assert set(body) == {
+            "wallet_index", "owner_hex", "time_accrued", "influence",
+            "updated_at_block",
+        }
+        assert body["owner_hex"] == owner0_hex
+        assert body["wallet_index"] == 0
+        assert body["time_accrued"] == 1
+        assert body["influence"] == pytest.approx(1.0)
+        assert body["updated_at_block"] > 0
+
+        # Valid wallet with no service history → zeroed row, not 404.
+        r2 = c.get("/api/time/2")
+        assert r2.status_code == 200
+        assert r2.json()["time_accrued"] == 0
+        assert r2.json()["influence"] == 0.0
+
+        # Out-of-range wallet → 404.
+        assert c.get("/api/time/99999").status_code == 404
+
+    def test_leaderboard_sorted_and_route_order(self):
+        from fastapi.testclient import TestClient
+        from agentic.testnet import api as api_module
+
+        c = TestClient(api_module.app)
+        _reset(c, api_module)
+        g = api_module._g()
+        owner0_hex = g.wallets[0].public_key.hex()
+        owner1_hex = g.wallets[1].public_key.hex()
+
+        # Seed tenure at the ledger level (accrual mechanics proven in Task 3).
+        # The second grant lands in a LATER fixed window (S3 review R1:
+        # windowed, not ring-boundary, accrual) so owner0 genuinely earns a
+        # second tick rather than a same-window no-op.
+        g.time_ledger.accrue_epoch({owner0_hex: 1, owner1_hex: 1}, block=10)
+        g.time_ledger.accrue_epoch(
+            {owner0_hex: 2}, block=TIME_EPOCH_BLOCKS + 20
+        )  # owner0: 2, owner1: 1
+
+        r = c.get("/api/time/leaderboard")
+        # Route-order regression guard: if /api/time/{wallet_index} were
+        # registered first, "leaderboard" would 422 as a non-integer index.
+        assert r.status_code == 200
+        board = r.json()
+        assert len(board) == 2
+        assert [e["owner_hex"] for e in board] == [owner0_hex, owner1_hex]
+        assert board[0]["time_accrued"] == 2
+        assert board[0]["influence"] == pytest.approx(2 ** 0.5)
+        assert board[1]["time_accrued"] == 1
+        assert set(board[0]) == {"owner_hex", "time_accrued", "influence"}
