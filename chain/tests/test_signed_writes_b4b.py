@@ -69,7 +69,24 @@ def test_nonce_endpoint_returns_sign_context():
         assert body["owner_hex"] == api._g().wallets[2].public_key.hex()
 
 
-def test_secure_endpoint_rejects_unsigned_when_bypass_off(monkeypatch):
+_admin_token_before_secure_test: list = []
+
+
+@pytest.fixture
+def _capture_admin_token():
+    """Snapshot api._ADMIN_TOKEN immediately before the next test's body runs.
+
+    Used by test_admin_token_restored_after_secure_endpoint_test (below) to
+    confirm that test doesn't permanently leak a mutation to shared module
+    state past its own monkeypatch teardown. See #205.
+    """
+    import agentic.testnet.api as api
+
+    _admin_token_before_secure_test.clear()
+    _admin_token_before_secure_test.append(api._ADMIN_TOKEN)
+
+
+def test_secure_endpoint_rejects_unsigned_when_bypass_off(monkeypatch, _capture_admin_token):
     """Production posture: unsigned secure → 401; correctly-signed secure → 200.
 
     Proves Task 1 enforcement without any code change: ALLOW_DEV_CUSTODIAL_SIGN
@@ -79,14 +96,21 @@ def test_secure_endpoint_rejects_unsigned_when_bypass_off(monkeypatch):
     Uses wallet 0 (the genesis claim holder) so the secured wallet already owns
     a node — this lets us hit 200 on success rather than stopping at 400 "no claim".
     """
-    import importlib
     import agentic.testnet.api as api
     from fastapi.testclient import TestClient
     from agentic.testnet.signing import canonical_message
 
-    monkeypatch.setenv("ADMIN_TOKEN", "test-admin")
+    # Patch the module attribute directly instead of monkeypatch.setenv +
+    # importlib.reload(api). reload() re-executes the module in place, which
+    # permanently overwrites api._ADMIN_TOKEN in sys.modules — monkeypatch's
+    # env-var rollback at teardown cannot undo that, so the clobbered value
+    # leaked into every test collected after this one (#205). setattr keeps
+    # the same module object and is fully auto-restored at teardown.
+    monkeypatch.setattr(api, "_ADMIN_TOKEN", "test-admin")
+    # ALLOW_DEV_CUSTODIAL_SIGN is read inline (agentic.testnet.signing._dev_bypass
+    # calls os.environ.get(...) at call time, not a module-level constant), so
+    # delenv alone — no reload — already made this take effect correctly.
     monkeypatch.delenv("ALLOW_DEV_CUSTODIAL_SIGN", raising=False)
-    importlib.reload(api)
 
     with TestClient(api.app) as c:
         # Reset to a known state; wallet 0 always holds the genesis claim.
@@ -126,3 +150,39 @@ def test_secure_endpoint_rejects_unsigned_when_bypass_off(monkeypatch):
         assert r2.status_code == 200, (
             f"Expected 200 for correctly-signed write, got {r2.status_code}: {r2.text}"
         )
+
+
+def test_admin_token_restored_after_secure_endpoint_test():
+    """Regression guard for #205.
+
+    test_secure_endpoint_rejects_unsigned_when_bypass_off used to reassign
+    ADMIN_TOKEN via monkeypatch.setenv and then call importlib.reload(api) so
+    the module would re-read _ADMIN_TOKEN from the environment. reload()
+    re-executes the module and overwrites its __dict__ in place (the module
+    object in sys.modules is the same one every other test imports), so the
+    clobbered "test-admin" value survived monkeypatch's teardown — which only
+    restores the environment variable, not a module attribute mutated by a
+    reload — and leaked into every test collected afterwards.
+
+    This test runs immediately after that one (pytest preserves file
+    definition order) and asserts api._ADMIN_TOKEN is exactly what it was
+    right before that test's body ran. Under the old reload-based
+    implementation this assertion fails (clobbered to "test-admin"); under
+    the monkeypatch.setattr fix it passes because monkeypatch auto-restores
+    the attribute at test teardown.
+    """
+    import agentic.testnet.api as api
+
+    assert _admin_token_before_secure_test, (
+        "the _capture_admin_token fixture did not run before "
+        "test_secure_endpoint_rejects_unsigned_when_bypass_off"
+    )
+    assert api._ADMIN_TOKEN == _admin_token_before_secure_test[0], (
+        "api._ADMIN_TOKEN leaked past "
+        "test_secure_endpoint_rejects_unsigned_when_bypass_off: was "
+        f"{_admin_token_before_secure_test[0]!r} before that test ran, is now "
+        f"{api._ADMIN_TOKEN!r}. A test that needs a different admin token must "
+        "use monkeypatch.setattr(api, \"_ADMIN_TOKEN\", ...), never "
+        "importlib.reload(api) — reload bakes the value into sys.modules where "
+        "monkeypatch's rollback can't reach it (#205)."
+    )
