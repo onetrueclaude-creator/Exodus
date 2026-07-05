@@ -224,3 +224,226 @@ def test_disclosure_snippet_phrases_have_zero_p0():
         "The game is free to play.",
     ):
         assert p0(ok) == [], (ok, p0(ok))
+
+
+# --- W2 firewall/selection honesty guard (whitepaper wave-2 truth-up) ---
+#
+# Regression class: a future edit re-asserts that the consensus "finality
+# firewall" (committee/leader SELECTION weighted by AGNTC token stake only)
+# is LIVE behaviour. In truth it is specified and test-guarded in the
+# consensus module (chain/tests/test_consensus_firewall.py) but NOT yet
+# wired into the live coordinator path — live selection still runs on
+# effective stake `S_eff`. Honest copy says so with a staged-honesty
+# qualifier ("specified", "live-path staged", "Honest status", "pending the
+# trustless-verifier stage", "not yet wired", "takes live effect with")
+# nearby; a regression drops the qualifier and asserts the mechanic as live.
+#
+# RED = the ORIGINAL un-remediated claims (verbatim, from the pre-truth-up
+# whitepaper / the independent-review worklist items 1, 3, 4, 13, 14, 19).
+# GREEN = the HONEST rewrites actually shipped in the truth-up (verbatim,
+# from the truth-up commits). Paired by key so every RED has a GREEN twin.
+
+FIREWALL_RED_GREEN_PAIRS = {
+    # Item 1 — Abstract (CRITICAL).
+    "item1_abstract": (
+        "the **finality weight** — committee (verifier) selection *and* "
+        "leader selection — is **AGNTC token-stake only** (the *finality "
+        "firewall*, Section 13.5), so cheaply corrupting the storage layer "
+        "cannot buy consensus influence; CPU-weighted committee selection "
+        "is a PoRep-gated mainnet goal, not current behaviour.",
+        "the **finality weight** — committee (verifier) selection *and* "
+        "leader selection — is *specified as* **AGNTC token-stake only** "
+        "(the *finality firewall*, Section 13.5); live committee/leader "
+        "selection today still runs on the effective stake `S_eff` under "
+        "the trusted coordinator, pending the trustless-verifier stage.",
+    ),
+    # Item 3 — §5B.2 (CRITICAL).
+    "item3_5b2": (
+        "As of 2026-06-22 the finality weight — committee and leader "
+        "selection — is **AGNTC token stake only** (`W_fin`, Section "
+        "13.5), because the CPU / Proof-of-Vault leg is Sybil-weak. "
+        "CPU-weighted committee selection (the original §13 "
+        "dual-staking-in-finality vision) is therefore stated only as a "
+        "**PoRep-gated mainnet goal**, never as current behaviour.",
+        "The finality weight — committee and leader selection — is "
+        "*specified* as **AGNTC token stake only** (`W_fin`, Section "
+        "13.5) — implemented and test-guarded, but not yet wired into the "
+        "live coordinator path (Section 13.5 Honest status). "
+        "CPU-weighted committee selection (the original §13 "
+        "dual-staking-in-finality vision) is therefore specified only as "
+        "a **PoRep-gated mainnet goal**, not as a claim that the firewall "
+        "itself is already live.",
+    ),
+    # Item 4 — post-E1 paragraph, heading (the self-contradiction beside the
+    # fix): "Architectural keystone" callout right above L1585/1587/1589.
+    "item4_heading": (
+        "**Architectural keystone — the finality firewall (now shipped).** "
+        "This is the most important security property of the staking "
+        "model, and v1.5 states it as **current behaviour**: the "
+        "**finality weight is AGNTC token stake only.**",
+        "**Architectural keystone — the finality firewall, as specified.** "
+        "This is the most important security property of the staking "
+        "model; the **finality weight is *specified* as AGNTC token "
+        "stake only**, not yet wired into the live coordinator path "
+        "(Honest status, Section 13.5).",
+    ),
+    # Item 4 — L1585 (first post-E1 paragraph).
+    "item4a_selection_weighted": (
+        "Committee (verifier) selection (Section 5.5) and leader "
+        "selection (Section 7.1) are both weighted by `W_fin`. The CPU / "
+        "Proof-of-Vault leg of effective stake (Section 13.1, β = 0.60) "
+        "is **deliberately excluded from finality** and contributes only "
+        "to **earnings** (reward share, Section 14) and to "
+        "liveness/admission.",
+        "Committee (verifier) selection (Section 5.5) and leader "
+        "selection (Section 7.1) are *specified to be* weighted by "
+        "`W_fin`; live selection today still runs on `S_eff` per the "
+        "Honest status above. The CPU / Proof-of-Vault leg of effective "
+        "stake (Section 13.1, β = 0.60) is specified to be **deliberately "
+        "excluded from finality** once that wiring lands, and contributes "
+        "today — via `S_eff` — to committee/leader selection as well as "
+        "to **earnings** (reward share, Section 14) and to "
+        "liveness/admission.",
+    ),
+    # Item 4 — L1587 (second post-E1 paragraph).
+    "item4b_closes_that_path": (
+        "so a metering-inflation or PoV-corruption attack was a path to "
+        "bias *committee selection* — a ledger-relevant influence. v1.5 "
+        "closes that path **in code**: by sourcing finality from token "
+        "stake alone, **corrupting Proof-of-Vault can no longer buy "
+        "committee influence.** A compromised or biased storage layer "
+        "now degrades only state-measurement and *earnings* fairness — "
+        "never finality selection.",
+        "so a metering-inflation or PoV-corruption attack was a path to "
+        "bias *committee selection* — a ledger-relevant influence. v1.5 "
+        "specifies the closure (implemented in the consensus module); it "
+        "takes live effect with the trustless-verifier stage — until "
+        "then the coordinator's trust scope includes selection, so a "
+        "compromised or biased storage layer can still degrade live "
+        "finality selection (via `S_eff`) in addition to "
+        "state-measurement and earnings fairness — never finality "
+        "selection once the firewall is live.",
+    ),
+    # Item 4 — L1589 (third post-E1 paragraph, the honest un-rounded line).
+    "item4c_honest_statement": (
+        "The original §13 vision — CPU contribution *also* weighting "
+        "committee selection — is deferred, not abandoned. Until then, "
+        "the honest, un-rounded statement is: **finality is "
+        "token-weighted (Sybil cost = token cost); CPU-weighted finality "
+        "is a PoRep-gated mainnet target.** The residual testnet trust in "
+        "the Singularity coordinator therefore bounds *state-measurement "
+        "and earnings* fairness only — it no longer touches finality "
+        "selection.",
+        "The original §13 vision — CPU contribution *also* weighting "
+        "committee selection — is deferred, not abandoned. Until then, "
+        "the honest, un-rounded statement is: **finality is "
+        "*specified* to be token-weighted, and the live testnet has not "
+        "yet switched to that path (Honest status above); CPU-weighted "
+        "finality is a PoRep-gated mainnet target for after that.** The "
+        "residual testnet trust in the Singularity coordinator therefore "
+        "bounds *state-measurement and earnings* fairness — and, until "
+        "the trustless-verifier stage, finality selection itself.",
+    ),
+    # Item 13 — quantified Sybil cost, "Scope (read first)" lead.
+    "item13_scope": (
+        "**Scope (read first — finality firewall).** The following "
+        "derivation analyzes the cost of dominating selection *when CPU "
+        "stake weights it*. Under the current finality firewall (Section "
+        "13.5), CPU stake does **not** weight finality, so the *present* "
+        "finality Sybil cost is simply the token cost (the pure-PoS line "
+        "below, `X`).",
+        "**Scope (read first — finality firewall).** The following "
+        "derivation analyzes the cost of dominating selection *when CPU "
+        "stake weights it*. Under the finality firewall as specified "
+        "(Section 13.5), CPU stake does **not** weight finality, so the "
+        "finality Sybil cost becomes simply the token cost (live with "
+        "the trustless-verifier stage; today's cost model runs on "
+        "`S_eff`) (the pure-PoS line below, `X`).",
+    ),
+    # Item 14 — trust matrix row.
+    "item14_trust_matrix": (
+        "| Singularity coordinator (testnet trust assumption) | VER-INT, "
+        "VER-PRIV, COM-UNBIAS (ledger safety intact) — **the finality "
+        "firewall (Section 13.5) makes this clean: finality selection is "
+        "token-only, so a biased CPU/storage metering cannot move "
+        "committee composition** | State-layer measurement reliability |",
+        "| Singularity coordinator (testnet trust assumption) | VER-INT, "
+        "VER-PRIV, COM-UNBIAS (ledger safety intact) — **the finality "
+        "firewall *as specified* makes this clean once live (§13.5 "
+        "Honest status); on the current testnet the coordinator's trust "
+        "scope includes selection** | State-layer measurement "
+        "reliability |",
+    ),
+    # Item 19 — §22 BETA parameter note.
+    "item19_beta_note": (
+        "| BETA ‡ | 0.60 | CPU weight in effective stake formula "
+        "(economic / reward-share only). **Note (v1.5 finality "
+        "firewall):** `S_eff` governs *earnings*; consensus *finality* "
+        "selection is weighted by token stake alone (`W_fin = "
+        "T/T_total`), so β does **not** weight committee/leader "
+        "selection — Section 13.5. |",
+        "| BETA ‡ | 0.60 | CPU weight in effective stake formula "
+        "(economic / reward-share only). **Note (v1.5 finality "
+        "firewall):** `S_eff` governs *earnings*; consensus *finality* "
+        "selection is *specified* to be token-stake-only (`W_fin = "
+        "T/T_total`, live-path staged — §13.5), under which β does "
+        "**not** weight committee/leader selection; on the current "
+        "coordinator testnet, selection still runs on the β-weighted "
+        "`S_eff`. |",
+    ),
+}
+
+
+def test_firewall_rule_flags_each_red_item_as_p0():
+    # Each ORIGINAL (un-remediated) claim must be caught as a P0 finding
+    # under our new label. If the rule is deleted, every one of these
+    # fails (nothing is flagged at all).
+    for key, (red, _green) in FIREWALL_RED_GREEN_PAIRS.items():
+        findings = p0(red)
+        assert any("firewall" in lbl.lower() for _, lbl in findings), \
+            (key, red, findings)
+
+
+def test_firewall_rule_spares_each_green_item():
+    # Each HONEST rewrite (verbatim from the truth-up) must produce ZERO
+    # findings of ANY kind. If the skip predicate is deleted, every one of
+    # these fails (the honest text starts getting flagged, since it
+    # legitimately contains the same trigger words as the RED text).
+    for key, (_red, green) in FIREWALL_RED_GREEN_PAIRS.items():
+        assert scan_text(green) == [], (key, green, scan_text(green))
+
+
+def test_firewall_rule_spares_earnings_current_behaviour_label():
+    # The one legitimately-honest exception called out in the worklist:
+    # "Earnings (current behaviour — both dimensions)" is TRUE live today
+    # (earnings really are dual-weighted) — the rule keys on SELECTION
+    # mechanic terms, so this must not trip it, unfixed or not.
+    earnings_line = (
+        "**Earnings (current behaviour — both dimensions).** *Reward "
+        "share* remains governed by the dual-staking effective stake "
+        "`S_eff = α·token + β·cpu` (β = 0.60). But inflating *measured* "
+        "CPU buys earnings, not finality."
+    )
+    assert scan_text(earnings_line) == [], scan_text(earnings_line)
+
+
+def test_firewall_rule_flags_finality_current_behaviour_label():
+    # Its neighbour, "Finality (current behaviour — token dimension
+    # only)", is the actual regression (selection is NOT token-only live)
+    # and must flag; the same label pattern once fixed to "specified" must
+    # not.
+    finality_red = (
+        "**Finality (current behaviour — token dimension only).** "
+        "Committee and leader selection are weighted by **AGNTC token "
+        "stake alone**. The token weight for *finality* is therefore "
+        "effectively 1.0, not α = 0.40."
+    )
+    finality_green = (
+        "**Finality (specified — token dimension only; live-path "
+        "staged, §13.5).** Committee and leader selection are weighted "
+        "by **AGNTC token stake alone**. The token weight for *finality* "
+        "is therefore effectively 1.0, not α = 0.40."
+    )
+    assert any("firewall" in lbl.lower() for _, lbl in p0(finality_red)), \
+        p0(finality_red)
+    assert scan_text(finality_green) == [], scan_text(finality_green)
