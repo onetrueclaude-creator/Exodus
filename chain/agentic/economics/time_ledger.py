@@ -17,6 +17,21 @@ Hard boundaries (dossier §6, enforced by structural tests in both directions):
     the tx ledger, or any reward path.
   - Soulbound: no operation takes two owners; no API path moves Time.
 
+Once-per-window structural guarantee
+-------------------------------------
+Accrual boundaries are fixed block windows: ``window = block // TIME_EPOCH_BLOCKS``,
+never a "ring" or any other epoch concept. Each row persists its own
+``last_window`` watermark, and a tick is credited only if BOTH (a)
+``window > last_window`` (this window hasn't already paid out) AND (b) the
+owner's cumulative pass total advanced past ``passes_watermark`` (real
+evidence of service this window). This is enforced INSIDE the ledger, not
+left to caller discipline: calling ``accrue_epoch`` twice for the same
+window (an auto-miner call plus a retry, a duplicate scheduler tick, two
+calls within the same block window generally) can never mint a second tick.
+A same-window call still resyncs ``passes_watermark``/``updated_at_block``
+when new pass evidence arrives, so nothing is lost — it just cannot credit
+again until a later window opens.
+
 Persistence semantics — why the watermark rides the row (vs the score ledger)
 ------------------------------------------------------------------------------
 The score ledger keeps its metric watermark in-memory-only because its metric
@@ -24,11 +39,11 @@ sources reset to 0 on restart, so an empty watermark measures the first
 post-restart delta from 0. That trick does NOT transfer here: pin-registry
 pass counts are cumulative-since-genesis AND persisted, so an empty in-memory
 watermark after a reboot would re-count every historical pass as "this
-epoch's" and grant one free tick per restart (restart-farmed tenure).
-``passes_watermark`` therefore persists INSIDE each row, and save_state
-writes it in the same SQLite transaction as the epoch ring and the pin rows —
-the three fact sets advance or revert together, so a crash can never
-double-grant or skip-grant.
+window's" and grant one free tick per restart (restart-farmed tenure).
+``passes_watermark`` and ``last_window`` therefore persist INSIDE each row,
+and save_state writes them in the same SQLite transaction as the rest of the
+chain's persisted state — the fact sets advance or revert together, so a
+crash can never double-grant or skip-grant.
 
 NOTE: this docstring deliberately avoids the CamelCase class names of the
 money/reward machinery — the reverse Howey guard
@@ -40,6 +55,7 @@ from __future__ import annotations
 import math
 
 from agentic.params import (
+    TIME_EPOCH_BLOCKS,
     TIME_TICKS_PER_EPOCH,
     TIME_INFLUENCE_EXPONENT,
     TIME_GATE_BASE,
@@ -62,6 +78,7 @@ def _empty_row(block: int) -> dict:
     return {
         "time_accrued": 0,      # epochs of service; monotonic, never decreases
         "passes_watermark": 0,  # pin-registry cumulative passes at last boundary
+        "last_window": -1,      # last block // TIME_EPOCH_BLOCKS that credited a tick
         "updated_at_block": block,
     }
 
@@ -83,12 +100,18 @@ class TimeLedger:
         """Grant Time for the block window that just closed.
 
         ``pass_totals[owner_hex]`` is the owner's cumulative-since-genesis
-        passed-audit count (from PlayerPinRegistry). The persisted per-row
-        ``passes_watermark`` turns it into a binary window-attendance fact:
-        >= 1 new pass since the last boundary -> exactly +TIME_TICKS_PER_EPOCH
-        (flat; the pass COUNT never scales the grant). The S1.5 desktop tier
-        raises the effective per-owner rate at this seam, nowhere else.
+        passed-audit count (from PlayerPinRegistry). ``block`` maps to a fixed
+        window via ``block // TIME_EPOCH_BLOCKS``. A tick is credited only if
+        BOTH this window hasn't already paid out (``window > last_window``)
+        AND the owner has >= 1 new pass since the last boundary
+        (``total > passes_watermark``) — flat; the pass COUNT never scales
+        the grant. This makes "once per window" structural rather than caller
+        discipline: calling this twice for the same window (auto-miner plus a
+        retry, a duplicate scheduler tick, ...) can never double-credit. The
+        S1.5 desktop tier raises the effective per-owner rate at this seam,
+        nowhere else.
         """
+        window = block // TIME_EPOCH_BLOCKS
         for owner_hex, total in pass_totals.items():
             total = max(int(total), 0)
             row = self._rows.get(owner_hex)
@@ -97,11 +120,13 @@ class TimeLedger:
                     continue  # miss-only / idle owner: nothing to track yet
                 row = _empty_row(block)
                 self._rows[owner_hex] = row
-            delta = total - row["passes_watermark"]
-            if delta >= 1:
+            if window > row["last_window"] and total > row["passes_watermark"]:
                 row["time_accrued"] += TIME_TICKS_PER_EPOCH
-            # delta <= 0: no new passes (or the registry regressed after a
-            # reseed) — resync the watermark, never subtract accrued tenure.
+                row["last_window"] = window
+            # Same-window second call, or no new passes (or the registry
+            # regressed after a reseed): never mint a second tick, but still
+            # resync the watermark/block so no pass evidence is lost and
+            # accrued tenure is never stranded behind a stale watermark.
             row["passes_watermark"] = total
             row["updated_at_block"] = block
 

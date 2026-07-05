@@ -957,3 +957,13 @@ class TestDePinS3TimeParams:
         assert TIME_GATE_GROWTH == 1.5
         assert TIME_GATE_BASE >= 1                     # level 2 requires real tenure
         assert TIME_GATE_GROWTH > 1.0                  # later levels strictly harder
+
+    def test_time_epoch_blocks_window_is_pinned(self):
+        from agentic.params import TIME_EPOCH_BLOCKS
+        # Concordance pin (S3 review R1): the fixed block window TimeLedger
+        # divides `block` by to compute `window = block // TIME_EPOCH_BLOCKS`.
+        # Retuning this is a visible, deliberate diff (change param + test
+        # in lockstep) — it directly controls the once-per-window cadence.
+        assert isinstance(TIME_EPOCH_BLOCKS, int)
+        assert TIME_EPOCH_BLOCKS == 1440   # ~=1 day @ 60s block cadence
+        assert 0 < TIME_EPOCH_BLOCKS <= 10_000          # sane accrual window bound

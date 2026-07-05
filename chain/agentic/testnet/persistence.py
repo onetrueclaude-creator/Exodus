@@ -121,6 +121,7 @@ CREATE TABLE IF NOT EXISTS time_ledger (
     owner_hex        TEXT    PRIMARY KEY,
     time_accrued     INTEGER NOT NULL DEFAULT 0,
     passes_watermark INTEGER NOT NULL DEFAULT 0,
+    last_window      INTEGER NOT NULL DEFAULT -1,
     updated_at_block INTEGER NOT NULL
 );
 """
@@ -313,6 +314,7 @@ def save_state(g: GenesisState, last_block_time: float, db_path: Path) -> None:
                         owner_hex,
                         int(row.get("time_accrued", 0)),
                         int(row.get("passes_watermark", 0)),
+                        int(row.get("last_window", -1)),
                         int(row.get("updated_at_block", 0)),
                     )
                     for owner_hex, row in tl.all().items()
@@ -320,8 +322,8 @@ def save_state(g: GenesisState, last_block_time: float, db_path: Path) -> None:
                 if time_rows:
                     conn.executemany(
                         "INSERT OR REPLACE INTO time_ledger "
-                        "(owner_hex, time_accrued, passes_watermark, "
-                        " updated_at_block) VALUES (?, ?, ?, ?)",
+                        "(owner_hex, time_accrued, passes_watermark, last_window, "
+                        " updated_at_block) VALUES (?, ?, ?, ?, ?)",
                         time_rows,
                     )
 
@@ -541,13 +543,14 @@ def load_state(g: GenesisState, db_path: Path) -> float:
             try:
                 from agentic.economics.time_ledger import TimeLedger
                 time_rows = conn.execute(
-                    "SELECT owner_hex, time_accrued, passes_watermark, "
+                    "SELECT owner_hex, time_accrued, passes_watermark, last_window, "
                     "       updated_at_block FROM time_ledger"
                 ).fetchall()
                 loaded_time: dict[str, dict] = {
                     row["owner_hex"]: {
                         "time_accrued": int(row["time_accrued"]),
                         "passes_watermark": int(row["passes_watermark"]),
+                        "last_window": int(row["last_window"]),
                         "updated_at_block": int(row["updated_at_block"]),
                     }
                     for row in time_rows
