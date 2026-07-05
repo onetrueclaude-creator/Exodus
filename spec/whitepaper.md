@@ -111,7 +111,7 @@ ZK Agentic Chain addresses these limitations with three design principles:
 
 **Intelligent verification.** AI agents reason about chain integrity rather than executing purely deterministic checks. A committee of 13 AI verification agents audits each proposed block, examining transaction validity, state transition correctness, and proof integrity. Agents cross-reference state across isolated ledger spaces, flag anomalous patterns, and produce attestations that reflect semantic understanding of the data — not just cryptographic validity. This provides an additional verification layer whose detection capabilities improve as the underlying AI models advance.
 
-**Verification-layer privacy.** Agents operate within zero-knowledge private channels, proving correctness without exposing the underlying data [6] [29]. Unlike public blockchains where validators must read transaction data to validate it, ZK Agentic Chain's verification agents receive ZK proofs of state transitions and validate those proofs — never accessing the plaintext state. All user data is private by default; privacy is not an opt-in feature but the fundamental operating mode of the protocol.
+**Verification-layer privacy.** Agents operate within zero-knowledge private channels, proving correctness without exposing the underlying data [6] [29]. *(Design target — on the current testnet these channels run a simulated stand-in; see the §5B.2 honesty ladder for exactly which rung ships today.)* Unlike public blockchains where validators must read transaction data to validate it, ZK Agentic Chain's verification agents receive ZK proofs of state transitions and validate those proofs — never accessing the plaintext state. All user data is private by default; privacy is not an opt-in feature but the fundamental operating mode of the protocol.
 
 #### 1.3 Vision: The Neural Lattice
 
@@ -657,6 +657,8 @@ The *zero-knowledge* claim is held to a strict, disclosed ladder (the full state
 
 The rule that governs all three: **no present-tense zero-knowledge claim above the rung that ships.** The securing proof is a *possession* proof until its SNARK wrap (rung a) lands.
 
+**Shipped hardening (present tense, verified in code).** A small set of testnet hardening steps have since shipped and are accurately described in present tense. Challenge randomness is mixed with a public randomness beacon (drand, with a Solana-slot fallback and a deterministic local hash-chain as the last resort; real sources are enabled by operator configuration) so that sampled-PDP challenge seeds are grind-proof even against the coordinator itself. Each participant's shard pin assignments and audit (pass/miss) history are recorded durably and survive a restart. The coordinator now writes vault shards to a restart-durable backbone replica rather than holding them only in memory — still a single, disclosed custodian pending the later erasure-coded rollout across independent nodes. And the participant's own client displays their pinned bytes, their windowed audit pass-rate, and the beacon's current source and staleness — mechanism visibility, not a value or yield claim.
+
 ---
 
 ### 5B. The ZK-Agentic Gate / Proof of Agentic Work
@@ -716,7 +718,7 @@ This claim is **carefully bounded.** It is a claim of (1) *provenance* — an AI
 
 #### 6.1 ZK Private Channels
 
-ZK Agentic Chain implements verification-layer privacy through *ZK private channels* — isolated communication pathways between AI agents where data is verified but never exposed in plaintext to the broader network [29].
+ZK Agentic Chain is designed to provide verification-layer privacy through *ZK private channels* — isolated communication pathways between AI agents where data is verified but never exposed in plaintext to the broader network [29]. *(testnet status: simulated stand-in — §5B.2)*
 
 The design inverts the traditional blockchain transparency model. In Bitcoin and Ethereum, all transaction data is public; validators read and verify the same data that every other node can see. In Zcash and Aztec, transaction data can be hidden from observers, but validators still interact with the data (or its encrypted form) during proof generation. In ZK Agentic Chain, the verification agents themselves operate within a privacy boundary — they receive ZK proofs as input and produce attestations as output, never accessing the underlying state that the proofs describe.
 
@@ -1207,10 +1209,10 @@ The following table shows illustrative supply growth as the field fills through 
 | 50 | 10,201 | 1,020,100 | 800 | 3,200 |
 | 100 | 40,401 | 4,040,100 | 1,600 | 6,400 |
 | 200 | 160,801 | 16,080,100 | 3,200 | 12,800 |
-| 324 | 421,201 | ~42,120,100 | 5,184 | 20,736 |
+| 324 | 421,201 | a small fraction of the fixed supply | 5,184 | 20,736 |
 | 500 | 1,002,001 | ~100,200,100 | 8,000 | 32,000 |
 
-The ~42 million AGNTC landmark emerges naturally around band 324 — the point at which mining cost makes further expansion economically impractical for a network of approximately 1,000 active nodes. This is an emergent property of the hardness curve, not a declared cap.
+A supply landmark — a small fraction of the fixed supply — emerges naturally around band 324, the point at which mining cost makes further expansion economically impractical for a network of approximately 1,000 active nodes. This is an emergent property of the hardness curve, not a declared cap.
 
 For comparison:
 
@@ -1320,7 +1322,7 @@ The organic growth model produces a supply curve that flattens asymptotically. T
 |-------------|----------------|--------------------|---------------------------------|
 | Solo node | ~100-150 | 4M-9M | 4-7 days |
 | Small (~100 nodes) | ~200-250 | 16M-25M | 9-11 days |
-| Medium (~1,000 nodes) | ~324 | ~42M | 14 days |
+| Medium (~1,000 nodes) | ~324 | a small fraction of the fixed supply | 14 days |
 | Large (~10,000 nodes) | ~500+ | 100M+ | 22+ days |
 
 **Net supply after burns:** The actual circulating supply is reduced by multiple burn channels:
@@ -1573,7 +1575,7 @@ A ~23.1% chance of a committee slot per block — set by the validator's **token
 2. **Trustless verifier (mainnet):** Move challenge issuance + proof checking from the single coordinator to the PoAIV committee or an on-chain verifier, removing the coordinator from the state-security trust chain.
 3. **Unique-replica encoding (mainnet research):** Filecoin-grade Proof-of-Replication (PoRep) sealing so one disk cannot fake `N` replicas, plus timed/keyed challenges to defeat on-demand regeneration (Section 24 wall).
 
-**Architectural keystone — the finality firewall (now shipped).** This is the most important security property of the staking model, and v1.5 states it as **current behaviour**: the **finality weight is AGNTC token stake only.**
+**Architectural keystone — the finality firewall (implemented in the consensus module; live-path wiring is staged).** v1.5 specifies the finality weight as AGNTC token stake only (`W_fin`), and this is implemented and test-guarded in the consensus module. **Honest status:** the current testnet's live block pipeline still selects its verification committee by the effective-stake weighting under the trusted coordinator; the token-only selection becomes the live path when the trustless verifier stage replaces the coordinator (the same staged-honesty ladder as §5B.2).
 
 ```
 W_fin(i) = (T_i / T_total)   if validator i is online and T_total > 0
@@ -2579,6 +2581,8 @@ The following table provides the complete set of protocol-level parameters that 
 | VAULT_MIN_STAKE_CAPACITY | 100.0 | Dual-stake committed-capacity floor required to be assigned a shard |
 | VAULT_PROOF_CPU_CREDIT | 50.0 | CPU-equivalent credited to activity/reward for each passing vault proof |
 | VAULT_SLASH_RATE ‡ | 0.10 | Fraction of committed capacity slashed on a missed/failed vault proof (Section 15.1a) |
+| BEACON_HTTP_TIMEOUT_S | 2.0 | Per-source epoch-beacon fetch timeout, in seconds (block cadence is 60s) |
+| BEACON_REFRESH_INTERVAL_BLOCKS | 30 (= VAULT_CHALLENGE_INTERVAL_BLOCKS) | Beacon refresh cadence; pinned to the sampled-PDP challenge interval so every challenge draws a fresh beacon value (Section 5A) |
 
 #### Agent Lifecycle Parameters
 
@@ -2636,7 +2640,7 @@ Under v1.2, **only the Singularity core is seated at genesis** (`k = 0`, origin)
 
 **Theorem.** The total AGNTC minted approaches a finite limit as the number of bands approaches infinity, under the assumption that individual miners exit when the CPU-Energy cost to mine one more AGNTC exceeds that AGNTC's in-network utility.
 
-> *Illustrative internal mechanics, not a price model. The dynamics in this subsection are stated in the protocol's internal terms — CPU Energy expended versus AGNTC quantity minted. They are not a representation or promise of any present or future value, yield, return, or market price; AGNTC on the testnet is a valueless token with no market price (see disclosure #1). Specific figures below (e.g. the ~42M convergence point) are illustrative and non-binding.*
+> *Illustrative internal mechanics, not a price model. The dynamics in this subsection are stated in the protocol's internal terms — CPU Energy expended versus AGNTC quantity minted. They are not a representation or promise of any present or future value, yield, return, or market price; AGNTC on the testnet is a valueless token with no market price (see disclosure #1). Specific figures below (e.g. the illustrative convergence point, a small fraction of the fixed supply) are illustrative and non-binding.*
 
 > *Note: this proof retains the legacy ring parameterization (ring index `N`, with `8N` cells per ring) for continuity with earlier revisions. Under v1.2 the radial label is the band index `B`; the seat-count per band is `(2B − 1)·K1` and cumulative capacity is `∝ B²·K1` (Section 11.2). The quadratic growth that drives convergence is identical under either parameterization (`∝ N² ≡ ∝ B²·K1`), so the result is unchanged.*
 
@@ -2676,14 +2680,14 @@ S(N) = Σ_{k=1}^{N} 8k = 4N(N+1)
 
 The series S(N) grows quadratically, but the *rate of growth* (dS/dN = 8N+4) is bounded by the mining cost that grows at 16N. Since mining cost growth (16N) exceeds seat-count growth (8N), the incentive to mine diminishes monotonically. In equilibrium, the supply asymptotically approaches a value determined by the intersection of the rising CPU-Energy mining-cost curve and the AGNTC's bounded in-network utility (which, unlike a market price, does not grow with band).
 
-**Corollary (illustrative).** Under the illustrative internal-economy assumptions below, the equilibrium circulating supply for a network of 1,000 active miners settles near 42 million AGNTC — the plateau at band 324, far below the fixed 1B cap. This specific figure is illustrative and non-binding: it depends on the assumptions, which are not mathematical constants. ∎
+**Corollary (illustrative).** Under the illustrative internal-economy assumptions below, the equilibrium circulating supply for a network of 1,000 active miners settles at a small fraction of the fixed supply — the plateau at band 324, far below the fixed 1B cap. This specific figure is illustrative and non-binding: it depends on the assumptions, which are not mathematical constants. ∎
 
 **Illustrative internal-economy assumptions (not mathematical constants):**
 - Electricity cost: $0.05/kWh (a real cost input on the CPU-Energy side of the inequality)
 - AGNTC in-network utility: bounded and roughly flat — one AGNTC performs a bounded amount of in-network work (gas, agent deployment, data storage) and does not appreciate; convergence follows from the rising CPU-Energy mining cost crossing this bounded utility, not from any market price
 - Miner hardware: consumer GPU, 300W continuous (a real cost input on the CPU-Energy side)
 
-These assumptions determine the illustrative convergence point (~42M AGNTC at band 324) but are NOT part of the mathematical proof. The mathematical claim is only: the hardness function H(N) = 16N causes the marginal mining cost to increase linearly with band distance, while the reward per cell decreases inversely.
+These assumptions determine the illustrative convergence point (a small fraction of the fixed supply, at band 324) but are NOT part of the mathematical proof. The mathematical claim is only: the hardness function H(N) = 16N causes the marginal mining cost to increase linearly with band distance, while the reward per cell decreases inversely.
 
 #### 23.2 Byzantine Tolerance Proof
 
@@ -2788,7 +2792,7 @@ This section enumerates known limitations and unsolved problems. Honest disclosu
 
 **Mitigation path:** replication + slashing (testnet) → committee/on-chain verifier (mainnet) → unique-replica sealing + keyed challenges (mainnet research). See Section 5A and Section 13.5. Note: the **ledger** layer (PoAIV committee) does not depend on this verifier *for ordering and balances* — but see the next paragraph for the one coupling that does exist.
 
-**Related keystone (finality firewall — coupling now severed).** v1.4 disclosed a CPU-stake → finality coupling here: because effective stake then weighted `α·token + β·cpu`, the CPU leg measured by this same coordinator also fed *committee selection*, giving the storage-measurement trust assumption a bounded influence on finality. **v1.5 removes that coupling in code** (Section 13.5, "Architectural keystone"): finality selection is now weighted by **token stake only** (`W_fin`), so a biased coordinator or a corrupted Proof-of-Vault layer can distort *state measurement and earnings* but **cannot** move committee or leader selection. The coordinator's residual testnet trust is therefore now scoped to the **state layer and reward fairness**, not finality. Re-admitting a PoRep-hardened CPU term to the finality weight (so demonstrated work again earns consensus influence, at the dual-axis Sybil cost of Section 8) remains the mainnet goal, gated on the trustless verifier and unique-replica sealing.
+**Related keystone (finality firewall — coupling specified for removal; live-path wiring staged).** v1.4 disclosed a CPU-stake → finality coupling here: because effective stake then weighted `α·token + β·cpu`, the CPU leg measured by this same coordinator also fed *committee selection*, giving the storage-measurement trust assumption a bounded influence on finality. **The coupling removal is specified and implemented in the consensus module** (Section 13.5, "Architectural keystone"): finality selection is defined to be weighted by **token stake only** (`W_fin`). **Honest status:** on the live testnet, the coordinator's block-production pipeline still weights committee and leader selection by the effective stake `S_eff`, so the firewall's protection **arrives with the trustless-verifier stage** — until then, the coordinator's trust scope includes committee/leader selection as well as state measurement and earnings. Re-admitting a PoRep-hardened CPU term to the finality weight (so demonstrated work again earns consensus influence, at the dual-axis Sybil cost of Section 8) remains the mainnet goal, gated on the trustless verifier and unique-replica sealing.
 
 #### 24.4 Committee Scalability
 
@@ -2888,8 +2892,8 @@ A natural question is whether the *AI compute* itself — agents running inferen
 | **Ring** | *(legacy — see Band)* The v1.0/v1.1 Chebyshev expansion boundary, replaced by the radial band under v1.2 |
 | **RLN** | Rate-Limiting Nullifiers [44] — spam-resistant anonymous messaging primitive |
 | **S_eff** | Effective stake (the **economic weight**): α(T/T_total) + β(C/C_total), α=0.40, β=0.60. Determines **reward share / earnings** (CPU earns proportionally more). Under the finality firewall it does **not** weight committee/leader selection — that uses `W_fin` (Sections 13.5, 14) |
-| **W_fin (finality weight)** | The **finality firewall** quantity: `W_fin(i) = T_i / T_total` (AGNTC **token stake only**, online-gated). Weights committee (verifier) selection and leader selection (Sections 5.5, 7.1). CPU / Proof-of-Vault work is excluded — it is Sybil-weak until PoRep-hardened, so weighting finality by it would let a corrupted storage layer buy consensus influence (security item P1-1). Distinct from `S_eff` (earnings). Section 13.5 |
-| **Finality firewall** | The rule (shipped 2026-06-22, v1.5) that consensus *finality selection* — committee + leader — is weighted by token stake only (`W_fin`), never by the Sybil-weak CPU/PoV leg. Re-admitting a PoRep-hardened CPU term to finality is the mainnet goal. Sections 13.5, 8.3 |
+| **W_fin (finality weight)** | The **finality firewall** quantity: `W_fin(i) = T_i / T_total` (AGNTC **token stake only**, online-gated) — specified v1.5 and implemented in the consensus module; live-path wiring is staged with the trustless verifier, so today's live committee/leader selection still runs on effective stake under the coordinator (Sections 5.5, 7.1). CPU / Proof-of-Vault work is excluded from `W_fin` — it is Sybil-weak until PoRep-hardened, so weighting finality by it would let a corrupted storage layer buy consensus influence (security item P1-1). Distinct from `S_eff` (earnings). Section 13.5 |
+| **Finality firewall** | The rule that consensus *finality selection* — committee + leader — is weighted by token stake only (`W_fin`), never by the Sybil-weak CPU/PoV leg: specified v1.5, implemented in the consensus module, live-path wiring staged with the trustless verifier. Today's live testnet selection still runs on effective stake under the coordinator. Re-admitting a PoRep-hardened CPU term to finality is the mainnet goal. Sections 13.5, 8.3 |
 | **Safe mode** | Emergency state triggered when >20% validators offline |
 | **Secure** | Sub-cell type committing CPU+disk to vault storage proofs (the **securing** verb, Section 5A) and minting AGNTC as the coupled mining issuance. Securing ≠ mining: securing proves vault work, mining issues supply |
 | **Securing** | The verifiable-resource-commitment verb: spending real CPU+disk to replicate, serve, and re-prove a shard of the knowledge vault, with the proof submitted through the Singularity link. Distinct from mining (issuance) and staking (the bond). Section 5A |
