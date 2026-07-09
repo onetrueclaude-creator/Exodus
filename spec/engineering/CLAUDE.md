@@ -1,5 +1,6 @@
 # Change Log — spec/engineering/
 
+> **Archived stub (2026-07-09):** the Pending items below were all overtaken — the deployment runbook is repo-root `DEPLOY.md`, Supabase sync shipped 2026-03-28, the ChainService contract lives in `apps/game/src/services/` (`chainService.ts` + `testnetChainService.ts`), and PoE was superseded by Proof-of-Vault (whitepaper §5A). Live changelog: `spec/CLAUDE.md`.
 > Tracks what changed in engineering documentation, what's planned, and why.
 > Read `seed.md` first.
 

@@ -56,6 +56,18 @@
 
 ---
 
+## 2026-06/07 — Fixed-supply lock (v1.6) + real-resources direction
+
+**Decided (June–July 2026, collected across the v1.5/v1.6 whitepaper revisions and the S1–S3 merge trains):**
+
+- **Fixed-supply tokenomics locked (v1.6):** AGNTC = fixed 1,000,000,000 total supply across defined buckets; the 250M participation bucket distributes earned + pro-rata-capped; "5% ceiling" = per-epoch release rate, not open inflation. Supersedes all older "organic growth" notes above.
+- **Finality firewall shipped (v1.5, 2026-06-22):** consensus finality selection weights token stake only; the CPU leg stays economic-only until PoRep-hardened.
+- **Real-resources product direction (2026-07-01):** players contribute verifiable **Disk / CPU / Time**. S1 (beacon-seeded possession-proof audits + player pinning) and S2 (game-native vault surfacing with visible disclosure) shipped 2026-07-02; S3 (soulbound gates-only **Time** tenure ledger — single monotonic counter, √-influence, gate thresholds, never spent or transferred) built 2026-07-05.
+
+**Why:** aligns product surface with the whitepaper's honesty ladder — every player-facing claim states exactly what is proven today.
+
+---
+
 ## Pending
 
 - [ ] Write feature spec for subgrid allocation panel UI

@@ -25,8 +25,8 @@
 
 ---
 
-## Pending
+## Pending (historical — Feb-2026 era)
 
 - [x] ~~Fill `competitors/` — analyze Star Atlas, Parallel, Axie for resource economy patterns~~ (done: broader competitor set analyzed)
-- [ ] Fill `market/` — TAM for blockchain gaming + AI agent subscriptions
-- [ ] Fill `users/` — document onboarding funnel observations from Playwright beta testers
+- [ ] Fill `market/` — TAM for blockchain gaming + AI agent subscriptions *(never filled; post-pivot competitive research is tracked in internal working docs, not this tree)*
+- [ ] Fill `users/` — document onboarding funnel observations from Playwright beta testers *(never filled)*

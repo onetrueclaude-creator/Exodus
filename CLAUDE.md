@@ -1,10 +1,10 @@
 # ZK Agentic Network
 
 ## Required Reading
-**Before working on any feature, read `spec/whitepaper.md`** — the whitepaper (v1.1, Open-Grid Revision) is the authoritative specification for all protocol mechanics: PoAIV consensus, dual staking, tokenomics, subgrid resources, privacy architecture, and the SOL→L1 migration path. All implementation must align with the whitepaper.
+**Before working on any feature, read `spec/whitepaper.md`** — the whitepaper is the authoritative specification for all protocol mechanics (PoAIV consensus, Proof-of-Vault, dual staking with the finality firewall, tokenomics, subgrid resources, privacy architecture, and the SOL→L1 migration path). Its header states the current version (v1.6, Fixed-Supply Tokenomics Revision, June 2026) — never trust a version number cited elsewhere. All implementation must align with the whitepaper; `spec/CLAUDE.md` is the revision changelog.
 
 ## Project Overview
-Gamified social media dApp where users explore a 2D Neural Lattice, communicate via haiku through AI agents, develop nodes with planets (content storage), research technologies, and build diplomatic relationships. All state is backed by the Agentic Chain testnet blockchain ledger.
+Gamified social media dApp where users explore a 2D Neural Lattice, communicate via haiku through AI agents, develop nodes with planets (content storage), research technologies, and build diplomatic relationships. All state is backed by the Agentic Chain testnet blockchain ledger. Since 2026-07-01 the protocol is building out its real-resources direction — players contribute verifiable **Disk / CPU / Time** (Proof-of-Vault storage shards, sampled possession proofs, and a soulbound gates-only Time tenure ledger; see whitepaper §5A/§5B and the S1–S3 chain modules).
 
 ## Tech Stack
 - **Framework:** Next.js 16 (App Router, server mode with `output: 'standalone'`)
@@ -34,23 +34,8 @@ Gamified social media dApp where users explore a 2D Neural Lattice, communicate 
 - Services in `src/services/`, store in `src/store/`
 - Dark theme with CSS variables defined in `globals.css`
 
-## UI Architecture (DockPanel pattern)
-- **Dock state lives in Zustand** (`activeDockPanel`), not component-local state — any part of the tree can open a panel
-- `setActiveDockPanel(null)` is an unconditional close; `setActiveDockPanel(id)` toggles (same id = close, different id = switch)
-- `activeTab` (tab navigation) and `activeDockPanel` (right sidebar) are **orthogonal** — never let one affect the other
-- **`focusRequest` must be consumed** after the camera moves (`clearFocusRequest()`); leaving it set causes snap-back on every agent update
-- CSS utility classes for dock UI: `dock-icon`, `dock-icon-active`, `glass-panel-floating`, `animate-slide-left` (defined in `globals.css`)
-- Use `z-[25]` bracket syntax for non-standard z-index values (Tailwind 4 only generates z-0/10/20/30/40/50)
-
-## PixiJS Patterns
-- Mutations to PixiJS objects (alpha, tint, position) belong in pure functions (e.g. `setNodeDimmed`) imported into React effects — not inline in components
-- Never iterate `world.children` and assume all children are star nodes — filter by explicit marker (`.label` string or future `.name === 'star-node'`)
-- Canvas/WebGL is not available in jsdom — mock PixiJS sub-components with test stubs in unit tests
-
-## Test Mocking Patterns
-- `@solana/wallet-adapter-react` must be mocked globally in any test that renders `ResourceBar` (it calls `useWallet()` unconditionally)
-- DockPanel sub-components (GalaxyChatRoom, AgentChat, SecuredNodes, TimechainStats, TimeRewind) should be stubbed with `data-testid` markers in unit tests to avoid canvas/WebGL crashes
-- When a service makes multiple sequential `fetch` calls, each must be covered by its own `mockResolvedValueOnce` in test setup
+## UI / PixiJS / Test-Mocking Patterns
+Game-UI implementation patterns (DockPanel state rules, `focusRequest` consumption, PixiJS mutation and `world.children` rules, wallet-adapter and fetch mocking) live in **`apps/game/CLAUDE.md`** — the single source of truth for game-app gotchas. Read it before touching anything under `apps/game/`.
 
 ## Key Concepts (Neural Lattice)
 - Neural Lattice = the full network grid (dynamic bounds, grows with epoch rings)
@@ -60,7 +45,7 @@ Gamified social media dApp where users explore a 2D Neural Lattice, communicate 
 - Claude model = LLM powering a deployed agent (Haiku/Sonnet/Opus), chosen at deploy time. Distinct from node tier — any node tier can run any model.
 - CPU Energy = CPU deployed to maintaining the grid (yellow resource)
 - Secured Chains = blocks secured by the user (green resource with +/- deltas)
-- AGNTC = tradeable coins; supply grows via mining only (soft cap with 5% ceiling). Node claims cost AGNTC + CPU (city model: inner expensive, outer cheap)
+- AGNTC = the native token; **fixed total supply of 1,000,000,000** (v1.6) — new circulating AGNTC is *released* only through subgrid mining, and the 5% ceiling is the per-epoch release rate of the earned buckets, not open-ended inflation. Node claims cost AGNTC + CPU (city model: inner expensive, outer cheap)
 - Data Frags = compute production from mining
 - Planets = content storage (posts, chats, prompts) orbiting nodes
 - Jump points = nodes where new agents can be spawned
@@ -131,12 +116,13 @@ When working in a directory, read `seed.md` first (purpose), then `CLAUDE.md` (h
 | Directory | Purpose |
 |-----------|---------|
 | `seed.md` | **Root** — project tree map, architecture table, navigation connector index |
-| `src/seed.md` → `src/CLAUDE.md` | Next.js source — components, store, services, hooks, types |
-| `spec/seed.md` → `spec/CLAUDE.md` | Knowledge base — whitepaper, research, product, audit |
-| `tests/seed.md` → `tests/CLAUDE.md` | E2E test suite |
-| `chain/seed.md` → `chain/CLAUDE.md` | Testnet API — protocol, consensus, mining |
-| `apps/game/CLAUDE.md` | Game UI — components, store, services |
-| `docs/seed.md` → `docs/CLAUDE.md` | Public documentation |
+| `spec/seed.md` → `spec/CLAUDE.md` | Knowledge base — whitepaper (+ revision changelog), research, product |
+| `apps/game/CLAUDE.md` | Game UI (Next.js/PixiJS) — components, store, services, UI gotchas |
+| `apps/timegrid/` · `apps/zkagenticnetwork/` | Sibling apps (timegrid was forked out to the Timechain Grid project 2026-04-29) |
+| `chain/seed.md` → `chain/CLAUDE.md` | Testnet API — protocol, consensus, mining, Proof-of-Vault |
+| `tests/seed.md` → `tests/CLAUDE.md` | E2E + visual test suites |
+| `web/marketing/` · `web/monitor/` | Site sources (marketing → zkagentic.com; monitor → zkagentic.ai) — see `DEPLOY.md`, never mix them |
+| `docs/seed.md` → `docs/CLAUDE.md` | Working documentation index |
 
 Sub-directory seeds have their own connector tables pointing up (parent), down (children), and sideways (related).
 
