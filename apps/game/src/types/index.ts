@@ -48,6 +48,8 @@ export type {
   VaultPinRow,
   VaultPinsResponse,
   BeaconResponse,
+  TimeRowResponse,
+  TimeLeaderboardEntryResponse,
 } from "./testnet";
 export { CHAIN_GRID_MIN, CHAIN_GRID_MAX, CHAIN_GRID_SPAN } from "./testnet";
 

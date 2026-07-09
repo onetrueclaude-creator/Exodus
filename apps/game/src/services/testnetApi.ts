@@ -13,6 +13,7 @@ import type {
   VaultRootResponse, VaultAssignmentResponse, VaultShardResponse,
   VaultChallengeResponse, VaultSubmitProofRequest, VaultSubmitProofResponse,
   VaultStatusResponse, VaultPinsResponse, BeaconResponse,
+  TimeRowResponse, TimeLeaderboardEntryResponse,
 } from '@/types';
 import { signedPost } from '@/lib/writeSigner';
 
@@ -303,6 +304,16 @@ export function getVaultPins(walletIndex: number): Promise<VaultPinsResponse> {
 /** GET /api/beacon — current epoch challenge-randomness beacon (source + staleness) */
 export function getBeacon(): Promise<BeaconResponse> {
   return get<BeaconResponse>('/api/beacon');
+}
+
+/** GET /api/time/{wallet_index} — one wallet's soulbound tenure row (DePIN S3). */
+export function getTimeStatus(walletIndex: number): Promise<TimeRowResponse> {
+  return get<TimeRowResponse>(`/api/time/${walletIndex}`);
+}
+
+/** GET /api/time/leaderboard — full √-influence tenure ranking (DePIN S3). */
+export function getTimeLeaderboard(): Promise<TimeLeaderboardEntryResponse[]> {
+  return get<TimeLeaderboardEntryResponse[]>('/api/time/leaderboard');
 }
 
 import type { EconomyParams } from "@/lib/economyDefaults";

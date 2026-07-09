@@ -20,6 +20,7 @@ import { CHAIN_GRID_MIN, CHAIN_GRID_SPAN } from '@/types/testnet';
 import { TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
 import { getNodeTier, getNodeCpuPerTurn } from '@/lib/nodeTier';
 import { getWalletIndex } from '@/lib/walletIndex';
+import { foldTimeStatus, foldLeaderboardRow, type TimeStatus, type LeaderboardRow } from '@/lib/timeLedger';
 import type { ChainService } from './chainService';
 import * as api from './testnetApi';
 
@@ -295,6 +296,20 @@ export class TestnetChainService implements ChainService {
 
   async getBeacon(): Promise<BeaconResponse> {
     return api.getBeacon();
+  }
+
+  async getTimeStatus(walletIndex: number): Promise<TimeStatus | null> {
+    try {
+      return foldTimeStatus(await api.getTimeStatus(walletIndex));
+    } catch {
+      // Unreachable / out-of-range wallet → null. The store keeps the last
+      // synced value (never fabricates 0); the leaderboard highlights nothing.
+      return null;
+    }
+  }
+
+  async getTimeLeaderboard(): Promise<LeaderboardRow[]> {
+    return (await api.getTimeLeaderboard()).map(foldLeaderboardRow);
   }
 
   /** Fetch ledger status for display */

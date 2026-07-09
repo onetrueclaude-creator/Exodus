@@ -361,3 +361,26 @@ export interface BeaconResponse {
   stale: boolean;
   value_prefix: string;
 }
+
+// GET /api/time/{wallet_index} — one wallet's soulbound tenure row (DePIN S3,
+// spec §2.1 — GATES ONLY). time_accrued = epochs of verified service: a
+// monotonic counter, never spent or moved. influence = time_accrued ** 0.5 (√),
+// the leaderboard/governance rank weight. A valid wallet with no service history
+// returns a zeroed row (genuinely 0, not missing); the chain 404s only an
+// out-of-range wallet index.
+export interface TimeRowResponse {
+  wallet_index: number;
+  owner_hex: string;
+  time_accrued: number;
+  influence: number;
+  updated_at_block: number;
+}
+
+// GET /api/time/leaderboard — every owner with service history, √-influence-ranked
+// (chain pre-sorts by -time_accrued, ties broken by owner_hex). The chain speaks
+// owner_hex only; the game joins usernames (S3b, via the store's agent window).
+export interface TimeLeaderboardEntryResponse {
+  owner_hex: string;
+  time_accrued: number;
+  influence: number;
+}
