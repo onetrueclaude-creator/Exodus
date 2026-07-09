@@ -1,8 +1,20 @@
-# Change Log — vault/
+# Change Log — spec/
 
-> Tracks what changed in the knowledge vault, what will be added, and why.
+> Tracks what changed in the knowledge tree (formerly `vault/`, renamed `spec/`), what will be added, and why.
 > Format: `YYYY-MM-DD — [summary]`
-> Read `seed.md` first to understand vault structure before reading this log.
+> Read `seed.md` first to understand the structure before reading this log. Paths cited in pre-rename entries as `vault/...` now live at `spec/...`.
+
+---
+
+## 2026-06-2x — Whitepaper v1.6 (Fixed-Supply Tokenomics Revision)
+
+**Changed:** `whitepaper.md` from v1.5 to v1.6 (June 2026). A token-economics revision reconciling the paper with the fixed-supply distribution model: AGNTC stated as a **fixed total supply of 1,000,000,000** allocated across defined buckets (participation mining 25% / ongoing emissions 25% / team 18% / treasury 14% / liquidity 10% / ecosystem 8%; community/earned ≈ 58%). The document now distinguishes the **distribution layer** (the fixed 1B) from the **internal economy** (subgrid mining, 900-AGNTC chain genesis, fee burn), and reframes the **"5% ceiling" as the per-epoch release rate** of the fixed participation/emissions buckets, not open-ended inflation. New **§10.1.3 Participation Distribution** documents the earned, pro-rata-capped 250M participation bucket (identity-gated; unclaimed → treasury; earned-for-work, not a sale). Affected: §9.1, §9.3, §10.1 (+§10.1.1/§10.1.2/§10.1.3), §10.4, §11.1. **§22 unchanged numerically** (`MAX_SUPPLY = 1,000,000,000` and `GENESIS_SUPPLY = 900` are both already parameters and remain concordant) — the concordance suite stays green. All protocol mechanics unchanged. *(Source: the whitepaper's own v1.6 header paragraph.)*
+
+---
+
+## 2026-06-22 — Whitepaper v1.5 (Finality-Firewall Revision)
+
+**Changed:** `whitepaper.md` from v1.4 to v1.5. One consensus-behaviour change, reframed throughout: the **finality weight** — committee (verifier) selection *and* leader selection — became **AGNTC token-stake ONLY** (the "finality firewall"). The dual-staking effective stake `S_eff = α·token + β·cpu` (α=0.40, β=0.60) is preserved unchanged as the **economic** weight (reward share / earnings proportionality). Reason (blueprint item P1-1): CPU / Proof-of-Vault-derived work is Sybil-weak until PoRep-hardened, so letting it weight finality would be a cheap path to consensus capture. CPU-weighted committee selection is relabelled from current behaviour to a **PoRep-gated mainnet goal**, in the same honesty style as the ZK ladder (§5B.2). Affected: Abstract/§1.3, §5, §8 Sybil analysis, §13 (firewall vs economic-weight split; v1.4's "architectural keystone" caveat replaced by the shipped firewall), §23.3, §24.3, glossary (`finality_weight`, *finality firewall*). §22 unchanged (selection-source change, not a parameter change) — concordance suite stays green. *(Source: the whitepaper's own v1.5 header paragraph.)*
 
 ---
 
@@ -139,7 +151,7 @@ Section-by-section:
 - Competitor comparison table (vs Bitcoin, Ethereum, Solana, Zcash, Bittensor)
 - Limitations and Open Problems section (7 honest disclosures incl. ZKML gap)
 - VRF specification (Ed25519, RFC 9381), ZK circuit architecture overview
-- Completed APY table, fixed Gini coefficient formula, fixed VRF selection formula
+- Completed the staking yield-schedule table (the term "APY" was later retired from public copy per the value-language discipline), fixed Gini coefficient formula, fixed VRF selection formula
 - CPU measurement trust assumptions and mitigation roadmap
 - 7 new references [29]-[35]
 
@@ -154,11 +166,6 @@ Section-by-section:
 
 ---
 
-## Pending
+## Pending (historical — Feb/Mar-2026 era)
 
-- [ ] Write Proof of Energy (PoE) whitepaper section in `engineering/`
-- [ ] Fill `research/competitors/` with competitor landscape analysis
-- [ ] Write `product/roadmap/` milestones for Q1 2026
-- [ ] Define base rates: BASE_SECURE_RATE, BASE_DEVELOP_RATE, BASE_RESEARCH_RATE, BASE_STORAGE_RATE
-- [ ] Define max subsquare level and dev point cost formula for leveling
-- [ ] Define Storage unit (bytes vs abstract data blocks)
+> Kept for archaeology; superseded by the v1.1–v1.6 revisions. `research/competitors/` was filled 2026-02-25; base rates and subgrid parameters have since been defined in `chain/agentic/params.py` (the source of truth, guarded by `chain/tests/test_whitepaper_audit.py`); the PoE section was overtaken by Proof-of-Vault (§5A) and PoAW (§5B).

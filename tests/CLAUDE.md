@@ -1,7 +1,8 @@
-# Change Log — playwright/
+# Change Log — tests/
 
 > Tracks what E2E tests changed, what's passing, and what's planned.
 > Read `seed.md` first.
+> **2026-07-09 note:** this log stops at the Feb-2026 22-test era. The suite has since grown: `tests/visual/` (visual regression, `playwright.visual.config.ts`), `playtest/` agents, and E2E-in-CI (W4, 2026-06-29). Trust `npx playwright test --list` for counts, not this file.
 
 ---
 
@@ -45,7 +46,6 @@
 
 | Direction | Path | Why |
 |-----------|------|-----|
-| Parent | `../CLAUDE.md` | Monorepo root changelog |
-| Components tested | `../src/components/CLAUDE.md` | Recent component changes to test |
-| App routes | `../src/app/CLAUDE.md` | Route changes affecting e2e |
-| Test findings | `../../vault/research/CLAUDE.md` | Where beta tester observations go |
+| Parent | `../CLAUDE.md` | Monorepo root instructions |
+| Game app under test | `../apps/game/CLAUDE.md` | UI gotchas + component patterns |
+| Spec tree | `../spec/CLAUDE.md` | Protocol revision changelog |

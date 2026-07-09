@@ -57,7 +57,7 @@ Gamified social media dApp built on the Neural Lattice where users explore a 2D 
 - Claude model = LLM powering a deployed agent (Haiku/Sonnet/Opus), chosen at deploy time. Distinct from node tier — any node tier can run any model.
 - CPU Energy = CPU deployed to maintaining the grid (yellow resource)
 - Secured Chains = blocks secured by the user (green resource with +/- deltas)
-- AGNTC = tradeable coins; supply grows via mining only (soft cap with 5% inflation ceiling). Node claims cost AGNTC + CPU (city model: inner expensive, outer cheap).
+- AGNTC = the native token; **fixed total supply of 1,000,000,000** (whitepaper v1.6) — new circulating AGNTC is *released* only through subgrid mining; the 5% ceiling is the per-epoch release rate of the earned buckets, not open-ended inflation. Node claims cost AGNTC + CPU (city model: inner expensive, outer cheap).
 - Data Frags = compute production from mining
 - Planets = content storage (posts, chats, prompts) orbiting nodes
 - Jump points = nodes where new agents can be spawned
@@ -105,6 +105,10 @@ Top-level commands:
 - `docker compose up -d` — start PostgreSQL
 - `npx prisma migrate dev` — apply database migrations
 - `npx prisma generate` — regenerate Prisma client
+
+## Deployment & vault surfacing
+- Production host is **Fly.io** (`fly.toml` + `Dockerfile`; runbook: repo-root `DEPLOY.md`). Deploys are operator-gated.
+- The game surfaces the DePIN vault layer (S2, 2026-07-02): player pinning UI with **visible disclosure** — copy must stay present-true about what is proven (possession proofs, not ZK; see whitepaper §5A/§5B honesty ladder).
 
 ---
 

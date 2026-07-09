@@ -6,7 +6,7 @@ Python implementation of the Agentic Chain whitepaper for testnet dry-run.
 
 **Development (no password):**
 ```bash
-python3 -m pytest tests/ -v                              # run all tests (387)
+python3 -m pytest tests/ -v                              # run all tests (~1050 test functions / 97 files as of 2026-07 — trust pytest's count, not this comment)
 uvicorn agentic.testnet.api:app --port 8080 --reload     # start API server
 ```
 
@@ -34,6 +34,7 @@ controls are the platform firewall + the admin-token gate.
 - `agentic/economics/` — staking, vesting, rewards, fee model
 - `agentic/privacy/` — Sparse Merkle Tree (depth 26), nullifiers, ownership proofs
 - `agentic/testnet/` — FastAPI server, genesis initialization, frontend contract
+- **DePIN vault layer (S1–S3, 2026-07):** Merkle-PDP possession proofs (`pdp.py`), beacon-seeded grind-proof audits, `PlayerPinRegistry` + `StorageBackend` seam, and the soulbound gates-only **Time ledger** (single monotonic `time_accrued`, √-influence, `meets_gate` thresholds, no spend/transfer) with its `/api/time/*` endpoints — see whitepaper §5A/§5B and the S1–S3 PRs (#197, #200, #206)
 
 ## Testnet API
 Base URL: `http://localhost:8080` | Swagger: `/docs`
@@ -55,7 +56,7 @@ Base URL: `http://localhost:8080` | Swagger: `/docs`
 - `python3` and `pip3` (not `python`/`pip`)
 - Tests in `tests/` mirroring `agentic/` structure
 - Genesis is deterministic: `create_genesis(seed=42)` always produces same state
-- Frontend contract: `agentic/testnet/frontend_contract.ts` (TypeScript interfaces)
+- Frontend contract: the game's `ChainService` layer at `apps/game/src/services/{chainService,testnetChainService}.ts` (no `frontend_contract.ts` file exists — stale path corrected 2026-07-09)
 
 ## Existing Patterns (reuse before creating new)
 
@@ -69,6 +70,8 @@ Base URL: `http://localhost:8080` | Swagger: `/docs`
 | Disinflation curve | `agentic/economics/rewards.py` | Long-term yield decay |
 
 ## Operator runbooks
+
+> **Historical note (2026-07-09):** the two reset runbooks below target the v1.1/v1.2-era states and are kept for archaeology. The universal reset remains true today: stop the server, `rm chain/testnet_state.db` (gitignored), restart — genesis rebuilds deterministically (`create_genesis(seed=42)`).
 
 ### Reset live testnet to whitepaper v1.1 state
 
@@ -107,6 +110,8 @@ uvicorn agentic.testnet.api:app --port 8080 --reload
 ```
 
 ## Change Log
+
+> This log stops at 2026-03-28. Later history (Proof-of-Vault, the v1.2–v1.6 whitepaper revisions, security-hardening waves, DePIN S1–S3) is tracked in `spec/CLAUDE.md`, the PR history, and CHANGELOG.md.
 
 ### 2026-03-28 — API security hardening + deployment artifacts + new sync tables
 

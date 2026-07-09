@@ -1,5 +1,6 @@
 # Change Log — spec/ideas/
 
+> **Archived stub (2026-07-09):** of the Pending ideas below, Time Rewind was implemented and later removed from the dock (commit `b0083ac`, 2026-04-11); planets/diplomacy remain unbuilt. Live changelog: `spec/CLAUDE.md`.
 > Tracks ideas added, promoted to features, or discarded.
 > Read `seed.md` first.
 
