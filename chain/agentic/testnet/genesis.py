@@ -10,6 +10,7 @@ from agentic.actions.pipeline import ActionPipeline
 from agentic.consensus.validator import Validator
 from agentic.economics.fees import FeeEngine
 from agentic.economics.score_ledger import ScoreLedger
+from agentic.economics.time_ledger import TimeLedger
 from agentic.economics.securing import SecuringRegistry
 from agentic.economics.staking import StakeRegistry
 from agentic.lattice.claims import ClaimRegistry
@@ -75,6 +76,11 @@ class GenesisState:
     # ledger per genesis (create_genesis / reset); load_state restores its
     # cumulative rows on boot.
     score_ledger: ScoreLedger = field(default_factory=ScoreLedger)
+    # DePIN S3 Time ledger — soulbound per-owner tenure (single monotonic
+    # time_accrued; GATES ONLY) with the persisted pass-watermark. Fresh per
+    # genesis; load_state restores rows on boot. NEVER an AGNTC-yield input
+    # (Howey invariant — tests/test_economy_simulation.py).
+    time_ledger: TimeLedger = field(default_factory=TimeLedger)
     # Proof-of-Vault: content-addressed knowledge vault + coordinator registry.
     # Built in __post_init__ because the registry must wrap *its own* dag.
     vault_dag: VaultDag = None

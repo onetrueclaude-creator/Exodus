@@ -234,6 +234,30 @@ SECURE_AGNTC_REWARD = 1.0  # AGNTC minted to the prover's wallet on an accepted 
 BEACON_HTTP_TIMEOUT_S = 2.0        # per-source fetch timeout (block cadence is 60s)
 BEACON_REFRESH_INTERVAL_BLOCKS = VAULT_CHALLENGE_INTERVAL_BLOCKS  # refresh cadence
 
+# ── DePIN Vault S3 — Time (tenure) ledger (spec 2026-07-02 §2.1; founder round
+# 2026-07-05: GATES ONLY) ─────────────────────────────────────────────────────
+# Time is soulbound tenure: +TIME_TICKS_PER_EPOCH per fixed block window in which
+# the owner passed >= 1 storage audit (present AND serving). Accrual is FLAT
+# (linear); influence-type benefits (leaderboard rank weight, governance weight)
+# scale with accrued ** TIME_INFLUENCE_EXPONENT so veterans lead but late joiners
+# are never mathematically locked out (anti-Helium-exit). Utility is pure
+# threshold reads: node level N requires cumulative Time >= T(N) =
+# ceil(TIME_GATE_BASE * TIME_GATE_GROWTH ** (N - 2)), T(1) = 0. Time is NEVER
+# spent, consumed, or moved (no spend API exists, ever).
+# DESKTOP SEAM (S1.5, not built): the desktop tier's x3 uptime multiplier will
+# raise the effective per-owner grant at the accrue_epoch call site once desktop
+# availability facts exist; TIME_TICKS_PER_EPOCH stays the base rate.
+# HOWEY BOUNDARY: these constants gate GAME capability + governance weight only.
+# They must never appear in an AGNTC-yield term (structural invariant:
+# tests/test_economy_simulation.py::test_time_never_enters_agntc_yield_terms).
+# TIME_GATE_BASE / TIME_GATE_GROWTH are founder-tunable defaults (concordance
+# tests pin them; retune param + test in lockstep).
+TIME_EPOCH_BLOCKS = 1440           # fixed block window for Time accrual (≈1 day @ 60s cadence)
+TIME_TICKS_PER_EPOCH = 1           # flat tenure grant per qualifying window
+TIME_INFLUENCE_EXPONENT = 0.5      # sqrt influence curve (leaderboard/governance)
+TIME_GATE_BASE = 2                 # T(2): epochs of service required for level 2
+TIME_GATE_GROWTH = 1.5             # geometric gate growth per level beyond 2
+
 # ── Game-economy params (client reads via GET /api/params; tunable server-side) ──
 # Changing these takes effect on next server restart — no client redeploy needed.
 NODE_UPGRADE_COST_BASE = 200

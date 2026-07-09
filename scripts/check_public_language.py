@@ -116,6 +116,61 @@ def _zk_caveat_nearby(line, lines=None, idx=0, *_):
     ))
 
 
+# Firewall/selection present-tense regression guard (whitepaper truth-up).
+# The consensus "finality firewall" (committee/leader SELECTION weighted by
+# token stake only) is specified and test-guarded in the consensus module,
+# but NOT yet wired into the live coordinator path — live selection still
+# runs on effective stake `S_eff`. A future edit re-asserting the firewall
+# mechanic as LIVE behaviour (no staged-honesty qualifier nearby) is the
+# regression this rule catches.
+_FIREWALL_MECHANIC_RX = (
+    r"finality\s+firewall|"
+    r"committee\s*(?:\(verifier\))?\s*selection|"
+    r"leader\s+selection|"
+    r"finality\s+weight\b[^.\n]{0,80}\bselection\b"
+)
+_FIREWALL_MARKER_RX = (
+    r"current\s+behaviou?r|"
+    r"token[\s-]*stake\s+(?:only|alone)|"
+    r"now\s+runs|"
+    r"as\s+of\s+today|"
+    r"as\s+of\s+2026|"
+    r"today\s+the|"
+    r"\bcurrently\b|"
+    r"now\s+shipped|"
+    r"are\s+both\s+weighted\s+by|"
+    r"closes\s+that\s+path|"
+    r"no\s+longer\s+buy|"
+    r"is\s+token[\s-]*weighted|"
+    r"makes?\s+this\s+clean|"
+    r"current\s+finality|"
+    r"present\s+finality"
+)
+# Co-occurrence, on the SAME line, via zero-width lookaheads (order-agnostic)
+# — the engine still does one `rx.search(line)` per rule, unchanged.
+_FIREWALL_PRESENT_TENSE_RX = (
+    r"(?=.*(?:" + _FIREWALL_MECHANIC_RX + r"))"
+    r"(?=.*(?:" + _FIREWALL_MARKER_RX + r"))"
+)
+
+
+def _firewall_honesty_nearby(line, lines=None, idx=0, *_):
+    """Staged-honesty qualifier nearby (models _zk_caveat_nearby's window).
+
+    Honest copy legitimately CONTAINS the trigger words above — e.g. "is
+    *specified as* token-stake only", or the Earnings line's own "current
+    behaviour" label — so proximity to a staged-honesty qualifier, not the
+    trigger words themselves, is what discriminates a live-status regression
+    from honest, correctly-qualified prose."""
+    seq = lines or [line]
+    window = " ".join(seq[max(0, idx - 3): idx + 4]).lower()
+    return any(c in window for c in (
+        "specified", "live-path staged", "honest status",
+        "pending the trustless-verifier stage", "not yet wired",
+        "takes live effect with", "present-day claim",
+    ))
+
+
 def _disclaimed_falseclaim(line, lines=None, idx=0, m=None, *_):
     """FALSE-CLAIM tier: strong disclaimer marker, or explicit term-denial
     directly before the match. Bare 'no X' does NOT skip."""
@@ -158,6 +213,15 @@ RULES = [
     ("HYPE: Nx returns",              r"\b\d{2,}x\b",                 "P1", _not_profit_ctx),
     ("STALE: faction",                r"\bfaction",                   "P1", _or(_faction_retraction, _disclaimed_howey)),
     ("ZK-LADDER: present-tense ZK",   r"zero[\s-]*knowledge[\s-]*proven", "P1", _zk_caveat_nearby),
+    # --- W2 firewall/selection honesty guard (whitepaper wave-2 truth-up):
+    #     catches a future edit that re-asserts the finality-firewall /
+    #     committee-or-leader-selection mechanic as LIVE behaviour, when it
+    #     is specified + test-guarded but not yet wired into the live
+    #     coordinator path (selection still runs on S_eff). Keyed on
+    #     SELECTION-mechanic terms only, so it does not fire on the (truly
+    #     live-today) dual-staking *earnings* weighting. ---
+    ("FIREWALL: present-tense selection claim",
+        _FIREWALL_PRESENT_TENSE_RX, "P0", _firewall_honesty_nearby),
     # --- W1 recall hardening (targeted families; verified zero hits across the
     #     honest, earn-framed copy in spec/). These cover the linter blind spots
     #     the RED baseline exposed: reward-worded guarantees, FOMO/urgency,
