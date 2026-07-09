@@ -925,3 +925,45 @@ class TestDePinS1Params:
     def test_beacon_refresh_matches_challenge_cadence(self):
         from agentic.params import BEACON_REFRESH_INTERVAL_BLOCKS, VAULT_CHALLENGE_INTERVAL_BLOCKS
         assert BEACON_REFRESH_INTERVAL_BLOCKS == VAULT_CHALLENGE_INTERVAL_BLOCKS
+
+
+# ---------------------------------------------------------------------------
+# DePIN Vault S3 Concordance Tests (spec 2026-07-02 §2.1; founder round
+# 2026-07-05: GATES ONLY)
+# ---------------------------------------------------------------------------
+
+
+class TestDePinS3TimeParams:
+    """Time-ledger constants exist, encode flat accrual + the sqrt influence
+    curve + the geometric gate curve. Guards params.py against silent drift,
+    per the concordance charter. Values marked founder-tunable are pinned so
+    retuning is a visible, deliberate diff (change param + test in lockstep)."""
+
+    def test_time_accrual_is_flat_and_positive(self):
+        from agentic.params import TIME_TICKS_PER_EPOCH
+        assert isinstance(TIME_TICKS_PER_EPOCH, int)
+        assert TIME_TICKS_PER_EPOCH == 1   # spec §2.1 v1: +1 tick per qualifying epoch
+
+    def test_time_influence_is_sqrt_diminishing(self):
+        from agentic.params import TIME_INFLUENCE_EXPONENT
+        assert TIME_INFLUENCE_EXPONENT == 0.5          # sqrt curve (spec §2.1)
+        assert 0.0 < TIME_INFLUENCE_EXPONENT < 1.0     # strictly diminishing — anti-lockout
+
+    def test_time_gate_curve_is_sane(self):
+        from agentic.params import TIME_GATE_BASE, TIME_GATE_GROWTH
+        # Founder-tunable defaults (proposed 2026-07-05, geometric like
+        # NODE_UPGRADE_COST_GROWTH). T(2)=2, T(3)=3, T(4)=5, T(5)=7 epochs.
+        assert TIME_GATE_BASE == 2
+        assert TIME_GATE_GROWTH == 1.5
+        assert TIME_GATE_BASE >= 1                     # level 2 requires real tenure
+        assert TIME_GATE_GROWTH > 1.0                  # later levels strictly harder
+
+    def test_time_epoch_blocks_window_is_pinned(self):
+        from agentic.params import TIME_EPOCH_BLOCKS
+        # Concordance pin (S3 review R1): the fixed block window TimeLedger
+        # divides `block` by to compute `window = block // TIME_EPOCH_BLOCKS`.
+        # Retuning this is a visible, deliberate diff (change param + test
+        # in lockstep) — it directly controls the once-per-window cadence.
+        assert isinstance(TIME_EPOCH_BLOCKS, int)
+        assert TIME_EPOCH_BLOCKS == 1440   # ~=1 day @ 60s block cadence
+        assert 0 < TIME_EPOCH_BLOCKS <= 10_000          # sane accrual window bound

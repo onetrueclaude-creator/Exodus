@@ -725,3 +725,115 @@ def test_sinks_geq_faucet_over_window():
         f"sink {sink} < {FLOOR_FRACTION:.0%} of faucet {faucet} — engine does "
         f"not yet model burns/upkeep (expected until W5 build wires sinks)"
     )
+
+
+# ── DePIN S3 Howey invariant: Time appears in NO AGNTC-yield term ────────────
+def test_time_never_enters_agntc_yield_terms():
+    """Structural Howey invariant (design spec §2.1/§8, dossier §6 — binding).
+
+    Time gates game capability and governance weight ONLY. Sweep every module
+    that computes or allocates AGNTC (the whole agentic.economics package plus
+    the mining engine) and assert none of them references the Time ledger or
+    its params. Sweeping the package (not a hand-list) means a FUTURE econ
+    module that couples Time into yield fails this test automatically.
+    """
+    import importlib
+    import inspect
+    import pkgutil
+
+    import agentic.economics as econ_pkg
+
+    forbidden = (
+        "time_ledger", "TimeLedger", "time_accrued",
+        "sqrt_influence", "meets_gate", "gate_threshold",
+        "TIME_TICKS_PER_EPOCH", "TIME_INFLUENCE_EXPONENT",
+        "TIME_GATE_BASE", "TIME_GATE_GROWTH",
+    )
+    modules = [
+        importlib.import_module(f"agentic.economics.{m.name}")
+        for m in pkgutil.iter_modules(econ_pkg.__path__)
+        if m.name != "time_ledger"          # the ledger itself is not a yield term
+    ]
+    modules.append(importlib.import_module("agentic.lattice.mining"))
+
+    for mod in modules:
+        src = inspect.getsource(mod)
+        for token in forbidden:
+            assert token not in src, (
+                f"{mod.__name__} references {token!r} — Time must appear in NO "
+                f"AGNTC-yield term (Howey invariant, dossier §6 / spec §2.1)"
+            )
+
+
+def test_time_ledger_never_touches_money():
+    """The reverse guard: the Time ledger cannot mint, move, or weigh AGNTC.
+    Its source must not reference the tx/mint/reward machinery at all."""
+    import inspect
+
+    from agentic.economics import time_ledger
+
+    src = inspect.getsource(time_ledger)
+    for token in (
+        "MintTx", "validate_mint", "receive_mint", "LedgerState",
+        "MiningEngine", "FeeEngine", "SecuringRegistry", "ScoreLedger",
+        "AIRDROP_POOL", "capped_contribution",
+    ):
+        assert token not in src, (
+            f"time_ledger references {token!r} — Time is game-capability only "
+            f"and must never touch AGNTC flows"
+        )
+
+
+def test_time_never_enters_agntc_yield_terms_in_do_mine():
+    """Howey sweep, extended into agentic/testnet/api.py's `_do_mine` — the
+    mining/reward orchestration function (dossier §6 / spec §2.1, same
+    invariant as test_time_never_enters_agntc_yield_terms above).
+
+    Some AGNTC-affecting logic (verifier fee distribution, securing rewards,
+    vault-pass rewards — each with direct MintTx/validate_mint calls) lives
+    directly in `_do_mine` rather than inside `agentic.economics` or
+    `agentic.lattice.mining`, so neither module-level sweep above ever reads
+    this source text: a Time term multiplied into one of these amounts
+    inline would slip past both and still reach a wallet balance.
+
+    Scoped to `_do_mine`'s OWN source, not the whole `api.py` module, so the
+    legitimate read-only `/api/time` endpoints (separate functions elsewhere
+    in the file that genuinely read `time_accrued`/`sqrt_influence` by
+    design — Task 4) are structurally out of scope rather than allowlisted.
+    The one legitimate Time reference INSIDE `_do_mine` is its own Task 3
+    accrual-hook block (Time accruing Time, not Time entering an AGNTC
+    amount); excluded below as a unit via its two pre-existing structural
+    anchor comments (the same anchors the plan's File Structure table cites
+    for hook placement) — not by weakening the token list. If those anchors
+    ever move, the assertion below fails loudly with an actionable message
+    instead of silently losing coverage.
+    """
+    import inspect
+
+    from agentic.testnet import api as api_module
+
+    forbidden = (
+        "time_ledger", "TimeLedger", "time_accrued",
+        "sqrt_influence", "meets_gate", "gate_threshold",
+        "TIME_TICKS_PER_EPOCH", "TIME_INFLUENCE_EXPONENT",
+        "TIME_GATE_BASE", "TIME_GATE_GROWTH",
+    )
+    do_mine_src = inspect.getsource(api_module._do_mine)
+
+    hook_start = "# DePIN S3 Time ledger:"
+    hook_end = "# Push chain state to Supabase"
+    assert do_mine_src.count(hook_start) == 1 and do_mine_src.count(hook_end) == 1, (
+        "_do_mine's Time-accrual-hook anchor comments changed shape or "
+        "count — update this test's region markers to match; do not "
+        "silently drop the exclusion or widen it"
+    )
+    before_hook, _, rest = do_mine_src.partition(hook_start)
+    _, _, after_hook = rest.partition(hook_end)
+    scoped_src = before_hook + after_hook  # _do_mine minus its own accrual hook
+
+    for token in forbidden:
+        assert token not in scoped_src, (
+            f"_do_mine references {token!r} outside its own Time-accrual "
+            f"hook — Time must appear in NO AGNTC-yield term (Howey "
+            f"invariant, dossier §6 / spec §2.1)"
+        )

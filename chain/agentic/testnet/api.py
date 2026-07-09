@@ -768,6 +768,24 @@ def _build_score_metrics(g: "GenesisState") -> dict:
     return metrics
 
 
+def _build_time_pass_totals(g) -> dict:
+    """{owner_hex: cumulative-since-genesis passed audits} from the pin registry.
+
+    The Time ledger's fact source (spec §2.1): an owner accrues one Time tick
+    for a fixed block window iff their cumulative pass count grew during it.
+    Totals are cumulative — the ledger's per-row persisted watermarks
+    (``passes_watermark`` + ``last_window``, S3 review R1) turn them into a
+    binary per-window attendance fact without double-counting across restarts.
+    """
+    pins = getattr(g, "pin_registry", None)
+    if pins is None:
+        return {}
+    return {
+        owner_hex: sum(int(r.get("passes", 0)) for r in shards.values())
+        for owner_hex, shards in pins.all().items()
+    }
+
+
 def _do_mine(g: GenesisState) -> dict:
     """Core mining logic shared by auto-miner and /api/mine."""
     global _last_block_time
@@ -986,6 +1004,28 @@ def _do_mine(g: GenesisState) -> dict:
             "score_ledger accrual failed for block %s", block_slot, exc_info=True
         )
 
+    # DePIN S3 Time ledger: feed cumulative pin-registry pass totals into the
+    # ledger on every block. TimeLedger.accrue_epoch computes its own fixed
+    # block window internally (window = block // TIME_EPOCH_BLOCKS — S3 review
+    # R1: ring-epochs are mining-paced and decelerate quadratically, so they
+    # cannot drive a time-like resource) and only credits a tick the first
+    # time a window is seen with new pass evidence, so calling this every
+    # block is cadence-safe by construction — no boundary gate is needed
+    # here, and a same-window call just resyncs the watermark (never
+    # double-credits). Runs BEFORE save_state so the pin-registry pass counts
+    # and the ledger's persisted watermarks advance in the SAME SQLite
+    # transaction — a crash can never double-grant or skip-grant. This MUST
+    # NEVER crash the mining critical path — wrapped + logged.
+    try:
+        pass_totals = _build_time_pass_totals(g)
+        if pass_totals:
+            _time_ledger(g).accrue_epoch(pass_totals, block=block_slot)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).warning(
+            "time_ledger accrual failed for block %s", block_slot, exc_info=True
+        )
+
     # Push chain state to Supabase after each block so the frontend
     # receives real-time updates via postgres_changes subscriptions.
     try:
@@ -1019,6 +1059,16 @@ def _pin_registry(g):
         from agentic.vault.pin_registry import PlayerPinRegistry
         g.pin_registry = PlayerPinRegistry()
     return g.pin_registry
+
+
+def _time_ledger(g):
+    """Lazy TimeLedger attach (mirrors _pin_registry). GenesisState already
+    default-factories this field (S3 Task 2), so this is defensive
+    belt-and-suspenders for any state object that predates or bypasses it."""
+    if not hasattr(g, "time_ledger"):
+        from agentic.economics.time_ledger import TimeLedger
+        g.time_ledger = TimeLedger()
+    return g.time_ledger
 
 
 def _refresh_vault_owners() -> None:
@@ -2791,6 +2841,82 @@ def get_airdrop_preview() -> dict:
         "pool": pool,
         "cap": cap,
     }
+
+
+# ---------------------------------------------------------------------------
+# Time ledger (DePIN S3) — soulbound tenure, read-only rank inputs
+# ---------------------------------------------------------------------------
+
+
+class TimeRow(BaseModel):
+    """One wallet's soulbound tenure (DePIN S3, spec §2.1 — GATES ONLY).
+
+    ``time_accrued`` = epochs of service (a monotonic counter — never spent,
+    never moved). ``influence`` = time_accrued ** TIME_INFLUENCE_EXPONENT, the
+    leaderboard/governance rank weight. These are the leaderboard's two rank
+    inputs. Read-only by design: Time has no write or move API. The internal
+    passes_watermark / last_window bookkeeping is deliberately NOT exposed."""
+    wallet_index: int
+    owner_hex: str
+    time_accrued: int = 0
+    influence: float = 0.0
+    updated_at_block: int = 0
+
+
+class TimeLeaderboardEntry(BaseModel):
+    owner_hex: str
+    time_accrued: int
+    influence: float
+
+
+# NOTE: /api/time/leaderboard MUST stay registered BEFORE /api/time/{wallet_index}
+# — routes match in registration order, and the int path converter would
+# otherwise turn "leaderboard" into a 422.
+# TODO(pre-mainnet): paginate — unpaginated is fine at testnet scale (mirrors /api/scores).
+@app.get("/api/time/leaderboard", response_model=list[TimeLeaderboardEntry])
+def get_time_leaderboard() -> list:
+    """Full tenure ranking: every owner with service history, ordered by
+    influence (monotonic in raw tenure; ties broken by owner_hex for
+    determinism). The chain speaks owner_hex only — the game joins usernames
+    and highlights the caller's row (S3b). Read-only and public, like
+    /api/scores."""
+    g = _g()
+    tl = _time_ledger(g)
+    rows = tl.all()
+    ranked = sorted(rows.items(), key=lambda kv: (-kv[1]["time_accrued"], kv[0]))
+    return [
+        TimeLeaderboardEntry(
+            owner_hex=owner_hex,
+            time_accrued=row["time_accrued"],
+            influence=tl.sqrt_influence(owner_hex),
+        )
+        for owner_hex, row in ranked
+    ]
+
+
+@app.get("/api/time/{wallet_index}", response_model=TimeRow)
+def get_time(wallet_index: int) -> TimeRow:
+    """One wallet's tenure row.
+
+    404 on an out-of-range wallet; a valid wallet with no service history
+    returns a zeroed row (its tenure is genuinely 0, not missing). The
+    internal passes_watermark / last_window bookkeeping is deliberately NOT
+    exposed."""
+    g = _g()
+    if wallet_index < 0 or wallet_index >= len(g.wallets):
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    owner_hex = g.wallets[wallet_index].public_key.hex()
+    tl = _time_ledger(g)
+    row = tl.get(owner_hex)
+    if row is None:
+        return TimeRow(wallet_index=wallet_index, owner_hex=owner_hex)
+    return TimeRow(
+        wallet_index=wallet_index,
+        owner_hex=owner_hex,
+        time_accrued=row["time_accrued"],
+        influence=tl.sqrt_influence(owner_hex),
+        updated_at_block=row["updated_at_block"],
+    )
 
 
 @app.post("/api/reset", response_model=ResetResult)
