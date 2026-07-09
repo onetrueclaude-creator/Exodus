@@ -1,9 +1,7 @@
 """Tests for the /api/birth endpoint — v2 organic growth model."""
 import pytest
 from fastapi.testclient import TestClient
-from tests.conftest import TEST_ADMIN_TOKEN
-
-_ADMIN = {"X-Admin-Token": TEST_ADMIN_TOKEN}
+from tests.conftest import reset_chain
 
 
 @pytest.fixture
@@ -12,7 +10,7 @@ def client():
     _init_genesis()
     c = TestClient(app)
     # v2: genesis creates 9 fixed nodes, no claims param needed
-    c.post("/api/reset", headers=_ADMIN)
+    reset_chain(c)
     return c
 
 

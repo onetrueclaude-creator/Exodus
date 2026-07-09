@@ -48,6 +48,66 @@ def _reset_rate_limiter():
     yield
 
 
+@pytest.fixture(autouse=True)
+def _snapshot_admin_token():
+    """Defense-in-depth for the whole _ADMIN_TOKEN-clobber class (#205, #208,
+    #209): unconditionally snapshot api._ADMIN_TOKEN before every test and
+    restore it after, regardless of how (or whether) the test mutated it.
+
+    monkeypatch.setattr already self-restores correctly (that is the fix
+    applied to test_signed_writes_b4b.py in #208 and to test_bind_signing_key.py
+    in #209) — this fixture is a blanket safety net for anything that bypasses
+    monkeypatch entirely (a stray importlib.reload(api), or a test that
+    assigns the module attribute directly), so a future instance of the same
+    bug class can no longer leak past the end of the one test that caused it.
+
+    Ordering vs monkeypatch, verified empirically (#209, probe run then
+    deleted — see the PR description): autouse fixtures at a given scope are
+    set up before explicitly-requested fixtures at the same scope, so this
+    fixture's snapshot is always taken before any monkeypatch.setattr in the
+    test body runs. Teardown reverses that (LIFO): monkeypatch's own restore
+    fires first, then this fixture's restore runs last. In the common case
+    (the mutation went through monkeypatch) that makes this fixture's restore
+    a harmless no-op — monkeypatch already put the value back to exactly what
+    this fixture snapshotted. It only does real work when something mutated
+    _ADMIN_TOKEN outside monkeypatch's reach.
+    """
+    from agentic.testnet import api as _api_module
+
+    before = _api_module._ADMIN_TOKEN
+    yield
+    _api_module._ADMIN_TOKEN = before
+
+
+def reset_chain(client, *, wallets=None, claims=None, seed=None, token=None):
+    """POST /api/reset and assert it actually succeeded.
+
+    Several test files used to fire-and-forget this call with no status-code
+    check (#209): a clobbered or expired admin token made the request 403
+    silently, and the test then ran against whatever stale state a previous
+    test file had left behind, passing by luck instead of by a clean reset.
+    This wraps the same call with a loud assertion so that failure mode can
+    no longer hide.
+
+    Only params explicitly passed are put on the query string; omitting one
+    falls through to the /api/reset endpoint's own default. This mirrors
+    each original call site's exact semantics (some passed wallets/seed, one
+    also passed claims, one passed no params at all) — only the missing
+    status-code check changes, never what state a given call resets to.
+    """
+    params = {}
+    if wallets is not None:
+        params["wallets"] = wallets
+    if claims is not None:
+        params["claims"] = claims
+    if seed is not None:
+        params["seed"] = seed
+    headers = {"X-Admin-Token": token if token is not None else TEST_ADMIN_TOKEN}
+    r = client.post("/api/reset", params=params, headers=headers)
+    assert r.status_code == 200, f"/api/reset failed ({r.status_code}): {r.text}"
+    return r
+
+
 def seat_player_claims(coords, *, wallet_index: int = 1, stake: int = 200):
     """Seat player claims directly on the live ``_genesis`` for API tests.
 
