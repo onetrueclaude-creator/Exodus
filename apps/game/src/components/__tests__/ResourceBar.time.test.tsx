@@ -32,4 +32,16 @@ describe("ResourceBar — Time chip", () => {
     expect(chip.textContent).toContain("6");
     expect(chip.textContent).toContain(`√${Math.sqrt(6).toFixed(1)}`);
   });
+
+  it("renders a genuine 0 (not the unsynced dash) when a synced row reports zero epochs", () => {
+    // Constraint-2 distinction: null = unknown (dash) vs a REAL zero from a
+    // successful sync (honest 0). A truthiness regression (`timeStatus.timeAccrued
+    // ? ... : "—"`) would collapse the two — this pins them apart.
+    useGameStore.setState({ timeStatus: { walletIndex: 1, ownerHex: "ab".repeat(32), timeAccrued: 0, influence: 0, updatedAtBlock: 9 } });
+    render(<ResourceBar />);
+    const chip = screen.getByTestId("time-hud");
+    expect(chip.textContent).toContain("0");
+    expect(chip.textContent).toContain("ep");
+    expect(chip.textContent).not.toContain("—");
+  });
 });

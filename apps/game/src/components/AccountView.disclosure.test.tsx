@@ -56,6 +56,9 @@ describe("AccountView rewards-panel disclosure (Howey-guard)", () => {
     const heading = await screen.findByText("Cumulative Rewards");
     expect(heading).toBeInTheDocument();
     const panel = heading.closest(".glass-card") as HTMLElement;
+    // Guard the cast: if the panel container class ever changes, fail as a
+    // readable assertion here — not as a TypeError inside within(null).
+    expect(panel).not.toBeNull();
     expect(within(panel).getByText("AGNTC Earned")).toBeInTheDocument();
 
     // Disclosure #1 (DISCLOSURES.testnetToken) is co-located with the value figure.

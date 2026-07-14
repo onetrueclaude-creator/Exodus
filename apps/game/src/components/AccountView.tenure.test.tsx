@@ -52,5 +52,10 @@ describe("AccountView — Tenure card + gate badges", () => {
     await screen.findByText("Tenure");
     // The badge column renders "—" for unknown; the "LEVEL-UP GATES" heading is present.
     expect(screen.getByText("LEVEL-UP GATES")).toBeInTheDocument();
+    // Null-honesty discriminator: with tenure unknown, NO fabricated pass/fail
+    // badge may render anywhere. (queryByText matches exact full text content,
+    // so "unlocked" does not collide with "locked".)
+    expect(screen.queryByText("locked")).toBeNull();
+    expect(screen.queryByText("unlocked")).toBeNull();
   });
 });
