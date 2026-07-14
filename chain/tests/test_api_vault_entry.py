@@ -195,3 +195,27 @@ class TestBackfill:
 
     def test_backfill_is_admin_gated(self, client):
         assert client.post("/api/vault/backfill", json={"dry_run": True}).status_code in (403, 503)
+
+    def test_missing_sender_coord_is_unattributed_never_origin_defaulted(self, client):
+        """Fail-safe (T6 fix): a history entry whose sender_coord is absent or
+        partial must NOT default to (0,0)=GENESIS_ORIGIN (the Singularity's
+        permanent claim, wallet 0) and get ingested — it is unattributed.
+        Discriminating: without the guard the coord-less entry resolves to
+        (0,0), is attributed to wallet 0, and is ingested (haiku_ncp=1,
+        total=1) — flipping every assertion below."""
+        from agentic.testnet import api as api_module
+        g = api_module._g()
+        g.message_history[(10, 0)] = [
+            {"id": "msg-nocoord", "target_coord": {"x": 10, "y": 0},
+             "text": "coordless drifter", "timestamp": 1000.0},        # no sender_coord
+            {"id": "msg-partial", "sender_coord": {"x": 5},
+             "target_coord": {"x": 10, "y": 0},
+             "text": "half a coordinate", "timestamp": 1001.0},        # missing y
+        ]
+        admin = {"X-Admin-Token": api_module._ADMIN_TOKEN}
+        r = client.post("/api/vault/backfill", json={"dry_run": False}, headers=admin)
+        assert r.status_code == 200
+        body = r.json()
+        assert body["haiku_ncp"] == 0                     # nothing ingested
+        assert body["skipped_unattributed"] == 2          # both coord-less entries
+        assert client.get("/api/vault/entries", headers=SVC).json()["total"] == 0

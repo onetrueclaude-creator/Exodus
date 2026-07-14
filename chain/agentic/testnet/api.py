@@ -1947,7 +1947,15 @@ def post_vault_backfill(request: Request, req: VaultBackfillRequest) -> VaultBac
     for _target, msgs in g.message_history.items():
         for m in msgs:
             sc = m.get("sender_coord", {})
-            owner = _owner_at(int(sc.get("x", 0)), int(sc.get("y", 0)))
+            if "x" not in sc or "y" not in sc:
+                # Fail-safe: a coord-less history entry must NOT default to
+                # (0,0)=GENESIS_ORIGIN (the Singularity's permanent claim) and
+                # be mis-attributed/ingested — it is unattributed (mirrors the
+                # out-of-bounds guard in _owner_at). Intros can't hit this: their
+                # coord is the (x,y) dict KEY, structurally always a full pair.
+                counts["skipped_unattributed"] += 1
+                continue
+            owner = _owner_at(int(sc["x"]), int(sc["y"]))
             if owner is None:
                 counts["skipped_unattributed"] += 1
                 continue
