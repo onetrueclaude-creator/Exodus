@@ -8,16 +8,14 @@ from fastapi.testclient import TestClient
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from agentic.testnet.api import app
-from tests.conftest import TEST_ADMIN_TOKEN
-
-_ADMIN = {"X-Admin-Token": TEST_ADMIN_TOKEN}
+from tests.conftest import reset_chain
 
 
 @pytest.fixture(scope="module")
 def client():
     """Create a TestClient that triggers startup/shutdown events."""
     with TestClient(app) as c:
-        c.post("/api/reset?wallets=50&seed=42", headers=_ADMIN)
+        reset_chain(c, wallets=50, seed=42)
         yield c
 
 

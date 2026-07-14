@@ -1,9 +1,7 @@
 """Tests that /api/mine creates real ledger Records."""
 import pytest
 from fastapi.testclient import TestClient
-from tests.conftest import TEST_ADMIN_TOKEN
-
-_ADMIN = {"X-Admin-Token": TEST_ADMIN_TOKEN}
+from tests.conftest import reset_chain
 
 
 @pytest.fixture
@@ -12,7 +10,7 @@ def client():
     _init_genesis()
     c = TestClient(app)
     # Mining requires claims to produce yields — seed them
-    c.post("/api/reset?claims=25", headers=_ADMIN)
+    reset_chain(c, claims=25)
     return c
 
 

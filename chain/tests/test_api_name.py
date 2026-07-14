@@ -7,16 +7,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 from agentic.testnet.api import app
-from tests.conftest import TEST_ADMIN_TOKEN, seat_player_claims
-
-_ADMIN = {"X-Admin-Token": TEST_ADMIN_TOKEN}
+from tests.conftest import reset_chain, seat_player_claims
 
 
 @pytest.fixture
 def client():
     """Fresh genesis per test so name mutations don't leak between tests."""
     with TestClient(app) as c:
-        c.post("/api/reset?wallets=50&seed=42", headers=_ADMIN)
+        reset_chain(c, wallets=50, seed=42)
         yield c
 
 
