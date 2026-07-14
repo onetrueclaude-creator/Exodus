@@ -445,6 +445,7 @@ _ALLOWED_ORIGINS = [
     if o.strip()
 ]
 _ADMIN_TOKEN = _os.environ.get("ADMIN_TOKEN", "")
+_VAULT_SERVICE_TOKEN = _os.environ.get("VAULT_SERVICE_TOKEN", "")
 
 # Conditionally disable /docs and /redoc in production
 _docs_url: str | None = "/docs" if _ENVIRONMENT != "production" else None
@@ -477,6 +478,16 @@ def _require_admin(request: Request) -> None:
         raise HTTPException(status_code=503, detail="Admin endpoints disabled")
     token = request.headers.get("X-Admin-Token", "")
     if token != _ADMIN_TOKEN:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+
+def _require_vault_service(request: Request) -> None:
+    """Gate the S4 vault-entry surfaces behind VAULT_SERVICE_TOKEN — held only
+    by the game host (server-only gateway trust boundary, design §5.4). Mirrors
+    _require_admin: unset env = surface disabled (503)."""
+    if not _VAULT_SERVICE_TOKEN:
+        raise HTTPException(status_code=503, detail="Vault entry endpoints disabled")
+    if request.headers.get("X-Service-Token", "") != _VAULT_SERVICE_TOKEN:
         raise HTTPException(status_code=403, detail="Forbidden")
 
 
@@ -1069,6 +1080,14 @@ def _time_ledger(g):
         from agentic.economics.time_ledger import TimeLedger
         g.time_ledger = TimeLedger()
     return g.time_ledger
+
+
+def _vault_entry_meta(g) -> dict:
+    """Lazy per-CID entry provenance {cid: {vault_root, block}} (mirrors
+    _pin_registry). persistence.py saves/restores exactly these CIDs."""
+    if not hasattr(g, "vault_entry_meta"):
+        g.vault_entry_meta = {}
+    return g.vault_entry_meta
 
 
 def _refresh_vault_owners() -> None:
@@ -1747,6 +1766,102 @@ def get_vault_pins(wallet_index: int) -> VaultPinsResponse:
         pinned_bytes=pr.pinned_bytes(owner),
         pass_rate=pr.pass_rate(owner),
     )
+
+
+class VaultEntryRequest(BaseModel):
+    kind: str
+    text: str
+    visibility: str
+    owner_hex: str
+    author: str = ""
+    origin: str = "token_authorized"
+    meta: dict = {}
+
+
+class VaultEntryResponse(BaseModel):
+    cid: str
+    block: int
+    shard_id: int
+    vault_root: str
+
+
+@app.post("/api/vault/entry", response_model=VaultEntryResponse)
+def post_vault_entry(request: Request, req: VaultEntryRequest) -> VaultEntryResponse:
+    """S4 §5.4 — the ONE door into the vault for indexable game-native content.
+    Server-gateway-only (the game host holds the service token); never
+    browser-reachable. An accepted entry is a first-class audited vault atom:
+    it joins shard assignment and the beacon-seeded PDP audit universe."""
+    _require_vault_service(request)
+    g = _g()
+    block = g.mining_engine.total_blocks_processed
+    from agentic.vault.entries import ingest_entry
+    try:
+        cid, shard_id = ingest_entry(
+            g.vault_dag, kind=req.kind, text=req.text, visibility=req.visibility,
+            owner_hex=req.owner_hex, author=req.author, origin=req.origin,
+            meta=req.meta, created_block=block,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    root = g.vault_dag.root_cid()
+    meta_map = _vault_entry_meta(g)
+    if cid not in meta_map:              # first write wins provenance (idempotent re-posts)
+        meta_map[cid] = {"vault_root": root, "block": block}
+    _refresh_vault_owners()              # fold the new atom into shard/pin assignment
+    # Entry durability must NOT wait for the next mined block — auto-mine is
+    # OFF by default in prod. Never fail the write on a persistence error;
+    # the per-block save retries. NOTE: this is a full-state save per
+    # accepted write, bounded by the write quota (max 128/day/subject, §6
+    # veteran tier) and never-fail wrapped — acceptable at testnet scale;
+    # batch the save if entry throughput grows.
+    try:
+        from agentic.testnet.persistence import save_state
+        save_state(g, _last_block_time, _DB_PATH)
+    except Exception:
+        pass
+    return VaultEntryResponse(cid=cid, block=block, shard_id=shard_id, vault_root=root)
+
+
+class VaultEntryListItem(BaseModel):
+    cid: str
+    vault_root: str
+    block: int
+    shard_id: int
+    entry: dict
+
+
+class VaultEntriesResponse(BaseModel):
+    total: int
+    offset: int
+    entries: list[VaultEntryListItem]
+
+
+@app.get("/api/vault/entries", response_model=VaultEntriesResponse)
+def list_vault_entries(request: Request, offset: int = 0, limit: int = 500) -> VaultEntriesResponse:
+    """Service-gated listing of entry atoms — the rebuild-from-DAG source
+    (Global Constraint 8: the index is a derived projection). Gated because
+    `network`-visibility bodies are not world-readable (design §5.5)."""
+    _require_vault_service(request)
+    from agentic.vault.entries import parse_entry_payload
+    from agentic.vault.shard import shard_of_cid
+    g = _g()
+    meta = _vault_entry_meta(g)
+    cids = sorted(meta)
+    offset = max(0, offset)
+    limit = max(0, min(limit, 500))
+    items: list[VaultEntryListItem] = []
+    for cid in cids[offset: offset + limit]:
+        try:
+            doc = parse_entry_payload(g.vault_dag.get_payload(cid))
+        except KeyError:
+            continue
+        if doc is None:
+            continue
+        items.append(VaultEntryListItem(
+            cid=cid, vault_root=meta[cid]["vault_root"],
+            block=meta[cid]["block"], shard_id=shard_of_cid(cid), entry=doc,
+        ))
+    return VaultEntriesResponse(total=len(cids), offset=offset, entries=items)
 
 
 @app.get("/api/safe-mode", response_model=SafeModeResponse)
