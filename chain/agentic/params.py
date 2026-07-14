@@ -272,3 +272,25 @@ SUBSCRIPTION_ECONOMY = {
     "COMMUNITY":    {"startEnergy": 1000, "cpuRegen": 100,  "startAgntc": 10,  "startMinerals": 10},
     "PROFESSIONAL": {"startEnergy": 5000, "cpuRegen": 200,  "startAgntc": 100, "startMinerals": 50},
 }
+
+# ── DePIN Vault S4 — knowledge index + MCP server (design 2026-07-05, founder
+# gate 2026-07-09: D1 C2 · D2 writes · D3 A2 · D4 B3-gated · D5 table · D6
+# agent_note · D7 network=all-players · D8 split backfill) ────────────────────
+# HOWEY BOUNDARY: these constants gate MEMORY capability (search rate, write
+# quota) only. They must never appear in an AGNTC-yield/price term, and no
+# AGNTC payment may buy quota (structural sweeps:
+# tests/test_vault_mcp_structural.py). Time reuse here is meets_gate() pure
+# threshold READS — gates-only is preserved (spec §2.1).
+VAULT_ENTRY_MAX_BYTES = 4096       # max UTF-8 bytes of one entry body (§4.1)
+VAULT_EXCERPT_MAX_BYTES = 1024     # max UTF-8 bytes of a search-hit excerpt
+VAULT_MCP_TOKEN_TTL_S = 3600       # short-TTL bearer JWT lifetime (§4.2)
+VAULT_MCP_QUOTA_TIERS = {          # §6 founder-approved standing table (D5)
+    "read_only": {"search_per_min": 20, "writes_per_day": 0},
+    "wallet":    {"search_per_min": 30, "writes_per_day": 8},
+    "standing":  {"search_per_min": 30, "writes_per_day": 32},
+    "veteran":   {"search_per_min": 60, "writes_per_day": 128},
+}
+VAULT_MCP_STANDING_PASS_WINDOWS = 7  # "≥1 audit pass in last 7 Time-windows"
+VAULT_MCP_STANDING_GATE_LEVEL = 2    # or meets_gate(2) — Time ≥ T(2)=2
+VAULT_MCP_VETERAN_GATE_LEVEL = 4     # meets_gate(4) — Time ≥ T(4)=5
+VAULT_INDEX_EMBED_MODEL_ID = "minilm-l6-v2-q8-384"  # reindex-safe row tag (§5.3)

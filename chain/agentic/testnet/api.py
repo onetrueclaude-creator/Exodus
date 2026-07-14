@@ -1111,6 +1111,9 @@ def health_check() -> dict:
     }
 
 
+from agentic.economics.time_ledger import gate_threshold as _gate_threshold
+
+
 @app.get("/api/params")
 def get_params() -> dict:
     """Server-authoritative economy params (the client reads these at runtime so
@@ -1136,6 +1139,21 @@ def get_params() -> dict:
             "baseCpuPerSecureBlock": params.BASE_CPU_PER_SECURE_BLOCK,
             "annualInflationCeiling": params.ANNUAL_INFLATION_CEILING,
             "feeBurnRate": params.FEE_BURN_RATE,
+        },
+        # DePIN S4: founder-tunable memory-quota + index params. The game host
+        # reads these live (single source of truth; retune = server restart,
+        # no game redeploy). gate thresholds are resolved server-side so the
+        # T(N) curve is never duplicated in TypeScript.
+        "vault": {
+            "entryMaxBytes": params.VAULT_ENTRY_MAX_BYTES,
+            "excerptMaxBytes": params.VAULT_EXCERPT_MAX_BYTES,
+            "tokenTtlS": params.VAULT_MCP_TOKEN_TTL_S,
+            "quotaTiers": params.VAULT_MCP_QUOTA_TIERS,
+            "standingPassWindows": params.VAULT_MCP_STANDING_PASS_WINDOWS,
+            "standingGateTime": _gate_threshold(params.VAULT_MCP_STANDING_GATE_LEVEL),
+            "veteranGateTime": _gate_threshold(params.VAULT_MCP_VETERAN_GATE_LEVEL),
+            "timeEpochBlocks": params.TIME_EPOCH_BLOCKS,
+            "embedModelId": params.VAULT_INDEX_EMBED_MODEL_ID,
         },
     }
 
