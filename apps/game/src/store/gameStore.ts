@@ -24,7 +24,7 @@ export const MINE_GRID_CPU_COST = 10;
 export const CLAIM_GRID_AGNTC_COST = 1;
 
 export type GameTab = "network" | "account" | "researches" | "skills";
-export type DockPanelId = "chat" | "terminal" | "deploy" | "stats" | "timeRewind" | "nodes" | "quests" | "referral";
+export type DockPanelId = "chat" | "terminal" | "deploy" | "stats" | "timeRewind" | "nodes" | "quests" | "referral" | "tenure";
 
 interface GameState {
   // Entities

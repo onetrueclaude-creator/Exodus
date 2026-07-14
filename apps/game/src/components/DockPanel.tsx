@@ -9,6 +9,7 @@ import OtherNodeTerminal from '@/components/OtherNodeTerminal';
 import TimechainStats from '@/components/TimechainStats';
 import QuestPanel from '@/components/QuestPanel';
 import ReferralPanel from '@/components/ReferralPanel';
+import TenurePanel from '@/components/TenurePanel';
 import type { Agent } from '@/types';
 import type { ChainService } from '@/services/chainService';
 
@@ -26,6 +27,7 @@ const DOCK_ITEMS: { id: DockPanelId; icon: string; label: string }[] = [
   { id: 'chat',       icon: '\u25C8', label: 'Network Chat' },
   { id: 'quests',     icon: '\u25C9', label: 'Quests' },
   { id: 'referral',   icon: '\u2295', label: 'Invite' },
+  { id: 'tenure',     icon: '\u23f3', label: 'Tenure' },
 ];
 
 export default function DockPanel({
@@ -90,6 +92,8 @@ export default function DockPanel({
         return <QuestPanel />;
       case 'referral':
         return <ReferralPanel />;
+      case 'tenure':
+        return <TenurePanel chainService={chainService} />;
       default:
         return null;
     }
