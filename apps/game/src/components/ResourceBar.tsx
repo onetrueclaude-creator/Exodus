@@ -274,7 +274,7 @@ export default function ResourceBar() {
           (AccountView.tsx, AccountView.disclosure.test.tsx). Unconditional —
           renders regardless of chain mode or pin-sync state. */}
       <div
-        className="shrink-0 bg-background-light/60 border-b border-card-border px-3 py-1"
+        className="shrink-0 bg-background-light/60 border-b border-card-border px-3 pr-[184px] py-1"
         data-testid="disk-disclosure"
       >
         <p className="text-[10px] leading-snug text-text-muted/70">
