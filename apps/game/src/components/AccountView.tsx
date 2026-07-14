@@ -9,6 +9,7 @@ import { getNodeTier, TIER_DISPLAY_NAME } from '@/lib/nodeTier';
 import { sciFormat } from '@/lib/format';
 import { getSubscriptionEconomy } from '@/types/subscription';
 import { DISCLOSURES } from '@/lib/disclosures';
+import { gateThreshold } from '@/lib/timeLedger';
 
 export default function AccountView() {
   const currentAgentId = useGameStore((s) => s.currentAgentId);
@@ -22,6 +23,7 @@ export default function AccountView() {
   const chainMode = useGameStore((s) => s.chainMode);
   const switchAgent = useGameStore((s) => s.switchAgent);
   const currentUserTier = useGameStore((s) => s.currentUserTier);
+  const timeStatus = useGameStore((s) => s.timeStatus);
 
   // Every agent the player owns — primary (homenode) first, sub-agents next.
   // Replaces the single-agent "Network Overview" view which only ever showed
@@ -305,6 +307,53 @@ export default function AccountView() {
             <StatCard label="Frags" value={minerals.toFixed(0)} valueClass="text-blue-300" dotColor="bg-blue-400" sublabel="mining output" />
           </div>
         </div>
+
+        {/* Tenure (DePIN Time) — soulbound epochs of verified service. GATES
+            ONLY: read, never spent. Present-true copy; no value/yield/AGNTC. */}
+        {chainMode === 'testnet' && (
+          <div className="glass-card p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <span className="text-indigo-400 text-sm">{'⏳'}</span>
+              <h2 className="text-lg font-heading font-bold text-text-primary tracking-wide">Tenure</h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <StatCard label="Epochs of Service" value={timeStatus ? String(timeStatus.timeAccrued) : '—'} valueClass="text-indigo-300" dotColor="bg-indigo-400" sublabel="verified storage service" />
+              <StatCard label="Rank Weight" value={timeStatus ? timeStatus.influence.toFixed(2) : '—'} valueClass="text-accent-purple" sublabel={'√ tenure (influence)'} />
+              <StatCard label="Updated" value={timeStatus ? `blk ${timeStatus.updatedAtBlock}` : '—'} valueClass="text-text-muted" />
+            </div>
+            {/* Node level-up gates (spec §2.1): each owned node's next level needs
+                cumulative Time >= T(N+1). A threshold READ — nothing is spent. */}
+            {ownedAgents.length > 0 && (
+              <div className="mt-4 border-t border-card-border pt-3 space-y-1.5">
+                <div className="text-[10px] text-text-muted/60 tracking-wider">LEVEL-UP GATES</div>
+                {ownedAgents.map((a) => {
+                  const nextLevel = a.level + 1;
+                  const need = gateThreshold(nextLevel);
+                  const met = timeStatus ? timeStatus.timeAccrued >= need : null;
+                  return (
+                    <div key={a.id} className="flex items-center justify-between text-[11px] font-mono">
+                      <span className="text-text-muted">{a.username || a.id.slice(0, 12)} {'→'} L{nextLevel}</span>
+                      <span className="flex items-center gap-2">
+                        <span className="text-text-muted/70">{need} ep</span>
+                        {met === null ? (
+                          <span className="text-text-muted/40">{'—'}</span>
+                        ) : met ? (
+                          <span className="text-emerald-400">unlocked</span>
+                        ) : (
+                          <span className="text-yellow-400/80">locked</span>
+                        )}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <p className="mt-4 border-t border-card-border pt-3 text-[10px] leading-snug text-text-muted/70">
+              Tenure is a soulbound count of epochs of verified service. It is never spent, sold, or
+              exchanged; it gates node levels and weights network ranking. {DISCLOSURES.testnetToken}
+            </p>
+          </div>
+        )}
 
         {/* Staking & Effective Stake — from chain */}
         {chainMode === 'testnet' && (

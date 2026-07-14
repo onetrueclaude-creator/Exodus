@@ -5,7 +5,7 @@
 // Earned") may never appear on a public surface without the valueless-token
 // caveat travelling with it.
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { useGameStore } from "@/store";
 
 // AccountView fetches chain data on mount (useEffect) when chainMode === 'testnet'.
@@ -46,16 +46,24 @@ describe("AccountView rewards-panel disclosure (Howey-guard)", () => {
   it("renders the testnet-token disclosure adjacent to Cumulative Rewards", async () => {
     render(<AccountView />);
 
-    // The rewards panel renders once the chain promise resolves.
-    expect(await screen.findByText("Cumulative Rewards")).toBeInTheDocument();
-    expect(screen.getByText("AGNTC Earned")).toBeInTheDocument();
+    // The rewards panel renders once the chain promise resolves. Scope every
+    // query below to this panel specifically — DePIN S3b (T4) added a second,
+    // independently-valid co-located disclosure (the Tenure card), so the
+    // canonical disclosure string now legitimately appears twice on the page.
+    // This test's claim is "the Rewards panel co-locates it", not "it is
+    // globally unique" — `within(panel)` asserts exactly that, unaffected by
+    // how many other panels also correctly carry the same required copy.
+    const heading = await screen.findByText("Cumulative Rewards");
+    expect(heading).toBeInTheDocument();
+    const panel = heading.closest(".glass-card") as HTMLElement;
+    expect(within(panel).getByText("AGNTC Earned")).toBeInTheDocument();
 
     // Disclosure #1 (DISCLOSURES.testnetToken) is co-located with the value figure.
     await waitFor(() => {
       expect(
-        screen.getByText(/valueless token with no market price/i),
+        within(panel).getByText(/valueless token with no market price/i),
       ).toBeInTheDocument();
     });
-    expect(screen.getByText(/earned through work/i)).toBeInTheDocument();
+    expect(within(panel).getByText(/earned through work/i)).toBeInTheDocument();
   });
 });

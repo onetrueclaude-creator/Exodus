@@ -88,6 +88,7 @@ export default function ResourceBar() {
   const securingCpuPerBlock = useGameStore((s) => s.securingCpuPerBlock);
   const allAgents = useGameStore((s) => s.agents);
   const vaultPinStats = useGameStore((s) => s.vaultPinStats);
+  const timeStatus = useGameStore((s) => s.timeStatus);
 
   const ownedBlocknodes = Object.values(blocknodes).filter((n) => n.ownerId === currentUserId);
   const tier = currentUserTier ?? "community";
@@ -207,6 +208,26 @@ export default function ResourceBar() {
           {vaultPinStats && vaultPinStats.pinnedBytes > 0 && (
             <span className="text-[11px] font-mono text-text-muted/60 tabular-nums">
               {Math.round(vaultPinStats.passRate * 100)}% audits passed
+            </span>
+          )}
+        </div>
+
+        {/* Time — soulbound tenure (DePIN third resource): epochs of verified
+            service. GATES ONLY (read, never spent). Factual copy only —
+            "epochs", never value/yield. The visible disclosure is the strip
+            below the bar. */}
+        <div className="flex items-center gap-1" data-testid="time-hud" title={DISCLOSURES.testnetToken}>
+          <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
+          <span className="text-xs font-mono text-indigo-300 tabular-nums">
+            {timeStatus ? timeStatus.timeAccrued : "—"}
+          </span>
+          <span className="text-[11px] font-mono text-text-muted/40">ep</span>
+          {timeStatus && timeStatus.timeAccrued > 0 && (
+            <span
+              className="text-[11px] font-mono text-text-muted/60 tabular-nums"
+              title="√-tenure rank weight (influence)"
+            >
+              {"√"}{timeStatus.influence.toFixed(1)}
             </span>
           )}
         </div>
