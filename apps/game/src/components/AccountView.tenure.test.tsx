@@ -3,7 +3,7 @@
  * level-up gate badges (locked/unlocked/—) driven by the folded tenure status.
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import AccountView from "@/components/AccountView";
 import { useGameStore } from "@/store";
 
@@ -57,5 +57,19 @@ describe("AccountView — Tenure card + gate badges", () => {
     // so "unlocked" does not collide with "locked".)
     expect(screen.queryByText("locked")).toBeNull();
     expect(screen.queryByText("unlocked")).toBeNull();
+  });
+
+  it("renders a genuine zero tenure as '0', not the unknown-dash", async () => {
+    useGameStore.setState({ timeStatus: { walletIndex: 1, ownerHex: "ab".repeat(32), timeAccrued: 0, influence: 0, updatedAtBlock: 9 } });
+    render(<AccountView />);
+    await screen.findByText("Tenure");
+    // Scope tightly to the "Epochs of Service" StatCard itself — the page can
+    // contain other "0"s (e.g. Secured Chains) and other unknown-dashes (e.g.
+    // the gate badges), so asserting on screen directly would not discriminate.
+    // A truthiness regression (`timeStatus.timeAccrued ? ... : '—'`) would
+    // fail this: real zero would render '—' instead of '0'.
+    const statCard = screen.getByText("Epochs of Service").parentElement as HTMLElement;
+    expect(within(statCard).getByText("0")).toBeInTheDocument();
+    expect(within(statCard).queryByText("—")).toBeNull();
   });
 });

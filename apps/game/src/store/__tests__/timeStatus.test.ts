@@ -72,7 +72,13 @@ describe("gameStore — beginNodeLevelUp tenure gate", () => {
   it("never spends tenure — timeStatus is unchanged across a level-up (GATES ONLY)", () => {
     const s = status(5);
     useGameStore.getState().setTimeStatus(s);
+    // Snapshot a detached copy before the gate runs. The store holds the same
+    // `s` reference (Zustand's `set` does not clone), so asserting against `s`
+    // itself would be blind to an in-place field mutation — `s` would mutate
+    // right along with the store's copy and the comparison would trivially
+    // pass. Asserting against a pre-mutation snapshot closes that gap.
+    const before = { ...s };
     useGameStore.getState().beginNodeLevelUp("a1");
-    expect(useGameStore.getState().timeStatus).toEqual(s);
+    expect(useGameStore.getState().timeStatus).toEqual(before);
   });
 });
