@@ -1899,6 +1899,103 @@ def get_vault_audit_summary() -> AuditSummaryResponse:
     )
 
 
+class VaultBackfillRequest(BaseModel):
+    dry_run: bool = True
+
+
+class VaultBackfillResponse(BaseModel):
+    dry_run: bool
+    haiku_ncp: int
+    agent_intro: int
+    skipped_unattributed: int
+    already_present: int
+
+
+@app.post("/api/vault/backfill", response_model=VaultBackfillResponse)
+def post_vault_backfill(request: Request, req: VaultBackfillRequest) -> VaultBackfillResponse:
+    """One-time S4 backfill (design §5.1, founder decision D8 — SPLIT PER
+    EVIDENCE): existing haiku_ncp + agent_intro content becomes PUBLIC vault
+    entry atoms (their chain read paths are unauthenticated today).
+    planet_post is EXCLUDED by D8 — its in-game gating (ownership/diplomatic
+    clarity) contradicts ambient sharing; it is not read here, not ingested
+    here, and not auto-indexed anywhere in S4. Admin-gated; idempotent
+    (canonical payloads → stable CIDs → re-runs count already_present).
+    Run with dry_run=true FIRST and eyeball the counts."""
+    _require_admin(request)
+    from agentic.lattice.coordinate import GridCoordinate
+    from agentic.vault.entries import ingest_entry
+    g = _g()
+    block = g.mining_engine.total_blocks_processed
+    names = {w.public_key.hex(): w.name for w in g.wallets}
+    counts = {"haiku_ncp": 0, "agent_intro": 0,
+              "skipped_unattributed": 0, "already_present": 0}
+
+    def _owner_at(x: int, y: int) -> str | None:
+        # A coordinate outside GLOBAL_BOUNDS can never hold a genesis claim —
+        # GridCoordinate.__post_init__ raises ValueError for it rather than
+        # constructing silently, so treat that the same as "no claim found"
+        # (unattributed adaptation — brief's literal code assumed in-bounds
+        # inputs only; see s4-task-6-report.md).
+        try:
+            coord = GridCoordinate(x=x, y=y)
+        except ValueError:
+            return None
+        claim = g.claim_registry.get_claim_at(coord)
+        return claim.owner.hex() if claim is not None else None
+
+    planned: list[dict] = []
+    for _target, msgs in g.message_history.items():
+        for m in msgs:
+            sc = m.get("sender_coord", {})
+            owner = _owner_at(int(sc.get("x", 0)), int(sc.get("y", 0)))
+            if owner is None:
+                counts["skipped_unattributed"] += 1
+                continue
+            planned.append(dict(
+                kind="haiku_ncp", text=m.get("text", ""), visibility="public",
+                owner_hex=owner, author=names.get(owner, owner[:10]),
+                origin="wallet_signed",
+                meta={"msg_id": m.get("id"), "sender_coord": sc,
+                      "target_coord": m.get("target_coord", {}),
+                      "timestamp": m.get("timestamp")},
+            ))
+    for (x, y), text in g.intro_messages.items():
+        owner = _owner_at(x, y)
+        if owner is None:
+            counts["skipped_unattributed"] += 1
+            continue
+        planned.append(dict(
+            kind="agent_intro", text=text, visibility="public",
+            owner_hex=owner, author=names.get(owner, owner[:10]),
+            origin="wallet_signed", meta={"coord": {"x": x, "y": y}},
+        ))
+
+    meta_map = _vault_entry_meta(g)
+    for fields in planned:
+        if req.dry_run:
+            counts[fields["kind"]] += 1
+            continue
+        try:
+            cid, _shard = ingest_entry(g.vault_dag, created_block=block, **fields)
+        except ValueError:
+            counts["skipped_unattributed"] += 1   # e.g. empty text
+            continue
+        if cid in meta_map:
+            counts["already_present"] += 1
+            continue
+        meta_map[cid] = {"vault_root": g.vault_dag.root_cid(), "block": block}
+        counts[fields["kind"]] += 1
+
+    if not req.dry_run:
+        _refresh_vault_owners()
+        try:
+            from agentic.testnet.persistence import save_state
+            save_state(g, _last_block_time, _DB_PATH)
+        except Exception:
+            pass  # per-block save retries
+    return VaultBackfillResponse(dry_run=req.dry_run, **counts)
+
+
 @app.get("/api/safe-mode", response_model=SafeModeResponse)
 def get_safe_mode() -> SafeModeResponse:
     """Return safe mode status of the verification pipeline."""

@@ -143,3 +143,55 @@ class TestProvenanceReads:
         assert body["shards"]["5"] is None        # pinned, never passed
         assert "-1" not in body["shards"]         # miss bucket never leaks
         assert isinstance(body["beacon_stale"], bool)
+
+
+class TestBackfill:
+    def _seed_content(self, api_module):
+        """Seed one haiku + one intro authored from a genesis-claimed coord
+        (origin (0,0) is the Singularity's claim, wallet 0) and one
+        unattributed haiku from an unclaimed coord."""
+        g = api_module._g()
+        g.intro_messages[(0, 0)] = "origin node greets the grid"
+        g.message_history[(10, 0)] = [
+            {"id": "msg-000001", "sender_coord": {"x": 0, "y": 0},
+             "target_coord": {"x": 10, "y": 0},
+             "text": "packet drifts on the grid", "timestamp": 1000.0},
+            {"id": "msg-000002", "sender_coord": {"x": 9990, "y": 9990},
+             "target_coord": {"x": 10, "y": 0},
+             "text": "ghost message from unclaimed space", "timestamp": 1001.0},
+        ]
+        return g
+
+    def test_dry_run_counts_without_ingesting(self, client):
+        from agentic.testnet import api as api_module
+        g = self._seed_content(api_module)
+        root_before = g.vault_dag.root_cid()
+        r = client.post("/api/vault/backfill", json={"dry_run": True},
+                        headers={"X-Admin-Token": api_module._ADMIN_TOKEN})
+        assert r.status_code == 200
+        body = r.json()
+        assert body == {"dry_run": True, "haiku_ncp": 1, "agent_intro": 1,
+                        "skipped_unattributed": 1, "already_present": 0}
+        assert g.vault_dag.root_cid() == root_before      # nothing ingested
+
+    def test_real_run_ingests_public_wallet_signed_and_is_idempotent(self, client):
+        from agentic.testnet import api as api_module
+        g = self._seed_content(api_module)
+        admin = {"X-Admin-Token": api_module._ADMIN_TOKEN}
+        r = client.post("/api/vault/backfill", json={"dry_run": False}, headers=admin)
+        assert r.status_code == 200
+        assert r.json()["haiku_ncp"] == 1 and r.json()["agent_intro"] == 1
+        listing = client.get("/api/vault/entries", headers=SVC).json()
+        assert listing["total"] == 2
+        for item in listing["entries"]:
+            assert item["entry"]["visibility"] == "public"          # D8
+            assert item["entry"]["origin"] == "wallet_signed"
+            assert item["entry"]["kind"] != "planet_post"           # D8 exclusion holds
+        # Re-run: content addressing makes it a no-op.
+        r2 = client.post("/api/vault/backfill", json={"dry_run": False}, headers=admin)
+        assert r2.json()["already_present"] == 2
+        assert r2.json()["haiku_ncp"] == 0 and r2.json()["agent_intro"] == 0
+        assert client.get("/api/vault/entries", headers=SVC).json()["total"] == 2
+
+    def test_backfill_is_admin_gated(self, client):
+        assert client.post("/api/vault/backfill", json={"dry_run": True}).status_code in (403, 503)
