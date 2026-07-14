@@ -9,6 +9,7 @@ import { buildCellsForRing, buildAllCells } from "@/lib/lattice";
 import { getNodeCpuPerTurn, getNodeTier as getNodeTierFromStore, getLevelUpCost, getMiningPresets } from "@/lib/nodeTier";
 import { EDGE_FADE_BLOCKS } from "@/lib/orbitalEdges";
 import type { PinStats } from "@/lib/vaultGate";
+import { gateThreshold, type TimeStatus } from "@/lib/timeLedger";
 
 /** CPU Energy deducted per turn for each owned blocknode (maintenance cost) */
 export const NODE_CPU_PER_TURN = 1;
@@ -45,6 +46,10 @@ interface GameState {
   /** Disk resource (DePIN vault pins) — folded from the chain's pins surface;
    *  null until the first successful sync (offline / never synced → HUD dash). */
   vaultPinStats: PinStats | null;
+
+  /** Soulbound Time (tenure) — folded from the chain's /api/time surface; null
+   *  until the first successful sync (offline / never synced → HUD dash). */
+  timeStatus: TimeStatus | null;
 
   // CPU allocation (per-block commitments)
   miningCpuPerBlock: number;
@@ -164,6 +169,8 @@ interface GameState {
   setSyncedAgntcBalance: (agntc: number) => void;
   /** Replace the Disk pin stats ABSOLUTELY from chain truth (null = unsynced). */
   setVaultPinStats: (stats: PinStats | null) => void;
+  /** Replace the tenure row ABSOLUTELY from chain truth (null = unsynced). */
+  setTimeStatus: (status: TimeStatus | null) => void;
   setNodeMiningSecuring: (agentId: string, mining: number, securing: number) => boolean;
   beginNodeLevelUp: (agentId: string) => boolean;
   cancelNodeLevelUp: (agentId: string) => void;
@@ -233,6 +240,7 @@ const initialState = {
   walletMiningRate: 0,
   walletEffectiveStake: 0,
   vaultPinStats: null as PinStats | null,
+  timeStatus: null as TimeStatus | null,
   blocknodes: {} as Record<string, BlockNode>,
   gridNodes: {} as Record<string, GridNode>,
   visibleTiers: [] as Tier[],
@@ -692,6 +700,8 @@ export const useGameStore = create<GameState>((set) => ({
 
   setVaultPinStats: (stats) => set({ vaultPinStats: stats }),
 
+  setTimeStatus: (status) => set({ timeStatus: status }),
+
   setNodeMiningSecuring: (agentId, mining, securing) => {
     const validPresets: ReadonlyArray<number> = getMiningPresets();
     if (!validPresets.includes(mining) || !validPresets.includes(securing)) return false;
@@ -714,6 +724,14 @@ export const useGameStore = create<GameState>((set) => ({
     const s = useGameStore.getState();
     const agent = s.agents[agentId];
     if (!agent || agent.levelingUntilTurn !== null) return false;
+    // Tenure gate (spec §2.1, GATES ONLY): level N+1 requires cumulative Time
+    // >= T(N+1). Time is READ here, never spent. Advisory client check — enforced
+    // only when we hold a real tenure row on testnet; offline/unsynced (null)
+    // never blocks and never fabricates a pass (the chain stays source of truth).
+    const t = s.timeStatus;
+    if (s.chainMode === "testnet" && t !== null && t.timeAccrued < gateThreshold(agent.level + 1)) {
+      return false;
+    }
     const cost = getLevelUpCost(agent.level);
     if (s.energy < cost) return false; // cannot afford
     set((state) => ({

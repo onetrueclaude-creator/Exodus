@@ -196,6 +196,17 @@ export default function GamePage() {
     } catch {
       // Pin sync failed — keep the last synced stats
     }
+
+    // Sync the Time resource (DePIN soulbound tenure): epochs of verified service
+    // + √-influence → HUD Time chip, AccountView Tenure card, and the level-up
+    // gate. Through the ChainService seam (works in mock too). Null-honest: keep
+    // the last synced value on failure — never fabricate 0 tenure.
+    try {
+      const t = await svc.getTimeStatus(getWalletIndex());
+      if (t) store.setTimeStatus(t);
+    } catch {
+      // Time sync failed — keep the last synced status
+    }
   }, []);
 
   useEffect(() => {
