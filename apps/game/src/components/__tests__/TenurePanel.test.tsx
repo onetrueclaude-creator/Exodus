@@ -1,10 +1,12 @@
 /**
  * DePIN S3b — Tenure Leaderboard: both numbers (epochs + √-influence), username
- * join from the agent window, truncated-hex fallback, own-row highlight, and
- * null-honest "unavailable" when the board never loads.
+ * join from the agent window, truncated-hex fallback, own-row highlight, the
+ * null-honest "unavailable" failure path (asserted POST-rejection, so a
+ * fabricated-empty-board regression fails), and the distinct loaded-but-empty
+ * board state.
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import TenurePanel from "@/components/TenurePanel";
 import { useGameStore } from "@/store";
 import type { ChainService } from "@/services/chainService";
@@ -58,8 +60,27 @@ describe("TenurePanel", () => {
   });
 
   it("shows null-honest 'unavailable' when the board never loads", async () => {
-    const failing = { getTimeLeaderboard: vi.fn().mockRejectedValue(new Error("offline")) } as unknown as ChainService;
+    const getTimeLeaderboard = vi.fn().mockRejectedValue(new Error("offline"));
+    const failing = { getTimeLeaderboard } as unknown as ChainService;
     render(<TenurePanel chainService={failing} />);
-    await waitFor(() => expect(screen.getByText(/unavailable/i)).toBeInTheDocument());
+    // Frame 0 already shows "unavailable" (rows === null on mount), so waiting on
+    // that text alone observes nothing. Anchor on the fetch having fired, then
+    // flush the mocked rejection's microtask deterministically...
+    await waitFor(() => expect(getTimeLeaderboard).toHaveBeenCalled());
+    await act(async () => { await Promise.resolve(); });
+    // ...and assert BOTH sides of the null-honest distinction: still
+    // "unavailable", and NO fabricated empty board (a `catch { setRows([]) }`
+    // regression must fail here).
+    expect(screen.getByText(/unavailable/i)).toBeInTheDocument();
+    expect(screen.queryByText(/No service history/i)).not.toBeInTheDocument();
+  });
+
+  it("renders a loaded-but-empty board as 'no history yet', not 'unavailable'", async () => {
+    render(<TenurePanel chainService={stubChain([])} />);
+    // Settles only when rows = [] lands — frame 0 shows "unavailable" while null.
+    await waitFor(() =>
+      expect(screen.getByText(/No service history recorded yet/i)).toBeInTheDocument(),
+    );
+    expect(screen.queryByText(/unavailable/i)).not.toBeInTheDocument();
   });
 });

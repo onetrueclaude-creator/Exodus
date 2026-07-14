@@ -27,7 +27,7 @@ const DOCK_ITEMS: { id: DockPanelId; icon: string; label: string }[] = [
   { id: 'chat',       icon: '\u25C8', label: 'Network Chat' },
   { id: 'quests',     icon: '\u25C9', label: 'Quests' },
   { id: 'referral',   icon: '\u2295', label: 'Invite' },
-  { id: 'tenure',     icon: '\u23f3', label: 'Tenure' },
+  { id: 'tenure',     icon: '\u23F3', label: 'Tenure' },
 ];
 
 export default function DockPanel({
