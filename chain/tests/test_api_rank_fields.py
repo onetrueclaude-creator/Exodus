@@ -9,9 +9,7 @@ from fastapi.testclient import TestClient
 
 from agentic.lattice.seating import band_of
 from agentic.testnet.api import app
-from tests.conftest import TEST_ADMIN_TOKEN, seat_player_claims
-
-_ADMIN = {"X-Admin-Token": TEST_ADMIN_TOKEN}
+from tests.conftest import reset_chain, seat_player_claims
 
 
 @pytest.fixture(scope="module")
@@ -21,7 +19,7 @@ def client():
         # ring-1 player nodes so there are real seats to rank/band. Deterministic
         # seed keeps the Singularity at the origin (rank 0). Seated directly on
         # the ClaimRegistry to avoid the /api/claim rate limiter (5 / 10s).
-        c.post("/api/reset?wallets=50&seed=42", headers=_ADMIN)
+        reset_chain(c, wallets=50, seed=42)
         seat_player_claims(
             [(10, 0), (0, 10), (-10, 0), (0, -10), (10, 10), (-10, -10)],
             wallet_index=1,

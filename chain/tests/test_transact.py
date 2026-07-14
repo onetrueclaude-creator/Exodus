@@ -9,16 +9,15 @@ GET /api/settings/{wallet_index} — per-wallet network parameters.
 import pytest
 from fastapi.testclient import TestClient
 from agentic.testnet.api import app
-from tests.conftest import TEST_ADMIN_TOKEN
+from tests.conftest import reset_chain
 
 client = TestClient(app)
-_ADMIN = {"X-Admin-Token": TEST_ADMIN_TOKEN}
 
 
 @pytest.fixture(autouse=True)
 def reset_testnet():
     """Reset to fresh genesis before each test."""
-    client.post("/api/reset?wallets=5&claims=2&seed=42", headers=_ADMIN)
+    reset_chain(client, wallets=5, claims=2, seed=42)
 
 
 class TestTransactEndpoint:

@@ -380,6 +380,30 @@ class TestTimeReadEndpoints:
         # Out-of-range wallet → 404.
         assert c.get("/api/time/99999").status_code == 404
 
+    def test_wallet_index_exact_boundary_404(self):
+        """The guard at agentic/testnet/api.py::get_time is
+        `wallet_index < 0 or wallet_index >= len(g.wallets)`. Only a wildly
+        out-of-range index (99999, see test_single_wallet_contract) was
+        covered — the boundary value itself (exactly len(g.wallets), the
+        first invalid index) was untested, while one below it (the last
+        valid index) must still resolve to a zeroed row rather than 404
+        (#209 task 5)."""
+        from fastapi.testclient import TestClient
+        from agentic.testnet import api as api_module
+
+        c = TestClient(api_module.app)
+        _reset(c, api_module)
+        g = api_module._g()
+        n = len(g.wallets)
+
+        # Last valid index: still resolves (zeroed row, no service history).
+        r = c.get(f"/api/time/{n - 1}")
+        assert r.status_code == 200
+        assert r.json()["time_accrued"] == 0
+
+        # Exactly len(wallets): the first invalid index — the boundary itself.
+        assert c.get(f"/api/time/{n}").status_code == 404
+
     def test_leaderboard_sorted_and_route_order(self):
         from fastapi.testclient import TestClient
         from agentic.testnet import api as api_module
