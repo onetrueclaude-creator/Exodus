@@ -1,5 +1,6 @@
 # Change Log — spec/skills/
 
+> **Archived stub (2026-07-09):** the persona-skill system logged below was superseded — live skills moved to `.claude/skills/` (local-only), including the supabase-expert and chain-protocol coverage the Pending list asked for. This log is historical.
 > Tracks what skills exist, what's been added/modified, and what's planned.
 > Read `seed.md` first.
 

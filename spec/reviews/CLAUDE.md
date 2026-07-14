@@ -1,5 +1,6 @@
 # Change Log — spec/reviews/
 
+> **Archived stub (2026-07-09):** the pending reviews below reference the retired spiral-grid era (superseded by v1.1+, see `spec/CLAUDE.md`). Reviews since June 2026 run as per-PR review trains recorded in PR history, not here.
 > Tracks reviews conducted, findings addressed, and what's pending review.
 > Read `seed.md` first.
 
