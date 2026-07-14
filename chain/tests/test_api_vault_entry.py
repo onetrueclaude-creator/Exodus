@@ -108,3 +108,38 @@ class TestEntriesListing:
         assert item["entry"]["visibility"] in ("public", "network")
         r2 = client.get("/api/vault/entries?offset=2&limit=2", headers=SVC)
         assert len(r2.json()["entries"]) == 1
+
+
+class TestProvenanceReads:
+    def test_pins_expose_durable_last_pass_block(self, client):
+        from agentic.testnet import api as api_module
+        g = api_module._g()
+        owner = g.wallets[0].public_key.hex()
+        pr = api_module._pin_registry(g)
+        pr.assign_pin(owner, shard_id=3, block=5, size_bytes=2048)
+        pr.record_audit(owner, shard_id=3, passed=True, block=9)
+        r = client.get("/api/vault/pins/0")
+        assert r.status_code == 200
+        row = [p for p in r.json()["pins"] if p["shard_id"] == 3][0]
+        assert row["last_pass_block"] == 9
+
+    def test_audit_summary_aggregates_freshest_pass_per_shard(self, client):
+        from agentic.testnet import api as api_module
+        g = api_module._g()
+        o0 = g.wallets[0].public_key.hex()
+        o1 = g.wallets[1].public_key.hex()
+        pr = api_module._pin_registry(g)
+        pr.assign_pin(o0, shard_id=3, block=1, size_bytes=1024)
+        pr.record_audit(o0, shard_id=3, passed=True, block=10)
+        pr.assign_pin(o1, shard_id=3, block=1, size_bytes=1024)
+        pr.record_audit(o1, shard_id=3, passed=True, block=22)   # fresher
+        pr.assign_pin(o0, shard_id=5, block=1, size_bytes=1024)  # never passed
+        pr.record_audit(o0, shard_id=-1, passed=False, block=30) # miss bucket
+        r = client.get("/api/vault/audit-summary")
+        assert r.status_code == 200
+        body = r.json()
+        assert set(body) == {"block", "beacon_stale", "shards"}
+        assert body["shards"]["3"] == 22          # max across owners
+        assert body["shards"]["5"] is None        # pinned, never passed
+        assert "-1" not in body["shards"]         # miss bucket never leaks
+        assert isinstance(body["beacon_stale"], bool)

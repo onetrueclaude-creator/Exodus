@@ -1738,6 +1738,7 @@ class PinRow(BaseModel):
     misses: int
     size_bytes: int
     active: bool
+    last_pass_block: int | None = None   # durable standing fact (S4 quota tiers)
 
 
 class VaultPinsResponse(BaseModel):
@@ -1761,7 +1762,8 @@ def get_vault_pins(wallet_index: int) -> VaultPinsResponse:
         wallet_index=wallet_index, owner=owner,
         # shard_id=-1 is the internal owner-level miss bucket — never a real pin; keep it out of the public surface (pass_rate still absorbs it).
         pins=[PinRow(shard_id=sid, passes=r["passes"], misses=r["misses"],
-                     size_bytes=r["size_bytes"], active=r["active"])
+                     size_bytes=r["size_bytes"], active=r["active"],
+                     last_pass_block=r.get("last_pass_block"))
               for sid, r in sorted(shards.items()) if sid >= 0],
         pinned_bytes=pr.pinned_bytes(owner),
         pass_rate=pr.pass_rate(owner),
@@ -1862,6 +1864,39 @@ def list_vault_entries(request: Request, offset: int = 0, limit: int = 500) -> V
             block=meta[cid]["block"], shard_id=shard_of_cid(cid), entry=doc,
         ))
     return VaultEntriesResponse(total=len(cids), offset=offset, entries=items)
+
+
+class AuditSummaryResponse(BaseModel):
+    block: int
+    beacon_stale: bool
+    shards: dict[int, int | None]
+
+
+@app.get("/api/vault/audit-summary", response_model=AuditSummaryResponse)
+def get_vault_audit_summary() -> AuditSummaryResponse:
+    """Per-shard freshest audit-pass block + beacon staleness — the search-hit
+    provenance source (design §4.1). Public and aggregate-only: it reveals
+    nothing beyond what /api/vault/pins already exposes per wallet."""
+    g = _g()
+    pr = _pin_registry(g)
+    shards: dict[int, int | None] = {}
+    for _owner_hex, rows in pr.all().items():
+        for sid, r in rows.items():
+            if sid < 0:
+                continue  # owner-level miss bucket — never a real pin
+            lp = r.get("last_pass_block")
+            cur = shards.get(sid)
+            if sid not in shards or (lp is not None and (cur is None or lp > cur)):
+                shards[sid] = lp
+    if not hasattr(g, "epoch_beacon"):
+        from agentic.vault.beacon import get_epoch_beacon
+        g.epoch_beacon = get_epoch_beacon(None)
+        g.vault_registry.epoch_beacon_value = g.epoch_beacon.value
+    return AuditSummaryResponse(
+        block=g.mining_engine.total_blocks_processed,
+        beacon_stale=g.epoch_beacon.stale,
+        shards=shards,
+    )
 
 
 @app.get("/api/safe-mode", response_model=SafeModeResponse)
