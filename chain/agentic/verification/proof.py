@@ -14,9 +14,12 @@ from agentic.verification.verdict import Verdict
 
 @dataclass(frozen=True)
 class SimulatedZKProof:
-    """Simulated STARK proof (SHA-256 stand-in).
+    """Simulated ZK proof (SHA-256 stand-in).
 
-    In production: STARK proof from SP1/RISC Zero zkVM.
+    In production: a Groth16/PLONK proof. Per the whitepaper's authoritative
+    proving stack (§6.4 / §21.1), the consensus privacy proof migrates
+    Groth16 -> PLONK -> Halo2/Nova, and this SimulatedZKProof stand-in is
+    replaced by a live Groth16/PLONK prover (§789, rung (b) of §5B.2).
     """
     proof_hash: bytes
     circuit_id: str
