@@ -1,6 +1,9 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    # pgvector/pgvector:pg16 = stock Postgres 16 + the pgvector extension
+    # available to CREATE EXTENSION (S4 knowledge index, design §5.3). Same
+    # major version — the existing pgdata volume loads unchanged.
+    image: pgvector/pgvector:pg16
     ports:
       - "5432:5432"
     environment:
