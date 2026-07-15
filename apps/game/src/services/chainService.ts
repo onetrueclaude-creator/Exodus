@@ -4,6 +4,7 @@ import type {
   VaultSubmitProofRequest, VaultSubmitProofResponse, VaultStatusResponse,
   VaultPinsResponse, BeaconResponse,
 } from '@/types';
+import type { TimeStatus, LeaderboardRow } from '@/lib/timeLedger';
 import { TIER_BASE_BORDER, TIER_MINING_RATE } from '@/types/agent';
 import { getNodeCpuPerTurn, getNodeTier } from '@/lib/nodeTier';
 import { generateMockAgents, generateMockHaiku } from './mockData';
@@ -40,6 +41,15 @@ export interface ChainService {
   getVaultPins(walletIndex: number): Promise<VaultPinsResponse>;
   /** Current epoch challenge-randomness beacon (source + staleness are public). */
   getBeacon(): Promise<BeaconResponse>;
+
+  // ── Time (soulbound tenure, DePIN S3) ────────────────────────────────────
+  /** This wallet's tenure row (epochs of service + √-influence), or null if
+   *  unresolvable (offline / out-of-range wallet). Null-honest: the store keeps
+   *  the last synced value and never fabricates 0. */
+  getTimeStatus(walletIndex: number): Promise<TimeStatus | null>;
+  /** Full √-influence tenure ranking (every participant). owner_hex only — the
+   *  game joins usernames from its agent window (S3b). */
+  getTimeLeaderboard(): Promise<LeaderboardRow[]>;
 }
 
 export class MockChainService implements ChainService {
@@ -219,5 +229,27 @@ export class MockChainService implements ChainService {
 
   async getBeacon(): Promise<BeaconResponse> {
     return { source: 'mock', round_id: null, stale: false, value_prefix: '00'.repeat(8) };
+  }
+
+  async getTimeStatus(walletIndex: number): Promise<TimeStatus | null> {
+    // Non-zero tenure so the HUD/gate render a real value offline; ownerHex
+    // matches the leaderboard self row so own-row highlight is demonstrable.
+    return {
+      walletIndex,
+      ownerHex: `mock-owner-${walletIndex}`,
+      timeAccrued: 6,
+      influence: Math.sqrt(6),
+      updatedAtBlock: this.blockNumber,
+    };
+  }
+
+  async getTimeLeaderboard(): Promise<LeaderboardRow[]> {
+    // Small √-influence-ranked board including the mock self (wallet 1), already
+    // descending by tenure (chain pre-sorts).
+    return [
+      { ownerHex: "mock-owner-0", timeAccrued: 12, influence: Math.sqrt(12) },
+      { ownerHex: "mock-owner-1", timeAccrued: 6, influence: Math.sqrt(6) },
+      { ownerHex: "mock-owner-7", timeAccrued: 2, influence: Math.sqrt(2) },
+    ];
   }
 }

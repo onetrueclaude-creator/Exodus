@@ -251,8 +251,7 @@ export interface RewardsResponse {
 // GET /api/balance/{wallet_index} — real spendable AGNTC balance.
 // `spendable_micro_agntc` is the wallet's live ledger balance (sum of unspent
 // record values) in microAGNTC. Divide by 1e6 for a human AGNTC figure. Starts
-// at 0 for a fresh wallet (earn-by-securing: no pre-mine) and grows as the wallet
-// mines / secures.
+// at 0 for a fresh wallet and grows as the wallet mines / secures.
 export interface BalanceResponse {
   wallet_index: number;
   spendable_micro_agntc: number;
@@ -360,4 +359,27 @@ export interface BeaconResponse {
   round_id: number | null;
   stale: boolean;
   value_prefix: string;
+}
+
+// GET /api/time/{wallet_index} — one wallet's soulbound tenure row (DePIN S3,
+// spec §2.1 — GATES ONLY). time_accrued = epochs of verified service: a
+// monotonic counter, never spent or moved. influence = time_accrued ** 0.5 (√),
+// the leaderboard/governance rank weight. A valid wallet with no service history
+// returns a zeroed row (genuinely 0, not missing); the chain 404s only an
+// out-of-range wallet index.
+export interface TimeRowResponse {
+  wallet_index: number;
+  owner_hex: string;
+  time_accrued: number;
+  influence: number;
+  updated_at_block: number;
+}
+
+// GET /api/time/leaderboard — every owner with service history, √-influence-ranked
+// (chain pre-sorts by -time_accrued, ties broken by owner_hex). The chain speaks
+// owner_hex only; the game joins usernames (S3b, via the store's agent window).
+export interface TimeLeaderboardEntryResponse {
+  owner_hex: string;
+  time_accrued: number;
+  influence: number;
 }

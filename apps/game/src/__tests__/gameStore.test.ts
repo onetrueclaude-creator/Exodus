@@ -115,8 +115,8 @@ describe("gameStore — lattice/blocknode state", () => {
     useGameStore.getState().setSyncedAgntcBalance(2.5);
     expect(useGameStore.getState().agntcBalance).toBe(2.5);
 
-    // A fresh wallet's chain balance is 0 (earn-by-securing, no pre-mine) — the
-    // HUD must reflect 0, not the static plan value.
+    // A fresh wallet's chain balance is 0 — the HUD must reflect 0, not the
+    // static plan value.
     useGameStore.getState().setSyncedAgntcBalance(0);
     expect(useGameStore.getState().agntcBalance).toBe(0);
   });
