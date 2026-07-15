@@ -964,7 +964,7 @@ Sybil attacks — where a single adversary creates multiple identities to gain d
 
 **Earnings (current behaviour — both dimensions).** *Reward share* remains governed by the dual-staking effective stake `S_eff = α·token + β·cpu` (β = 0.60). To capture a disproportionate share of *rewards*, an adversary must still provision proportional committed CPU+disk — sustained infrastructure that, unlike an instant token purchase, cannot be faked cheaply (challenge-response VPU benchmarks, sampled-PDP proofs). But inflating *measured* CPU buys earnings, not finality.
 
-**Dual-axis finality hardening (mainnet goal).** The original dual-staking claim — that requiring investment along *both* axes simultaneously makes a finality Sybil attack ≈2.5× more expensive than pure PoS (derivation below) — is premised on CPU stake *weighting committee selection*. Under the finality firewall that premise does not hold once the firewall is live (specified; §13.5) — at that point finality cost = token cost — so we relabel the 2.5× result as the **PoRep-gated mainnet target**: once committed CPU+disk is Sybil-resistant (Proof-of-Replication sealing + a trustless verifier, Section 13.5), the CPU leg can re-enter finality weighting and the dual-axis cost multiplier applies. Until then it characterizes earnings concentration and the future finality design, not present finality Sybil-resistance.
+**Dual-axis finality hardening (mainnet goal).** The original dual-staking claim — that requiring investment along *both* axes simultaneously makes a finality Sybil attack ≈2.5× more expensive than pure PoS (derivation below) — is premised on CPU stake *weighting committee selection*. Under the finality firewall that premise does not hold now that the firewall is live for committee selection (§13.5 Honest status) — committee-selection finality cost = token cost — so we relabel the 2.5× result as the **PoRep-gated mainnet target**: once committed CPU+disk is Sybil-resistant (Proof-of-Replication sealing + a trustless verifier, Section 13.5), the CPU leg can re-enter finality weighting and the dual-axis cost multiplier applies. Until then it characterizes earnings concentration and the future finality design, not present finality Sybil-resistance.
 
 #### 8.4 AI Model Integrity
 
@@ -1011,7 +1011,7 @@ ZK Agentic Chain's use of AI in consensus introduces threat vectors unique to AI
 
 The 9/13 supermajority threshold requires an attacker to control at least 69.2% of the committee's **finality weight** to unilaterally produce invalid blocks. Under the finality firewall, live for committee selection (§13.5 Honest status), the finality weight is **token stake only**, so acquiring finality influence means:
 
-- At least 69.2% of the total **staked AGNTC supply** (the sole finality-weighting axis once the firewall is live; today's coordinator pipeline weights `S_eff`).
+- At least 69.2% of the total **staked AGNTC supply** (the sole finality-weighting axis for committee selection, live as of 2026-07-15 — the coordinator pipeline now weights committee selection by `W_fin`).
 
 The CPU / Proof-of-Vault axis intentionally provides **no** finality discount: an adversary cannot substitute cheap (and, pre-PoRep, Sybil-forgeable) storage proofs for token stake to reach the threshold. *(Mainnet goal: once committed CPU+disk is PoRep-hardened and re-admitted to finality weighting per Section 13.5, dominating finality will require 69.2% of **both** the staked AGNTC supply **and** the total committed CPU+disk — the dual-axis cost the firewall defers until the CPU leg is Sybil-resistant.)*
 
@@ -1550,7 +1550,7 @@ S_eff = 0.40 * (2,000 / 100,000) + 0.60 * (2,000 / 10,000)
 
 Despite staking 60% fewer tokens, the Professional validator achieves 4× the effective stake through compute contribution. This is the dual-staking model working as designed: rewarding operational commitment over passive capital.
 
-*(The example computes selection under the specified firewall; the current coordinator testnet selects on `S_eff` — §13.5.)*
+*(The example computes selection under the finality firewall, now live for committee selection on the coordinator testnet — §13.5 Honest status.)*
 
 **Validator Selection Probability.** *Committee selection is weighted by token stake only* — the finality weight `W_fin` of the finality firewall (Section 13.5), **not** the effective stake `S_eff` computed above (`S_eff` governs *reward share*, Section 14). Members for each block are selected via VRF [41] [32] (Verifiable Random Function) with probability proportional to `W_fin`:
 
