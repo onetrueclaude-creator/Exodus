@@ -185,7 +185,6 @@ class VerificationPipeline:
         validator_map = {v.id: v for v in validators}
 
         total_token = sum(v.token_stake for v in validators if v.online)
-        total_cpu = sum(v.cpu_vpu for v in validators if v.online)
 
         # Filter to agents whose validator is online (no uniform fallback)
         eligible = []
@@ -197,20 +196,15 @@ class VerificationPipeline:
         if not eligible:
             return []
 
-        weights = []
-        for _agent, v in eligible:
-            if total_token > 0 and total_cpu > 0:
-                w = v.effective_stake(total_token, total_cpu)
-            else:
-                w = 1.0 / len(eligible)
-            weights.append(w)
-
+        # P1-1 firewall: finality (committee selection) weights by TOKEN STAKE
+        # ONLY — mirrors agentic.consensus.vrf.select_verifiers exactly. CPU
+        # never buys finality influence (it earns via effective_stake, not
+        # here); a Sybil-cheap CPU/PoV claim must not buy committee seats.
         active_agents = [a for a, _ in eligible]
-        weights_arr = np.array(weights)
-        if weights_arr.sum() > 0:
-            weights_arr = weights_arr / weights_arr.sum()
-        else:
-            weights_arr = np.ones(len(active_agents)) / len(active_agents)
+        weights_arr = np.array([v.finality_weight(total_token) for _agent, v in eligible])
+        if weights_arr.sum() == 0:
+            weights_arr = np.ones(len(eligible))
+        weights_arr = weights_arr / weights_arr.sum()
 
         # Deterministic VRF seed derived from pipeline seed + slot (128-bit)
         vrf_seed = int(

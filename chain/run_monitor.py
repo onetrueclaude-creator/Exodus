@@ -522,8 +522,14 @@ with tab_econ:
             ts = stake_registry.get_total_staked()
             online = [v for v in validators if v.online]
             tt = sum(v.token_stake for v in online)
-            tc = sum(v.cpu_vpu for v in online)
-            orderer = max(online, key=lambda v: v.effective_stake(tt, tc))
+            # P1-1 firewall: orderer/leader pick weights by token stake only
+            # (finality_weight) — matches agentic.consensus.vrf and the
+            # already-firewalled ConsensusSimulator leader schedule this panel
+            # calls above. CPU never buys finality influence, only earnings
+            # (effective_stake); this is a dashboard economics projection, not
+            # live chain code, but it must not model the opposite of the
+            # firewall it charts.
+            orderer = max(online, key=lambda v: v.finality_weight(tt))
             acct = epoch_manager.process_epoch(circulating_supply=circ, fee_revenue=0,
                                                validators=validators, orderer_id=orderer.id, total_staked=ts)
             apy = epoch_manager.get_annualized_yield(epoch, circ, ts)
