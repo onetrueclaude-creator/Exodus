@@ -209,7 +209,7 @@ export class PostgresKnowledgeIndex implements KnowledgeIndex {
       const vec = await this.pool.query(
         `SELECT ${cols}
          FROM vault_index.entries WHERE ${vWhere}
-         ORDER BY embedding <=> $1::vector LIMIT $${vArgs.length}`, vArgs);
+         ORDER BY embedding <=> $1::vector, cid LIMIT $${vArgs.length}`, vArgs);
       vec.rows.forEach((r, i) => {
         byCid.set(r.cid, r);
         rrf.set(r.cid, (rrf.get(r.cid) ?? 0) + rrfTerm(i));
