@@ -10,6 +10,7 @@ import { sciFormat } from '@/lib/format';
 import { getSubscriptionEconomy } from '@/types/subscription';
 import { DISCLOSURES } from '@/lib/disclosures';
 import { gateThreshold } from '@/lib/timeLedger';
+import VaultTokenPanel from './VaultTokenPanel';
 
 export default function AccountView() {
   const currentAgentId = useGameStore((s) => s.currentAgentId);
@@ -537,6 +538,9 @@ export default function AccountView() {
             </div>
           </div>
         )}
+
+        {/* Vault access token (S4) — MCP client mint/revoke panel */}
+        <VaultTokenPanel />
       </div>
     </div>
   );
