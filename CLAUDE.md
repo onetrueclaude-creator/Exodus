@@ -1,7 +1,7 @@
 # ZK Agentic Network
 
 ## Required Reading
-**Before working on any feature, read `spec/whitepaper.md`** — the whitepaper is the authoritative specification for all protocol mechanics (PoAIV consensus, Proof-of-Vault, dual staking with the finality firewall, tokenomics, subgrid resources, privacy architecture, and the SOL→L1 migration path). Its header states the current version (v1.6, Fixed-Supply Tokenomics Revision, June 2026) — never trust a version number cited elsewhere. All implementation must align with the whitepaper; `spec/CLAUDE.md` is the revision changelog.
+**Before working on any feature, read `spec/whitepaper.md`** — the whitepaper is the authoritative specification for all protocol mechanics (PoAIV consensus, Proof-of-Vault, dual staking with the finality firewall, tokenomics, subgrid resources, privacy architecture, and the SOL→L1 migration path). Its header states the current version (v1.7, Finality Single-Path Revision, July 2026) — never trust a version number cited elsewhere. All implementation must align with the whitepaper; `spec/CLAUDE.md` is the revision changelog.
 
 ## Project Overview
 Gamified social media dApp where users explore a 2D Neural Lattice, communicate via haiku through AI agents, develop nodes with planets (content storage), research technologies, and build diplomatic relationships. All state is backed by the Agentic Chain testnet blockchain ledger. Since 2026-07-01 the protocol is building out its real-resources direction — players contribute verifiable **Disk / CPU / Time** (Proof-of-Vault storage shards, sampled possession proofs, and a soulbound gates-only Time tenure ledger; see whitepaper §5A/§5B and the S1–S3 chain modules).
