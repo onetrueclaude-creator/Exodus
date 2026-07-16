@@ -947,8 +947,10 @@ def _do_mine(g: GenesisState) -> dict:
                     # after it) so every owner in this block's miss batch is
                     # recorded, not just the last one.
                     try:
+                        # DePIN S5 pin-write (attested): miss recording, audit-driven only.
                         pr = _pin_registry(g)
                         pr.record_audit(owner_hex, shard_id=-1, passed=False, block=block_slot)
+                        # end DePIN S5 pin-write (attested)
                     except Exception:
                         pass  # never break mining on bookkeeping
 
@@ -1703,10 +1705,13 @@ def post_vault_submit_proof(req: VaultSubmitProofRequest) -> VaultSubmitProofRes
             pass  # never break proof submission on a bookkeeping error
         # DePIN S1: record the passed audit in the durable pin registry.
         try:
+            # DePIN S5 pin-write (attested): assign_pin/record_audit here are driven
+            # ONLY by an accepted possession proof — an attested fact, never a spend.
             size = sum(len(u) for u in g.vault_registry.shard_sub_units(req.shard_id))
             pr = _pin_registry(g)
             pr.assign_pin(owner, req.shard_id, block_slot, size)
             pr.record_audit(owner, req.shard_id, passed=True, block=block_slot)
+            # end DePIN S5 pin-write (attested)
         except Exception:
             pass  # never break proof submission on bookkeeping
     return VaultSubmitProofResponse(

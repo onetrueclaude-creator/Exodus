@@ -355,3 +355,111 @@ def test_release_residual_is_pool_bounded_not_capacity_gated():
     large, _ = m13_capped_quadratic([1000.0, 1000.0], pool, cap)
     assert abs(sum(small) - sum(large)) < 1e-3   # same total, only shares differ
     assert params.AIRDROP_POOL == params.MAX_SUPPLY // 4  # pool is a slice of the fixed cap
+
+
+from agentic.testnet import api as api_module
+
+_SPEND_TOKENS = ("receive_mint", "validate_mint", "MintTx", "transfer",
+                 "buy", "purchase", "spend", "debit_balance")
+
+
+def test_e2_no_purchase_reaches_claim_accrual():
+    """E2: no spend/purchase symbol appears in the claim-accrual math. Sweep the
+    economics package's earn path (score_ledger + airdrop)."""
+    for name in ("score_ledger", "airdrop"):
+        src = inspect.getsource(importlib.import_module(f"agentic.economics.{name}"))
+        for tok in _SPEND_TOKENS:
+            assert tok not in src, f"{name} references spend token {tok!r} — E2 wall"
+
+
+# --------------------------------------------------------------------------- #
+# C5 discrimination-strengthening (builder note, S5 Task 8 — documented in the
+# task report). The plan's own draft `test_c5_no_spend_handler_raises_pinned_
+# bytes` asserted only anchor COUNTS (`n_anchor_regions >= 2`, an unused
+# `n_writers` tally) and a by-NAME sweep of spend-looking function defs (`def
+# buy`/`purchase`/`spend`/`_do_transfer`). Its docstring promises "EVERY
+# assign_pin/record_audit call site must sit inside an anchored region," but
+# neither original assertion actually enforces textual containment: a
+# pin-write added inside a DIFFERENTLY-NAMED function (e.g. `_apply_bonus`)
+# living outside any anchor would satisfy both original assertions — same
+# anchor count, no spend-token name to trip the sweep — and slip through
+# undetected. That is a real gap between the docstring's claim and the
+# check's power, so the invariant would not actually be fail-closed.
+#
+# Strengthened below: parse the real anchored spans from source and assert
+# every writer call site's source offset falls inside one of them. The
+# by-name sweep is kept as defense in depth (cheap, catches the common case
+# by name even if a span is somehow malformed).
+# --------------------------------------------------------------------------- #
+_ANCHOR_OPEN = "# DePIN S5 pin-write (attested)"
+_ANCHOR_END = "# end DePIN S5 pin-write (attested)"
+
+
+def _anchored_spans(src: str) -> list:
+    """[start, end) character offsets of every anchored region in `src`, in
+    source order. `_ANCHOR_OPEN` ("# DePIN S5 pin-write (attested)") is never
+    a substring of `_ANCHOR_END` ("# end DePIN S5 pin-write (attested)") —
+    the end marker's lone "#" is immediately followed by " end ", never by
+    " DePIN" — so a plain find-loop cannot mistake an end marker for an open
+    one."""
+    spans = []
+    pos = 0
+    while True:
+        start = src.find(_ANCHOR_OPEN, pos)
+        if start == -1:
+            break
+        end = src.find(_ANCHOR_END, start)
+        assert end != -1, f"anchor opened at source offset {start} is never closed"
+        end_of_marker = end + len(_ANCHOR_END)
+        spans.append((start, end_of_marker))
+        pos = end_of_marker
+    return spans
+
+
+def _call_offsets(src: str, needle: str) -> list:
+    """All source offsets where `needle` occurs in `src`, in order."""
+    offsets = []
+    pos = 0
+    while True:
+        pos = src.find(needle, pos)
+        if pos == -1:
+            break
+        offsets.append(pos)
+        pos += len(needle)
+    return offsets
+
+
+def test_c5_no_spend_handler_raises_pinned_bytes():
+    """C5 storage-side twin of test_time_never_enters_agntc_yield_terms:
+    prove assign_pin / record_audit (the only writers of pinned_bytes that feed
+    Disk-fact claims) are called ONLY from the attested audit path — never from a
+    purchase/spend handler. Discrimination: EVERY assign_pin/record_audit call
+    site in api.py must sit textually inside a 'DePIN S5 pin-write (attested)'
+    anchored region; a future spend handler — under ANY name, not just the
+    known spend-token names — that calls assign_pin/record_audit outside an
+    anchor trips this (see the discrimination-strengthening note above)."""
+    src = inspect.getsource(api_module)
+
+    spans = _anchored_spans(src)
+    assert len(spans) >= 2, "the two legitimate pin-write regions must be anchored"
+
+    writer_offsets = (_call_offsets(src, "pr.assign_pin(")
+                       + _call_offsets(src, "pr.record_audit("))
+    assert writer_offsets, "expected at least one assign_pin/record_audit call site"
+
+    stray = [off for off in writer_offsets
+             if not any(s <= off < e for s, e in spans)]
+    assert not stray, (
+        f"pin-write call site(s) at source offset(s) {stray} sit OUTSIDE every "
+        "anchored 'DePIN S5 pin-write (attested)' region — every assign_pin/"
+        "record_audit call must live inside an anchor (C5 fail-closed)"
+    )
+
+    # Defense in depth (kept from the plan's draft): also forbid a pin-write
+    # inside a function whose name signals a spend/purchase handler by name.
+    for tok in ("def buy", "def purchase", "def spend", "def _do_transfer"):
+        if tok in src:
+            seg = src.split(tok, 1)[1].split("\ndef ", 1)[0]
+            assert "assign_pin(" not in seg and "record_audit(" not in seg, (
+                f"a spend handler ({tok}) writes pins — C5 purchasable-multiplier seam"
+            )
