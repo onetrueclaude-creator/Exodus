@@ -2,10 +2,10 @@
  * vaultShardStore — IndexedDB cache for held vault shard bytes.
  *
  * The "hold the shard over time" (spacetime-possession) property: the browser
- * fetches its shard's sub-units ONCE from `/api/vault/shard`, caches the bytes
- * locally, then re-proves from the cached bytes on every subsequent per-block
- * challenge — it does NOT re-fetch each challenge. That persistent local custody
- * is the thing the sampled-PDP challenge is meant to attest.
+ * fetches its shard's sub-units ONCE via a signed POST to `/api/vault/shard`,
+ * caches the bytes locally, then re-proves from the cached bytes on every
+ * subsequent per-block challenge — it does NOT re-fetch each challenge. That
+ * persistent local custody is the thing the sampled-PDP challenge is meant to attest.
  *
  * Cache key: (walletIndex, shardId, rootCid). Keying on the vault root means a
  * vault rebuild (e.g. genesis reset) naturally invalidates stale shard bytes —

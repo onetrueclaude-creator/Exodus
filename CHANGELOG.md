@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Security
+- Closed an unauthenticated shard-payload read: `GET /api/vault/shard/{shard_id}` is replaced by a signed `POST /api/vault/shard` (Ed25519 + per-account nonce, mirroring the existing `/api/vault/challenge` and `/api/vault/submit-proof` routes) — only a wallet with a bound B4 signing key AND assigned to that shard may fetch its bytes. Adds a fail-closed capability probe (`shard_fetch_is_authenticated`) plus a standing payload-access allowlist test so any future route serving raw shard bytes is caught structurally. (#221)
+
 ## [0.1.0-testnet] - 2026-04-06
 
 ### Added
