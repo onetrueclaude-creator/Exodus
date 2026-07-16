@@ -258,6 +258,44 @@ TIME_INFLUENCE_EXPONENT = 0.5      # sqrt influence curve (leaderboard/governanc
 TIME_GATE_BASE = 2                 # T(2): epochs of service required for level 2
 TIME_GATE_GROWTH = 1.5             # geometric gate growth per level beyond 2
 
+# ── DePIN S5 — claims migration (economy design 2026-07-09, E1–E4) ───────────
+# The dated cut (E1): at/after this block height the score ledger STOPS accruing
+# contribution from gameplay counters (mined blocks + securing-proof COUNT) and
+# starts accruing from ATTESTED DISK FACTS (Δaudit-passes × bytes-held, sourced
+# from PlayerPinRegistry). Pre-cut accruals are preserved in place — the cut
+# changes the accrual SOURCE, not the cumulative already earned.
+#
+# DEFAULT = HIGH SENTINEL ("no cut announced yet"). E1 specifies a
+# FOUNDER-ANNOUNCED epoch E_CUT — a FUTURE height, never genesis. A default of 0
+# would make `block >= cut` always true → mining/securing would earn nothing from
+# the shipped economy's first block and ≥4 existing tests (test_score_ledger.py
+# ::test_capped_contribution_composes_mine_and_secure, ::test_epoch_cap_limits_
+# gain_per_epoch, ::test_accrual_hooked_into_do_mine_and_persists, and the score
+# read-endpoint test) would flip to 0 and fail. With the sentinel, every live
+# block is < cut → the LEGACY gameplay basis runs → the shipped economy AND its
+# whole test suite are unchanged. S5 ships the migration MECHANISM + invariants;
+# setting the real height is the founder's separate activation step (a founder-
+# round params change + lockstep concordance retune).
+SCORE_BASIS_CUT_BLOCK = 10**12     # sentinel: cut disabled (≈ never at 60s/block)
+# Weight on the post-cut Disk-fact increment (Δaudit-passes × pinned_bytes). The
+# per-epoch SCORE_EPOCH_CAP (100.0) still bounds the delta.
+# ⚠ CALIBRATION (founder-tuning — set WITH the real cut height, NOT shipped as-is):
+# 1.0 is a PLACEHOLDER. raw = Δpasses × pinned_bytes; with real byte-scale pins
+# (thousands+) a single audit pass saturates SCORE_EPOCH_CAP=100, degenerating
+# "audit-passes × BYTES-HELD" into near-binary "passed an audit" (the cap was
+# calibrated for small integer mining deltas). The live weight is almost certainly
+# « 1 (scaled to byte magnitude) and/or SCORE_EPOCH_CAP is raised, so bytes-held
+# actually differentiates. Tune SCORE_W_DISK, SCORE_EPOCH_CAP, and the cut height
+# together in the activation founder round; the concordance test pins what ships.
+SCORE_W_DISK = 1.0
+# E3 eligibility gate: an owner may CLAIM in an epoch only if their soulbound
+# Time meets the level-2 service gate AND they passed >= 1 audit recently. The
+# gate is BINARY (who, never how much) — applied at the distribution boundary
+# (/api/airdrop-preview), never in the accrual math (Time must appear in NO
+# yield term: test_time_never_enters_agntc_yield_terms).
+CLAIM_ELIGIBILITY_GATE_LEVEL = 2
+CLAIM_ELIGIBILITY_WINDOW_BLOCKS = TIME_EPOCH_BLOCKS  # ~1 day of blocks (=1440)
+
 # ── Game-economy params (client reads via GET /api/params; tunable server-side) ──
 # Changing these takes effect on next server restart — no client redeploy needed.
 NODE_UPGRADE_COST_BASE = 200
