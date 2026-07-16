@@ -437,14 +437,28 @@ def test_c5_no_spend_handler_raises_pinned_bytes():
     site in api.py must sit textually inside a 'DePIN S5 pin-write (attested)'
     anchored region; a future spend handler — under ANY name, not just the
     known spend-token names — that calls assign_pin/record_audit outside an
-    anchor trips this (see the discrimination-strengthening note above)."""
+    anchor trips this (see the discrimination-strengthening note above).
+
+    Needles are the BARE method names, not the `pr.`-prefixed call literal
+    (adversarial-review fix, S5 Task 8 REV-s5-t8): the original `"pr.assign_pin("`
+    / `"pr.record_audit("` literals only match the exact `pr.` receiver spelling
+    used by today's two writers, so an equivalent-but-differently-spelled call
+    (a registry bound to another variable name, `getattr(pr, "assign_pin")(...)`,
+    or an inline `_pin_registry(g).assign_pin(...)`) would write pins outside
+    every anchor yet never trip the containment check — the enumeration, not the
+    span logic, was the hole. Sweeping the bare `assign_pin` / `record_audit`
+    substrings — exactly what `test_time_never_enters_agntc_yield_terms` already
+    does for its symbols — closes that regardless of call spelling. Verified
+    empirically (S5 Task 8 fix report) to stay a zero-false-positive sweep on
+    current api.py: the comment near the second anchor also names both methods
+    in prose, but that occurrence sits inside the anchored span too."""
     src = inspect.getsource(api_module)
 
     spans = _anchored_spans(src)
     assert len(spans) >= 2, "the two legitimate pin-write regions must be anchored"
 
-    writer_offsets = (_call_offsets(src, "pr.assign_pin(")
-                       + _call_offsets(src, "pr.record_audit("))
+    writer_offsets = (_call_offsets(src, "assign_pin")
+                       + _call_offsets(src, "record_audit"))
     assert writer_offsets, "expected at least one assign_pin/record_audit call site"
 
     stray = [off for off in writer_offsets
