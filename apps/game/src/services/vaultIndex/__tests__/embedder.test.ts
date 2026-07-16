@@ -2,7 +2,14 @@
 // Embedder seam tests. The local-model leg is opt-in (downloads a model):
 //   VAULT_INDEX_TEST_EMBEDDER=1 npm run test:run -- src/services/vaultIndex/__tests__/embedder.test.ts
 import { describe, it, expect } from 'vitest';
-import { NullEmbedder, createEmbedderFromEnv, chunkText, LocalOnnxEmbedder } from '../embedder';
+import {
+  NullEmbedder,
+  createEmbedderFromEnv,
+  chunkText,
+  LocalOnnxEmbedder,
+  CHUNK_CHAR_BUDGET,
+  meanPoolAndNormalize,
+} from '../embedder';
 import { VAULT_ENTRY_MAX_BYTES } from '../types';
 
 describe('NullEmbedder (B1 keyword-only mode)', () => {
@@ -21,13 +28,15 @@ describe('createEmbedderFromEnv', () => {
   });
 });
 
-// C3 correction (vault-audit, plan Revision Log): all-MiniLM-L6-v2 has a
-// 256-token context window; vault entries run up to VAULT_ENTRY_MAX_BYTES
-// (4096 bytes, ~1000+ tokens). These are pure, always-on unit tests of the
-// chunking helper itself — no model download required — proving inputs
-// longer than the model window are split into multiple chunks whose
-// concatenation still carries content past what a naive first-256-token
-// truncation would ever see.
+// C3 correction (vault-audit, plan Revision Log): all-MiniLM-L6-v2's
+// tokenizer hard-truncates at 512 tokens (256 is the model card's
+// quality/eval window, not the truncation mechanism — see embedder.ts's
+// header comment, REV-S4-T10 D4); vault entries run up to
+// VAULT_ENTRY_MAX_BYTES (4096 bytes, ~1000+ tokens). These are pure,
+// always-on unit tests of the chunking helper itself — no model download
+// required — proving inputs longer than the model window are split into
+// multiple chunks whose concatenation still carries content past what a
+// naive truncation at the chunker's own budget would ever see.
 describe('chunkText (C3 correction — pure, no model needed)', () => {
   it('returns short input as a single unchanged chunk', () => {
     const short = 'a quiet audit passes on the grid';
@@ -38,10 +47,12 @@ describe('chunkText (C3 correction — pure, no model needed)', () => {
     const long = 'the vault records a quiet grid entry. '.repeat(40); // ~1560 chars
     const chunks = chunkText(long);
     expect(chunks.length).toBeGreaterThan(1);
-    // Every chunk must individually fit comfortably under the model window —
-    // this is the guarantee that replaces silent truncation.
+    // Every chunk must individually fit under the model window — this is
+    // the guarantee that replaces silent truncation. Derived from
+    // CHUNK_CHAR_BUDGET (REV-S4-T10 D3) so a budget tune can't silently
+    // desync this from the chunker's actual invariant.
     for (const c of chunks) {
-      expect(c.length).toBeLessThanOrEqual(700);
+      expect(c.length).toBeLessThanOrEqual(CHUNK_CHAR_BUDGET);
     }
   });
 
@@ -50,10 +61,10 @@ describe('chunkText (C3 correction — pure, no model needed)', () => {
     const marker = 'UNIQUE_TAIL_MARKER_ZQX';
     const withTail = base + marker;
 
-    // Stand-in for "what a truncating impl would ever see": the first
-    // ~256-token window, approximated the same conservative way the
-    // chunker itself budgets (see CHUNK_CHAR_BUDGET in embedder.ts).
-    const naiveTruncated = withTail.slice(0, 630);
+    // Stand-in for "what a truncating impl would ever see": the chunker's
+    // own budget (REV-S4-T10 D3: derived from CHUNK_CHAR_BUDGET, not
+    // hardcoded, so this stays in sync if the budget is ever tuned).
+    const naiveTruncated = withTail.slice(0, CHUNK_CHAR_BUDGET);
     expect(naiveTruncated).not.toContain(marker);
 
     // Our chunker must not lose it: the marker survives in *some* chunk,
@@ -61,6 +72,61 @@ describe('chunkText (C3 correction — pure, no model needed)', () => {
     const chunks = chunkText(withTail);
     expect(chunks.length).toBeGreaterThan(1);
     expect(chunks.some((c) => c.includes(marker))).toBe(true);
+  });
+});
+
+// REV-S4-T10 D1: chunkText trims every piece (see the tests above), so a
+// whitespace-only input of any length returns zero chunks. embed() must
+// treat "nothing to embed" as the Embedder contract's null value (types.ts:
+// "null when this embedder does not produce vectors") instead of falling
+// through to meanPoolAndNormalize([]), which reads vectors[0].length of
+// undefined and throws a TypeError. Always-on and pure: chunkText's
+// zero-chunk early return means embedChunk — and so the model — is never
+// reached on this path, so no model download or cache is required.
+describe('LocalOnnxEmbedder.embed — empty-chunk guard (D1, pure, no model needed)', () => {
+  it('resolves to null for whitespace-only input longer than the chunk budget, instead of throwing', async () => {
+    const e = new LocalOnnxEmbedder();
+    const whitespaceOnly = ' '.repeat(CHUNK_CHAR_BUDGET + 70);
+    expect(chunkText(whitespaceOnly)).toEqual([]); // pins the root cause
+    await expect(e.embed(whitespaceOnly)).resolves.toBeNull();
+  });
+});
+
+// REV-S4-T10 D2(a): the re-normalization step in meanPoolAndNormalize is
+// the load-bearing math the C3 fix depends on — "mean of unit vectors is
+// not itself unit-norm" (embedder.ts comment). Proven here with synthetic
+// vectors, no model required, so the invariant is CI-visible on every run.
+// This strengthens the review's own suggested fix, which only extended the
+// opt-in, model-gated long-input test below (D2(b)) — that leg needs
+// VAULT_INDEX_TEST_EMBEDDER=1 and a cached model, so it is skipped by
+// default and CI never exercises it. This test carries the invariant in
+// the always-on suite instead, independent of D2(b).
+describe('meanPoolAndNormalize (D2(a), pure, no model needed) — synthetic re-normalization invariant', () => {
+  it('re-normalizes the mean of two orthogonal unit vectors back to unit length', () => {
+    const a = [1, 0];
+    const b = [0, 1];
+
+    // Ground truth, computed independently of the function under test: the
+    // mean of two orthogonal unit vectors is [0.5, 0.5], with norm
+    // sqrt(0.5) ≈ 0.70710678 — NOT unit length.
+    const rawMean = [0.5, 0.5];
+    const rawMeanNorm = Math.sqrt(rawMean[0] ** 2 + rawMean[1] ** 2);
+    expect(rawMeanNorm).toBeCloseTo(0.70710678, 6);
+    const expectedRenormalized = rawMean.map((x) => x / rawMeanNorm);
+
+    const result = meanPoolAndNormalize([a, b]);
+
+    // The function's output must be unit-norm...
+    const resultNorm = Math.sqrt(result.reduce((s, x) => s + x * x, 0));
+    expect(resultNorm).toBeGreaterThan(0.99);
+    expect(resultNorm).toBeLessThan(1.01);
+
+    // ...and equal the independently-computed renormalized mean,
+    // componentwise. If the re-normalization step is ever deleted, `result`
+    // becomes the raw mean [0.5, 0.5] (norm ≈ 0.7071) and both the norm
+    // assertions above and the equality assertions below fail.
+    expect(result[0]).toBeCloseTo(expectedRenormalized[0], 6);
+    expect(result[1]).toBeCloseTo(expectedRenormalized[1], 6);
   });
 });
 
@@ -105,5 +171,24 @@ describe.skipIf(!RUN_LOCAL)('LocalOnnxEmbedder (B3, spike-gated)', () => {
     expect(v1!.length).toBe(384);
     expect(v2!.length).toBe(384);
     expect(v1).not.toEqual(v2);
+
+    // REV-S4-T10 D2(b): the committed norm assertion in the test above this
+    // one only exercises a short, single-chunk input, where the pipeline
+    // itself already normalizes — it never proves the multi-chunk
+    // mean-pool-then-renormalize path (meanPoolAndNormalize) holds the
+    // "normalized" contract on a real, multi-chunk embedding. Assert it
+    // here against the real model, on both long (>5-chunk) inputs.
+    const norm1 = Math.sqrt(v1!.reduce((s, x) => s + x * x, 0));
+    const norm2 = Math.sqrt(v2!.reduce((s, x) => s + x * x, 0));
+    expect(norm1).toBeGreaterThan(0.99);
+    expect(norm1).toBeLessThan(1.01);
+    expect(norm2).toBeGreaterThan(0.99);
+    expect(norm2).toBeLessThan(1.01);
+
+    // Determinism: re-embedding the same multi-chunk input is byte-identical
+    // — the sequential embedChunk loop + mean-pool must not introduce
+    // nondeterminism across calls.
+    const v2Again = await e.embed(withTail);
+    expect(v2Again).toEqual(v2);
   }, 120_000);
 });

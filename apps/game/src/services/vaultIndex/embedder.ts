@@ -10,11 +10,15 @@
 // re-embed, not a migration (design §5.3).
 //
 // C3 correction (2026-07-15 vault-audit, plan Revision Log — verified gap):
-// all-MiniLM-L6-v2 has a 256-token context window, but vault entries run up
-// to VAULT_ENTRY_MAX_BYTES (4096 bytes, ~1000+ tokens). Handing the raw body
+// all-MiniLM-L6-v2's tokenizer hard-truncates at model_max_length = 512
+// tokens (Xenova/all-MiniLM-L6-v2/tokenizer_config.json); 256 is the model
+// card's quality/eval window, not the truncation mechanism (corrected per
+// REV-S4-T10 D4 — the practical conclusion is unchanged: 180-token chunks
+// sit safely under both figures). Vault entries run up to
+// VAULT_ENTRY_MAX_BYTES (4096 bytes, ~1000+ tokens). Handing the raw body
 // straight to the pipeline lets the underlying tokenizer silently truncate
-// to the first ~256 tokens — everything past that point is invisible to
-// search, with no error or signal. Fix (scope-contained to this file, no
+// at 512 tokens — everything past that point is invisible to search, with
+// no error or signal. Fix (scope-contained to this file, no
 // Task-9/schema change): chunk inputs longer than the model's window into
 // fixed, newline/sentence-aware windows, embed each chunk (the pipeline
 // already mean-pools + normalizes per chunk), then mean-pool the per-chunk
@@ -33,11 +37,13 @@ const ONNX_MODEL = 'Xenova/all-MiniLM-L6-v2';
 // Conservative chars-per-token estimate for a wordpiece English tokenizer.
 // Deliberately on the low side (fewer chars assumed per token = more tokens
 // assumed per char) so punctuation-dense or unusual text (haiku line
-// breaks, code-like content) doesn't blow the model's 256-token ceiling
-// even though the true ratio is usually a bit higher for common vocabulary.
+// breaks, code-like content) doesn't blow past the model's 256-token
+// quality window (see the file header — the tokenizer's actual hard
+// truncation cutoff is 512) even though the true ratio is usually a bit
+// higher for common vocabulary.
 const CHARS_PER_TOKEN_ESTIMATE = 3.5;
-// Leaves headroom under the model's 256-token window for [CLS]/[SEP] and
-// estimation slop rather than targeting the ceiling exactly.
+// Leaves headroom under the model's 256-token quality window for [CLS]/
+// [SEP] and estimation slop rather than targeting it exactly.
 const CHUNK_TOKEN_BUDGET = 180;
 export const CHUNK_CHAR_BUDGET = Math.floor(CHUNK_TOKEN_BUDGET * CHARS_PER_TOKEN_ESTIMATE); // 630 chars
 
@@ -80,8 +86,11 @@ export function chunkText(text: string, budget: number = CHUNK_CHAR_BUDGET): str
 
 /** Mean-pool several vectors, then re-normalize to unit length so the
  * multi-chunk path returns a vector with the same "normalized" contract as
- * the single-chunk path (mean of unit vectors is not itself unit-norm). */
-function meanPoolAndNormalize(vectors: number[][]): number[] {
+ * the single-chunk path (mean of unit vectors is not itself unit-norm).
+ * Exported for direct unit testing (REV-S4-T10 D2: the re-normalization step
+ * is the load-bearing math and needs an always-on, model-free proof — see
+ * the synthetic orthogonal-vector test in embedder.test.ts). */
+export function meanPoolAndNormalize(vectors: number[][]): number[] {
   const dim = vectors[0].length;
   const sum = new Array(dim).fill(0);
   for (const v of vectors) {
@@ -127,6 +136,12 @@ export class LocalOnnxEmbedder implements Embedder {
 
   async embed(text: string): Promise<number[] | null> {
     const chunks = chunkText(text);
+    // REV-S4-T10 D1: whitespace-only input (any length) trims away to zero
+    // chunks (chunkText drops every empty piece). Nothing to embed — return
+    // the contract's "no vector" value instead of falling through to
+    // meanPoolAndNormalize([]), which would read vectors[0].length of
+    // undefined and throw. No model touched on this path.
+    if (chunks.length === 0) return null;
     if (chunks.length === 1) return this.embedChunk(chunks[0]);
     // Sequential, not Promise.all: one long-lived pipeline instance backed
     // by a native ONNX Runtime addon with its own thread pool (see the T1
