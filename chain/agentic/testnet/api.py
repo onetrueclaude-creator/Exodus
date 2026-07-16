@@ -1849,8 +1849,22 @@ def post_vault_entry(request: Request, req: VaultEntryRequest) -> VaultEntryResp
     """S4 §5.4 — the ONE door into the vault for indexable game-native content.
     Server-gateway-only (the game host holds the service token); never
     browser-reachable. An accepted entry is a first-class audited vault atom:
-    it joins shard assignment and the beacon-seeded PDP audit universe."""
+    it joins shard assignment and the beacon-seeded PDP audit universe.
+
+    S4-#221-C fail-closed gate (issue #221 design §8.2): a `network`-
+    visibility atom becomes readable by every enrolled pinner the moment it
+    lands in a shard (D7), so writing one while /api/vault/shard is not
+    signature-gated would hand an unauthenticated fetcher a way to read it.
+    Refuse with 503 in that case. `public` writes are never gated here —
+    public content is world-readable by design; `private` is already
+    structurally rejected inside ingest_entry/build_entry_payload."""
     _require_vault_service(request)
+    from agentic.vault.capability import shard_fetch_is_authenticated
+    if req.visibility == "network" and not shard_fetch_is_authenticated(request.app):
+        raise HTTPException(
+            status_code=503,
+            detail="network-visibility writes disabled: shard route is not authenticated",
+        )
     g = _g()
     block = g.mining_engine.total_blocks_processed
     from agentic.vault.entries import ingest_entry
