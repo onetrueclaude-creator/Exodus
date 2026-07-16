@@ -1633,7 +1633,7 @@ REWARD_SPLIT_STAKER   = 0.40    (40% to the staking pool proportional to S_eff)
 REWARD_SPLIT_ORDERER  = 0.00    (0% to block orderer — no proposer reward)
 ```
 
-The absence of a block proposer reward is intentional. In traditional BFT systems, the block proposer receives a separate reward for constructing the block. In ZK Agentic Chain, the AI verification agents collectively assemble, verify, and attest to the block — there is no privileged proposer role. This eliminates MEV (Maximal Extractable Value) extraction by a single party, as transaction ordering is determined by the BFT protocol's deterministic sequencing rather than by a proposer optimizing for personal profit.
+The absence of a block proposer reward is intentional. In traditional BFT systems, the block proposer receives a separate reward for constructing the block. In ZK Agentic Chain's designed end-state, the AI verification agents collectively assemble, verify, and attest to the block — there is no privileged proposer role (on the present testnet the coordinator is a single fixed proposer with no extra reward; weighted leader scheduling remains a mainnet item — §13.5 Honest status). This eliminates MEV (Maximal Extractable Value) extraction by a single party, as transaction ordering is determined by the protocol's deterministic sequencing rather than by a proposer optimizing for personal profit.
 
 **Verifier reward distribution.** The 60% verifier share is split equally among the k = 13 committee members who provided valid attestations. If only 9 members attest (the minimum threshold), the reward is divided among 9, not 13 — incentivizing participation. Agents that fail to attest forfeit their share, which is redistributed to the attesting agents.
 
@@ -2724,7 +2724,7 @@ This confirms that t = 9 is the minimum threshold for tolerating f = 4 Byzantine
 
 #### 23.3 Dual Staking Gini Coefficient Analysis
 
-**Scope (finality firewall).** This analysis concerns the **economic weight** — the effective-stake distribution that governs *reward share / earnings* (Section 14). It is the anti-plutocracy result that remains fully in force under v1.5/v1.6. It is **not** a claim about finality-selection concentration: committee selection is weighted by **token stake alone** (`W_fin`, Section 13.5), live, as of 2026-07-15 (Section 13.5 Honest status) — its concentration now tracks the token Gini `G_t` alone, not a mix with the CPU Gini. Leader selection has no live weighted mechanism yet, so it has no concentration property to state either way. In short, dual staking equalizes *earnings* now; equalizing *finality influence* is achieved for committee selection already, with CPU re-admission to that weight remaining the PoRep-gated mainnet goal.
+**Scope (finality firewall).** This analysis concerns the **economic weight** — the effective-stake distribution that governs *reward share / earnings* (Section 14). It is the anti-plutocracy result that remains fully in force under v1.5/v1.6/v1.7. It is **not** a claim about finality-selection concentration: committee selection is weighted by **token stake alone** (`W_fin`, Section 13.5), live, as of 2026-07-15 (Section 13.5 Honest status) — its concentration now tracks the token Gini `G_t` alone, not a mix with the CPU Gini. Leader selection has no live weighted mechanism yet, so it has no concentration property to state either way. In short, dual staking equalizes *earnings* now; equalizing *finality influence* is achieved for committee selection already, with CPU re-admission to that weight remaining the PoRep-gated mainnet goal.
 
 **Theorem.** For any distribution of token holdings with Gini coefficient G_t > 0, adding a CPU dimension with weight β > 0 produces an effective stake (earnings) distribution with Gini coefficient G_eff < G_t, provided the CPU distribution is not perfectly correlated with the token distribution.
 
@@ -3015,5 +3015,5 @@ A natural question is whether the *AI compute* itself — agents running inferen
 
 ---
 
-*AGNTC Whitepaper v1.6 — ZK Agentic Chain*
+*AGNTC Whitepaper v1.7 — ZK Agentic Chain*
 *Copyright © 2026 ZK Agentic Network. All rights reserved.*

@@ -19,7 +19,8 @@ class SimulatedZKProof:
     In production: a Groth16/PLONK proof. Per the whitepaper's authoritative
     proving stack (§6.4 / §21.1), the consensus privacy proof migrates
     Groth16 -> PLONK -> Halo2/Nova, and this SimulatedZKProof stand-in is
-    replaced by a live Groth16/PLONK prover (§789, rung (b) of §5B.2).
+    replaced by a live Groth16/PLONK prover (the §6.4 "Implementation
+    honesty" note; rung (b) of §5B.2).
     """
     proof_hash: bytes
     circuit_id: str
