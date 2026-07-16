@@ -273,9 +273,14 @@ export function getVaultAssignment(walletIndex: number): Promise<VaultAssignment
   return get<VaultAssignmentResponse>(`/api/vault/assignment/${walletIndex}`);
 }
 
-/** GET /api/vault/shard/{shard_id}?wallet_index=N — canonical sub-units (hex) to prove over */
+/** POST /api/vault/shard — signed { wallet_index, shard_id } body; canonical sub-units (hex) to
+ *  prove over. Signed (#221): only a wallet with a bound signing key (B4) AND assigned to this
+ *  shard may fetch its bytes — the old unauthenticated GET let any caller enumerate assignment
+ *  and read a shard's raw atom payloads with an attacker-chosen wallet_index. */
 export function getVaultShard(shardId: number, walletIndex: number): Promise<VaultShardResponse> {
-  return get<VaultShardResponse>(`/api/vault/shard/${shardId}?wallet_index=${walletIndex}`);
+  return signedPost<VaultShardResponse>('/api/vault/shard', 'vault_shard_fetch', {
+    wallet_index: walletIndex, shard_id: shardId,
+  });
 }
 
 /** POST /api/vault/challenge — fresh per-block sampled-PDP challenge for a shard */

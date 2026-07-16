@@ -18,8 +18,8 @@
  * Proof shape (matches pdp.py `make_proof`):
  *   { root: hex, leaves: { [idx]: hex }, paths: { [idx]: hex[] } }
  *
- * The sampled sub-units are taken in the order the `/api/vault/shard` endpoint
- * returns them (already canonical/sorted on the chain via `sub_units_for_shard`),
+ * The sampled sub-units are taken in the order the signed `POST /api/vault/shard`
+ * endpoint returns them (already canonical/sorted on the chain via `sub_units_for_shard`),
  * and `indices` come from `/api/vault/challenge`. Callers must pass the full
  * sub-unit list (every sibling is needed to rebuild the Merkle paths).
  *
@@ -173,9 +173,9 @@ export function verifyProof(
 }
 
 /**
- * Convenience: build a proof directly from the hex sub-units returned by
- * `/api/vault/shard` (which serves the canonical order) for the given
- * challenge indices.
+ * Convenience: build a proof directly from the hex sub-units returned by the
+ * signed `POST /api/vault/shard` (which serves the canonical order) for the
+ * given challenge indices.
  */
 export function makeProofFromHex(subUnitsHex: string[], indices: number[]): VaultProof {
   return makeProof(subUnitsHex.map(fromHex), indices);
