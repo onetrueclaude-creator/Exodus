@@ -183,3 +183,90 @@ def test_client_builds_valid_proof_from_served_shard_bytes():
         "proof": proof,
     }).json()
     assert resp["accepted"] is True
+
+
+# --------------------------------------------------------------------------- #
+# Possession-proof soundness regression suite (security fix:
+# canonical-root binding) at the full HTTP accept path. Each encodes an attack
+# from verify-possession-proof-soundness.md as MUST-REJECT and FAILS against
+# the pre-fix accept path. Siblings of the weaker one-leaf
+# test_submit_tampered_proof_rejected, which never covered a self-consistent
+# forged tree.
+# --------------------------------------------------------------------------- #
+
+def test_submit_forged_tree_over_fabricated_bytes_rejected():
+    """PoC-A/B over HTTP: a self-consistent proof over FABRICATED bytes (never
+    held) for an OWNED shard WITH a real open challenge must be rejected — the
+    server binds expected_root to its own canonical per-shard root (fix #1)."""
+    client = TestClient(app)
+    assignment = client.get("/api/vault/assignment/1").json()
+    if not assignment["shards"]:
+        pytest.skip("wallet 1 holds no shard in this seeding")
+    shard_id = assignment["shards"][0]
+    ch = client.post("/api/vault/challenge",
+                     json={"wallet_index": 1, "shard_id": shard_id}).json()
+    g = api_module._g()
+    from agentic.vault.pdp import build_shard_tree, make_proof
+    real_units = g.vault_registry.shard_sub_units(shard_id)
+    canonical_root, _ = build_shard_tree(real_units)
+    fabricated = sorted(f"FORGED-{i}".encode() for i in range(len(real_units)))
+    forged = make_proof(fabricated, ch["indices"])
+    assert forged["root"] != canonical_root
+    resp = client.post("/api/vault/submit-proof", json={
+        "wallet_index": 1, "shard_id": shard_id,
+        "issued_block": ch["issued_block"], "expires_block": ch["expires_block"],
+        "indices": ch["indices"], "block_seed_hex": ch["block_seed_hex"],
+        "proof": forged,
+    }).json()
+    assert resp["accepted"] is False
+
+
+def test_submit_proof_without_challenge_rejected():
+    """Fix #2 over HTTP: a genuinely valid proof over real bytes for an OWNED
+    shard but with NO server-issued challenge must be rejected."""
+    client = TestClient(app)
+    assignment = client.get("/api/vault/assignment/1").json()
+    if not assignment["shards"]:
+        pytest.skip("wallet 1 holds no shard in this seeding")
+    shard_id = assignment["shards"][0]
+    g = api_module._g()
+    from agentic.vault.pdp import make_proof
+    units = g.vault_registry.shard_sub_units(shard_id)
+    indices = [0]
+    proof = make_proof(units, indices)                # a genuinely valid proof
+    # NOTE: no /api/vault/challenge call at all
+    resp = client.post("/api/vault/submit-proof", json={
+        "wallet_index": 1, "shard_id": shard_id,
+        "issued_block": 0, "expires_block": 10**9,
+        "indices": indices, "block_seed_hex": "00" * 32,
+        "proof": proof,
+    }).json()
+    assert resp["accepted"] is False
+
+
+def test_submit_proof_for_unowned_shard_rejected():
+    """PoC-B end to end: wallet 1 earns NO Disk-fact for a data shard it is not
+    responsible for and never requested a challenge for (fixes #2 + #3). Also
+    asserts no durable pin/audit row is written for the attacker."""
+    client = TestClient(app)
+    g = api_module._g()
+    owned = set(client.get("/api/vault/assignment/1").json()["shards"])
+    data_shards = [s for s in range(16) if g.vault_registry.shard_sub_units(s)]
+    target = next((s for s in data_shards if s not in owned), None)
+    if target is None:
+        pytest.skip("no data shard unowned by wallet 1 in this seeding")
+    from agentic.vault.pdp import make_proof
+    fabricated = sorted(f"FORGED-{i}".encode() for i in range(6))
+    indices = [0, 2, 4]
+    forged = make_proof(fabricated, indices)
+    resp = client.post("/api/vault/submit-proof", json={
+        "wallet_index": 1, "shard_id": target,
+        "issued_block": 0, "expires_block": 10**9,
+        "indices": indices, "block_seed_hex": "00" * 32,
+        "proof": forged,
+    }).json()
+    assert resp["accepted"] is False
+    # no durable pin row / passed audit was created for the non-holder
+    pins = client.get("/api/vault/pins/1").json()
+    row = next((p for p in pins["pins"] if p["shard_id"] == target), None)
+    assert row is None or row["passes"] == 0

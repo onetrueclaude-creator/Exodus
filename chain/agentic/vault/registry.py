@@ -19,6 +19,7 @@ from agentic.params import (
 )
 from agentic.vault.dag import VaultDag
 from agentic.vault.pdp import (
+    build_shard_tree,
     derive_challenge,
     sub_units_for_shard,
     verify_proof,
@@ -41,6 +42,7 @@ class _OpenChallenge:
     shard_id: int
     issued_block: int
     expires_block: int
+    indices: list[int]          # server-issued sampled indices (authoritative at verify)
     answered: bool = False
 
 
@@ -97,7 +99,7 @@ class VaultRegistry:
         n = len(self.shard_sub_units(shard_id))
         indices = derive_challenge(seed, shard_id, n)
         expires = block_slot + VAULT_CHALLENGE_WINDOW_BLOCKS
-        self._open.append(_OpenChallenge(owner_id, shard_id, block_slot, expires))
+        self._open.append(_OpenChallenge(owner_id, shard_id, block_slot, expires, indices))
         return Challenge(
             shard_id=shard_id,
             indices=indices,
@@ -109,20 +111,39 @@ class VaultRegistry:
     # -- proof submission -------------------------------------------------- #
 
     def submit_proof(self, owner_id: str, challenge: Challenge, proof: dict, block_slot: int) -> bool:
-        if block_slot > challenge.expires_block:
+        # A possession proof is accepted only when it proves possession of the
+        # coordinator's OWN shard bytes against a challenge the coordinator
+        # itself issued. Everything on ``challenge`` except the (shard_id,
+        # issued_block) selector is client-supplied and must NOT be trusted —
+        # see verify-possession-proof-soundness.md. Three server-authoritative
+        # gates, cheapest first:
+        #
+        #   (fix #3) responsibility — the submitter must be assigned this shard.
+        #   (fix #2) server challenge — a matching *open* (unanswered) challenge
+        #            this coordinator issued must exist; its stored indices and
+        #            expiry are authoritative (client indices/expiry ignored).
+        #   (fix #1) canonical root — verify against the server's own per-shard
+        #            Merkle root, never the client's submitted root.
+        if challenge.shard_id not in self.shards_for_owner(owner_id):
             return False
         key = (owner_id, challenge.shard_id)
         last = self._accepted_window.get(key)
         if last is not None and block_slot - last < VAULT_CHALLENGE_WINDOW_BLOCKS:
             return False  # rate-limit: one accepted proof per (owner, shard) per window
-        if not verify_proof(challenge.indices, proof.get("root", ""), proof):
+        oc = next(
+            (c for c in self._open
+             if c.owner_id == owner_id and c.shard_id == challenge.shard_id
+             and c.issued_block == challenge.issued_block and not c.answered),
+            None,
+        )
+        if oc is None:
+            return False  # no server-issued open challenge to answer
+        if block_slot > oc.expires_block:
+            return False  # expired per the server-issued window (left unanswered -> miss)
+        canonical_root, _ = build_shard_tree(self.shard_sub_units(challenge.shard_id))
+        if not verify_proof(oc.indices, canonical_root, proof):
             return False
-        # mark matching open challenge answered
-        for oc in self._open:
-            if (oc.owner_id == owner_id and oc.shard_id == challenge.shard_id
-                    and oc.issued_block == challenge.issued_block and not oc.answered):
-                oc.answered = True
-                break
+        oc.answered = True
         self._accepted_window[key] = block_slot
         self._pass_buffer[owner_id] = self._pass_buffer.get(owner_id, 0.0) + VAULT_PROOF_CPU_CREDIT
         self._last_pass[owner_id] = block_slot
