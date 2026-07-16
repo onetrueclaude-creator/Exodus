@@ -1085,6 +1085,27 @@ def _time_ledger(g):
     return g.time_ledger
 
 
+def _has_recent_audit_pass(g, owner_hex: str) -> bool:
+    """E3 recency: >= 1 audit pass within CLAIM_ELIGIBILITY_WINDOW_BLOCKS."""
+    pins = _pin_registry(g)
+    shards = pins.get(owner_hex) or {}
+    now = g.mining_engine.total_blocks_processed
+    window = params.CLAIM_ELIGIBILITY_WINDOW_BLOCKS
+    return any(
+        r.get("last_pass_block") is not None and (now - r["last_pass_block"]) <= window
+        for r in shards.values()
+    )
+
+
+def _claim_eligibility(g, owner_hex: str) -> bool:
+    """Binary claim eligibility (E3): soulbound Time meets the service gate AND a
+    recent audit pass. Time GATES (who), never WEIGHTS (how much). Applied at the
+    distribution boundary — never in the accrual ledger (Time ∉ yield term)."""
+    tl = _time_ledger(g)
+    return (tl.meets_gate(owner_hex, params.CLAIM_ELIGIBILITY_GATE_LEVEL)
+            and _has_recent_audit_pass(g, owner_hex))
+
+
 def _refresh_vault_owners() -> None:
     """Recompute vault shard ownership from current claims (call after seats change)."""
     g = _g()
@@ -2822,7 +2843,10 @@ def get_airdrop_preview() -> dict:
 
     Read-only / public (like /api/scores). This is a PROJECTION, not a
     commitment — it mints/moves nothing; the real mainnet snapshot is a deferred
-    milestone. Response::
+    milestone. ``contribution`` is the raw ``capped_contribution`` (transparent,
+    matches ``/api/scores`` exactly for every owner); the E3 eligibility gate is
+    applied only to ``projected_allocation`` — see the gating note below.
+    Response::
 
         {
           "allocations": { "<owner_hex>": {"contribution": float,
@@ -2836,18 +2860,31 @@ def get_airdrop_preview() -> dict:
     pool = float(params.AIRDROP_POOL)
     cap = pool / params.AIRDROP_WHALE_CAP_DIVISOR
 
-    contributions = {
+    # Raw per-owner capped_contribution — unfiltered, so the preview stays a
+    # transparent read of /api/scores (every owner's `contribution` here always
+    # equals scores[owner]["capped_contribution"], eligible or not).
+    raw_contributions = {
         owner_hex: float(row.get("capped_contribution", 0.0))
         for owner_hex, row in g.score_ledger.all().items()
     }
-    allocations = airdrop_allocations(contributions, pool, cap)
+    # E3 eligibility gate (binary, distribution boundary): an ineligible owner's
+    # contribution is zeroed BEFORE the M13 transform — but ONLY for the
+    # transform input that produces `projected_allocation`. Never a weight —
+    # tenure magnitude never scales the amount, only the meets_gate/recent-
+    # audit-pass binary decides whether the existing capped_contribution counts
+    # at all toward what an owner would actually receive.
+    gated_contributions = {
+        owner_hex: (raw if _claim_eligibility(g, owner_hex) else 0.0)
+        for owner_hex, raw in raw_contributions.items()
+    }
+    allocations = airdrop_allocations(gated_contributions, pool, cap)
 
     preview = {
         owner_hex: {
-            "contribution": contributions[owner_hex],
+            "contribution": raw_contributions[owner_hex],
             "projected_allocation": allocations.get(owner_hex, 0.0),
         }
-        for owner_hex in contributions
+        for owner_hex in raw_contributions
     }
     return {
         "allocations": preview,

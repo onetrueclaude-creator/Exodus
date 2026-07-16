@@ -274,3 +274,50 @@ def test_score_ledger_module_has_no_gameplay_smuggle():
     src = inspect.getsource(importlib.import_module("agentic.economics.score_ledger"))
     # The post-cut raw term must be built from disk_passes/disk_bytes + SCORE_W_DISK.
     assert "SCORE_W_DISK" in src and "disk_passes_watermark" in src
+
+
+# NOTE (T6 divergence from the plan's literal Step-1 snippet): added `_pin_registry`
+# to this import line. The plan's `test_gate_is_binary_not_a_weight` body calls
+# `_pin_registry(g)` but the plan's own import statement never names it, and no
+# earlier test in this file imports it either — without this, the test would pass
+# collection (once `_claim_eligibility` exists) and then fail at runtime with
+# `NameError: name '_pin_registry' is not defined` instead of exercising the gate.
+from agentic.testnet.api import _claim_eligibility, get_airdrop_preview, _g, _pin_registry
+
+
+def test_below_gate_owner_is_ineligible(monkeypatch):
+    g = create_genesis(seed=42)
+    owner = _owner0(g)
+    # No Time accrued → meets_gate(2) is False → ineligible regardless of facts.
+    assert _claim_eligibility(g, owner) is False
+
+
+def test_gate_is_binary_not_a_weight(monkeypatch):
+    """E3: two owners, EQUAL Disk facts, DIFFERENT tenure, both above the gate →
+    EQUAL projected allocations. ∂claims/∂time_accrued = 0 for eligible owners."""
+    from agentic.economics.time_ledger import TimeLedger
+    from agentic.economics.score_ledger import ScoreLedger
+    from agentic.economics.score_ledger import _empty_row
+    g = create_genesis(seed=42)
+    a, b = g.wallets[1].public_key.hex(), g.wallets[2].public_key.hex()
+
+    # Equal contribution — full rows via _empty_row so every persisted field exists.
+    rows = {}
+    for o in (a, b):
+        r = _empty_row(0); r["capped_contribution"] = 100.0; rows[o] = r
+    g.score_ledger = ScoreLedger(rows=rows)
+
+    # Both above gate(2), very different tenure. meets_gate reads only
+    # row["time_accrued"], so a minimal row suffices via the real constructor.
+    g.time_ledger = TimeLedger(rows={a: {"time_accrued": 2}, b: {"time_accrued": 999}})
+
+    # Both have a recent audit pass (record_audit stamps last_pass_block).
+    pr = _pin_registry(g)
+    now = g.mining_engine.total_blocks_processed
+    for o in (a, b):
+        pr.assign_pin(o, 1, now, 1000); pr.record_audit(o, 1, True, now)
+
+    monkeypatch.setattr("agentic.testnet.api._g", lambda: g)
+    alloc = get_airdrop_preview()["allocations"]
+    # Different-tenure, equal-fact owners get identical projected allocation.
+    assert alloc[a]["projected_allocation"] == alloc[b]["projected_allocation"]
