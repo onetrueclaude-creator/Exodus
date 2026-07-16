@@ -969,6 +969,76 @@ class TestDePinS3TimeParams:
         assert 0 < TIME_EPOCH_BLOCKS <= 10_000          # sane accrual window bound
 
 
+class TestDePinVaultS4Params:
+    """S4 knowledge-index/MCP constants (design 2026-07-05, gate 2026-07-09).
+
+    HOWEY BOUNDARY: quota tiers gate MEMORY capability only — they must never
+    price, mint, or weigh AGNTC (structural sweeps live in
+    tests/test_vault_mcp_structural.py; these rows just pin the values)."""
+
+    def test_entry_and_excerpt_caps(self):
+        from agentic import params
+        assert params.VAULT_ENTRY_MAX_BYTES == 4096
+        assert params.VAULT_EXCERPT_MAX_BYTES == 1024
+        assert params.VAULT_EXCERPT_MAX_BYTES <= params.VAULT_ENTRY_MAX_BYTES
+
+    def test_token_ttl(self):
+        from agentic import params
+        assert params.VAULT_MCP_TOKEN_TTL_S == 3600
+        assert params.VAULT_MCP_TOKEN_TTL_S > 0
+
+    def test_quota_tiers_exact(self):
+        """The §6 founder-approved table (D5), pinned exactly."""
+        from agentic import params
+        assert params.VAULT_MCP_QUOTA_TIERS == {
+            "read_only": {"search_per_min": 20, "writes_per_day": 0},
+            "wallet":    {"search_per_min": 30, "writes_per_day": 8},
+            "standing":  {"search_per_min": 30, "writes_per_day": 32},
+            "veteran":   {"search_per_min": 60, "writes_per_day": 128},
+        }
+
+    def test_quota_tiers_monotone_and_readonly_cannot_write(self):
+        from agentic import params
+        t = params.VAULT_MCP_QUOTA_TIERS
+        order = ["read_only", "wallet", "standing", "veteran"]
+        for dim in ("search_per_min", "writes_per_day"):
+            vals = [t[k][dim] for k in order]
+            assert vals == sorted(vals), f"{dim} must be monotone across tiers"
+        assert t["read_only"]["writes_per_day"] == 0
+
+    def test_standing_params(self):
+        from agentic import params
+        assert params.VAULT_MCP_STANDING_PASS_WINDOWS == 7
+        assert params.VAULT_MCP_STANDING_GATE_LEVEL == 2
+        assert params.VAULT_MCP_VETERAN_GATE_LEVEL == 4
+
+    def test_gate_levels_resolve_via_time_ledger_curve(self):
+        """§6: meets_gate reuse is a pure threshold read — T(2)=2, T(4)=5."""
+        from agentic.economics.time_ledger import gate_threshold
+        from agentic import params
+        assert gate_threshold(params.VAULT_MCP_STANDING_GATE_LEVEL) == 2
+        assert gate_threshold(params.VAULT_MCP_VETERAN_GATE_LEVEL) == 5
+
+    def test_embed_model_id(self):
+        from agentic import params
+        assert isinstance(params.VAULT_INDEX_EMBED_MODEL_ID, str)
+        assert params.VAULT_INDEX_EMBED_MODEL_ID == "minilm-l6-v2-q8-384"
+
+    def test_api_params_exposes_vault_section(self):
+        from agentic.testnet import api as api_module
+        from agentic import params
+        vault = api_module.get_params()["vault"]
+        assert vault["entryMaxBytes"] == params.VAULT_ENTRY_MAX_BYTES
+        assert vault["excerptMaxBytes"] == params.VAULT_EXCERPT_MAX_BYTES
+        assert vault["tokenTtlS"] == params.VAULT_MCP_TOKEN_TTL_S
+        assert vault["quotaTiers"] == params.VAULT_MCP_QUOTA_TIERS
+        assert vault["standingPassWindows"] == params.VAULT_MCP_STANDING_PASS_WINDOWS
+        assert vault["standingGateTime"] == 2
+        assert vault["veteranGateTime"] == 5
+        assert vault["timeEpochBlocks"] == params.TIME_EPOCH_BLOCKS
+        assert vault["embedModelId"] == params.VAULT_INDEX_EMBED_MODEL_ID
+
+
 # ---------------------------------------------------------------------------
 # DePIN S5 Claims-Migration Concordance Tests (economy design 2026-07-09,
 # E1–E4; whitepaper §9.2 / §10.1.3 amendment + §22 param rows)

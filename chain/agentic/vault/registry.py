@@ -43,6 +43,7 @@ class _OpenChallenge:
     issued_block: int
     expires_block: int
     indices: list[int]          # server-issued sampled indices (authoritative at verify)
+    canonical_root: str         # server per-shard Merkle root PINNED at challenge-issue
     answered: bool = False
 
 
@@ -96,10 +97,15 @@ class VaultRegistry:
         if shard_id not in self.shards_for_owner(owner_id):
             return None
         seed = self.block_seed(block_slot, beacon=getattr(self, "epoch_beacon_value", None))
-        n = len(self.shard_sub_units(shard_id))
-        indices = derive_challenge(seed, shard_id, n)
+        # Snapshot the shard ONCE: the sampled indices and the pinned canonical
+        # root must describe the SAME shard state (the state as challenged).
+        sub_units = self.shard_sub_units(shard_id)
+        indices = derive_challenge(seed, shard_id, len(sub_units))
+        canonical_root, _ = build_shard_tree(sub_units)   # PIN the root at issue (S4)
         expires = block_slot + VAULT_CHALLENGE_WINDOW_BLOCKS
-        self._open.append(_OpenChallenge(owner_id, shard_id, block_slot, expires, indices))
+        self._open.append(
+            _OpenChallenge(owner_id, shard_id, block_slot, expires, indices, canonical_root)
+        )
         return Challenge(
             shard_id=shard_id,
             indices=indices,
@@ -120,10 +126,13 @@ class VaultRegistry:
         #
         #   (fix #3) responsibility — the submitter must be assigned this shard.
         #   (fix #2) server challenge — a matching *open* (unanswered) challenge
-        #            this coordinator issued must exist; its stored indices and
-        #            expiry are authoritative (client indices/expiry ignored).
-        #   (fix #1) canonical root — verify against the server's own per-shard
-        #            Merkle root, never the client's submitted root.
+        #            this coordinator issued must exist; its stored indices,
+        #            expiry, and canonical_root are authoritative (client
+        #            indices/expiry/root ignored).
+        #   (fix #1, S4-hardened) canonical root — verify against the server's own
+        #            per-shard Merkle root as PINNED at challenge-issue
+        #            (oc.canonical_root), never the client's root and never a root
+        #            recomputed from the now-possibly-mutated live DAG.
         if challenge.shard_id not in self.shards_for_owner(owner_id):
             return False
         key = (owner_id, challenge.shard_id)
@@ -140,8 +149,12 @@ class VaultRegistry:
             return False  # no server-issued open challenge to answer
         if block_slot > oc.expires_block:
             return False  # expired per the server-issued window (left unanswered -> miss)
-        canonical_root, _ = build_shard_tree(self.shard_sub_units(challenge.shard_id))
-        if not verify_proof(oc.indices, canonical_root, proof):
+        # Verify against the root PINNED when this challenge was issued. An entry
+        # ingested (S4) between issue and submit mutates shard_sub_units; recomputing
+        # here would FALSE-REJECT an honest holder who proved the bytes as committed
+        # WHEN CHALLENGED. The pinned root is still SERVER-computed (captured at
+        # issue), so a forged/never-held proof still fails — #224 binding preserved.
+        if not verify_proof(oc.indices, oc.canonical_root, proof):
             return False
         oc.answered = True
         self._accepted_window[key] = block_slot

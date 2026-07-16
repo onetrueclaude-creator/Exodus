@@ -44,6 +44,9 @@ playtest-tickets/
 # Local visual-debug probes (one-off Playwright/canvas scripts)
 apps/game/scripts/visual-debug/
 
+# Local one-off sizing spikes (throwaway node_modules + scripts)
+apps/game/scripts/spikes/
+
 # Auto-generated TypeScript declarations
 next-env.d.ts
 

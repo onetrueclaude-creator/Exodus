@@ -116,13 +116,19 @@ def _payload_accessor_endpoints():
 
 def test_p6_payload_access_tripwire():
     """Standing invariant: the ONLY route endpoints whose source references
-    a payload-byte accessor (shard_sub_units( / .get_payload() are
-    post_vault_shard_fetch (which must ALSO call verify_write() -- i.e. be
-    the authenticated fetch route) and post_vault_submit_proof (length-sum
-    only, never returns bytes). Any new/renamed byte-serving route trips
-    this the moment it's added, regardless of its path."""
+    a payload-byte accessor (shard_sub_units( / .get_payload() are:
+      - post_vault_shard_fetch (raw sub-unit bytes; must ALSO call
+        verify_write() -- the authenticated fetch route),
+      - post_vault_submit_proof (length-sum only, never returns bytes),
+      - list_vault_entries (S4: PARSES payloads to build the entry listing,
+        never serves raw shard bytes; must ALSO be _require_vault_service-
+        gated -- `network` bodies are not world-readable, design §5.5).
+    Any new/renamed byte-serving route trips this the moment it's added,
+    regardless of its path (security-reviewed additions go in the set below)."""
     hits = _payload_accessor_endpoints()
-    assert set(hits) == {"post_vault_shard_fetch", "post_vault_submit_proof"}, (
+    assert set(hits) == {
+        "post_vault_shard_fetch", "post_vault_submit_proof", "list_vault_entries",
+    }, (
         f"payload-byte accessor set drifted: {sorted(hits)} -- if this is a "
         "deliberate new route, it must be added to the frozen allowlist "
         "ABOVE only after a security review of what it exposes"
@@ -131,4 +137,11 @@ def test_p6_payload_access_tripwire():
     assert "verify_write(" in fetch_source, (
         "post_vault_shard_fetch no longer calls verify_write() -- the "
         "shard-fetch route would be serving payload bytes unauthenticated"
+    )
+    # list_vault_entries parses payloads for the listing; it must stay
+    # service-gated so `network` bodies never become world-readable (§5.5).
+    entries_source = inspect.getsource(hits["list_vault_entries"])
+    assert "_require_vault_service(" in entries_source, (
+        "list_vault_entries no longer calls _require_vault_service() -- the "
+        "entry listing would expose parsed `network` bodies unauthenticated"
     )

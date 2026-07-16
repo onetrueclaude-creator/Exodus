@@ -125,6 +125,13 @@ CREATE TABLE IF NOT EXISTS time_ledger (
     last_window      INTEGER NOT NULL DEFAULT -1,
     updated_at_block INTEGER NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS vault_atoms (
+    cid        TEXT PRIMARY KEY,
+    payload    BLOB NOT NULL,
+    vault_root TEXT NOT NULL DEFAULT '',
+    block      INTEGER NOT NULL DEFAULT 0
+);
 """
 
 
@@ -429,6 +436,28 @@ def save_state(g: GenesisState, last_block_time: float, db_path: Path) -> None:
                         time_rows,
                     )
 
+            # -- Vault entry atoms (DePIN S4): runtime-added DAG atoms + write
+            # provenance. Genesis atoms are rebuilt by create_genesis and are
+            # deliberately NOT saved (mirrors the _GENESIS_COORDS pattern);
+            # exactly the CIDs recorded in g.vault_entry_meta are persisted.
+            entry_meta = getattr(g, "vault_entry_meta", None)
+            if entry_meta:
+                atom_rows = []
+                for cid, m in entry_meta.items():
+                    try:
+                        payload = g.vault_dag.get_payload(cid)
+                    except KeyError:
+                        continue  # meta without atom: never block the save
+                    atom_rows.append(
+                        (cid, payload, m.get("vault_root", ""), int(m.get("block", 0)))
+                    )
+                if atom_rows:
+                    conn.executemany(
+                        "INSERT OR REPLACE INTO vault_atoms "
+                        "(cid, payload, vault_root, block) VALUES (?, ?, ?, ?)",
+                        atom_rows,
+                    )
+
     except Exception:
         pass  # persistence must never crash the miner
 
@@ -652,6 +681,25 @@ def load_state(g: GenesisState, db_path: Path) -> float:
             except Exception:
                 pass  # missing/old time_ledger table → keep the fresh empty ledger
 
+            # -- Vault entry atoms (DePIN S4): restore runtime entries so the
+            # DAG root, shard assignment, and the index rebuild source all
+            # survive restarts (live-smoke restart-persistence requirement).
+            try:
+                atom_rows = conn.execute(
+                    "SELECT cid, payload, vault_root, block FROM vault_atoms"
+                ).fetchall()
+                restored_meta: dict[str, dict] = {}
+                for row in atom_rows:
+                    g.vault_dag.add_atom(bytes(row["payload"]))
+                    restored_meta[row["cid"]] = {
+                        "vault_root": row["vault_root"],
+                        "block": int(row["block"]),
+                    }
+                if restored_meta:
+                    g.vault_entry_meta = restored_meta
+            except Exception:
+                pass  # missing/old vault_atoms table → genesis-only vault
+
     except Exception:
         pass  # load failures are non-fatal — fall back to fresh genesis
 
@@ -675,6 +723,7 @@ def clear_state(db_path: Path) -> None:
                 DELETE FROM score_ledger;
                 DELETE FROM pin_shards;
                 DELETE FROM time_ledger;
+                DELETE FROM vault_atoms;
             """)
     except Exception:
         pass

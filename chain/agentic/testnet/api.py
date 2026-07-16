@@ -445,6 +445,7 @@ _ALLOWED_ORIGINS = [
     if o.strip()
 ]
 _ADMIN_TOKEN = _os.environ.get("ADMIN_TOKEN", "")
+_VAULT_SERVICE_TOKEN = _os.environ.get("VAULT_SERVICE_TOKEN", "")
 
 # Conditionally disable /docs and /redoc in production
 _docs_url: str | None = "/docs" if _ENVIRONMENT != "production" else None
@@ -477,6 +478,16 @@ def _require_admin(request: Request) -> None:
         raise HTTPException(status_code=503, detail="Admin endpoints disabled")
     token = request.headers.get("X-Admin-Token", "")
     if token != _ADMIN_TOKEN:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+
+def _require_vault_service(request: Request) -> None:
+    """Gate the S4 vault-entry surfaces behind VAULT_SERVICE_TOKEN — held only
+    by the game host (server-only gateway trust boundary, design §5.4). Mirrors
+    _require_admin: unset env = surface disabled (503)."""
+    if not _VAULT_SERVICE_TOKEN:
+        raise HTTPException(status_code=503, detail="Vault entry endpoints disabled")
+    if request.headers.get("X-Service-Token", "") != _VAULT_SERVICE_TOKEN:
         raise HTTPException(status_code=403, detail="Forbidden")
 
 
@@ -1087,6 +1098,14 @@ def _time_ledger(g):
     return g.time_ledger
 
 
+def _vault_entry_meta(g) -> dict:
+    """Lazy per-CID entry provenance {cid: {vault_root, block}} (mirrors
+    _pin_registry). persistence.py saves/restores exactly these CIDs."""
+    if not hasattr(g, "vault_entry_meta"):
+        g.vault_entry_meta = {}
+    return g.vault_entry_meta
+
+
 def _has_recent_audit_pass(g, owner_hex: str) -> bool:
     """E3 recency: >= 1 audit pass within CLAIM_ELIGIBILITY_WINDOW_BLOCKS."""
     pins = _pin_registry(g)
@@ -1148,6 +1167,9 @@ def health_check() -> dict:
     }
 
 
+from agentic.economics.time_ledger import gate_threshold as _gate_threshold
+
+
 @app.get("/api/params")
 def get_params() -> dict:
     """Server-authoritative economy params (the client reads these at runtime so
@@ -1173,6 +1195,21 @@ def get_params() -> dict:
             "baseCpuPerSecureBlock": params.BASE_CPU_PER_SECURE_BLOCK,
             "annualInflationCeiling": params.ANNUAL_INFLATION_CEILING,
             "feeBurnRate": params.FEE_BURN_RATE,
+        },
+        # DePIN S4: founder-tunable memory-quota + index params. The game host
+        # reads these live (single source of truth; retune = server restart,
+        # no game redeploy). gate thresholds are resolved server-side so the
+        # T(N) curve is never duplicated in TypeScript.
+        "vault": {
+            "entryMaxBytes": params.VAULT_ENTRY_MAX_BYTES,
+            "excerptMaxBytes": params.VAULT_EXCERPT_MAX_BYTES,
+            "tokenTtlS": params.VAULT_MCP_TOKEN_TTL_S,
+            "quotaTiers": params.VAULT_MCP_QUOTA_TIERS,
+            "standingPassWindows": params.VAULT_MCP_STANDING_PASS_WINDOWS,
+            "standingGateTime": _gate_threshold(params.VAULT_MCP_STANDING_GATE_LEVEL),
+            "veteranGateTime": _gate_threshold(params.VAULT_MCP_VETERAN_GATE_LEVEL),
+            "timeEpochBlocks": params.TIME_EPOCH_BLOCKS,
+            "embedModelId": params.VAULT_INDEX_EMBED_MODEL_ID,
         },
     }
 
@@ -1758,6 +1795,7 @@ class PinRow(BaseModel):
     misses: int
     size_bytes: int
     active: bool
+    last_pass_block: int | None = None   # durable standing fact (S4 quota tiers)
 
 
 class VaultPinsResponse(BaseModel):
@@ -1781,11 +1819,260 @@ def get_vault_pins(wallet_index: int) -> VaultPinsResponse:
         wallet_index=wallet_index, owner=owner,
         # shard_id=-1 is the internal owner-level miss bucket — never a real pin; keep it out of the public surface (pass_rate still absorbs it).
         pins=[PinRow(shard_id=sid, passes=r["passes"], misses=r["misses"],
-                     size_bytes=r["size_bytes"], active=r["active"])
+                     size_bytes=r["size_bytes"], active=r["active"],
+                     last_pass_block=r.get("last_pass_block"))
               for sid, r in sorted(shards.items()) if sid >= 0],
         pinned_bytes=pr.pinned_bytes(owner),
         pass_rate=pr.pass_rate(owner),
     )
+
+
+class VaultEntryRequest(BaseModel):
+    kind: str
+    text: str
+    visibility: str
+    owner_hex: str
+    author: str = ""
+    origin: str = "token_authorized"
+    meta: dict = {}
+
+
+class VaultEntryResponse(BaseModel):
+    cid: str
+    block: int
+    shard_id: int
+    vault_root: str
+
+
+@app.post("/api/vault/entry", response_model=VaultEntryResponse)
+def post_vault_entry(request: Request, req: VaultEntryRequest) -> VaultEntryResponse:
+    """S4 §5.4 — the ONE door into the vault for indexable game-native content.
+    Server-gateway-only (the game host holds the service token); never
+    browser-reachable. An accepted entry is a first-class audited vault atom:
+    it joins shard assignment and the beacon-seeded PDP audit universe.
+
+    S4-#221-C fail-closed gate (issue #221 design §8.2): a `network`-
+    visibility atom becomes readable by every enrolled pinner the moment it
+    lands in a shard (D7), so writing one while /api/vault/shard is not
+    signature-gated would hand an unauthenticated fetcher a way to read it.
+    Refuse with 503 in that case. `public` writes are never gated here —
+    public content is world-readable by design; `private` is already
+    structurally rejected inside ingest_entry/build_entry_payload."""
+    _require_vault_service(request)
+    from agentic.vault.capability import shard_fetch_is_authenticated
+    if req.visibility == "network" and not shard_fetch_is_authenticated(request.app):
+        raise HTTPException(
+            status_code=503,
+            detail="network-visibility writes disabled: shard route is not authenticated",
+        )
+    g = _g()
+    block = g.mining_engine.total_blocks_processed
+    from agentic.vault.entries import ingest_entry
+    try:
+        cid, shard_id = ingest_entry(
+            g.vault_dag, kind=req.kind, text=req.text, visibility=req.visibility,
+            owner_hex=req.owner_hex, author=req.author, origin=req.origin,
+            meta=req.meta, created_block=block,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    root = g.vault_dag.root_cid()
+    meta_map = _vault_entry_meta(g)
+    if cid not in meta_map:              # first write wins provenance (idempotent re-posts)
+        meta_map[cid] = {"vault_root": root, "block": block}
+    _refresh_vault_owners()              # fold the new atom into shard/pin assignment
+    # Entry durability must NOT wait for the next mined block — auto-mine is
+    # OFF by default in prod. Never fail the write on a persistence error;
+    # the per-block save retries. NOTE: this is a full-state save per
+    # accepted write, bounded by the write quota (max 128/day/subject, §6
+    # veteran tier) and never-fail wrapped — acceptable at testnet scale;
+    # batch the save if entry throughput grows.
+    try:
+        from agentic.testnet.persistence import save_state
+        save_state(g, _last_block_time, _DB_PATH)
+    except Exception:
+        pass
+    return VaultEntryResponse(cid=cid, block=block, shard_id=shard_id, vault_root=root)
+
+
+class VaultEntryListItem(BaseModel):
+    cid: str
+    vault_root: str
+    block: int
+    shard_id: int
+    entry: dict
+
+
+class VaultEntriesResponse(BaseModel):
+    total: int
+    offset: int
+    entries: list[VaultEntryListItem]
+
+
+@app.get("/api/vault/entries", response_model=VaultEntriesResponse)
+def list_vault_entries(request: Request, offset: int = 0, limit: int = 500) -> VaultEntriesResponse:
+    """Service-gated listing of entry atoms — the rebuild-from-DAG source
+    (Global Constraint 8: the index is a derived projection). Gated because
+    `network`-visibility bodies are not world-readable (design §5.5)."""
+    _require_vault_service(request)
+    from agentic.vault.entries import parse_entry_payload
+    from agentic.vault.shard import shard_of_cid
+    g = _g()
+    meta = _vault_entry_meta(g)
+    cids = sorted(meta)
+    offset = max(0, offset)
+    limit = max(0, min(limit, 500))
+    items: list[VaultEntryListItem] = []
+    for cid in cids[offset: offset + limit]:
+        try:
+            doc = parse_entry_payload(g.vault_dag.get_payload(cid))
+        except KeyError:
+            continue
+        if doc is None:
+            continue
+        items.append(VaultEntryListItem(
+            cid=cid, vault_root=meta[cid]["vault_root"],
+            block=meta[cid]["block"], shard_id=shard_of_cid(cid), entry=doc,
+        ))
+    return VaultEntriesResponse(total=len(cids), offset=offset, entries=items)
+
+
+class AuditSummaryResponse(BaseModel):
+    block: int
+    beacon_stale: bool
+    shards: dict[int, int | None]
+
+
+@app.get("/api/vault/audit-summary", response_model=AuditSummaryResponse)
+def get_vault_audit_summary() -> AuditSummaryResponse:
+    """Per-shard freshest audit-pass block + beacon staleness — the search-hit
+    provenance source (design §4.1). Public and aggregate-only: it reveals
+    nothing beyond what /api/vault/pins already exposes per wallet."""
+    g = _g()
+    pr = _pin_registry(g)
+    shards: dict[int, int | None] = {}
+    for _owner_hex, rows in pr.all().items():
+        for sid, r in rows.items():
+            if sid < 0:
+                continue  # owner-level miss bucket — never a real pin
+            lp = r.get("last_pass_block")
+            cur = shards.get(sid)
+            if sid not in shards or (lp is not None and (cur is None or lp > cur)):
+                shards[sid] = lp
+    if not hasattr(g, "epoch_beacon"):
+        from agentic.vault.beacon import get_epoch_beacon
+        g.epoch_beacon = get_epoch_beacon(None)
+        g.vault_registry.epoch_beacon_value = g.epoch_beacon.value
+    return AuditSummaryResponse(
+        block=g.mining_engine.total_blocks_processed,
+        beacon_stale=g.epoch_beacon.stale,
+        shards=shards,
+    )
+
+
+class VaultBackfillRequest(BaseModel):
+    dry_run: bool = True
+
+
+class VaultBackfillResponse(BaseModel):
+    dry_run: bool
+    haiku_ncp: int
+    agent_intro: int
+    skipped_unattributed: int
+    already_present: int
+
+
+@app.post("/api/vault/backfill", response_model=VaultBackfillResponse)
+def post_vault_backfill(request: Request, req: VaultBackfillRequest) -> VaultBackfillResponse:
+    """One-time S4 backfill (design §5.1, founder decision D8 — SPLIT PER
+    EVIDENCE): existing haiku_ncp + agent_intro content becomes PUBLIC vault
+    entry atoms (their chain read paths are unauthenticated today).
+    planet_post is EXCLUDED by D8 — its in-game gating (ownership/diplomatic
+    clarity) contradicts ambient sharing; it is not read here, not ingested
+    here, and not auto-indexed anywhere in S4. Admin-gated; idempotent
+    (canonical payloads → stable CIDs → re-runs count already_present).
+    Run with dry_run=true FIRST and eyeball the counts."""
+    _require_admin(request)
+    from agentic.lattice.coordinate import GridCoordinate
+    from agentic.vault.entries import ingest_entry
+    g = _g()
+    block = g.mining_engine.total_blocks_processed
+    names = {w.public_key.hex(): w.name for w in g.wallets}
+    counts = {"haiku_ncp": 0, "agent_intro": 0,
+              "skipped_unattributed": 0, "already_present": 0}
+
+    def _owner_at(x: int, y: int) -> str | None:
+        # A coordinate outside GLOBAL_BOUNDS can never hold a genesis claim —
+        # GridCoordinate.__post_init__ raises ValueError for it rather than
+        # constructing silently, so treat that the same as "no claim found"
+        # (unattributed adaptation — brief's literal code assumed in-bounds
+        # inputs only; see s4-task-6-report.md).
+        try:
+            coord = GridCoordinate(x=x, y=y)
+        except ValueError:
+            return None
+        claim = g.claim_registry.get_claim_at(coord)
+        return claim.owner.hex() if claim is not None else None
+
+    planned: list[dict] = []
+    for _target, msgs in g.message_history.items():
+        for m in msgs:
+            sc = m.get("sender_coord", {})
+            if "x" not in sc or "y" not in sc:
+                # Fail-safe: a coord-less history entry must NOT default to
+                # (0,0)=GENESIS_ORIGIN (the Singularity's permanent claim) and
+                # be mis-attributed/ingested — it is unattributed (mirrors the
+                # out-of-bounds guard in _owner_at). Intros can't hit this: their
+                # coord is the (x,y) dict KEY, structurally always a full pair.
+                counts["skipped_unattributed"] += 1
+                continue
+            owner = _owner_at(int(sc["x"]), int(sc["y"]))
+            if owner is None:
+                counts["skipped_unattributed"] += 1
+                continue
+            planned.append(dict(
+                kind="haiku_ncp", text=m.get("text", ""), visibility="public",
+                owner_hex=owner, author=names.get(owner, owner[:10]),
+                origin="wallet_signed",
+                meta={"msg_id": m.get("id"), "sender_coord": sc,
+                      "target_coord": m.get("target_coord", {}),
+                      "timestamp": m.get("timestamp")},
+            ))
+    for (x, y), text in g.intro_messages.items():
+        owner = _owner_at(x, y)
+        if owner is None:
+            counts["skipped_unattributed"] += 1
+            continue
+        planned.append(dict(
+            kind="agent_intro", text=text, visibility="public",
+            owner_hex=owner, author=names.get(owner, owner[:10]),
+            origin="wallet_signed", meta={"coord": {"x": x, "y": y}},
+        ))
+
+    meta_map = _vault_entry_meta(g)
+    for fields in planned:
+        if req.dry_run:
+            counts[fields["kind"]] += 1
+            continue
+        try:
+            cid, _shard = ingest_entry(g.vault_dag, created_block=block, **fields)
+        except ValueError:
+            counts["skipped_unattributed"] += 1   # e.g. empty text
+            continue
+        if cid in meta_map:
+            counts["already_present"] += 1
+            continue
+        meta_map[cid] = {"vault_root": g.vault_dag.root_cid(), "block": block}
+        counts[fields["kind"]] += 1
+
+    if not req.dry_run:
+        _refresh_vault_owners()
+        try:
+            from agentic.testnet.persistence import save_state
+            save_state(g, _last_block_time, _DB_PATH)
+        except Exception:
+            pass  # per-block save retries
+    return VaultBackfillResponse(dry_run=req.dry_run, **counts)
 
 
 @app.get("/api/safe-mode", response_model=SafeModeResponse)
