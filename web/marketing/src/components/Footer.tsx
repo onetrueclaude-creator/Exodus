@@ -10,6 +10,7 @@ const productLinks = [
 
 const resourceLinks = [
   { label: "Whitepaper (v1.6)", href: "/AGNTC-Whitepaper-v1.6.pdf" },
+  { label: "Research: Possession-Proven Agent Memory", href: "/research" },
   { label: "Open the Network", href: "https://zkagenticnetwork.com" },
 ];
 
