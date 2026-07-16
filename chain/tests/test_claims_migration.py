@@ -247,8 +247,7 @@ def test_full_save_state_survives_pre_s5_db_no_silent_data_loss(tmp_path):
     assert restored["disk_passes_watermark"] == 3
 
 
-import importlib, inspect, pkgutil
-import agentic.economics as econ_pkg
+import importlib, inspect
 
 
 def test_claims_are_attested_facts_only_post_cut(monkeypatch):
@@ -282,7 +281,7 @@ def test_score_ledger_module_has_no_gameplay_smuggle():
 # earlier test in this file imports it either — without this, the test would pass
 # collection (once `_claim_eligibility` exists) and then fail at runtime with
 # `NameError: name '_pin_registry' is not defined` instead of exercising the gate.
-from agentic.testnet.api import _claim_eligibility, get_airdrop_preview, _g, _pin_registry
+from agentic.testnet.api import _claim_eligibility, get_airdrop_preview, _pin_registry
 
 
 def test_below_gate_owner_is_ineligible(monkeypatch):
@@ -324,7 +323,6 @@ def test_gate_is_binary_not_a_weight(monkeypatch):
 
 
 from agentic.economics.airdrop import m13_capped_quadratic
-from agentic import params
 
 
 def test_ceiling_safety_sum_leq_pool():
