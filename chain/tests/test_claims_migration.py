@@ -39,3 +39,47 @@ def test_build_score_metrics_includes_disk_facts():
     assert owner in metrics
     assert metrics[owner]["disk_passes"] == 2          # two attested passes
     assert metrics[owner]["disk_bytes"] == 4096         # current active bytes
+
+
+from agentic.economics.score_ledger import ScoreLedger
+
+
+def _metrics(owner, mined=0, proofs=0, disk_passes=0, disk_bytes=0):
+    return {owner: {"mined": mined, "proofs": proofs, "activity": 0.0,
+                    "disk_passes": disk_passes, "disk_bytes": disk_bytes}}
+
+
+def test_pre_cut_uses_gameplay_basis(monkeypatch):
+    monkeypatch.setattr(params, "SCORE_BASIS_CUT_BLOCK", 1000)
+    led = ScoreLedger()
+    # Before the cut: mining still earns (legacy basis preserved).
+    led.record_epoch(_metrics("o", mined=5), block=10)
+    assert led.get("o")["capped_contribution"] > 0
+
+
+def test_post_cut_mining_stops_earning_disk_facts_earn(monkeypatch):
+    monkeypatch.setattr(params, "SCORE_BASIS_CUT_BLOCK", 0)  # facts-only from block 0
+    monkeypatch.setattr(params, "SCORE_W_DISK", 1.0)
+    monkeypatch.setattr(params, "SCORE_EPOCH_CAP", 1e12)     # lift cap to see raw math
+    led = ScoreLedger()
+    # Mining grows but disk facts flat → NO contribution (E1: game action stops).
+    led.record_epoch(_metrics("o", mined=100, disk_passes=0, disk_bytes=0), block=5)
+    assert led.get("o")["capped_contribution"] == 0.0
+    # A new audit pass over 2048 held bytes → contribution = 1 × 2048.
+    led.record_epoch(_metrics("o", mined=200, disk_passes=1, disk_bytes=2048), block=6)
+    assert led.get("o")["capped_contribution"] == 2048.0
+
+
+def test_post_cut_restart_no_double_count(monkeypatch):
+    monkeypatch.setattr(params, "SCORE_BASIS_CUT_BLOCK", 0)
+    monkeypatch.setattr(params, "SCORE_W_DISK", 1.0)
+    monkeypatch.setattr(params, "SCORE_EPOCH_CAP", 1e12)
+    led = ScoreLedger()
+    led.record_epoch(_metrics("o", disk_passes=3, disk_bytes=1000), block=6)
+    saved = led.all()  # persisted rows include disk_passes_watermark == 3
+    assert saved["o"]["disk_passes_watermark"] == 3
+    # Simulate restart: rebuild from persisted rows; pin registry still reports 3.
+    led2 = ScoreLedger(rows=saved)
+    led2.record_epoch(_metrics("o", disk_passes=3, disk_bytes=1000), block=7)
+    # No NEW passes since the watermark → no double-count on the reloaded cumulative.
+    assert led2.get("o")["capped_contribution"] == saved["o"]["capped_contribution"]

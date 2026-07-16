@@ -42,7 +42,23 @@ M13 whale-cap/quadratic and M14 NCP-trust are deferred; ``activity_score`` is
 """
 from __future__ import annotations
 
-from agentic.params import SCORE_W_MINE, SCORE_W_SECURE, SCORE_EPOCH_CAP
+from agentic import params
+
+# NOTE (S5 divergence from the plan's literal snippet — see the T3 build report):
+# imported as the MODULE, not as bare names (`from agentic.params import X`).
+# SCORE_BASIS_CUT_BLOCK / SCORE_W_DISK / SCORE_EPOCH_CAP are read live below as
+# `params.X` so `monkeypatch.setattr(params, "X", ...)` (the idiom this task's
+# own tests — and T5/T6/T7's, per the plan — use throughout) actually takes
+# effect. A bare-name import binds a frozen snapshot at module-load time;
+# mutating the `agentic.params` module attribute afterward does NOT change that
+# already-bound local name, so the cut/weight/cap would silently stay at their
+# original values under any monkeypatch. Confirmed empirically: the plan's
+# literal bare-name-import form left `test_post_cut_mining_stops_earning_
+# disk_facts_earn` computing 100.0 instead of 0.0 (cut never observed as live).
+# SCORE_W_MINE/SCORE_W_SECURE move to the same dotted form for consistency —
+# no behavior change (nothing monkeypatches them; test_score_ledger.py already
+# reads `params.SCORE_W_MINE`/`params.SCORE_W_SECURE` dotted for its own
+# expected-value math).
 
 
 def _empty_row(block: int) -> dict:
@@ -52,6 +68,7 @@ def _empty_row(block: int) -> dict:
         "proof_secured_count": 0,     # cumulative-since-genesis
         "activity_score": 0.0,        # latest activity EMA (recorded, not earned)
         "capped_contribution": 0.0,   # the M4/M5-capped composite = airdrop-weight input
+        "disk_passes_watermark": 0,   # S5: last Disk-fact pass count accrued from
         "last_activity_block": None,
         "updated_at_block": block,
     }
@@ -91,42 +108,68 @@ class ScoreLedger:
     def record_epoch(self, metrics: dict[str, dict], block: int) -> None:
         """Accrue one epoch of NEW verifiable work into the cumulative ledger.
 
-        For each owner: ``delta = current_metric - _last_flushed``;
-        ``raw = W_MINE*norm(Δmined) + W_SECURE*norm(Δproofs)``;
-        ``Δcapped = min(raw, SCORE_EPOCH_CAP)`` is added to the cumulative
-        ``capped_contribution``. ``activity_score`` is recorded (latest value),
-        not added to the contribution.
+        DePIN S5 (E1) — cut-aware basis:
+
+        - Pre-cut (``block < SCORE_BASIS_CUT_BLOCK``), the legacy gameplay
+          basis, preserved exactly: ``delta = current_metric - _last_flushed``;
+          ``raw = W_MINE*norm(Δmined) + W_SECURE*norm(Δproofs)``.
+        - Post-cut (``block >= SCORE_BASIS_CUT_BLOCK``), the attested-facts
+          basis: each NEW audit pass credits the bytes currently held —
+          ``raw = SCORE_W_DISK*norm(Δdisk_passes)*norm(disk_bytes)``, where
+          ``Δdisk_passes`` is measured against the row's PERSISTED
+          ``disk_passes_watermark`` (restart-safe — never the in-memory,
+          restart-reset ``_last_flushed``). Mining/securing gameplay counters
+          STOP advancing ``capped_contribution`` post-cut; they remain
+          display-only fields.
+
+        Either way, ``Δcapped = min(raw, SCORE_EPOCH_CAP)`` is added to the
+        cumulative ``capped_contribution``. ``activity_score`` is recorded
+        (latest value), not added to the contribution.
         """
         for owner_hex, m in metrics.items():
             mined = int(m.get("mined", 0))
             proofs = int(m.get("proofs", 0))
             activity = float(m.get("activity", 0.0))
-
-            last = self._last_flushed.get(owner_hex, {})
-            d_mined = mined - last.get("mined", 0)
-            d_proofs = proofs - last.get("proofs", 0)
-            # Metrics are monotonic counts; clamp defensively so a spurious
-            # decrease (or a stale snapshot) can never subtract from the ledger.
-            if d_mined < 0:
-                d_mined = 0
-            if d_proofs < 0:
-                d_proofs = 0
-
-            raw = SCORE_W_MINE * self._norm(d_mined) + SCORE_W_SECURE * self._norm(d_proofs)
-            d_capped = min(raw, SCORE_EPOCH_CAP)
+            disk_passes = int(m.get("disk_passes", 0))
+            disk_bytes = int(m.get("disk_bytes", 0))
 
             row = self._rows.get(owner_hex)
             if row is None:
                 row = _empty_row(block)
                 self._rows[owner_hex] = row
+
+            last = self._last_flushed.get(owner_hex, {})
+            d_mined = 0
+            d_proofs = 0
+
+            if block < params.SCORE_BASIS_CUT_BLOCK:
+                # Legacy gameplay basis (pre-cut) — preserved exactly. Metrics are
+                # monotonic counts; clamp defensively so a spurious decrease (or a
+                # stale snapshot) can never subtract from the ledger.
+                d_mined = max(0, mined - last.get("mined", 0))
+                d_proofs = max(0, proofs - last.get("proofs", 0))
+                raw = params.SCORE_W_MINE * self._norm(d_mined) + params.SCORE_W_SECURE * self._norm(d_proofs)
+            else:
+                # E1 attested-facts basis (post-cut): each NEW audit pass credits
+                # the bytes currently held. disk_passes is monotonic (delta >= 0);
+                # the watermark is PERSISTED on the row (never the in-memory,
+                # restart-reset _last_flushed) so a restart never re-credits
+                # already-counted passes. Mining/securing gameplay counters do NOT
+                # enter — they stay display-only fields post-cut (E1).
+                d_passes = max(0, disk_passes - int(row.get("disk_passes_watermark", 0)))
+                raw = params.SCORE_W_DISK * self._norm(d_passes) * self._norm(disk_bytes)
+
+            d_capped = min(raw, params.SCORE_EPOCH_CAP)
+
             row["mined_blocks"] += d_mined
             row["proof_secured_count"] += d_proofs
             row["capped_contribution"] += d_capped
             row["activity_score"] = activity
+            row["disk_passes_watermark"] = disk_passes
             row["last_activity_block"] = block
             row["updated_at_block"] = block
 
-            # Advance the watermark to the current cumulative metric.
+            # Advance the in-memory gameplay watermark (used only pre-cut).
             self._last_flushed[owner_hex] = {"mined": mined, "proofs": proofs}
 
     def get(self, owner_hex: str) -> dict | None:
