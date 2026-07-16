@@ -15,3 +15,27 @@ def test_s5_params_exist_and_are_sane():
     assert params.CLAIM_ELIGIBILITY_GATE_LEVEL == 2
     # Recency window: an owner must have >= 1 audit pass within this many blocks.
     assert params.CLAIM_ELIGIBILITY_WINDOW_BLOCKS > 0
+
+
+from agentic.testnet.api import _build_score_metrics
+from agentic.testnet.genesis import create_genesis
+from agentic.vault.pin_registry import PlayerPinRegistry
+
+
+def _owner0(g):
+    return g.wallets[0].public_key.hex()
+
+
+def test_build_score_metrics_includes_disk_facts():
+    g = create_genesis(seed=42)
+    owner = _owner0(g)
+    pr = PlayerPinRegistry()
+    pr.assign_pin(owner, shard_id=3, block=10, size_bytes=4096)
+    pr.record_audit(owner, shard_id=3, passed=True, block=10)
+    pr.record_audit(owner, shard_id=3, passed=True, block=40)
+    g.pin_registry = pr
+
+    metrics = _build_score_metrics(g)
+    assert owner in metrics
+    assert metrics[owner]["disk_passes"] == 2          # two attested passes
+    assert metrics[owner]["disk_bytes"] == 4096         # current active bytes

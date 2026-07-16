@@ -743,7 +743,10 @@ def _build_score_metrics(g: "GenesisState") -> dict:
     metrics: dict[str, dict] = {}
 
     def _slot(owner_hex: str) -> dict:
-        return metrics.setdefault(owner_hex, {"mined": 0, "proofs": 0, "activity": 0.0})
+        return metrics.setdefault(
+            owner_hex,
+            {"mined": 0, "proofs": 0, "activity": 0.0, "disk_passes": 0, "disk_bytes": 0},
+        )
 
     # Mining: cumulative-since-restart blocks-mined, keyed by owner bytes.
     for owner_bytes, count in g.mining_engine._blocks_mined_per_owner.items():
@@ -764,6 +767,17 @@ def _build_score_metrics(g: "GenesisState") -> dict:
                 _slot(owner_hex)["activity"] = float(score)
         except Exception:
             pass
+
+    # DePIN S5 attested Disk facts: cumulative audit-passes (monotonic) + current
+    # pinned bytes (gauge), sourced from the PlayerPinRegistry fact surface — NOT
+    # from the securing-proof gameplay counter. Post-cut, Task 3 accrues
+    # Δpasses × pinned_bytes from these (economy E1). Owners with pins but no
+    # gameplay work still surface so their Disk facts accrue.
+    pins = _pin_registry(g)
+    for owner_hex, shards in pins.all().items():
+        slot = _slot(owner_hex)
+        slot["disk_passes"] = sum(int(r.get("passes", 0)) for r in shards.values())
+        slot["disk_bytes"] = pins.pinned_bytes(owner_hex)
 
     return metrics
 
