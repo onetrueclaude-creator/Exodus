@@ -1499,6 +1499,11 @@ class VaultShardResponse(BaseModel):
     count: int
 
 
+class VaultShardFetchRequest(SignedRequest):
+    wallet_index: int
+    shard_id: int
+
+
 class VaultChallengeRequest(SignedRequest):
     wallet_index: int
     shard_id: int
@@ -1581,22 +1586,34 @@ def get_vault_assignment(wallet_index: int) -> VaultAssignmentResponse:
     )
 
 
-@app.get("/api/vault/shard/{shard_id}", response_model=VaultShardResponse)
-def get_vault_shard(shard_id: int, wallet_index: int) -> VaultShardResponse:
-    """Serve a shard's full sampled-PDP sub-units (hex) to the wallet
-    responsible for it, so a player's browser can recompute Merkle proofs
-    itself ("the player's machine proves" model). The whole sub-unit list is
-    returned — not just challenged indices — because the client needs every
-    sibling to rebuild the Merkle paths.
+@app.post("/api/vault/shard", response_model=VaultShardResponse)
+def post_vault_shard_fetch(req: VaultShardFetchRequest) -> VaultShardResponse:
+    """Serve a shard's full sampled-PDP sub-units (hex) to the SIGNED-IN
+    wallet responsible for it, so a player's browser can recompute Merkle
+    proofs itself ("the player's machine proves" model). The whole sub-unit
+    list is returned — not just challenged indices — because the client
+    needs every sibling to rebuild the Merkle paths.
+
+    Signed (B3/B4, issue #221): this used to be an unauthenticated GET, which
+    let any caller enumerate /api/vault/assignment/{i} for a (wallet_index,
+    shard) pair and then read the shard's raw atom payloads with an
+    attacker-chosen wallet_index. It is now a signed POST mirroring
+    /api/vault/challenge and /api/vault/submit-proof: only a wallet with a
+    bound signing key (B4) AND assigned to this shard may fetch its bytes.
+    See docs/superpowers/specs/2026-07-16-issue-221-shard-route-auth-design.md.
     """
     g = _g()
-    if wallet_index < 0 or wallet_index >= len(g.wallets):
+    if req.wallet_index < 0 or req.wallet_index >= len(g.wallets):
         raise HTTPException(status_code=404, detail="Wallet not found")
-    owner = g.wallets[wallet_index].public_key.hex()
-    if shard_id not in g.vault_registry.shards_for_owner(owner):
+    try:
+        verify_write(g, g.wallets[req.wallet_index].public_key, "vault_shard_fetch", req.model_dump(exclude={"signature", "nonce"}), req.signature, req.nonce)
+    except SignatureError as e:
+        raise HTTPException(status_code=401, detail=f"signature: {e}")
+    owner = g.wallets[req.wallet_index].public_key.hex()
+    if req.shard_id not in g.vault_registry.shards_for_owner(owner):
         raise HTTPException(status_code=404, detail="Wallet not responsible for this shard")
-    units = [u.hex() for u in g.vault_registry.shard_sub_units(shard_id)]
-    return VaultShardResponse(shard_id=shard_id, sub_units=units, count=len(units))
+    units = [u.hex() for u in g.vault_registry.shard_sub_units(req.shard_id)]
+    return VaultShardResponse(shard_id=req.shard_id, sub_units=units, count=len(units))
 
 
 @app.post("/api/vault/challenge", response_model=VaultChallengeResponse)
