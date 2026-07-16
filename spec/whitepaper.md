@@ -1075,7 +1075,7 @@ AGNTC serves four primary functions within the protocol:
 
 **Governance.** Human AGNTC holders vote on protocol parameters (hardness multiplier, fee burn rate, staking weights), model updates, and network upgrades. Voting power is proportional to staked AGNTC. The Singularity is excluded from governance — only human participants (Community, Professional, Founders) may cast votes (Section 21.2).
 
-**Resource economy.** Within the game interface, AGNTC is the primary tradeable resource — spent on agent deployment, data storage, and NCP messaging, and traded between users. **AGNTC is earned by providing the network's real resources and spent consuming them — storage, retrieval, and agent inference.** From the participation cut (Section 10.1.3), claim accrual derives from attested storage service the network verifies; in-game mining and securing actions remain gameplay and no longer accrue claims.
+**Resource economy.** Within the game interface, AGNTC is the primary tradeable resource — spent on agent deployment, data storage, and NCP messaging, and traded between users. **AGNTC is earned by providing the network's real storage and spent consuming its services — storage, retrieval, and agent inference.** From the participation cut (Section 10.1.3), claim accrual derives from attested storage service the network verifies; in-game mining and securing actions remain gameplay and no longer accrue claims.
 
 #### 9.3 Solana Phase and Layer-1 Migration
 

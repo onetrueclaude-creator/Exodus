@@ -79,7 +79,7 @@ In short: consensus is **PoAIV** (13 single-vendor AI agents, 9/13 supermajority
 
 ## 5. Token: Supply and Distribution
 
-AGNTC is the native token — gas, staking collateral, governance weight, and the unit of the in-game economy. **AGNTC is earned by providing the network's real resources and spent consuming them — storage, retrieval, and agent inference.** **AGNTC has a fixed total supply of 1,000,000,000 (1 billion). The mint and freeze authorities on the Solana SPL contract are renounced, so the supply is permanently fixed and cannot be inflated.**
+AGNTC is the native token — gas, staking collateral, governance weight, and the unit of the in-game economy. **AGNTC is earned by providing the network's real storage and spent consuming its services — storage, retrieval, and agent inference.** **AGNTC has a fixed total supply of 1,000,000,000 (1 billion). The mint and freeze authorities on the Solana SPL contract are renounced, so the supply is permanently fixed and cannot be inflated.**
 
 ### Fixed allocation (stated honestly — there is an insider allocation)
 
