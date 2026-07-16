@@ -83,3 +83,29 @@ def test_post_cut_restart_no_double_count(monkeypatch):
     led2.record_epoch(_metrics("o", disk_passes=3, disk_bytes=1000), block=7)
     # No NEW passes since the watermark → no double-count on the reloaded cumulative.
     assert led2.get("o")["capped_contribution"] == saved["o"]["capped_contribution"]
+
+
+import sqlite3
+from agentic.testnet import persistence as P
+
+
+def test_disk_watermark_survives_save_load(tmp_path, monkeypatch):
+    monkeypatch.setattr(params, "SCORE_BASIS_CUT_BLOCK", 0)
+    monkeypatch.setattr(params, "SCORE_W_DISK", 1.0)
+    monkeypatch.setattr(params, "SCORE_EPOCH_CAP", 1e12)
+    db = str(tmp_path / "s.db")
+
+    led = ScoreLedger()
+    led.record_epoch(_metrics("o", disk_passes=4, disk_bytes=500), block=6)
+
+    # Minimal round-trip through the score_ledger table helpers.
+    conn = sqlite3.connect(db)
+    P._ensure_schema(conn)                       # creates score_ledger with the new column
+    P._save_score_ledger_rows(conn, led.all())   # persist
+    reloaded = P._load_score_ledger_rows(conn)   # restore
+    conn.close()
+
+    assert reloaded["o"]["disk_passes_watermark"] == 4
+    led2 = ScoreLedger(rows=reloaded)
+    led2.record_epoch(_metrics("o", disk_passes=4, disk_bytes=500), block=7)
+    assert led2.get("o")["capped_contribution"] == led.get("o")["capped_contribution"]
