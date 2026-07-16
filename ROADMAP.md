@@ -94,4 +94,4 @@ Current focus areas:
 
 ## Protocol Specification
 
-The full protocol is defined in the [whitepaper](spec/whitepaper.md) (v1.6). All implementation must align with the whitepaper — if they disagree, the whitepaper wins.
+The full protocol is defined in the [whitepaper](spec/whitepaper.md) (v1.7). All implementation must align with the whitepaper — if they disagree, the whitepaper wins.
