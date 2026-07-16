@@ -115,7 +115,7 @@ def test_shard_bytes_endpoint_serves_owner_sub_units():
         pytest.skip("wallet 1 holds no shard in this seeding")
     shard_id = assignment["shards"][0]
 
-    r = client.get(f"/api/vault/shard/{shard_id}?wallet_index=1")
+    r = client.post("/api/vault/shard", json={"wallet_index": 1, "shard_id": shard_id})
     assert r.status_code == 200
     body = r.json()
     assert body["shard_id"] == shard_id
@@ -138,13 +138,13 @@ def test_shard_bytes_endpoint_unowned_shard_404():
     assignment = client.get("/api/vault/assignment/1").json()
     owned = set(assignment["shards"])
     unowned = next(s for s in range(16) if s not in owned)
-    r = client.get(f"/api/vault/shard/{unowned}?wallet_index=1")
+    r = client.post("/api/vault/shard", json={"wallet_index": 1, "shard_id": unowned})
     assert r.status_code == 404
 
 
 def test_shard_bytes_endpoint_bad_wallet_404():
     client = TestClient(app)
-    r = client.get("/api/vault/shard/0?wallet_index=99999")
+    r = client.post("/api/vault/shard", json={"wallet_index": 99999, "shard_id": 0})
     assert r.status_code == 404
 
 
@@ -159,7 +159,7 @@ def test_client_builds_valid_proof_from_served_shard_bytes():
     shard_id = assignment["shards"][0]
 
     # 1. fetch the full sub-unit list from the new endpoint (what the browser sees)
-    shard_body = client.get(f"/api/vault/shard/{shard_id}?wallet_index=1").json()
+    shard_body = client.post("/api/vault/shard", json={"wallet_index": 1, "shard_id": shard_id}).json()
     sub_units = [bytes.fromhex(u) for u in shard_body["sub_units"]]
 
     # 2. get a challenge (the indices to spot-check)
