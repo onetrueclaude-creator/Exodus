@@ -22,7 +22,7 @@ class TestVaultRouteSurface:
         assert surface == {
             ("/api/vault/root", ("GET",)),
             ("/api/vault/assignment/{wallet_index}", ("GET",)),
-            ("/api/vault/shard/{shard_id}", ("GET",)),
+            ("/api/vault/shard", ("POST",)),
             ("/api/vault/challenge", ("POST",)),
             ("/api/vault/submit-proof", ("POST",)),
             ("/api/vault/status/{wallet_index}", ("GET",)),

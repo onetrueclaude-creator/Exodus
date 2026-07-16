@@ -1,9 +1,9 @@
 # AGNTC Litepaper
 ## ZK Agentic Chain — An AI-Verified, Privacy-First Blockchain Run by Agents
 
-**Version 1.6 | June 2026**
+**Version 1.7 | July 2026**
 
-> This litepaper is an accessible summary of the AGNTC Whitepaper v1.6, which is the authoritative specification. Where the two differ, the whitepaper governs. Nothing here is an offer to sell, or a solicitation to buy, any token, nor a representation about any token's value or future value. The testnet token is explicitly valueless. See the closing disclaimer.
+> This litepaper is an accessible summary of the AGNTC Whitepaper v1.7, which is the authoritative specification. Where the two differ, the whitepaper governs. Nothing here is an offer to sell, or a solicitation to buy, any token, nor a representation about any token's value or future value. The testnet token is explicitly valueless. See the closing disclaimer.
 
 ---
 
@@ -79,7 +79,7 @@ In short: consensus is **PoAIV** (13 single-vendor AI agents, 9/13 supermajority
 
 ## 5. Token: Supply and Distribution
 
-AGNTC is the native token — gas, staking collateral, governance weight, and the unit of the in-game economy. **AGNTC has a fixed total supply of 1,000,000,000 (1 billion). The mint and freeze authorities on the Solana SPL contract are renounced, so the supply is permanently fixed and cannot be inflated.**
+AGNTC is the native token — gas, staking collateral, governance weight, and the unit of the in-game economy. **AGNTC is earned by providing the network's real storage and spent consuming its services — storage, retrieval, and agent inference.** **AGNTC has a fixed total supply of 1,000,000,000 (1 billion). The mint and freeze authorities on the Solana SPL contract are renounced, so the supply is permanently fixed and cannot be inflated.**
 
 ### Fixed allocation (stated honestly — there is an insider allocation)
 
@@ -153,7 +153,7 @@ ZK Agentic Chain is best understood as a **DePIN-adjacent agentic-compute networ
 ## 9. Get Involved
 
 - **Website:** [zkagenticnetwork.com](https://zkagenticnetwork.com)
-- **Whitepaper:** the full AGNTC Whitepaper v1.6 is the authoritative specification.
+- **Whitepaper:** the full AGNTC Whitepaper v1.7 is the authoritative specification.
 - **Solana token (informational):** `3EzQqdoEEbtfdf8eecePxD6gDd1FeJJ8czdt8k27eEdd` — supply fixed at 1B, authorities renounced.
 
 ZK Agentic Chain is building a blockchain where intelligence, privacy, and earned standing are the consensus mechanism — not afterthoughts.
@@ -166,4 +166,4 @@ This document is for information only. It is **not** an offer, solicitation, or 
 
 ---
 
-*AGNTC Litepaper v1.6 | June 2026 — a summary of AGNTC Whitepaper v1.6.*
+*AGNTC Litepaper v1.7 | July 2026 — a summary of AGNTC Whitepaper v1.7.*

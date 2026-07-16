@@ -95,13 +95,14 @@ CREATE TABLE IF NOT EXISTS account_keys (
 );
 
 CREATE TABLE IF NOT EXISTS score_ledger (
-    owner_hex            TEXT PRIMARY KEY,
-    mined_blocks         INTEGER NOT NULL DEFAULT 0,
-    proof_secured_count  INTEGER NOT NULL DEFAULT 0,
-    activity_score       REAL    NOT NULL DEFAULT 0.0,
-    capped_contribution  REAL    NOT NULL DEFAULT 0.0,
-    last_activity_block  INTEGER,
-    updated_at_block     INTEGER NOT NULL
+    owner_hex             TEXT PRIMARY KEY,
+    mined_blocks          INTEGER NOT NULL DEFAULT 0,
+    proof_secured_count   INTEGER NOT NULL DEFAULT 0,
+    activity_score        REAL    NOT NULL DEFAULT 0.0,
+    capped_contribution   REAL    NOT NULL DEFAULT 0.0,
+    disk_passes_watermark INTEGER NOT NULL DEFAULT 0,
+    last_activity_block   INTEGER,
+    updated_at_block      INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS pin_shards (
@@ -142,10 +143,130 @@ def _connect(db_path: Path) -> sqlite3.Connection:
     return conn
 
 
+def _ensure_schema(conn: sqlite3.Connection) -> None:
+    """Create all tables on the given connection if they don't exist, then
+    apply idempotent column migrations for tables that already existed under
+    an older schema.
+
+    Separable from ``init_db`` so tests (and other schema-tolerant helpers)
+    can drive the schema directly against a bare connection.  NOTE: every
+    ``CREATE TABLE`` statement in ``_SCHEMA`` is ``IF NOT EXISTS``, so on its
+    own it does NOT add new columns to an already-existing table on disk —
+    that is what ``_migrate_score_ledger_disk_passes_watermark`` below is for
+    (deploy hazard #5: without it, a carried-forward pre-S5 DB's
+    ``score_ledger`` would keep lacking ``disk_passes_watermark`` forever,
+    the S5 save INSERT would raise ``sqlite3.OperationalError``, and
+    ``save_state``'s broad ``except Exception: pass`` would silently roll
+    back and swallow the entire save — not just the score ledger).
+    """
+    conn.executescript(_SCHEMA)
+    _migrate_score_ledger_disk_passes_watermark(conn)
+
+
+def _migrate_score_ledger_disk_passes_watermark(conn: sqlite3.Connection) -> None:
+    """Idempotent ADD COLUMN migration for a pre-S5 ``score_ledger`` table.
+
+    ``CREATE TABLE IF NOT EXISTS`` is a no-op against an already-existing
+    table, so a DB carried forward from before S5 (T4) would never gain the
+    ``disk_passes_watermark`` column just from ``_SCHEMA`` alone. Detect the
+    gap via ``PRAGMA table_info`` and ``ALTER TABLE ... ADD COLUMN`` it in
+    (SQLite allows ``ADD COLUMN`` with a ``NOT NULL DEFAULT``). Safe to run
+    on every startup: a fresh DB's table already has the column (created
+    with it by ``_SCHEMA`` above), so the check below is a no-op for it, and
+    re-running against an already-migrated DB is also a no-op.
+    """
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(score_ledger)").fetchall()}
+    if "disk_passes_watermark" not in cols:
+        conn.execute(
+            "ALTER TABLE score_ledger ADD COLUMN disk_passes_watermark "
+            "INTEGER NOT NULL DEFAULT 0"
+        )
+
+
 def init_db(db_path: Path) -> None:
     """Create tables if they don't exist. Safe to call on every startup."""
     with _connect(db_path) as conn:
-        conn.executescript(_SCHEMA)
+        _ensure_schema(conn)
+
+
+def _save_score_ledger_rows(conn: sqlite3.Connection, rows: dict[str, dict]) -> None:
+    """Persist a ``{owner_hex: row}`` score-ledger mapping (e.g. ``ScoreLedger.all()``)
+    into the ``score_ledger`` table, including the S5 ``disk_passes_watermark``
+    column (restart-safety for the post-cut Disk-fact accrual — see
+    ``score_ledger.py``'s ``record_epoch``).
+    """
+    ledger_rows = [
+        (
+            owner_hex,
+            int(row.get("mined_blocks", 0)),
+            int(row.get("proof_secured_count", 0)),
+            float(row.get("activity_score", 0.0)),
+            float(row.get("capped_contribution", 0.0)),
+            int(row.get("disk_passes_watermark", 0)),
+            row.get("last_activity_block"),
+            int(row.get("updated_at_block", 0)),
+        )
+        for owner_hex, row in rows.items()
+    ]
+    if ledger_rows:
+        conn.executemany(
+            "INSERT OR REPLACE INTO score_ledger "
+            "(owner_hex, mined_blocks, proof_secured_count, activity_score, "
+            " capped_contribution, disk_passes_watermark, last_activity_block, "
+            " updated_at_block) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            ledger_rows,
+        )
+
+
+def _load_score_ledger_rows(conn: sqlite3.Connection) -> dict[str, dict]:
+    """Load the ``score_ledger`` table into a ``{owner_hex: row}`` mapping.
+
+    Schema-tolerant: a pre-S5 DB whose ``score_ledger`` table predates the
+    ``disk_passes_watermark`` column (added in S5) falls back to ``0`` for
+    that field — mirroring the existing missing-table tolerance
+    ``load_state`` already applies around this call. Reads rows positionally
+    (not by ``sqlite3.Row`` key) so this works whether or not the caller's
+    connection has ``row_factory`` set.
+    """
+    try:
+        rows = conn.execute(
+            "SELECT owner_hex, mined_blocks, proof_secured_count, activity_score, "
+            "       capped_contribution, disk_passes_watermark, last_activity_block, "
+            "       updated_at_block FROM score_ledger"
+        ).fetchall()
+        return {
+            row[0]: {
+                "mined_blocks": int(row[1]),
+                "proof_secured_count": int(row[2]),
+                "activity_score": float(row[3]),
+                "capped_contribution": float(row[4]),
+                "disk_passes_watermark": int(row[5]),
+                "last_activity_block": row[6],
+                "updated_at_block": int(row[7]),
+            }
+            for row in rows
+        }
+    except sqlite3.OperationalError:
+        # Pre-S5 DB without the disk_passes_watermark column — reselect
+        # without it and default the watermark to 0 (E1 restart-safety: a
+        # missing watermark must never be treated as "already caught up").
+        rows = conn.execute(
+            "SELECT owner_hex, mined_blocks, proof_secured_count, activity_score, "
+            "       capped_contribution, last_activity_block, updated_at_block "
+            "FROM score_ledger"
+        ).fetchall()
+        return {
+            row[0]: {
+                "mined_blocks": int(row[1]),
+                "proof_secured_count": int(row[2]),
+                "activity_score": float(row[3]),
+                "capped_contribution": float(row[4]),
+                "disk_passes_watermark": 0,
+                "last_activity_block": row[5],
+                "updated_at_block": int(row[6]),
+            }
+            for row in rows
+        }
 
 
 def save_state(g: GenesisState, last_block_time: float, db_path: Path) -> None:
@@ -269,26 +390,7 @@ def save_state(g: GenesisState, last_block_time: float, db_path: Path) -> None:
             # -- Score ledger (W5): per-owner cumulative contribution ----------
             ledger = getattr(g, "score_ledger", None)
             if ledger is not None:
-                ledger_rows = [
-                    (
-                        owner_hex,
-                        int(row.get("mined_blocks", 0)),
-                        int(row.get("proof_secured_count", 0)),
-                        float(row.get("activity_score", 0.0)),
-                        float(row.get("capped_contribution", 0.0)),
-                        row.get("last_activity_block"),
-                        int(row.get("updated_at_block", 0)),
-                    )
-                    for owner_hex, row in ledger.all().items()
-                ]
-                if ledger_rows:
-                    conn.executemany(
-                        "INSERT OR REPLACE INTO score_ledger "
-                        "(owner_hex, mined_blocks, proof_secured_count, activity_score, "
-                        " capped_contribution, last_activity_block, updated_at_block) "
-                        "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                        ledger_rows,
-                    )
+                _save_score_ledger_rows(conn, ledger.all())
 
             # -- Pin registry (DePIN S1): per-(owner, shard) audit history -----
             pins = getattr(g, "pin_registry", None)
@@ -517,26 +619,17 @@ def load_state(g: GenesisState, db_path: Path) -> float:
 
             # -- Score ledger (W5): restore the cumulative contribution rows ---
             # _last_flushed stays empty (fresh ScoreLedger) so the first
-            # post-restart delta is measured from 0 — no double-count. Guarded
-            # so an old db lacking the table just leaves the empty ledger.
+            # post-restart delta is measured from 0 — no double-count (pre-cut
+            # gameplay terms). The post-cut Disk-fact term instead compares
+            # against the PERSISTED disk_passes_watermark restored below (S5;
+            # see score_ledger.py) — that one MUST ride the row, since pin-
+            # registry passes are cumulative-since-genesis, not since-restart.
+            # Guarded so an old db lacking the table just leaves the empty
+            # ledger; _load_score_ledger_rows itself tolerates an old table
+            # that predates the disk_passes_watermark column.
             try:
                 from agentic.economics.score_ledger import ScoreLedger
-                ledger_rows = conn.execute(
-                    "SELECT owner_hex, mined_blocks, proof_secured_count, activity_score, "
-                    "       capped_contribution, last_activity_block, updated_at_block "
-                    "FROM score_ledger"
-                ).fetchall()
-                loaded: dict[str, dict] = {
-                    row["owner_hex"]: {
-                        "mined_blocks": int(row["mined_blocks"]),
-                        "proof_secured_count": int(row["proof_secured_count"]),
-                        "activity_score": float(row["activity_score"]),
-                        "capped_contribution": float(row["capped_contribution"]),
-                        "last_activity_block": row["last_activity_block"],
-                        "updated_at_block": int(row["updated_at_block"]),
-                    }
-                    for row in ledger_rows
-                }
+                loaded = _load_score_ledger_rows(conn)
                 g.score_ledger = ScoreLedger(rows=loaded)
             except Exception:
                 pass  # missing/old score_ledger table → keep the fresh empty ledger

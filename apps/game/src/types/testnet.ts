@@ -285,7 +285,7 @@ export interface VaultAssignmentResponse {
   shards: number[];
 }
 
-// GET /api/vault/shard/{shard_id}?wallet_index=N — canonical sub-units (hex) the client proves over
+// POST /api/vault/shard — signed { wallet_index, shard_id } body — canonical sub-units (hex) the client proves over
 export interface VaultShardResponse {
   shard_id: number;
   sub_units: string[];
