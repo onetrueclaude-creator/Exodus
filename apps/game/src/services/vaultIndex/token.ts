@@ -54,6 +54,15 @@ async function isRevoked(jti: string): Promise<boolean> {
   return (r.rowCount ?? 0) > 0;
 }
 
+// Malformed-mint defense-in-depth: not attacker-reachable (HS256 secret
+// required to sign), but an out-of-table tier would otherwise flow through
+// to params.quotaTiers[tier] → undefined → TypeError in search/fetch.
+// Re-validate against the exact tier set; unknown/malformed (incl. missing
+// or non-string) → the most restrictive tier.
+function sanitizeQuotaTier(v: unknown): QuotaTier {
+  return v === 'read_only' || v === 'wallet' || v === 'standing' || v === 'veteran' ? v : 'read_only';
+}
+
 export async function verifyVaultToken(token: string): Promise<VaultTokenClaims> {
   const { payload } = await jwtVerify(token, secret(), {
     issuer: ISSUER, audience: AUDIENCE,
@@ -65,7 +74,7 @@ export async function verifyVaultToken(token: string): Promise<VaultTokenClaims>
     walletIndex: Number(payload.walletIndex),
     username: String(payload.username ?? ''),
     scope: (payload.scope as MemoryScope[]) ?? [],
-    quotaTier: (payload.quotaTier as QuotaTier) ?? 'read_only',
+    quotaTier: sanitizeQuotaTier(payload.quotaTier),
     jti,
     exp: Number(payload.exp),
   };

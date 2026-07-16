@@ -72,6 +72,35 @@ describe('mint + verify', () => {
     queryMock.mockResolvedValue({ rows: [{ jti: 'any' }], rowCount: 1 });
     await expect(verifyVaultToken(token)).rejects.toThrow(/revoked/);
   });
+
+  // REV-s4-whole-branch pre-PR item 2 (low-sev): quotaTier is cast from the
+  // JWT without runtime validation. A malformed mint producing an
+  // out-of-table tier would otherwise flow through to
+  // params.quotaTiers[tier] → undefined → TypeError in search/fetch. Not
+  // attacker-reachable (HS256 secret required to sign) — defense-in-depth.
+  it('sanitizes an out-of-table quotaTier to read_only (malformed-mint defense-in-depth)', async () => {
+    const bad = await new SignJWT({
+      walletIndex: 1, username: 'neo',
+      scope: ['memory:read'], quotaTier: 'admin',
+    })
+      .setProtectedHeader({ alg: 'HS256' }).setSubject('a'.repeat(64))
+      .setIssuer('zkagenticnetwork.com').setAudience('vault-mcp')
+      .setJti('x').setExpirationTime('1h').sign(enc);
+    const claims = await verifyVaultToken(bad);
+    expect(claims.quotaTier).toBe('read_only');
+  });
+
+  it('sanitizes a non-string quotaTier to read_only (malformed-mint defense-in-depth)', async () => {
+    const bad = await new SignJWT({
+      walletIndex: 1, username: 'neo',
+      scope: ['memory:read'], quotaTier: 42,
+    })
+      .setProtectedHeader({ alg: 'HS256' }).setSubject('a'.repeat(64))
+      .setIssuer('zkagenticnetwork.com').setAudience('vault-mcp')
+      .setJti('x').setExpirationTime('1h').sign(enc);
+    const claims = await verifyVaultToken(bad);
+    expect(claims.quotaTier).toBe('read_only');
+  });
 });
 
 describe('revokeToken', () => {
