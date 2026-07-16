@@ -165,6 +165,10 @@ class ScoreLedger:
             row["proof_secured_count"] += d_proofs
             row["capped_contribution"] += d_capped
             row["activity_score"] = activity
+            # Last-seen (not max()) is correct ONLY because disk_passes is monotonic
+            # (record_audit only increments; shards are never pruned) — a future
+            # change that prunes shards or resets passes would need max(row[...], disk_passes)
+            # here to avoid re-crediting a since-lowered count as new work.
             row["disk_passes_watermark"] = disk_passes
             row["last_activity_block"] = block
             row["updated_at_block"] = block

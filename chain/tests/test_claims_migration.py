@@ -109,3 +109,139 @@ def test_disk_watermark_survives_save_load(tmp_path, monkeypatch):
     led2 = ScoreLedger(rows=reloaded)
     led2.record_epoch(_metrics("o", disk_passes=4, disk_bytes=500), block=7)
     assert led2.get("o")["capped_contribution"] == led.get("o")["capped_contribution"]
+
+
+# --------------------------------------------------------------------------- #
+# Deploy hazard #5 (independent S5 review): schema-tolerance was load-only.  #
+# Against a carried-forward pre-S5 testnet_state.db, CREATE TABLE IF NOT     #
+# EXISTS is a no-op on the already-existing score_ledger table, so the       #
+# disk_passes_watermark column never appears. The save INSERT then raises    #
+# sqlite3.OperationalError, and save_state's broad `except Exception: pass`  #
+# silently rolls back and swallows the ENTIRE save -- every table's state,   #
+# not just the score ledger. Fixed with an idempotent ALTER TABLE migration  #
+# in _ensure_schema.                                                         #
+# --------------------------------------------------------------------------- #
+def _pre_s5_score_ledger_ddl() -> str:
+    """The 7-column score_ledger shape that predates disk_passes_watermark."""
+    return """
+        CREATE TABLE score_ledger (
+            owner_hex           TEXT PRIMARY KEY,
+            mined_blocks        INTEGER NOT NULL DEFAULT 0,
+            proof_secured_count INTEGER NOT NULL DEFAULT 0,
+            activity_score      REAL    NOT NULL DEFAULT 0.0,
+            capped_contribution REAL    NOT NULL DEFAULT 0.0,
+            last_activity_block INTEGER,
+            updated_at_block    INTEGER NOT NULL
+        )
+    """
+
+
+def test_pre_s5_score_ledger_gains_watermark_column_on_ensure_schema(tmp_path):
+    """Hazard #5, core seam: _ensure_schema must migrate a carried-forward
+    pre-S5 score_ledger table in place (ADD COLUMN), and the S5 save path
+    (_save_score_ledger_rows) must succeed against it afterward -- both fail
+    against pre-fix code (missing column / sqlite3.OperationalError)."""
+    db_path = tmp_path / "legacy.db"
+
+    # Hand-build the PRE-S5 schema -- what a carried-forward production DB
+    # looks like before this fix -- and seed it with a legacy row.
+    conn = sqlite3.connect(db_path)
+    conn.execute(_pre_s5_score_ledger_ddl())
+    conn.execute(
+        "INSERT INTO score_ledger (owner_hex, mined_blocks, proof_secured_count, "
+        "activity_score, capped_contribution, last_activity_block, updated_at_block) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ("legacy_owner", 5, 2, 1.5, 10.0, 3, 3),
+    )
+    conn.commit()
+
+    cols_before = {row[1] for row in conn.execute("PRAGMA table_info(score_ledger)").fetchall()}
+    assert "disk_passes_watermark" not in cols_before  # sanity: genuinely pre-S5
+
+    # The fix under test: _ensure_schema must migrate the column in, even
+    # though the table already exists (CREATE TABLE IF NOT EXISTS alone
+    # cannot do this -- it is a no-op against an existing table).
+    P._ensure_schema(conn)
+
+    cols_after = {row[1] for row in conn.execute("PRAGMA table_info(score_ledger)").fetchall()}
+    assert "disk_passes_watermark" in cols_after
+
+    # The legacy row must survive the migration, watermark defaulted to 0
+    # (a missing watermark must never be treated as "already caught up").
+    legacy = conn.execute(
+        "SELECT disk_passes_watermark FROM score_ledger WHERE owner_hex = ?",
+        ("legacy_owner",),
+    ).fetchone()
+    assert legacy[0] == 0
+
+    # The S5 save path must now SUCCEED against the migrated table -- this
+    # INSERT is exactly what raised sqlite3.OperationalError before the fix.
+    P._save_score_ledger_rows(conn, {
+        "new_owner": {
+            "mined_blocks": 1, "proof_secured_count": 0,
+            "activity_score": 0.0, "capped_contribution": 4096.0,
+            "disk_passes_watermark": 7,
+            "last_activity_block": 9, "updated_at_block": 9,
+        }
+    })
+    conn.commit()
+
+    reloaded = P._load_score_ledger_rows(conn)
+    conn.close()
+    assert reloaded["new_owner"]["disk_passes_watermark"] == 7
+    assert reloaded["legacy_owner"]["disk_passes_watermark"] == 0
+
+    # Migration must be idempotent -- safe to run again on the same DB
+    # (e.g. every startup) without raising "duplicate column name".
+    conn2 = sqlite3.connect(db_path)
+    P._ensure_schema(conn2)
+    conn2.close()
+
+
+def test_full_save_state_survives_pre_s5_db_no_silent_data_loss(tmp_path):
+    """Robustness (hazard #5): pre-fix, the missing column made the WHOLE
+    save_state() transaction raise deep inside the score_ledger insert and
+    roll back -- losing account_keys (and every other table written in the
+    same call) too, not just score_ledger, because the broad
+    `except Exception: pass` hid the failure completely. Post-fix, a full
+    save_state()/load_state() round trip against a carried-forward pre-S5 DB
+    must succeed and EVERY table's data from that call must survive."""
+    db_path = tmp_path / "legacy_full.db"
+
+    # Build a full pre-S5 DB: every table in its current shape EXCEPT
+    # score_ledger, which predates the S5 disk_passes_watermark column --
+    # the only schema change S5 introduced (see the T1-T4 commits).
+    conn = sqlite3.connect(db_path)
+    conn.executescript(P._SCHEMA)
+    conn.execute("DROP TABLE score_ledger")
+    conn.execute(_pre_s5_score_ledger_ddl())
+    conn.commit()
+    conn.close()
+
+    # Startup path: init_db must apply the idempotent migration.
+    P.init_db(db_path)
+
+    g = create_genesis(num_wallets=10, num_claims=0, seed=42)
+    owner = g.wallets[1].public_key
+    owner_hex = owner.hex()
+    g.account_nonces[owner] = 9  # a DIFFERENT table (account_keys) in the same save
+    g.score_ledger.record_epoch(
+        {owner_hex: {"mined": 0, "proofs": 0, "activity": 0.0,
+                      "disk_passes": 3, "disk_bytes": 1000}},
+        block=1,
+    )
+
+    P.save_state(g, last_block_time=42.0, db_path=db_path)
+
+    g2 = create_genesis(num_wallets=10, num_claims=0, seed=42)
+    P.load_state(g2, db_path)
+
+    # Both tables' writes from the SAME save_state() call must have survived
+    # together -- proving the transaction committed rather than silently
+    # rolling back behind the broad except (pre-fix: account_nonces would be
+    # empty here, since the whole transaction -- not just score_ledger --
+    # never reached disk).
+    assert g2.account_nonces.get(owner) == 9
+    restored = g2.score_ledger.get(owner_hex)
+    assert restored is not None
+    assert restored["disk_passes_watermark"] == 3

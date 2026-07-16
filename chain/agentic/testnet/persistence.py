@@ -137,17 +137,43 @@ def _connect(db_path: Path) -> sqlite3.Connection:
 
 
 def _ensure_schema(conn: sqlite3.Connection) -> None:
-    """Create all tables on the given connection if they don't exist.
+    """Create all tables on the given connection if they don't exist, then
+    apply idempotent column migrations for tables that already existed under
+    an older schema.
 
     Separable from ``init_db`` so tests (and other schema-tolerant helpers)
-    can drive the schema directly against a bare connection.  NOTE: because
-    every statement is ``CREATE TABLE IF NOT EXISTS``, this does NOT add new
-    columns to an already-existing table on disk (e.g. a pre-S5 DB's
-    ``score_ledger`` lacking ``disk_passes_watermark``) — see
-    ``_load_score_ledger_rows`` for the schema-tolerant read that covers
-    that case.
+    can drive the schema directly against a bare connection.  NOTE: every
+    ``CREATE TABLE`` statement in ``_SCHEMA`` is ``IF NOT EXISTS``, so on its
+    own it does NOT add new columns to an already-existing table on disk —
+    that is what ``_migrate_score_ledger_disk_passes_watermark`` below is for
+    (deploy hazard #5: without it, a carried-forward pre-S5 DB's
+    ``score_ledger`` would keep lacking ``disk_passes_watermark`` forever,
+    the S5 save INSERT would raise ``sqlite3.OperationalError``, and
+    ``save_state``'s broad ``except Exception: pass`` would silently roll
+    back and swallow the entire save — not just the score ledger).
     """
     conn.executescript(_SCHEMA)
+    _migrate_score_ledger_disk_passes_watermark(conn)
+
+
+def _migrate_score_ledger_disk_passes_watermark(conn: sqlite3.Connection) -> None:
+    """Idempotent ADD COLUMN migration for a pre-S5 ``score_ledger`` table.
+
+    ``CREATE TABLE IF NOT EXISTS`` is a no-op against an already-existing
+    table, so a DB carried forward from before S5 (T4) would never gain the
+    ``disk_passes_watermark`` column just from ``_SCHEMA`` alone. Detect the
+    gap via ``PRAGMA table_info`` and ``ALTER TABLE ... ADD COLUMN`` it in
+    (SQLite allows ``ADD COLUMN`` with a ``NOT NULL DEFAULT``). Safe to run
+    on every startup: a fresh DB's table already has the column (created
+    with it by ``_SCHEMA`` above), so the check below is a no-op for it, and
+    re-running against an already-migrated DB is also a no-op.
+    """
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(score_ledger)").fetchall()}
+    if "disk_passes_watermark" not in cols:
+        conn.execute(
+            "ALTER TABLE score_ledger ADD COLUMN disk_passes_watermark "
+            "INTEGER NOT NULL DEFAULT 0"
+        )
 
 
 def init_db(db_path: Path) -> None:
