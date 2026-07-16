@@ -321,3 +321,37 @@ def test_gate_is_binary_not_a_weight(monkeypatch):
     alloc = get_airdrop_preview()["allocations"]
     # Different-tenure, equal-fact owners get identical projected allocation.
     assert alloc[a]["projected_allocation"] == alloc[b]["projected_allocation"]
+
+
+from agentic.economics.airdrop import m13_capped_quadratic
+from agentic import params
+
+
+def test_ceiling_safety_sum_leq_pool():
+    """§3 ceiling safety: Σ allocations <= pool for any participant count."""
+    pool = float(params.AIRDROP_POOL)
+    cap = pool / params.AIRDROP_WHALE_CAP_DIVISOR
+    for n in (1, 5, 50, 500):
+        alloc, treasury = m13_capped_quadratic([1.0] * n, pool, cap)
+        assert sum(alloc) <= pool + 1e-3
+        assert abs(sum(alloc) + treasury - pool) < 1e-3
+
+
+def test_release_residual_is_pool_bounded_not_capacity_gated():
+    """BOUNDARY ITEM #1 (break-point #1), named in code so it is never mistaken
+    for capacity-gated issuance:
+
+    S5 makes CLAIM DISTRIBUTION attested-fact-linked. It does NOT make aggregate
+    RELEASE capacity-gated — the M13 transform distributes WITHIN a fixed pool
+    (AIRDROP_POOL, a slice of the fixed 1B), bounded by construction. The per-epoch
+    5% RELEASE ceiling stays position/time-based (a separate queued founder round:
+    'capacity-linked release curve', economy §6.3). This is distributional-under-a
+    -hard-cap, not a death-spiral — legitimately deferred, explicitly named."""
+    pool = float(params.AIRDROP_POOL)
+    cap = pool / params.AIRDROP_WHALE_CAP_DIVISOR
+    # Doubling total attested facts does NOT increase total distributed — the cap
+    # bounds it (distribution reshuffles shares; it does not expand the pool).
+    small, _ = m13_capped_quadratic([1.0, 1.0], pool, cap)
+    large, _ = m13_capped_quadratic([1000.0, 1000.0], pool, cap)
+    assert abs(sum(small) - sum(large)) < 1e-3   # same total, only shares differ
+    assert params.AIRDROP_POOL == params.MAX_SUPPLY // 4  # pool is a slice of the fixed cap
