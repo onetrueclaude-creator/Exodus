@@ -477,3 +477,28 @@ def test_c5_no_spend_handler_raises_pinned_bytes():
             assert "assign_pin(" not in seg and "record_audit(" not in seg, (
                 f"a spend handler ({tok}) writes pins — C5 purchasable-multiplier seam"
             )
+
+
+def test_end_to_end_cut_switches_basis_and_survives_restart(tmp_path, monkeypatch):
+    """Whole-slice: before the cut mining earns; at/after the cut only Disk facts
+    earn; a restart preserves the post-cut cumulative (no double-count)."""
+    monkeypatch.setattr(params, "SCORE_BASIS_CUT_BLOCK", 3)
+    monkeypatch.setattr(params, "SCORE_W_DISK", 1.0)
+    monkeypatch.setattr(params, "SCORE_EPOCH_CAP", 1e12)
+    led = ScoreLedger()
+    o = "owner_e2e"
+
+    # Block 1 (pre-cut): mining earns.
+    led.record_epoch(_metrics(o, mined=4), block=1)
+    pre = led.get(o)["capped_contribution"]
+    assert pre > 0
+
+    # Block 4 (post-cut): mining grows but earns nothing new; a Disk fact earns.
+    led.record_epoch(_metrics(o, mined=999, disk_passes=1, disk_bytes=100), block=4)
+    post = led.get(o)["capped_contribution"]
+    assert post == pre + 100.0
+
+    # Restart from persisted rows; re-observe the same pin totals → no re-credit.
+    led2 = ScoreLedger(rows=led.all())
+    led2.record_epoch(_metrics(o, mined=1500, disk_passes=1, disk_bytes=100), block=5)
+    assert led2.get(o)["capped_contribution"] == post
