@@ -485,7 +485,7 @@ export default function ResearchPage() {
             <strong className="text-text-primary">Possession-verifiability.</strong>{" "}At any challenge time,{" "}
             <code>C</code>{" "}(or, later, a committee) can verify with a short interaction that a participant holds its
             assigned shard, without transferring the shard, and detect a missing fraction <em>&epsilon;</em>{" "}of a
-            shard with probability <code>&ge; 1 &minus; (1&minus;&epsilon)^s</code>{" "}for <em>s</em>{" "}sampled sub-units.
+            shard with probability <code>&ge; 1 &minus; (1&minus;&epsilon;)^s</code>{" "}for <em>s</em>{" "}sampled sub-units.
           </li>
           <li>
             <strong className="text-text-primary">Durability.</strong>{" "}Loss of any single participant (or of{" "}
@@ -1031,10 +1031,10 @@ export default function ResearchPage() {
           <li>
             <strong className="text-text-primary">Detection probability:</strong>{" "}a single challenge of <em>s</em>{" "}
             independent samples detects a missing fraction <em>&epsilon;</em>{" "}with probability{" "}
-            <code>1 &minus; (1&minus;&epsilon)^s</code>. Shipped <code>s = 8</code>: a 1% loss is caught in one shot
+            <code>1 &minus; (1&minus;&epsilon;)^s</code>. Shipped <code>s = 8</code>: a 1% loss is caught in one shot
             with probability &asymp; 0.077; the ~0.99 figure needs ~460 total independent samples, reached{" "}
             <em>cumulatively</em>{" "}over ~58 recurring challenges (or single-shot only if <em>s</em>{" "}is tuned to ~460).
-            Cumulative detection over <em>k</em>{" "}challenges is <code>1 &minus; (1&minus;&epsilon)^(sk)</code>.
+            Cumulative detection over <em>k</em>{" "}challenges is <code>1 &minus; (1&minus;&epsilon;)^(sk)</code>.
           </li>
           <li>
             <strong className="text-text-primary">Index retrieval:</strong>{" "}hybrid keyword + HNSW vector search,
@@ -1100,7 +1100,7 @@ export default function ResearchPage() {
             <strong className="text-text-primary">Possession soundness.</strong>{" "}Adversary drops a fraction{" "}
             <em>&epsilon;</em>{" "}&isin; {"{0.1%, 1%, 5%}"} of a shard; measure empirical detection rate vs. sample size{" "}
             <em>s</em>{" "}(single-shot) and vs. number of recurring challenges <em>k</em>{" "}(cumulative); confirm they
-            match <code>1&minus;(1&minus;&epsilon)^s</code>{" "}and <code>1&minus;(1&minus;&epsilon)^(sk)</code>, and
+            match <code>1&minus;(1&minus;&epsilon;)^s</code>{" "}and <code>1&minus;(1&minus;&epsilon;)^(sk)</code>, and
             that the shipped <code>s = 8</code>{" "}reaches ~99% cumulative detection of a 1% loss by ~58 challenges.{" "}
             <em>Metric:</em>{" "}detection probability; <em>baseline:</em>{" "}the analytic bound; <em>threat:</em>{" "}correlated
             (non-independent) sampling &mdash; test PRNG independence from the beacon seed.
