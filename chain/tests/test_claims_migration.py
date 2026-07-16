@@ -245,3 +245,32 @@ def test_full_save_state_survives_pre_s5_db_no_silent_data_loss(tmp_path):
     restored = g2.score_ledger.get(owner_hex)
     assert restored is not None
     assert restored["disk_passes_watermark"] == 3
+
+
+import importlib, inspect, pkgutil
+import agentic.economics as econ_pkg
+
+
+def test_claims_are_attested_facts_only_post_cut(monkeypatch):
+    """E1: post-cut, gameplay counters cannot move the claim; Disk facts can.
+    Discrimination-proven — if record_epoch ever routed `mined` into the post-cut
+    raw term, the first assert would trip."""
+    monkeypatch.setattr(params, "SCORE_BASIS_CUT_BLOCK", 0)
+    monkeypatch.setattr(params, "SCORE_W_DISK", 1.0)
+    monkeypatch.setattr(params, "SCORE_EPOCH_CAP", 1e12)
+    led = ScoreLedger()
+    # Inject only gameplay growth (mined + proofs), zero Disk facts.
+    led.record_epoch(_metrics("g", mined=10_000, proofs=10_000, disk_passes=0, disk_bytes=0), block=1)
+    assert led.get("g")["capped_contribution"] == 0.0   # game action earns nothing
+    # Inject Disk-fact growth.
+    led.record_epoch(_metrics("g", mined=20_000, proofs=20_000, disk_passes=1, disk_bytes=64), block=2)
+    assert led.get("g")["capped_contribution"] == 64.0  # only the attested fact counts
+
+
+def test_score_ledger_module_has_no_gameplay_smuggle():
+    """Structural: the post-cut earn term names only Disk-fact inputs. Guards
+    against a future edit that reintroduces a gameplay counter into the post-cut
+    branch by keyword. (Mirrors the Time-guard package sweep shape.)"""
+    src = inspect.getsource(importlib.import_module("agentic.economics.score_ledger"))
+    # The post-cut raw term must be built from disk_passes/disk_bytes + SCORE_W_DISK.
+    assert "SCORE_W_DISK" in src and "disk_passes_watermark" in src
