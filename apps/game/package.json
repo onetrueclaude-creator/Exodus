@@ -11,7 +11,8 @@
     "test:run": "vitest run",
     "visual-debug": "node scripts/visual-debug/game-flow.mjs",
     "visual-debug:panels": "node scripts/visual-debug/panel-inventory.mjs",
-    "vault:migrate": "node scripts/vault-index-migrate.mjs"
+    "vault:migrate": "node scripts/vault-index-migrate.mjs",
+    "vault:rebuild": "node scripts/vault-index-rebuild.mjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
