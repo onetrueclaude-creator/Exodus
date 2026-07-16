@@ -967,3 +967,38 @@ class TestDePinS3TimeParams:
         assert isinstance(TIME_EPOCH_BLOCKS, int)
         assert TIME_EPOCH_BLOCKS == 1440   # ~=1 day @ 60s block cadence
         assert 0 < TIME_EPOCH_BLOCKS <= 10_000          # sane accrual window bound
+
+
+# ---------------------------------------------------------------------------
+# DePIN S5 Claims-Migration Concordance Tests (economy design 2026-07-09,
+# E1–E4; whitepaper §9.2 / §10.1.3 amendment + §22 param rows)
+# ---------------------------------------------------------------------------
+
+
+class TestWhitepaperS5ClaimsParams:
+    """S5 claims-migration params (whitepaper §10.1.3 amendment / §22)."""
+
+    def test_score_basis_cut_block_pinned(self):
+        # §22 pins the shipped value: 10^12 (sentinel — cut disabled). Pinning it
+        # (not just hasattr) is what makes the §22 "pinned against silent drift"
+        # claim true; a founder activation re-pins this in lockstep.
+        assert params.SCORE_BASIS_CUT_BLOCK == 10**12, (
+            "Whitepaper §22/§10.1.3: the cut block ships as the high sentinel 10**12 "
+            "(cut disabled); a real future height is set in a founder activation round"
+        )
+
+    def test_claim_eligibility_gate_level(self):
+        assert params.CLAIM_ELIGIBILITY_GATE_LEVEL == 2, (
+            "Whitepaper §10.1.3: claim eligibility requires the level-2 Time gate"
+        )
+
+    def test_disk_weight_positive(self):
+        assert params.SCORE_W_DISK > 0, (
+            "Whitepaper §10.1.3: attested Disk facts carry positive claim weight"
+        )
+
+    def test_claim_eligibility_window_blocks_pinned(self):
+        # §22 pins the shipped value: 1440 (= TIME_EPOCH_BLOCKS, ~1 day @ 60s).
+        assert params.CLAIM_ELIGIBILITY_WINDOW_BLOCKS == 1440, (
+            "Whitepaper §22/§10.1.3: the claim recency window ships at 1440 blocks"
+        )

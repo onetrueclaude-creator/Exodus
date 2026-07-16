@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock fetch globally (mirrors testnetApi.test.ts pattern).
 const mockFetch = vi.fn();
@@ -12,6 +12,7 @@ import {
   submitVaultProof,
   getVaultStatus,
 } from '@/services/testnetApi';
+import { setWriteSigner } from '@/lib/writeSigner';
 
 describe('vault API client', () => {
   beforeEach(() => mockFetch.mockReset());
@@ -36,14 +37,50 @@ describe('vault API client', () => {
     expect(r.shards).toEqual([3, 7]);
   });
 
-  it('getVaultShard GETs shard with wallet_index query', async () => {
+  it('getVaultShard POSTs {wallet_index, shard_id} when no signer is registered (#221)', async () => {
+    // Mirrors getVaultChallenge's unsigned shape below: with no WriteSigner
+    // registered, signedPost posts the body as-is (dev bypass accepts it
+    // unsigned on the chain side) — see writeSigner.ts.
     const body = { shard_id: 5, sub_units: ['aa', 'bb'], count: 2 };
     mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(body) });
 
     const r = await getVaultShard(5, 1);
 
-    expect(mockFetch).toHaveBeenCalledWith('/api/chain/api/vault/shard/5?wallet_index=1');
+    expect(mockFetch).toHaveBeenCalledWith('/api/chain/api/vault/shard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wallet_index: 1, shard_id: 5 }),
+    });
     expect(r.sub_units).toEqual(['aa', 'bb']);
+  });
+
+  describe('getVaultShard with a registered signer (#221)', () => {
+    afterEach(() => setWriteSigner(null));
+
+    it('signs through the gateway: nonce context fetch, then a signed POST body', async () => {
+      setWriteSigner({
+        pubkeyBase58: 'Pk',
+        signMessage: async () => new Uint8Array(64),
+      });
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ nonce: 3, owner_hex: 'aa'.repeat(32), chain_id: 'testnet' }),
+      });
+      const body = { shard_id: 5, sub_units: ['aa', 'bb'], count: 2 };
+      mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(body) });
+
+      const r = await getVaultShard(5, 1);
+
+      expect(mockFetch).toHaveBeenNthCalledWith(1, '/api/chain/api/nonce/0');
+      const [url, init] = mockFetch.mock.calls[1];
+      expect(url).toBe('/api/chain/api/vault/shard');
+      const sentBody = JSON.parse(init.body);
+      expect(sentBody.wallet_index).toBe(1);
+      expect(sentBody.shard_id).toBe(5);
+      expect(sentBody.nonce).toBe(3);
+      expect(sentBody.signature).toBeTypeOf('string');
+      expect(r.sub_units).toEqual(['aa', 'bb']);
+    });
   });
 
   it('getVaultChallenge POSTs wallet_index + shard_id', async () => {

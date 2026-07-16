@@ -1075,7 +1075,7 @@ AGNTC serves four primary functions within the protocol:
 
 **Governance.** Human AGNTC holders vote on protocol parameters (hardness multiplier, fee burn rate, staking weights), model updates, and network upgrades. Voting power is proportional to staked AGNTC. The Singularity is excluded from governance — only human participants (Community, Professional, Founders) may cast votes (Section 21.2).
 
-**Resource economy.** Within the game interface, AGNTC represents the primary tradeable resource. It is earned through mining (Secure actions), spent on agent deployment, data storage, and NCP messaging, and traded between users.
+**Resource economy.** Within the game interface, AGNTC is the primary tradeable resource — spent on agent deployment, data storage, and NCP messaging, and traded between users. **AGNTC is earned by providing the network's real storage and spent consuming its services — storage, retrieval, and agent inference.** From the participation cut (Section 10.1.3), claim accrual derives from attested storage service the network verifies; in-game mining and securing actions remain gameplay and no longer accrue claims.
 
 #### 9.3 Solana Phase and Layer-1 Migration
 
@@ -1164,6 +1164,10 @@ Distribution properties:
 - **Time-weighted, anti-Sybil scoring.** Scoring weights sustained, genuine protocol work; the conversion formula is identical for every participant.
 
 This earned-participation model directs the community bucket to the participants who actually ran and secured the network during its formative period, while the fixed cap and pro-rata conversion remove any dependence on predicting participant numbers.
+
+**Attested-fact claim basis (from the participation cut).** From a published cut block, a participant's recorded contribution accrues only from **attested service facts** — storage audit-passes weighted by the bytes actually held and verified — not from in-game mining or securing actions, which remain gameplay. Contribution recorded before the cut is preserved. Claim *eligibility* each period requires standing (a soulbound-tenure service gate) and a recent verified audit; standing gates **who** may claim, never **how much** — equal verified facts convert to equal shares regardless of tenure. Compute contributions are **not** part of the basis until a verified compute fact exists (a roadmap item, not a present claim).
+
+**Scope note (release vs. distribution).** This makes the *distribution* of the fixed participation pool fact-linked. It does **not** make aggregate *release* capacity-gated: the pool is a fixed slice of the fixed 1B supply, and the per-period release rate remains the published 5% ceiling. A capacity-linked release curve is a separate, future protocol decision. The total is bounded by the fixed pool in every case.
 
 #### 10.2 Mining-Driven Distribution
 
@@ -1646,6 +1650,8 @@ reward_per_verifier = (total_fees * (1 - FEE_BURN_RATE) * REWARD_SPLIT_VERIFIER)
 ```
 reward_staker(i) = (total_fees * (1 - FEE_BURN_RATE) * REWARD_SPLIT_STAKER) * S_eff(i)
 ```
+
+*The block-reward split above is distinct from, and unchanged by, the attested-fact participation-claim basis of Section 10.1.3: that migration changes only how the fixed participation pool is apportioned to participants, not the on-chain block-reward mechanics here.*
 
 #### 14.2 Secure Action Rewards
 
@@ -2534,6 +2540,17 @@ The following table provides the complete set of protocol-level parameters that 
 | SINGULARITY_WALLET_INDEX | 0 | Origin wallet index of the Singularity protocol agent |
 | ANNUAL_INFLATION_CEILING | 0.05 | Maximum 5% annualized supply growth, enforced per epoch |
 | SIGNUP_BONUS | 1.0 | AGNTC minted per new user registration |
+
+#### Claims-Migration Parameters (Section 10.1.3)
+
+> These parameters govern the attested-fact participation-claim basis (Section 10.1.3). The reference chain implementation in `chain/agentic/params.py` is the source of truth; `chain/tests/test_whitepaper_audit.py` (`TestWhitepaperS5ClaimsParams`) pins them against silent drift.
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| SCORE_BASIS_CUT_BLOCK | 10¹² (sentinel — cut disabled) | Block height at/after which participation-claim accrual switches from in-game gameplay counters to attested Disk facts (Section 10.1.3). The default high sentinel disables the cut; a real future height is set in a founder activation round, with the concordance test re-pinned in lockstep. |
+| SCORE_W_DISK | 1.0 (placeholder) | Weight on the post-cut attested Disk-fact increment (Δ audit-passes × bytes-held). Placeholder; calibrated against live byte magnitudes when the cut height is set. |
+| CLAIM_ELIGIBILITY_GATE_LEVEL | 2 | Soulbound-tenure service-gate level required for claim eligibility — a binary gate (who may claim, never how much). |
+| CLAIM_ELIGIBILITY_WINDOW_BLOCKS | 1440 (= TIME_EPOCH_BLOCKS) | Recency window (blocks) within which a participant must have a verified audit pass to remain claim-eligible (~1 day @ 60s cadence). |
 
 #### Mining and Epoch Parameters
 
